@@ -40,6 +40,38 @@ export default defineConfig([
         },
       ],
       '@typescript-eslint/consistent-type-imports': 'error', // type import 일관성
+
+      // Naming Conventions
+      '@typescript-eslint/naming-convention': [
+        'error',
+        // 일반 변수: camelCase
+        {
+          selector: 'variable',
+          format: ['camelCase', 'UPPER_CASE', 'PascalCase'],
+          leadingUnderscore: 'allow',
+        },
+        // 함수: camelCase
+        {
+          selector: 'function',
+          format: ['camelCase', 'PascalCase'],
+        },
+        // 파라미터: camelCase (언더스코어 허용)
+        {
+          selector: 'parameter',
+          format: ['camelCase'],
+          leadingUnderscore: 'allow',
+        },
+        // 타입, 인터페이스, 클래스: PascalCase
+        {
+          selector: 'typeLike',
+          format: ['PascalCase'],
+        },
+        // enum 멤버: PascalCase 또는 UPPER_CASE
+        {
+          selector: 'enumMember',
+          format: ['PascalCase', 'UPPER_CASE'],
+        },
+      ],
     },
   },
 ]);
