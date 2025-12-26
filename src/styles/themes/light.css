@@ -1,0 +1,67 @@
+/**
+ * Light Theme - Default
+ * Primary: Indigo Blue #4F46E5
+ * Accent: React Cyan #61DAFB
+ * Background: Ghost White #F8FAFC
+ */
+
+:root {
+  --radius: 0.5rem; /* 8px - Consistent corner radius */
+
+  /* Primary: Indigo Blue #4F46E5 */
+  --primary: oklch(0.51 0.21 265);
+  --primary-foreground: oklch(0.985 0 0);
+
+  /* Secondary: Slate Gray #64748B */
+  --secondary: oklch(0.55 0.03 255);
+  --secondary-foreground: oklch(0.985 0 0);
+
+  /* Background: Ghost White #F8FAFC */
+  --background: oklch(0.98 0.005 250);
+  --foreground: oklch(0.15 0.02 260); /* Ink Black #0F172A */
+
+  /* Surface: Pure White #FFFFFF */
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.15 0.02 260);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.15 0.02 260);
+
+  /* Muted */
+  --muted: oklch(0.96 0.005 250);
+  --muted-foreground: oklch(0.55 0.03 255); /* Slate Gray */
+
+  /* Accent: React Cyan #61DAFB */
+  --accent: oklch(0.82 0.14 200);
+  --accent-foreground: oklch(0.15 0.02 260);
+
+  /* Semantic Colors */
+  --destructive: oklch(0.58 0.22 25); /* Error Red #EF4444 */
+  --success: oklch(0.65 0.17 160); /* Emerald #10B981 */
+  --warning: oklch(0.75 0.18 75); /* Amber #F59E0B */
+  --info: oklch(0.58 0.2 250); /* Blue #3B82F6 */
+
+  /* Borders & Inputs */
+  --border: oklch(0.9 0.01 255);
+  --input: oklch(0.9 0.01 255);
+  --ring: oklch(0.51 0.21 265); /* Same as primary */
+
+  /* Chart Colors */
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+
+  /* Sidebar */
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.15 0.02 260);
+  --sidebar-primary: oklch(0.51 0.21 265);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.96 0.005 250);
+  --sidebar-accent-foreground: oklch(0.15 0.02 260);
+  --sidebar-border: oklch(0.9 0.01 255);
+  --sidebar-ring: oklch(0.51 0.21 265);
+
+  /* Code Block: Dark Theme Fixed */
+  --code-bg: oklch(0.22 0.02 260); /* #1E293B */
+}

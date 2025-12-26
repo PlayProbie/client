@@ -1,0 +1,27 @@
+/**
+ * Design System: Progressive Refinement
+ * Concept: 단순함에서 시작해 복잡함을 질서 있게 해결하는 과정
+ * Key Metaphor: The Blue Print (설계도)
+ *
+ * @see .agent/instructions/design_system.md for full documentation
+ */
+
+/* Tailwind CSS */
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+/* Dark mode variant */
+@custom-variant dark (&:is(.dark *));
+
+/* Design System Tokens */
+@import './styles/tokens.css';
+
+/* Theme Definitions */
+@import './styles/themes/light.css';
+@import './styles/themes/dark.css';
+
+/* Base Styles & Typography */
+@import './styles/base.css';
+
+/* Component Styles */
+@import './styles/components/icons.css';

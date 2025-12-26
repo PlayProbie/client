@@ -1,0 +1,47 @@
+/**
+ * Base Styles
+ * Global element styles, typography scale, and resets
+ */
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html {
+    font-family: var(--font-sans);
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings:
+      'rlig' 1,
+      'calt' 1;
+  }
+
+  code,
+  pre {
+    font-family: var(--font-mono);
+  }
+
+  /* Typography Scale - High-Focus Readability */
+  h1 {
+    @apply text-4xl leading-tight font-bold tracking-tight;
+  }
+
+  h2 {
+    @apply text-2xl leading-snug font-semibold;
+  }
+
+  h3 {
+    @apply text-xl leading-normal font-semibold;
+  }
+
+  p {
+    @apply text-base leading-relaxed;
+  }
+
+  small {
+    @apply text-sm font-medium;
+  }
+}
