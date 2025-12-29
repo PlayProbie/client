@@ -64,8 +64,10 @@ function StepConfirm() {
         </dl>
         {gameContext && (
           <div className="space-y-2">
-            <p className="text-muted-foreground text-sm">게임 설명</p>
-            <p className="bg-muted rounded-lg p-3 text-start text-sm leading-relaxed">
+            <p className="text-muted-foreground w-[120px] text-center text-sm">
+              게임 설명
+            </p>
+            <p className="bg-muted mx-8 rounded-lg p-3 text-start text-sm leading-relaxed">
               {gameContext}
             </p>
           </div>

@@ -1,13 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 
-import { MOCK_AI_QUESTIONS, MOCK_FEEDBACK_MAP } from '@/data/ai-questions.mock';
+import { MOCK_FEEDBACK_MAP } from '@/data/ai-questions.mock';
 
+import { postAiQuestions } from '../api';
 import { useSurveyFormStore } from '../store/useSurveyFormStore';
 import type { QuestionFeedbackItem, SurveyFormData } from '../types';
 
 /**
  * 질문 생성 및 피드백 관리 훅
+ * - 페이지 렌더링 시 POST /surveys/ai-questions API 호출
  * - Zustand store와 연동하여 localStorage에 자동 저장
  * - react-hook-form과 연동하여 validation 제공
  */
@@ -20,9 +22,14 @@ function useQuestionGenerate() {
     formState: { errors },
   } = useFormContext<SurveyFormData>();
 
-  // Store에서 질문 목록 가져오기 (없으면 Mock 데이터로 초기화)
+  // API 호출 상태
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generateError, setGenerateError] = useState<string | null>(null);
+  const [hasGenerated, setHasGenerated] = useState(false);
+
+  // Store에서 질문 목록 가져오기
   const questions = useMemo(() => {
-    return formData.questions?.length ? formData.questions : MOCK_AI_QUESTIONS;
+    return formData.questions || [];
   }, [formData.questions]);
 
   // Store에서 선택된 질문 인덱스 가져오기 (없으면 전체 선택)
@@ -75,15 +82,68 @@ function useQuestionGenerate() {
     [updateFormData, setError, clearErrors, setValue]
   );
 
-  // 초기화: Store에 질문이 없으면 Mock 데이터로 초기화
-  useEffect(() => {
-    if (!formData.questions?.length) {
-      updateFormData({
-        questions: MOCK_AI_QUESTIONS,
-        selectedQuestionIndices: MOCK_AI_QUESTIONS.map((_, i) => i),
-      });
+  // AI 질문 생성 API 호출
+  const generateQuestions = useCallback(async () => {
+    const { gameName, gameGenre, gameContext, surveyName, testPurpose } =
+      formData;
+
+    // 필수 데이터 확인
+    if (!gameName || !gameGenre?.length || !surveyName || !testPurpose) {
+      setGenerateError('질문 생성에 필요한 정보가 부족합니다.');
+      return;
     }
-  }, [formData.questions, updateFormData]);
+
+    setIsGenerating(true);
+    setGenerateError(null);
+
+    try {
+      const response = await postAiQuestions({
+        game_name: gameName,
+        game_context: gameContext || '',
+        game_genre: gameGenre,
+        survey_name: surveyName,
+        test_purpose: testPurpose,
+        count: 5, // 기본 5개 질문 생성
+      });
+
+      const generatedQuestions = response.result;
+
+      // Store에 질문 저장
+      updateFormData({
+        questions: generatedQuestions,
+        selectedQuestionIndices: generatedQuestions.map((_, i) => i), // 전체 선택
+      });
+
+      // react-hook-form에도 동기화
+      setValue('questions', generatedQuestions);
+      setValue(
+        'selectedQuestionIndices',
+        generatedQuestions.map((_, i) => i)
+      );
+
+      setHasGenerated(true);
+      setFeedbackMap({}); // 피드백 캐시 초기화
+    } catch (error) {
+      console.error('Failed to generate questions:', error);
+      setGenerateError(
+        error instanceof Error
+          ? error.message
+          : 'AI 질문 생성에 실패했습니다. 다시 시도해주세요.'
+      );
+    } finally {
+      setIsGenerating(false);
+    }
+  }, [formData, updateFormData, setValue]);
+
+  // 페이지 렌더링 시 질문이 없으면 자동으로 API 호출
+  useEffect(() => {
+    // 이미 질문이 있거나 생성 중이면 스킵
+    if (questions.length > 0 || isGenerating || hasGenerated) {
+      return;
+    }
+
+    generateQuestions();
+  }, [questions.length, isGenerating, hasGenerated, generateQuestions]);
 
   // Validation 에러 메시지 (react-hook-form에서 가져옴)
   const validationError = errors.selectedQuestionIndices?.message;
@@ -164,14 +224,10 @@ function useQuestionGenerate() {
   }, [selectedQuestions.size, questions, setSelectedQuestions]);
 
   const handleRegenerate = useCallback(async () => {
-    // TODO: POST /surveys/ai-questions API 연동
-    console.log('Regenerating questions for:', formData);
-
-    // Mock: 질문 재생성 시뮬레이션
-    setQuestions([...MOCK_AI_QUESTIONS]);
-    setSelectedQuestions(new Set(MOCK_AI_QUESTIONS.map((_, i) => i)));
-    setFeedbackMap({}); // 피드백 캐시 초기화
-  }, [formData, setQuestions, setSelectedQuestions]);
+    // 질문 재생성 - hasGenerated 상태 리셋 후 API 호출
+    setHasGenerated(false);
+    await generateQuestions();
+  }, [generateQuestions]);
 
   // 특정 질문에 대한 피드백 요청 (질문 수정 시)
   const handleRequestFeedback = useCallback(
@@ -216,6 +272,8 @@ function useQuestionGenerate() {
     selectedQuestions,
     loadingIndex,
     isFetchingFeedback,
+    isGenerating,
+    generateError,
     selectedCount: selectedQuestions.size,
     totalCount: questions.length,
     isAllSelected: selectedQuestions.size === questions.length,
