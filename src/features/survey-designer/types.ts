@@ -116,3 +116,63 @@ export interface FixedQuestionsCount {
 export interface CreateFixedQuestionsResponse {
   result: FixedQuestionsCount;
 }
+
+// ----------------------------------------
+// Survey Form (설문 등록 폼)
+// ----------------------------------------
+
+/** 설문 폼 상태 */
+export type SurveyFormStatus = 'draft' | 'scheduled' | 'active' | 'completed';
+
+/** 설문 폼 데이터 */
+export type SurveyFormData = {
+  // Step 0: 게임 정보
+  gameName: string;
+  gameGenre: GameGenre[];
+  gameContext: string;
+
+  // Step 1: 설문 정보
+  surveyName: string;
+  testPurpose: TestPurpose;
+  startedAt: string;
+  endedAt: string;
+
+  // Step 2: 질문 생성
+  questions: string[];
+};
+
+/** 설문 폼 스텝 */
+export type SurveyFormStep = {
+  id: number;
+  label: string;
+  description?: string;
+};
+
+/** 설문 폼 스텝 정의 */
+export const SURVEY_FORM_STEPS: SurveyFormStep[] = [
+  {
+    id: 0,
+    label: '게임 정보',
+    description: '테스트할 게임 정보를 입력하세요',
+  },
+  {
+    id: 1,
+    label: '설문 정보',
+    description: '설문 이름과 테스트 목적을 입력하세요',
+  },
+  {
+    id: 2,
+    label: '질문 생성',
+    description: 'AI로 설문 질문을 생성합니다',
+  },
+  {
+    id: 3,
+    label: '최종 확인',
+    description: '입력 내용을 확인하세요',
+  },
+  {
+    id: 4,
+    label: '생성 완료',
+    description: '설문이 생성되었습니다',
+  },
+];
