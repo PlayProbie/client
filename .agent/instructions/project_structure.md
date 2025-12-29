@@ -44,6 +44,13 @@ src/
 ├── store/                # 전역 상태 (Zustand)
 │   ├── useAuthStore.ts   # 사용자 세션
 │   └── useSharedStore.ts # 워크스페이스 선택 정보 등 전역 상태
+├── types/                # 전역 타입 정의
+│   ├── api.ts            # API 에러, 응답 래퍼 타입
+│   └── utils.ts          # ConfigValue 등 타입 유틸리티
+├── constants/            # 프로덕션 상수
+│   └── options.ts        # Select/Checkbox 옵션
+├── data/                 # 개발용 목업 데이터 (프로덕션 제외)
+│   └── *.mock.ts         # 목업 데이터 파일 (예: games.mock.ts)
 └── utils/                # 순수 함수 (Date 포맷팅, 숫자 계산 등)
 ```
 
