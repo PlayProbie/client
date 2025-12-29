@@ -98,7 +98,7 @@ function SurveyRegisterForm({
           <div className="min-h-[300px]">
             {currentStep === 0 && <StepGameInfo control={control} />}
             {currentStep === 1 && <StepSurveyInfo control={control} />}
-            {currentStep === 2 && <StepQuestionGenerate formData={formData} />}
+            {currentStep === 2 && <StepQuestionGenerate />}
             {currentStep === 3 && <StepConfirm control={control} />}
             {currentStep === 4 && <StepComplete />}
           </div>

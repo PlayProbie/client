@@ -1,0 +1,41 @@
+type QuestionFeedbackSummaryProps = {
+  summary: string;
+  isFetchingFeedback: boolean;
+  hasFeedback: boolean;
+};
+
+/**
+ * AI 피드백 요약 표시
+ * - 피드백 로딩 중 또는 피드백 내용 표시
+ */
+function QuestionFeedbackSummary({
+  summary,
+  isFetchingFeedback,
+  hasFeedback,
+}: QuestionFeedbackSummaryProps) {
+  // 피드백 로딩 중
+  if (isFetchingFeedback && !hasFeedback) {
+    return (
+      <div className="border-border border-t px-4 py-3">
+        <p className="text-muted-foreground text-sm">피드백 로딩 중...</p>
+      </div>
+    );
+  }
+
+  // 피드백이 있는 경우
+  if (hasFeedback) {
+    return (
+      <div className="border-border border-t px-4 py-3">
+        <p className="text-muted-foreground text-start text-sm">
+          <span className="text-primary font-medium">AI: </span>
+          {summary}
+        </p>
+      </div>
+    );
+  }
+
+  return null;
+}
+
+export { QuestionFeedbackSummary };
+export type { QuestionFeedbackSummaryProps };

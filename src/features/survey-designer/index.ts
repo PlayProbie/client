@@ -9,6 +9,10 @@ export { SurveyRegisterForm } from './components/SurveyRegisterForm';
 // Store
 export { useSurveyFormStore } from './store/useSurveyFormStore';
 
+// Hooks
+export { useQuestionEdit } from './hooks/useQuestionEdit';
+export { useQuestionGenerate } from './hooks/useQuestionGenerate';
+
 // Types
 export * from './types';
 export { SURVEY_FORM_STEPS } from './types';

@@ -139,6 +139,7 @@ export type SurveyFormData = {
 
   // Step 2: 질문 생성
   questions: string[];
+  selectedQuestionIndices: number[]; // 선택된 질문 인덱스 배열 (Set은 JSON 직렬화 불가)
 };
 
 /** 설문 폼 스텝 */
