@@ -3,7 +3,7 @@ import type {
   CreateFixedQuestionsResponse,
 } from '../types';
 
-const API_BASE_URL = '/api';
+const API_BASE_URL = 'https://playprobie.com/api';
 
 /**
  * POST /surveys/fixed_questions - 고정 질문 생성

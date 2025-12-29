@@ -16,6 +16,7 @@ function useQuestionGenerate() {
   const {
     setError,
     clearErrors,
+    setValue,
     formState: { errors },
   } = useFormContext<SurveyFormData>();
 
@@ -26,7 +27,7 @@ function useQuestionGenerate() {
 
   // Store에서 선택된 질문 인덱스 가져오기 (없으면 전체 선택)
   const selectedQuestions = useMemo(() => {
-    if (formData.selectedQuestionIndices?.length) {
+    if (formData.selectedQuestionIndices !== undefined) {
       return new Set(formData.selectedQuestionIndices);
     }
     // 초기화 시 전체 선택
@@ -46,14 +47,20 @@ function useQuestionGenerate() {
   const setQuestions = useCallback(
     (newQuestions: string[]) => {
       updateFormData({ questions: newQuestions });
+      setValue('questions', newQuestions);
     },
-    [updateFormData]
+    [updateFormData, setValue]
   );
 
   // 선택된 질문 업데이트 시 Store에 저장 + validation 연동
   const setSelectedQuestions = useCallback(
     (indices: Set<number>) => {
-      updateFormData({ selectedQuestionIndices: Array.from(indices) });
+      const indicesArray = Array.from(indices);
+      updateFormData({ selectedQuestionIndices: indicesArray });
+      setValue('selectedQuestionIndices', indicesArray, {
+        shouldDirty: true,
+        shouldTouch: true,
+      });
 
       // react-hook-form validation 연동
       if (indices.size === 0) {
@@ -65,7 +72,7 @@ function useQuestionGenerate() {
         clearErrors('selectedQuestionIndices');
       }
     },
-    [updateFormData, setError, clearErrors]
+    [updateFormData, setError, clearErrors, setValue]
   );
 
   // 초기화: Store에 질문이 없으면 Mock 데이터로 초기화

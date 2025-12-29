@@ -1,6 +1,6 @@
 import type { CreateGameRequest, CreateGameResponse } from '@/features/game';
 
-const API_BASE_URL = '/api';
+const API_BASE_URL = 'https://playprobie.com/api';
 
 /**
  * POST /games - 게임 생성

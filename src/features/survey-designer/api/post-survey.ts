@@ -1,6 +1,6 @@
 import type { CreateSurveyRequest, CreateSurveyResponse } from '../types';
 
-const API_BASE_URL = '/api';
+const API_BASE_URL = 'https://playprobie.com/api';
 
 /**
  * POST /surveys - 설문 생성
