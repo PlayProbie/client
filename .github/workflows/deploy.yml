@@ -15,7 +15,7 @@ jobs:
       - name: 📥 Checkout source code
         uses: actions/checkout@v4
 
-      # 2. Node.js 20 환경 설정
+      # 2. Node.js 24 환경 설정
       - name: 🟢 Setup Node.js 24
         uses: actions/setup-node@v4
         with:
