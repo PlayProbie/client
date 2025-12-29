@@ -4,6 +4,7 @@
  */
 
 // Components
+export { SurveyRegisterComplete } from './components/SurveyRegisterComplete';
 export { SurveyRegisterForm } from './components/SurveyRegisterForm';
 
 // Store
@@ -12,6 +13,7 @@ export { useSurveyFormStore } from './store/useSurveyFormStore';
 // Hooks
 export { useQuestionEdit } from './hooks/useQuestionEdit';
 export { useQuestionGenerate } from './hooks/useQuestionGenerate';
+export { useSurveySubmit } from './hooks/useSurveySubmit';
 
 // Types
 export * from './types';

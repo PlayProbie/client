@@ -10,17 +10,22 @@ type SurveyFormState = {
   // 폼 데이터 임시 저장
   formData: Partial<SurveyFormData>;
 
+  // 생성된 설문 URL
+  surveyUrl: string | null;
+
   // 액션
   nextStep: () => void;
   prevStep: () => void;
   goToStep: (step: number) => void;
   updateFormData: (data: Partial<SurveyFormData>) => void;
+  setSurveyUrl: (url: string) => void;
   reset: () => void;
 };
 
 const INITIAL_STATE = {
   currentStep: 0,
   formData: {},
+  surveyUrl: null,
 };
 
 export const useSurveyFormStore = create<SurveyFormState>()(
@@ -47,6 +52,11 @@ export const useSurveyFormStore = create<SurveyFormState>()(
         set((state) => ({
           formData: { ...state.formData, ...data },
         })),
+
+      setSurveyUrl: (url) =>
+        set({
+          surveyUrl: url,
+        }),
 
       reset: () => set(INITIAL_STATE),
     }),

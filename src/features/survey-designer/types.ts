@@ -35,6 +35,7 @@ export interface CreateSurveyRequest {
 export interface Survey {
   survey_id: number;
   survey_name: string;
+  survey_url: string;
   started_at: string;
   ended_at: string;
   test_purpose: TestPurpose;
@@ -170,10 +171,5 @@ export const SURVEY_FORM_STEPS: SurveyFormStep[] = [
     id: 3,
     label: '최종 확인',
     description: '입력 내용을 확인하세요',
-  },
-  {
-    id: 4,
-    label: '생성 완료',
-    description: '설문이 생성되었습니다',
   },
 ];

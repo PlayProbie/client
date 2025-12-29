@@ -1,4 +1,4 @@
-export { StepComplete } from './StepComplete';
+export { SurveyRegisterComplete } from '../SurveyRegisterComplete';
 export { StepConfirm } from './StepConfirm';
 export { StepGameInfo } from './StepGameInfo';
 export { StepQuestionGenerate } from './StepQuestionGenerate';

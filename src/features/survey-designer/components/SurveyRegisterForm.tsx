@@ -7,10 +7,10 @@ import { Form } from '@/components/ui/form';
 import { Step } from '@/components/ui/Step';
 import { cn } from '@/lib/utils';
 
+import { useSurveySubmit } from '../hooks/useSurveySubmit';
 import { useSurveyFormStore } from '../store/useSurveyFormStore';
 import { SURVEY_FORM_STEPS, type SurveyFormData } from '../types';
 import {
-  StepComplete,
   StepConfirm,
   StepGameInfo,
   StepQuestionGenerate,
@@ -19,7 +19,7 @@ import {
 
 type SurveyRegisterFormProps = {
   className?: string;
-  onComplete?: (data: SurveyFormData) => void;
+  onComplete?: (surveyUrl: string) => void;
 };
 
 function SurveyRegisterForm({
@@ -41,6 +41,19 @@ function SurveyRegisterForm({
   // useWatch로 폼 데이터 구독 (React Compiler 호환)
   const watchedData = useWatch({ control });
 
+  // 설문 생성 API 호출 훅
+  const { mutate: submitSurvey, isPending } = useSurveySubmit({
+    onSuccess: (surveyUrl) => {
+      // 임시 저장 초기화 후 완료 콜백 호출
+      reset();
+      onComplete?.(surveyUrl);
+    },
+    onError: (error) => {
+      console.error('설문 생성 실패:', error);
+      // TODO: 에러 토스트 표시
+    },
+  });
+
   // URL에서 step 파라미터가 변경되면 store 동기화
   useEffect(() => {
     if (step) {
@@ -61,14 +74,16 @@ function SurveyRegisterForm({
 
   const handleNext = handleSubmit((data) => {
     updateFormData(data);
+
+    // 최종 확인 단계 (Step 3)에서 설문 생성 버튼 클릭 시 API 호출
     if (currentStep === SURVEY_FORM_STEPS.length - 1) {
-      // 최종 제출 시 임시 저장 초기화
-      reset();
-      onComplete?.(data as SurveyFormData);
-    } else {
-      const nextStepNum = currentStep + 1;
-      navigate(`/survey/create/step-${nextStepNum}`);
+      submitSurvey(formData);
+      return;
     }
+
+    // 다음 단계로 이동
+    const nextStepNum = currentStep + 1;
+    navigate(`/survey/create/step-${nextStepNum}`);
   });
 
   const handlePrev = () => {
@@ -79,7 +94,6 @@ function SurveyRegisterForm({
 
   const stepLabels = SURVEY_FORM_STEPS.map((s) => s.label);
   const isLastStep = currentStep === SURVEY_FORM_STEPS.length - 1;
-  const isConfirmStep = currentStep === 3;
 
   return (
     <div className={cn('flex flex-col gap-8', className)}>
@@ -99,8 +113,7 @@ function SurveyRegisterForm({
             {currentStep === 0 && <StepGameInfo control={control} />}
             {currentStep === 1 && <StepSurveyInfo control={control} />}
             {currentStep === 2 && <StepQuestionGenerate />}
-            {currentStep === 3 && <StepConfirm control={control} />}
-            {currentStep === 4 && <StepComplete />}
+            {currentStep === 3 && <StepConfirm />}
           </div>
 
           {/* Navigation Buttons */}
@@ -109,15 +122,16 @@ function SurveyRegisterForm({
               type="button"
               variant="outline"
               onClick={handlePrev}
-              disabled={currentStep === 0 || isLastStep}
+              disabled={currentStep === 0}
             >
               이전
             </Button>
-            {!isLastStep && (
-              <Button type="submit">
-                {isConfirmStep ? '설문 생성' : '다음'}
-              </Button>
-            )}
+            <Button
+              type="submit"
+              disabled={isPending}
+            >
+              {isPending ? '생성 중...' : isLastStep ? '설문 생성' : '다음'}
+            </Button>
           </div>
         </form>
       </Form>
