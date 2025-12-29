@@ -44,7 +44,7 @@ function FormItem({ className, ...props }: FormItemProps) {
   return (
     <FormItemContext.Provider value={{ id }}>
       <div
-        className={cn('space-y-2', className)}
+        className={cn('space-y-2 text-start', className)}
         {...props}
       />
     </FormItemContext.Provider>

@@ -1,6 +1,6 @@
 import { type VariantProps } from 'class-variance-authority';
 import { Check } from 'lucide-react';
-import { type ComponentProps } from 'react';
+import { type ComponentProps, type KeyboardEvent } from 'react';
 
 import { cn } from '@/lib/utils';
 
@@ -55,6 +55,7 @@ type StepProps = ComponentProps<'div'> & {
   currentStep: number;
   orientation?: 'horizontal' | 'vertical';
   showLabels?: boolean;
+  onStepClick?: (index: number) => void;
 };
 
 function Step({
@@ -63,6 +64,7 @@ function Step({
   currentStep,
   orientation = 'horizontal',
   showLabels = true,
+  onStepClick,
   ...props
 }: StepProps) {
   const normalizedSteps = steps.map((step) =>
@@ -75,6 +77,19 @@ function Step({
     return 'default';
   };
 
+  const handleStepClick = (index: number) => {
+    if (onStepClick) {
+      onStepClick(index);
+    }
+  };
+
+  const handleKeyDown = (index: number, e: KeyboardEvent) => {
+    if (onStepClick && (e.key === 'Enter' || e.key === ' ')) {
+      e.preventDefault();
+      onStepClick(index);
+    }
+  };
+
   if (orientation === 'vertical') {
     return (
       <div
@@ -84,7 +99,14 @@ function Step({
         {normalizedSteps.map((step, index) => (
           <div
             key={index}
-            className="flex items-start gap-3"
+            className={cn(
+              'flex items-start gap-3',
+              onStepClick && 'cursor-pointer hover:opacity-80'
+            )}
+            onClick={() => handleStepClick(index)}
+            onKeyDown={(e) => handleKeyDown(index, e)}
+            role={onStepClick ? 'button' : undefined}
+            tabIndex={onStepClick ? 0 : undefined}
           >
             <div className="flex flex-col items-center">
               <StepSymbol
@@ -125,7 +147,15 @@ function Step({
       {normalizedSteps.map((step, index) => (
         <div
           key={index}
-          className="flex flex-1 items-center gap-2"
+          className={cn(
+            'flex flex-1 items-center gap-2',
+            onStepClick && 'cursor-pointer hover:opacity-80',
+            index == normalizedSteps.length - 1 && 'flex-none'
+          )}
+          onClick={() => handleStepClick(index)}
+          onKeyDown={(e) => handleKeyDown(index, e)}
+          role={onStepClick ? 'button' : undefined}
+          tabIndex={onStepClick ? 0 : undefined}
         >
           <div className="flex flex-col items-center gap-1">
             <StepSymbol

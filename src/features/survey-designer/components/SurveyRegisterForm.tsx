@@ -92,6 +92,10 @@ function SurveyRegisterForm({
     }
   };
 
+  const handleStepClick = (index: number) => {
+    navigate(`/survey/create/step-${index}`);
+  };
+
   const stepLabels = SURVEY_FORM_STEPS.map((s) => s.label);
   const isLastStep = currentStep === SURVEY_FORM_STEPS.length - 1;
 
@@ -101,6 +105,7 @@ function SurveyRegisterForm({
       <Step
         steps={stepLabels}
         currentStep={currentStep}
+        onStepClick={handleStepClick}
       />
 
       {/* Form Content */}

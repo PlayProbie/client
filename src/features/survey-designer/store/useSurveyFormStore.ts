@@ -22,9 +22,14 @@ type SurveyFormState = {
   reset: () => void;
 };
 
+const getToday = () => new Date().toISOString().split('T')[0];
+
 const INITIAL_STATE = {
   currentStep: 0,
-  formData: {},
+  formData: {
+    startedAt: getToday(),
+    endedAt: getToday(),
+  },
   surveyUrl: null,
 };
 

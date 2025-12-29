@@ -1,4 +1,4 @@
-import type { Control } from 'react-hook-form';
+import { type Control, useWatch } from 'react-hook-form';
 
 import { ButtonGroup } from '@/components/ui/ButtonGroup';
 import {
@@ -17,11 +17,6 @@ type StepSurveyInfoProps = {
   control: Control<SurveyFormData>;
 };
 
-// 오늘 날짜를 YYYY-MM-DD 형식으로 반환
-function getToday(): string {
-  return new Date().toISOString().split('T')[0];
-}
-
 /**
  * Step 1: 설문 정보
  * - 설문 이름
@@ -30,7 +25,14 @@ function getToday(): string {
  * - 종료일
  */
 function StepSurveyInfo({ control }: StepSurveyInfoProps) {
-  const today = getToday();
+  // 오늘 날짜 (min 값 설정용)
+  const today = new Date().toISOString().split('T')[0];
+
+  // 시작일 감시
+  const startedAt = useWatch({
+    control,
+    name: 'startedAt',
+  });
 
   return (
     <div className="flex flex-col gap-4">
@@ -82,7 +84,6 @@ function StepSurveyInfo({ control }: StepSurveyInfoProps) {
                   type="date"
                   min={today}
                   {...field}
-                  value={field.value || today}
                 />
               </FormControl>
               <FormMessage />
@@ -100,9 +101,8 @@ function StepSurveyInfo({ control }: StepSurveyInfoProps) {
               <FormControl>
                 <Input
                   type="date"
-                  min={today}
+                  min={startedAt || today}
                   {...field}
-                  value={field.value || today}
                 />
               </FormControl>
               <FormMessage />
