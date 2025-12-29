@@ -16,10 +16,10 @@ jobs:
         uses: actions/checkout@v4
 
       # 2. Node.js 20 환경 설정
-      - name: 🟢 Setup Node.js 20
+      - name: 🟢 Setup Node.js 24
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
           cache: 'npm'
 
       # 3. 의존성 설치
@@ -30,7 +30,7 @@ jobs:
       - name: 🔨 Build React application
         run: npm run build
         env:
-          VITE_API_URL: https://api.playprobie.shop
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
 
       # 5. AWS 자격 증명 설정
       - name: 🔐 Configure AWS credentials
