@@ -3,6 +3,8 @@ import './App.css';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 
+import SurveyChatPage from '@/pages/survey/SurveyChatPage';
+import SurveyChatStartPage from '@/pages/survey/SurveyChatStartPage';
 import SurveyCreatePage from '@/pages/survey/SurveyCreatePage';
 
 import SurveyResponsePage from './pages/survey/SurveyResponsePage';
@@ -50,6 +52,16 @@ function App() {
           <Route
             path="/survey/response"
             element={<SurveyResponsePage />}
+          />
+          {/* 설문 채팅 진행 페이지 */}
+          <Route
+            path="/surveys/chat/sessions/:sessionId"
+            element={<SurveyChatPage />}
+          />
+          {/* 설문 채팅 시작 - 세션 생성 후 리다이렉트 */}
+          <Route
+            path="/surveys/chat/:surveyId"
+            element={<SurveyChatStartPage />}
           />
         </Routes>
       </BrowserRouter>

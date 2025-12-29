@@ -139,3 +139,58 @@ export interface SendMessageResult {
 export interface SendMessageResponse {
   result: SendMessageResult;
 }
+
+// ----------------------------------------
+// Client-side State Types
+// ----------------------------------------
+
+/** 채팅 메시지 데이터 (클라이언트 상태) */
+export interface ChatMessageData {
+  id: string;
+  type: 'ai' | 'user';
+  content: string;
+  turnNum: number;
+  qType?: InterviewLogQType;
+  fixedQId?: number;
+  timestamp: Date;
+}
+
+// ----------------------------------------
+// Hook Types
+// ----------------------------------------
+
+/** useChatSSE 훅 옵션 */
+export interface UseChatSSEOptions {
+  sessionId: number;
+  onQuestion: (data: SSEQuestionEventData) => void;
+  onInfo?: (message: string) => void;
+  onDone?: () => void;
+  onError?: (error: string) => void;
+  onConnect?: () => void;
+  onOpen?: () => void;
+  onDisconnect?: () => void;
+}
+
+/** useChatSSE 훅 반환 타입 */
+export interface UseChatSSEReturn {
+  isConnected: boolean;
+  connect: () => void;
+  disconnect: () => void;
+}
+
+/** useChatSession 훅 옵션 */
+export interface UseChatSessionOptions {
+  sessionId: number;
+  surveyId?: number;
+}
+
+/** useChatSession 훅 반환 타입 */
+export interface UseChatSessionReturn {
+  isReady: boolean;
+  isComplete: boolean;
+  isLoading: boolean;
+  error: string | null;
+  messages: ChatMessageData[];
+  currentTurnNum: number;
+  sendAnswer: (answerText: string) => Promise<void>;
+}

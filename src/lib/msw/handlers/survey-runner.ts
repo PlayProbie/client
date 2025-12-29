@@ -32,6 +32,38 @@ const generateMockExcerpts = (turnCount: number): ChatExcerpt[] => {
   }));
 };
 
+// SSE 질문 목록 (목업)
+const mockQuestions = [
+  {
+    fixed_q_id: 1,
+    q_type: 'FIXED' as const,
+    question_text:
+      '안녕하세요! 게임 플레이 테스트에 참여해 주셔서 감사합니다. 먼저, 게임의 첫인상이 어땠는지 알려주시겠어요?',
+    turn_num: 1,
+  },
+  {
+    fixed_q_id: 2,
+    q_type: 'FIXED' as const,
+    question_text: '튜토리얼이 게임 방법을 이해하는 데 도움이 되었나요?',
+    turn_num: 2,
+  },
+  {
+    fixed_q_id: 3,
+    q_type: 'TAIL' as const,
+    question_text: '조작 방식에서 불편했던 점이 있다면 구체적으로 알려주세요.',
+    turn_num: 3,
+  },
+  {
+    fixed_q_id: 4,
+    q_type: 'FIXED' as const,
+    question_text: '게임을 다시 플레이하고 싶은 마음이 드시나요?',
+    turn_num: 4,
+  },
+];
+
+// 세션별 턴 추적 (메모리 저장)
+const sessionTurns = new Map<number, number>();
+
 /**
  * Survey Runner (Chat) MSW Handlers
  */
@@ -44,6 +76,9 @@ export const surveyRunnerHandlers = [
 
       const surveyId = parseInt(params.surveyId as string, 10);
       const sessionId = Math.floor(Math.random() * 10000) + 1;
+
+      // 새 세션 턴 초기화
+      sessionTurns.set(sessionId, 0);
 
       const response: CreateChatSessionResponse = {
         result: {
@@ -96,6 +131,10 @@ export const surveyRunnerHandlers = [
       const sessionId = parseInt(params.sessionId as string, 10);
       const body = (await request.json()) as SendMessageRequest;
 
+      // 턴 증가
+      const currentTurn = sessionTurns.get(sessionId) || body.turn_num;
+      sessionTurns.set(sessionId, currentTurn + 1);
+
       const response: SendMessageResponse = {
         result: {
           accepted: true,
@@ -114,6 +153,54 @@ export const surveyRunnerHandlers = [
       console.log(`[MSW] Message saved for session ${sessionId}`);
 
       return HttpResponse.json(response, { status: 201 });
+    }
+  ),
+
+  // GET /api/chat/sessions/{session_id}/stream - SSE 스트림
+  http.get(
+    'https://playprobie.com/api/chat/sessions/:sessionId/stream',
+    async ({ params }) => {
+      const sessionId = parseInt(params.sessionId as string, 10);
+      console.log(`[MSW] SSE stream started for session ${sessionId}`);
+
+      // 현재 턴 가져오기
+      const currentTurn = sessionTurns.get(sessionId) || 0;
+
+      // 다음 질문 결정
+      const nextQuestion = mockQuestions[currentTurn];
+
+      // ReadableStream으로 SSE 구현
+      const stream = new ReadableStream({
+        async start(controller) {
+          const encoder = new TextEncoder();
+
+          // 첫 질문 전송 (약간의 지연 후)
+          await delay(500);
+
+          if (nextQuestion) {
+            const questionEvent = `event: question\ndata: ${JSON.stringify(nextQuestion)}\n\n`;
+            controller.enqueue(encoder.encode(questionEvent));
+            console.log(`[MSW] Sent question ${nextQuestion.turn_num}`);
+            // 질문 전송 후 스트림 닫기 (사용자 응답 대기)
+            controller.close();
+          } else {
+            // 질문이 없으면 done 이벤트
+            const doneEvent = `event: done\ndata: {}\n\n`;
+            controller.enqueue(encoder.encode(doneEvent));
+            console.log(`[MSW] Sent done event`);
+            controller.close();
+          }
+        },
+      });
+
+      return new HttpResponse(stream, {
+        status: 200,
+        headers: {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          Connection: 'keep-alive',
+        },
+      });
     }
   ),
 ];

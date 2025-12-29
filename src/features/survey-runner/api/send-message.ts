@@ -1,10 +1,10 @@
+import { API_BASE_URL } from '@/constants/api';
+
 import type {
   SendMessageParams,
   SendMessageRequest,
   SendMessageResponse,
 } from '../types';
-
-const API_BASE_URL = 'https://playprobie.com/api';
 
 /**
  * POST /chat/sessions/{session_id}/messages - 응답자 대답 전송

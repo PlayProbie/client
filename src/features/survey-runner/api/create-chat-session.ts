@@ -1,9 +1,9 @@
+import { API_BASE_URL } from '@/constants/api';
+
 import type {
   CreateChatSessionParams,
   CreateChatSessionResponse,
 } from '../types';
-
-const API_BASE_URL = 'https://playprobie.com/api';
 
 /**
  * POST /surveys/chat/{survey_id} - 새 대화 세션 생성
