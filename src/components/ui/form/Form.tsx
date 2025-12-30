@@ -58,11 +58,11 @@ function FormItem({ className, ...props }: FormItemProps) {
 type FormLabelProps = ComponentProps<typeof LabelPrimitive.Root>;
 
 function FormLabel({ className, ...props }: FormLabelProps) {
-  const { error, formItemId } = useFormField();
+  const { formItemId } = useFormField();
 
   return (
     <Label
-      className={cn(error && 'text-destructive', className)}
+      className={className}
       htmlFor={formItemId}
       {...props}
     />

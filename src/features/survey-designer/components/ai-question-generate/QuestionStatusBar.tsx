@@ -1,13 +1,15 @@
 import { RefreshCw } from 'lucide-react';
 
 import { Button } from '@/components/ui/Button';
+import { cn } from '@/lib/utils';
 
 type QuestionStatusBarProps = {
   selectedCount: number;
   totalCount: number;
   isAllSelected: boolean;
+  isRegenerating?: boolean;
   onSelectAll: () => void;
-  onRegenerate: () => void;
+  onRegenerate?: () => void;
 };
 
 /**
@@ -17,6 +19,7 @@ function QuestionStatusBar({
   selectedCount,
   totalCount,
   isAllSelected,
+  isRegenerating = false,
   onSelectAll,
   onRegenerate,
 }: QuestionStatusBarProps) {
@@ -35,16 +38,21 @@ function QuestionStatusBar({
           {totalCount} 선택됨
         </span>
       </div>
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        onClick={onRegenerate}
-        className="gap-1.5"
-      >
-        <RefreshCw className="size-4" />
-        다시 생성하기
-      </Button>
+      {onRegenerate && (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={onRegenerate}
+          disabled={isRegenerating}
+          className="gap-1.5"
+        >
+          <RefreshCw
+            className={cn('size-4', isRegenerating && 'animate-spin')}
+          />
+          {isRegenerating ? '생성 중...' : '다시 생성하기'}
+        </Button>
+      )}
     </div>
   );
 }

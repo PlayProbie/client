@@ -1,3 +1,7 @@
+import { Plus } from 'lucide-react';
+
+import { Button } from '@/components/ui/Button';
+
 import { useQuestionGenerate } from '../../hooks/useQuestionGenerate';
 import { QuestionList, QuestionStatusBar } from '../ai-question-generate';
 
@@ -9,13 +13,14 @@ import { QuestionList, QuestionStatusBar } from '../ai-question-generate';
  * - 선택 현황 상태 바
  * - 다시 생성하기 버튼
  */
-function StepQuestionGenerate() {
+function StepQuestionAIGenerate() {
   const {
     questions,
     feedbackMap,
     selectedQuestions,
     loadingIndex,
     isFetchingFeedback,
+    isGenerating,
     selectedCount,
     totalCount,
     isAllSelected,
@@ -23,6 +28,7 @@ function StepQuestionGenerate() {
     handleToggle,
     handleSelectAll,
     handleRegenerate,
+    handleAddQuestion,
     handleRequestFeedback,
     handleSuggestionClick,
   } = useQuestionGenerate();
@@ -31,12 +37,34 @@ function StepQuestionGenerate() {
     <div className="flex flex-col gap-6">
       {/* Header */}
       <div className="flex flex-col gap-1">
-        <h3 className="text-foreground text-lg font-semibold">질문 생성</h3>
+        <h3 className="text-foreground text-lg font-semibold">AI 질문 생성</h3>
         <p className="text-muted-foreground text-sm">
           AI가 생성한 질문을 확인하고, 설문에 포함할 질문을 선택하세요. 질문을
           수정하거나 추천 대안을 클릭하여 변경할 수 있습니다.
         </p>
       </div>
+
+      {/* Status Bar */}
+      <QuestionStatusBar
+        selectedCount={selectedCount}
+        totalCount={totalCount}
+        isAllSelected={isAllSelected}
+        isRegenerating={isGenerating}
+        onSelectAll={handleSelectAll}
+        onRegenerate={handleRegenerate}
+      />
+
+      {/* Add Question Button */}
+      <Button
+        type="button"
+        variant="outline"
+        onClick={handleAddQuestion}
+        disabled={isGenerating}
+        className="w-full gap-1.5"
+      >
+        <Plus className="size-4" />
+        {isGenerating ? 'AI 질문 생성 중...' : 'AI 질문 추가 생성'}
+      </Button>
 
       {/* Questions List */}
       <QuestionList
@@ -50,15 +78,6 @@ function StepQuestionGenerate() {
         onRequestFeedback={handleRequestFeedback}
       />
 
-      {/* Status Bar */}
-      <QuestionStatusBar
-        selectedCount={selectedCount}
-        totalCount={totalCount}
-        isAllSelected={isAllSelected}
-        onSelectAll={handleSelectAll}
-        onRegenerate={handleRegenerate}
-      />
-
       {/* Validation Message (react-hook-form 연동) */}
       {validationError && (
         <p className="text-destructive text-sm">{validationError}</p>
@@ -67,4 +86,4 @@ function StepQuestionGenerate() {
   );
 }
 
-export { StepQuestionGenerate };
+export { StepQuestionAIGenerate };

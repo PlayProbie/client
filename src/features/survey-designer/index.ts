@@ -13,6 +13,7 @@ export { useSurveyFormStore } from './store/useSurveyFormStore';
 // Hooks
 export { useQuestionEdit } from './hooks/useQuestionEdit';
 export { useQuestionGenerate } from './hooks/useQuestionGenerate';
+export { useQuestionUserGenerate } from './hooks/useQuestionUserGenerate';
 export { useSurveySubmit } from './hooks/useSurveySubmit';
 
 // Types
