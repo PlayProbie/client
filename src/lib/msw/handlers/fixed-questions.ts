@@ -5,12 +5,14 @@ import type {
   CreateFixedQuestionsResponse,
 } from '@/features/survey-designer';
 
+import { MSW_API_BASE_URL } from '../constants';
+
 /**
  * POST /api/surveys/fixed_questions - 고정 질문 생성 핸들러
  */
 export const fixedQuestionsHandlers = [
   http.post<never, CreateFixedQuestionsRequest>(
-    'https://playprobie.com/api/surveys/fixed_questions',
+    `${MSW_API_BASE_URL}/surveys/fixed_questions`,
     async ({ request }) => {
       await delay(200);
 

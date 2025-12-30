@@ -8,6 +8,8 @@ import type {
   SurveySessionStatus,
 } from '@/features/survey-response';
 
+import { MSW_API_BASE_URL } from '../constants';
+
 // 목업 데이터 생성 헬퍼
 const generateMockSessionItems = (count: number): SurveyResultListItem[] => {
   const statuses: SurveySessionStatus[] = [
@@ -40,7 +42,7 @@ const generateMockSessionItems = (count: number): SurveyResultListItem[] => {
 export const surveyResponseHandlers = [
   // GET /api/surveys/results/{game_id} - 전체 응답 요약
   http.get(
-    'https://playprobie.com/api/surveys/results/:gameId',
+    `${MSW_API_BASE_URL}/surveys/results/:gameId`,
     async ({ request }) => {
       await delay(200);
 
@@ -66,7 +68,7 @@ export const surveyResponseHandlers = [
 
   // GET /api/surveys/results/{game_id}/listup - 전체 응답 리스트
   http.get(
-    'https://playprobie.com/api/surveys/results/:gameId/listup',
+    `${MSW_API_BASE_URL}/surveys/results/:gameId/listup`,
     async ({ request }) => {
       await delay(300);
 
@@ -93,7 +95,7 @@ export const surveyResponseHandlers = [
 
   // GET /api/surveys/results/{survey_id}/details/{session_id} - 응답 세부내용
   http.get(
-    'https://playprobie.com/api/surveys/results/:surveyId/details/:sessionId',
+    `${MSW_API_BASE_URL}/surveys/results/:surveyId/details/:sessionId`,
     async ({ params }) => {
       await delay(250);
 

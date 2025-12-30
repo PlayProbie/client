@@ -1,9 +1,9 @@
+import { API_BASE_URL } from '@/constants/api';
+
 import type {
   CreateFixedQuestionsRequest,
   CreateFixedQuestionsResponse,
 } from '../types';
-
-const API_BASE_URL = 'https://playprobie.com/api';
 
 /**
  * POST /surveys/fixed_questions - 고정 질문 생성

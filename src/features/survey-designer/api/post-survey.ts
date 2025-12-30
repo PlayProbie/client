@@ -1,6 +1,6 @@
-import type { CreateSurveyRequest, CreateSurveyResponse } from '../types';
+import { API_BASE_URL } from '@/constants/api';
 
-const API_BASE_URL = 'https://playprobie.com/api';
+import type { CreateSurveyRequest, CreateSurveyResponse } from '../types';
 
 /**
  * POST /surveys - 설문 생성

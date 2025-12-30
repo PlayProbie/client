@@ -6,12 +6,14 @@ import type {
   QuestionFeedbackResponse,
 } from '@/features/survey-designer';
 
+import { MSW_API_BASE_URL } from '../constants';
+
 /**
  * POST /api/surveys/question-feedback - 질문 피드백 핸들러
  */
 export const questionFeedbackHandlers = [
   http.post<never, QuestionFeedbackRequest>(
-    'https://playprobie.com/api/surveys/question-feedback',
+    `${MSW_API_BASE_URL}/surveys/question-feedback`,
     async ({ request }) => {
       await delay(1000); // AI 분석 시간 시뮬레이션
 

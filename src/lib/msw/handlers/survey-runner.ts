@@ -8,6 +8,8 @@ import type {
   SendMessageResponse,
 } from '@/features/survey-runner';
 
+import { MSW_API_BASE_URL } from '../constants';
+
 // 목업 대화 발췌 데이터
 const generateMockExcerpts = (turnCount: number): ChatExcerpt[] => {
   const questions = [
@@ -70,7 +72,7 @@ const sessionTurns = new Map<string, number>();
 export const surveyRunnerHandlers = [
   // POST /api/surveys/interview/{survey_id} - 새 대화 세션 생성
   http.post(
-    'https://playprobie.com/api/surveys/interview/:surveyId',
+    `${MSW_API_BASE_URL}/surveys/interview/:surveyId`,
     async ({ params }) => {
       await delay(200);
 
@@ -98,7 +100,7 @@ export const surveyRunnerHandlers = [
 
   // GET /api/surveys/interview/{survey_id}/{session_id} - 대화 세션 복원
   http.get(
-    'https://playprobie.com/api/surveys/interview/:surveyId/:sessionId',
+    `${MSW_API_BASE_URL}/surveys/interview/:surveyId/:sessionId`,
     async ({ params }) => {
       await delay(250);
 
@@ -133,7 +135,7 @@ export const surveyRunnerHandlers = [
 
   // POST /api/interview/{session_id}/messages - 응답자 대답 전송
   http.post(
-    'https://playprobie.com/api/interview/:sessionId/messages',
+    `${MSW_API_BASE_URL}/interview/:sessionId/messages`,
     async ({ params, request }) => {
       await delay(200);
 
@@ -167,7 +169,7 @@ export const surveyRunnerHandlers = [
 
   // GET /api/interview/{session_id}/stream - SSE 스트림
   http.get(
-    'https://playprobie.com/api/interview/:sessionId/stream',
+    `${MSW_API_BASE_URL}/interview/:sessionId/stream`,
     async ({ params }) => {
       const sessionId = params.sessionId as string;
       console.log(`[MSW] SSE stream started for session ${sessionId}`);

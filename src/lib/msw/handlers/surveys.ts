@@ -5,12 +5,14 @@ import type {
   CreateSurveyResponse,
 } from '@/features/survey-designer';
 
+import { MSW_API_BASE_URL, MSW_CLIENT_BASE_URL } from '../constants';
+
 /**
  * POST /api/surveys - 설문 생성 핸들러
  */
 export const surveysHandlers = [
   http.post<never, CreateSurveyRequest>(
-    'https://playprobie.com/api/surveys',
+    `${MSW_API_BASE_URL}/surveys`,
     async ({ request }) => {
       await delay(300);
 
@@ -21,7 +23,7 @@ export const surveysHandlers = [
         result: {
           survey_id: surveyId,
           survey_name: body.survey_name,
-          survey_url: `http://localhost:5173/surveys/chat/sessions/84266fdbd31d4c2c6d0665f7e8380fa3`,
+          survey_url: `${MSW_CLIENT_BASE_URL}/surveys/chat/sessions/84266fdbd31d4c2c6d0665f7e8380fa3`,
           started_at: body.started_at,
           ended_at: body.ended_at,
           test_purpose: body.test_purpose,

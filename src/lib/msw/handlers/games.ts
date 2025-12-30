@@ -5,12 +5,14 @@ import type {
   CreateGameResponse,
 } from '@/features/game/types';
 
+import { MSW_API_BASE_URL } from '../constants';
+
 /**
  * POST /api/games - 게임 생성 핸들러
  */
 export const gamesHandlers = [
   http.post<never, CreateGameRequest>(
-    'https://playprobie.com/api/games',
+    `${MSW_API_BASE_URL}/games`,
     async ({ request }) => {
       await delay(300);
 

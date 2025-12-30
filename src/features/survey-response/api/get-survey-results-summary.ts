@@ -1,9 +1,9 @@
+import { API_BASE_URL } from '@/constants/api';
+
 import type {
   GetSurveyResultsSummaryParams,
   GetSurveyResultsSummaryResponse,
 } from '../types';
-
-const API_BASE_URL = 'https://playprobie.com/api';
 
 /**
  * GET /surveys/results/{game_id} - 전체 응답 요약

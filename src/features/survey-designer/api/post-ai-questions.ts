@@ -1,9 +1,9 @@
+import { API_BASE_URL } from '@/constants/api';
+
 import type {
   GenerateAiQuestionsRequest,
   GenerateAiQuestionsResponse,
 } from '../types';
-
-const API_BASE_URL = 'https://playprobie.com/api';
 
 /**
  * POST /surveys/ai-questions - AI 질문 생성

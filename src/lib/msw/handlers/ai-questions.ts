@@ -5,12 +5,14 @@ import type {
   GenerateAiQuestionsResponse,
 } from '@/features/survey-designer';
 
+import { MSW_API_BASE_URL } from '../constants';
+
 /**
  * POST /api/surveys/ai-questions - AI 질문 생성 핸들러
  */
 export const aiQuestionsHandlers = [
   http.post<never, GenerateAiQuestionsRequest>(
-    'https://playprobie.com/api/surveys/ai-questions',
+    `${MSW_API_BASE_URL}/surveys/ai-questions`,
     async ({ request }) => {
       await delay(1500); // AI 생성 시간 시뮬레이션
 
