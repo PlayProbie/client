@@ -21,7 +21,7 @@ export const surveysHandlers = [
         result: {
           survey_id: surveyId,
           survey_name: body.survey_name,
-          survey_url: `https://playprobie.com/survey/${surveyId}`,
+          survey_url: `http://localhost:5173/surveys/chat/sessions/84266fdbd31d4c2c6d0665f7e8380fa3`,
           started_at: body.started_at,
           ended_at: body.ended_at,
           test_purpose: body.test_purpose,

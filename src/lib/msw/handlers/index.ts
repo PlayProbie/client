@@ -7,6 +7,7 @@ import { fixedQuestionsHandlers } from './fixed-questions';
 import { gamesHandlers } from './games';
 import { questionFeedbackHandlers } from './question-feedback';
 import { surveyResponseHandlers } from './survey-response';
+import { surveyRunnerHandlers } from './survey-runner';
 import { surveysHandlers } from './surveys';
 
 export const handlers = [
@@ -16,4 +17,5 @@ export const handlers = [
   ...aiQuestionsHandlers,
   ...questionFeedbackHandlers,
   ...surveyResponseHandlers,
+  ...surveyRunnerHandlers,
 ];
