@@ -5,6 +5,8 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 
 import SurveyCreatePage from '@/pages/survey/SurveyCreatePage';
 
+import SurveyResponsePage from './pages/survey/SurveyResponsePage';
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -43,6 +45,11 @@ function App() {
           <Route
             path="/survey/create/:step"
             element={<SurveyCreatePage />}
+          />
+          {/* 설문 응답 결과 페이지 */}
+          <Route
+            path="/survey/response"
+            element={<SurveyResponsePage />}
           />
         </Routes>
       </BrowserRouter>
