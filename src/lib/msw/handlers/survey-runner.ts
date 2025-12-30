@@ -62,7 +62,7 @@ const mockQuestions = [
 ];
 
 // 세션별 턴 추적 (메모리 저장)
-const sessionTurns = new Map<number, number>();
+const sessionTurns = new Map<string, number>();
 
 /**
  * Survey Runner (Chat) MSW Handlers
@@ -75,7 +75,7 @@ export const surveyRunnerHandlers = [
       await delay(200);
 
       const surveyId = parseInt(params.surveyId as string, 10);
-      const sessionId = Math.floor(Math.random() * 10000) + 1;
+      const sessionId = `${Math.floor(Math.random() * 10000) + 1}`;
 
       // 새 세션 턴 초기화
       sessionTurns.set(sessionId, 0);
@@ -103,7 +103,16 @@ export const surveyRunnerHandlers = [
       await delay(250);
 
       const surveyId = parseInt(params.surveyId as string, 10);
-      const sessionId = parseInt(params.sessionId as string, 10);
+      const sessionId = params.sessionId as string;
+
+      // 새 세션이면 턴 초기화 (기존 대화 없음)
+      if (!sessionTurns.has(sessionId)) {
+        sessionTurns.set(sessionId, 0);
+      }
+
+      const currentTurn = sessionTurns.get(sessionId) || 0;
+      // 기존 대화가 있는 경우에만 excerpts 반환
+      const excerpts = currentTurn > 0 ? generateMockExcerpts(currentTurn) : [];
 
       const response: RestoreChatSessionResponse = {
         result: {
@@ -113,7 +122,7 @@ export const surveyRunnerHandlers = [
             tester_id: 'tester-uuid-restored',
             status: 'IN_PROGRESS',
           },
-          excerpts: generateMockExcerpts(2),
+          excerpts,
           sse_url: `/chat/sessions/${sessionId}/stream`,
         },
       };
@@ -128,7 +137,7 @@ export const surveyRunnerHandlers = [
     async ({ params, request }) => {
       await delay(200);
 
-      const sessionId = parseInt(params.sessionId as string, 10);
+      const sessionId = params.sessionId as string;
       const body = (await request.json()) as SendMessageRequest;
 
       // 턴 증가
@@ -160,7 +169,7 @@ export const surveyRunnerHandlers = [
   http.get(
     'https://playprobie.com/api/chat/sessions/:sessionId/stream',
     async ({ params }) => {
-      const sessionId = parseInt(params.sessionId as string, 10);
+      const sessionId = params.sessionId as string;
       console.log(`[MSW] SSE stream started for session ${sessionId}`);
 
       // 현재 턴 가져오기
@@ -181,10 +190,17 @@ export const surveyRunnerHandlers = [
             const questionEvent = `event: question\ndata: ${JSON.stringify(nextQuestion)}\n\n`;
             controller.enqueue(encoder.encode(questionEvent));
             console.log(`[MSW] Sent question ${nextQuestion.turn_num}`);
-            // 질문 전송 후 스트림 닫기 (사용자 응답 대기)
+
+            // 브라우저가 메시지를 받을 시간을 주고 스트림 닫기
+            await delay(100);
             controller.close();
           } else {
-            // 질문이 없으면 done 이벤트
+            // 질문이 없으면 먼저 감사 인사 info 이벤트 전송
+            const infoEvent = `event: info\ndata: 설문에 참여해 주셔서 감사합니다! 🙏 소중한 의견은 게임 개선에 큰 도움이 됩니다.\n\n`;
+            controller.enqueue(encoder.encode(infoEvent));
+            console.log(`[MSW] Sent thank you info event`);
+
+            // done 이벤트
             const doneEvent = `event: done\ndata: {}\n\n`;
             controller.enqueue(encoder.encode(doneEvent));
             console.log(`[MSW] Sent done event`);

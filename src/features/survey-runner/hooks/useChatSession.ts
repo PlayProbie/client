@@ -5,14 +5,16 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { restoreChatSession, sendMessage } from '../api';
+import { sendMessage } from '../api';
 import { useChatStore } from '../store/useChatStore';
 import type { UseChatSessionOptions, UseChatSessionReturn } from '../types';
 import { useChatSSE } from './useChatSSE';
 
+// Strict Mode에서 remount 시 중복 초기화 방지를 위한 모듈 레벨 Set
+const initializedSessions = new Set<string>();
+
 export function useChatSession({
   sessionId,
-  surveyId,
 }: UseChatSessionOptions): UseChatSessionReturn {
   const [isReady, setIsReady] = useState(false);
   const initializedRef = useRef(false);
@@ -23,8 +25,6 @@ export function useChatSession({
     isLoading,
     isComplete,
     error,
-    setSession,
-    restoreMessages,
     addUserMessage,
     addAIMessage,
     setLoading,
@@ -45,6 +45,8 @@ export function useChatSession({
     },
     onInfo: (message) => {
       console.log('[Chat] Info:', message);
+      // info 메시지를 AI 메시지로 표시 (감사 인사 등)
+      addAIMessage(message, -1, 'FIXED', -1);
     },
     onDone: () => {
       console.log('[Chat] Session completed');
@@ -53,12 +55,14 @@ export function useChatSession({
     onError: (err) => {
       console.error('[Chat] SSE error:', err);
       setError(err);
+      setIsReady(false);
     },
     onConnect: () => {
       setConnecting(true);
     },
     onOpen: () => {
       setConnecting(false);
+      setIsReady(true);
     },
     onDisconnect: () => {
       setConnecting(false);
@@ -67,54 +71,40 @@ export function useChatSession({
 
   // 세션 초기화 - 한 번만 실행
   useEffect(() => {
-    // 이미 초기화됐으면 스킵
-    if (initializedRef.current) {
+    console.log('[Chat] Initializing session...', {
+      sessionId,
+      alreadyInitialized: initializedSessions.has(sessionId),
+    });
+
+    // 이미 초기화됐으면 스킵 (모듈 레벨에서 체크하여 Strict Mode 대응)
+    if (!sessionId || initializedSessions.has(sessionId)) {
       return;
     }
+
+    // 초기화 시작 전에 Set에 추가하여 중복 방지
+    initializedSessions.add(sessionId);
     initializedRef.current = true;
 
     const initSession = async () => {
       try {
-        // surveyId가 있으면 세션 복원 시도
-        if (surveyId) {
-          const response = await restoreChatSession({
-            surveyId,
-            sessionId,
-          });
-
-          const { session, excerpts, sse_url: sseUrl } = response.result;
-
-          setSession(
-            session.session_id,
-            session.survey_id,
-            session.status,
-            sseUrl
-          );
-
-          // 기존 대화 복원
-          if (excerpts && excerpts.length > 0) {
-            restoreMessages(excerpts);
-          }
-
-          setIsReady(true);
-
-          // 세션이 진행 중이면 SSE 연결
-          if (session.status === 'IN_PROGRESS') {
-            connect();
-          }
-        } else {
-          // surveyId 없으면 바로 SSE 연결
-          setIsReady(true);
-          connect();
-        }
+        // SSE 연결하여 첫 질문 수신 (isReady는 onOpen에서 설정됨)
+        connect();
+        console.log('[Chat] Session initialized-------------------');
       } catch (err) {
         console.error('[Chat] Failed to init session:', err);
         setError('세션 초기화에 실패했습니다.');
+        // 실패 시 Set에서 제거하여 재시도 가능하게
+        initializedSessions.delete(sessionId);
       }
     };
 
     initSession();
-  }, [connect, restoreMessages, sessionId, setError, setSession, surveyId]);
+
+    // Cleanup: unmount 시 Set에서 제거 (페이지 재방문 시 다시 초기화 가능)
+    return () => {
+      initializedSessions.delete(sessionId);
+    };
+  }, [connect, sessionId, setError]);
 
   // 답변 전송
   const sendAnswer = useCallback(

@@ -15,7 +15,7 @@ export type InterviewLogQType = 'FIXED' | 'TAIL';
 
 /** 채팅 세션 정보 */
 export interface ChatSession {
-  session_id: number;
+  session_id: string;
   survey_id: number;
   tester_id: string;
   status: SurveySessionStatus;
@@ -66,7 +66,7 @@ export interface CreateChatSessionResponse {
 /** 대화 세션 복원 요청 파라미터 */
 export interface RestoreChatSessionParams {
   surveyId: number;
-  sessionId: number;
+  sessionId: string;
 }
 
 /** 대화 세션 복원 결과 데이터 */
@@ -120,7 +120,7 @@ export type SSEEvent =
 
 /** 응답자 대답 전송 요청 파라미터 */
 export interface SendMessageParams {
-  sessionId: number;
+  sessionId: string;
 }
 
 /** 응답자 대답 전송 요청 바디 */
@@ -161,7 +161,7 @@ export interface ChatMessageData {
 
 /** useChatSSE 훅 옵션 */
 export interface UseChatSSEOptions {
-  sessionId: number;
+  sessionId: string;
   onQuestion: (data: SSEQuestionEventData) => void;
   onInfo?: (message: string) => void;
   onDone?: () => void;
@@ -180,7 +180,7 @@ export interface UseChatSSEReturn {
 
 /** useChatSession 훅 옵션 */
 export interface UseChatSessionOptions {
-  sessionId: number;
+  sessionId: string;
   surveyId?: number;
 }
 

@@ -14,7 +14,7 @@ import type {
 /** 채팅 상태 인터페이스 */
 interface ChatState {
   // Session info
-  sessionId: number | null;
+  sessionId: string | null;
   surveyId: number | null;
   status: SurveySessionStatus | null;
   sseUrl: string | null;
@@ -31,7 +31,7 @@ interface ChatState {
 
   // Actions
   setSession: (
-    sessionId: number,
+    sessionId: string,
     surveyId: number,
     status: SurveySessionStatus,
     sseUrl: string

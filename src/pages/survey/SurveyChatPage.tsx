@@ -23,11 +23,12 @@ function SurveyChatPage() {
     sessionId?: number;
   } | null;
 
-  const parsedSessionId = parseInt(sessionId || '0', 10);
+  // sessionId는 문자열로 사용 (UUID 지원)
+  const chatSessionId = sessionId || '';
 
   const { isReady, isComplete, isLoading, error, messages, sendAnswer } =
     useChatSession({
-      sessionId: parsedSessionId,
+      sessionId: chatSessionId,
       surveyId: state?.surveyId,
     });
 
