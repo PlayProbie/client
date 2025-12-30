@@ -6,12 +6,12 @@ import type {
 } from '../types';
 
 /**
- * POST /surveys/chat/{survey_id} - 새 대화 세션 생성
+ * POST /surveys/interview/{survey_id} - 새 대화 세션 생성
  */
 export async function createChatSession(
   params: CreateChatSessionParams
 ): Promise<CreateChatSessionResponse> {
-  const url = `${API_BASE_URL}/surveys/chat/${params.surveyId}`;
+  const url = `${API_BASE_URL}/surveys/interview/${params.surveyId}`;
 
   const response = await fetch(url, {
     method: 'POST',

@@ -13,7 +13,7 @@ const generateMockSessionItems = (count: number): SurveyResultListItem[] => {
   const statuses: SurveySessionStatus[] = [
     'COMPLETED',
     'IN_PROGRESS',
-    'ABANDONED',
+    'DROPPED',
   ];
   const questions = [
     '튜토리얼이 이해하기 쉬웠나요?',
@@ -24,7 +24,7 @@ const generateMockSessionItems = (count: number): SurveyResultListItem[] => {
   ];
 
   return Array.from({ length: count }, (_, i) => ({
-    session_id: 1000 + i,
+    session_id: `session-uuid-${1000 + i}`,
     survey_name: `UX/UI 설문조사 #${i + 1}`,
     survey_id: 100 + Math.floor(i / 10),
     tester_id: `tester-uuid-${i}`,
@@ -98,7 +98,7 @@ export const surveyResponseHandlers = [
       await delay(250);
 
       const surveyId = parseInt(params.surveyId as string, 10);
-      const sessionId = parseInt(params.sessionId as string, 10);
+      const sessionId = params.sessionId as string;
 
       const response: GetSurveyResultDetailsResponse = {
         result: {

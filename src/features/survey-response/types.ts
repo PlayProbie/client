@@ -7,14 +7,14 @@
 // ----------------------------------------
 
 /** 설문 세션 상태 */
-export type SurveySessionStatus = 'COMPLETED' | 'IN_PROGRESS' | 'ABANDONED';
+export type SurveySessionStatus = 'COMPLETED' | 'IN_PROGRESS' | 'DROPPED';
 
 /** 질문/답변 타입 */
 export type InterviewLogQType = 'FIXED' | 'TAIL';
 
 /** 설문 세션 정보 */
 export interface SurveySession {
-  session_id: number;
+  session_id: string;
   survey_name: string;
   survey_id: number;
   tester_id: string;
@@ -92,7 +92,7 @@ export interface GetSurveyResultsListResponse {
 /** 응답 세부내용 요청 파라미터 */
 export interface GetSurveyResultDetailsParams {
   surveyId: number;
-  sessionId: number;
+  sessionId: string;
 }
 
 /** 응답 세부내용 데이터 */

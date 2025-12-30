@@ -32,7 +32,7 @@ type SurveyResultDetailDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   surveyId: number;
-  sessionId: number;
+  sessionId: string;
 };
 
 /**

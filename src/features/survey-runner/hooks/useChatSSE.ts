@@ -64,7 +64,7 @@ export function useChatSSE({
 
     onConnectRef.current?.();
 
-    const url = `${API_BASE_URL}/chat/sessions/${sessionId}/stream`;
+    const url = `${API_BASE_URL}/interview/${sessionId}/stream`;
     const eventSource = new EventSource(url);
     eventSourceRef.current = eventSource;
 

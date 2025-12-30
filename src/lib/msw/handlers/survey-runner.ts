@@ -68,14 +68,14 @@ const sessionTurns = new Map<string, number>();
  * Survey Runner (Chat) MSW Handlers
  */
 export const surveyRunnerHandlers = [
-  // POST /api/surveys/chat/{survey_id} - 새 대화 세션 생성
+  // POST /api/surveys/interview/{survey_id} - 새 대화 세션 생성
   http.post(
-    'https://playprobie.com/api/surveys/chat/:surveyId',
+    'https://playprobie.com/api/surveys/interview/:surveyId',
     async ({ params }) => {
       await delay(200);
 
       const surveyId = parseInt(params.surveyId as string, 10);
-      const sessionId = `${Math.floor(Math.random() * 10000) + 1}`;
+      const sessionId = `session-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
 
       // 새 세션 턴 초기화
       sessionTurns.set(sessionId, 0);
@@ -88,7 +88,7 @@ export const surveyRunnerHandlers = [
             tester_id: `tester-uuid-${Date.now()}`,
             status: 'IN_PROGRESS',
           },
-          sse_url: `/surveys/chat/sessions/${sessionId}`,
+          sse_url: `/interview/${sessionId}/stream`,
         },
       };
 
@@ -96,9 +96,9 @@ export const surveyRunnerHandlers = [
     }
   ),
 
-  // GET /api/surveys/chat/{survey_id}/{session_id} - 대화 세션 복원
+  // GET /api/surveys/interview/{survey_id}/{session_id} - 대화 세션 복원
   http.get(
-    'https://playprobie.com/api/surveys/chat/:surveyId/:sessionId',
+    'https://playprobie.com/api/surveys/interview/:surveyId/:sessionId',
     async ({ params }) => {
       await delay(250);
 
@@ -123,7 +123,7 @@ export const surveyRunnerHandlers = [
             status: 'IN_PROGRESS',
           },
           excerpts,
-          sse_url: `/chat/sessions/${sessionId}/stream`,
+          sse_url: `/interview/${sessionId}/stream`,
         },
       };
 
@@ -131,9 +131,9 @@ export const surveyRunnerHandlers = [
     }
   ),
 
-  // POST /api/chat/sessions/{session_id}/messages - 응답자 대답 전송
+  // POST /api/interview/{session_id}/messages - 응답자 대답 전송
   http.post(
-    'https://playprobie.com/api/chat/sessions/:sessionId/messages',
+    'https://playprobie.com/api/interview/:sessionId/messages',
     async ({ params, request }) => {
       await delay(200);
 
@@ -165,9 +165,9 @@ export const surveyRunnerHandlers = [
     }
   ),
 
-  // GET /api/chat/sessions/{session_id}/stream - SSE 스트림
+  // GET /api/interview/{session_id}/stream - SSE 스트림
   http.get(
-    'https://playprobie.com/api/chat/sessions/:sessionId/stream',
+    'https://playprobie.com/api/interview/:sessionId/stream',
     async ({ params }) => {
       const sessionId = params.sessionId as string;
       console.log(`[MSW] SSE stream started for session ${sessionId}`);

@@ -40,7 +40,7 @@ export interface SavedChatLog {
 }
 
 // ----------------------------------------
-// POST /surveys/chat/{survey_id} - 새 대화 세션 생성
+// POST /surveys/interview/{survey_id} - 새 대화 세션 생성
 // ----------------------------------------
 
 /** 새 대화 세션 생성 요청 파라미터 */
@@ -60,7 +60,7 @@ export interface CreateChatSessionResponse {
 }
 
 // ----------------------------------------
-// GET /surveys/chat/{survey_id}/{session_id} - 대화 세션 복원
+// GET /surveys/interview/{survey_id}/{session_id} - 대화 세션 복원
 // ----------------------------------------
 
 /** 대화 세션 복원 요청 파라미터 */
@@ -82,7 +82,7 @@ export interface RestoreChatSessionResponse {
 }
 
 // ----------------------------------------
-// SSE Events - GET /chat/sessions/{session_id}/stream
+// SSE Events - GET /interview/{session_id}/stream
 // ----------------------------------------
 
 /** SSE 이벤트 타입 */
@@ -115,7 +115,7 @@ export type SSEEvent =
   | { event: 'error'; data: SSEErrorEventData };
 
 // ----------------------------------------
-// POST /chat/sessions/{session_id}/messages - 응답자 대답 전송
+// POST /interview/{session_id}/messages - 응답자 대답 전송
 // ----------------------------------------
 
 /** 응답자 대답 전송 요청 파라미터 */
@@ -135,7 +135,7 @@ export interface SendMessageResult {
   saved_log: SavedChatLog;
 }
 
-/** POST /chat/sessions/{session_id}/messages Response */
+/** POST /interview/{session_id}/messages Response */
 export interface SendMessageResponse {
   result: SendMessageResult;
 }
