@@ -1,34 +1,52 @@
 import './App.css';
 
-import { useState } from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 
-import logo from '/logo.png';
+import SurveyCreatePage from '@/pages/survey/SurveyCreatePage';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5분
+      retry: 1,
+    },
+  },
+});
 
 function App() {
-  const [count, setCount] = useState(0);
-
   return (
-    <>
-      <div>
-        <a href="/">
-          <img
-            src={logo}
-            className="logo"
-            alt="PlayProbie logo"
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <Routes>
+          {/* '/' 경로는 '/survey/create/step-0'으로 리다이렉트 */}
+          <Route
+            path="/"
+            element={
+              <Navigate
+                to="/survey/create/step-0"
+                replace
+              />
+            }
           />
-        </a>
-      </div>
-      <h1>PlayProbie</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">Click on the logo to learn more</p>
-    </>
+          {/* 설문 생성 기본 경로도 step-0으로 리다이렉트 */}
+          <Route
+            path="/survey/create"
+            element={
+              <Navigate
+                to="/survey/create/step-0"
+                replace
+              />
+            }
+          />
+          {/* 각 step별 경로 */}
+          <Route
+            path="/survey/create/:step"
+            element={<SurveyCreatePage />}
+          />
+        </Routes>
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 }
 
