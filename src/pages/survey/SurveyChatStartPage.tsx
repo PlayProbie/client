@@ -29,11 +29,12 @@ function SurveyChatStartPage() {
         const { session, sse_url: sseUrl } = response.result;
 
         // 세션 정보를 state로 전달하면서 리다이렉트
-        navigate(sseUrl, {
+        navigate(`/surveys/chat/sessions/${session.session_id}`, {
           replace: true,
           state: {
             surveyId: session.survey_id,
             sessionId: session.session_id,
+            sseUrl: sseUrl,
           },
         });
       } catch (err) {

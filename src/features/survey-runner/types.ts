@@ -17,7 +17,6 @@ export type InterviewLogQType = 'FIXED' | 'TAIL';
 export interface ChatSession {
   session_id: string;
   survey_id: number;
-  tester_id: string;
   status: SurveySessionStatus;
 }
 
@@ -52,6 +51,7 @@ export interface CreateChatSessionParams {
 export interface CreateChatSessionResult {
   session: ChatSession;
   sse_url: string;
+  question_text: string;
 }
 
 /** POST /surveys/chat/{survey_id} Response */
@@ -127,6 +127,7 @@ export interface SendMessageParams {
 export interface SendMessageRequest {
   turn_num: number;
   answer_text: string;
+  question_text: string;
 }
 
 /** 응답자 대답 전송 결과 데이터 */

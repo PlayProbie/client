@@ -73,8 +73,7 @@ const mockQuestions = [
   {
     fixed_q_id: 3,
     q_type: 'FIXED' as const,
-    question_text:
-      '게임을 다시 플레이하고 싶은 욕구가 드시나요? 그 이유는 무엇인가요?',
+    question_text: '게임을 다시 플레이하고 싶은 욕구가 드시나요?',
     turn_num: 4,
   },
 ];
@@ -105,10 +104,10 @@ export const surveyRunnerHandlers = [
         session: {
           session_id: sessionId,
           survey_id: surveyId,
-          tester_id: `tester-uuid-${Date.now()}`,
           status: 'IN_PROGRESS',
         },
-        sse_url: `/surveys/chat/sessions/${sessionId}`,
+        sse_url: `/interview/sessions/${sessionId}/stream`,
+        question_text: mockQuestions[0]?.question_text || '',
       },
     };
 
@@ -148,7 +147,7 @@ export const surveyRunnerHandlers = [
             controller.close();
           } else {
             // 질문이 없으면 먼저 감사 인사 info 이벤트 전송
-            const infoEvent = `event: info\ndata: 설문에 참여해 주셔서 감사합니다! 🙏 소중한 의견은 게임 개선에 큰 도움이 됩니다.\n\n`;
+            const infoEvent = `event: info\ndata: 설문에 참여해 주셔서 감사합니다! 소중한 의견은 게임 개선에 큰 도움이 됩니다. 🙏\n\n`;
             controller.enqueue(encoder.encode(infoEvent));
             console.log(`[MSW] Sent thank you info event`);
 
@@ -236,11 +235,10 @@ export const surveyRunnerHandlers = [
           session: {
             session_id: sessionId,
             survey_id: surveyId,
-            tester_id: 'tester-uuid-restored',
             status: 'IN_PROGRESS',
           },
           excerpts,
-          sse_url: `/surveys/chat/sessions/${sessionId}`,
+          sse_url: `/interview/sessions/${sessionId}/stream`,
         },
       };
 

@@ -114,13 +114,23 @@ export function useChatSession({
       }
 
       try {
+        // 현재 턴의 AI 질문 텍스트 찾기
+        const currentQuestion = messages.find(
+          (m) => m.type === 'ai' && m.turnNum === currentTurnNum
+        );
+        const questionText = currentQuestion?.content ?? '';
+
         // 낙관적 업데이트: UI에 먼저 표시
         addUserMessage(answerText, currentTurnNum);
 
         // 서버에 전송
         await sendMessage(
           { sessionId },
-          { turn_num: currentTurnNum, answer_text: answerText }
+          {
+            turn_num: currentTurnNum,
+            answer_text: answerText,
+            question_text: questionText,
+          }
         );
 
         // 메시지 전송 후 다음 질문을 받기 위해 SSE 재연결
@@ -134,6 +144,7 @@ export function useChatSession({
     [
       sessionId,
       currentTurnNum,
+      messages,
       isLoading,
       isComplete,
       addUserMessage,
