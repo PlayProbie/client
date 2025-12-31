@@ -54,7 +54,7 @@ function StepConfirm() {
 
       {/* 게임 정보 */}
       <section className="bg-surface border-border space-y-4 rounded-xl border p-5 shadow-sm">
-        <h4 className="text-sm font-semibold">게임 정보</h4>
+        <h4 className="pb-3 text-lg font-bold">게임 정보</h4>
         <dl className="grid grid-cols-[120px_1fr] gap-x-4 gap-y-3 text-sm">
           <dt className="text-muted-foreground">게임 이름</dt>
           <dd className="font-medium">{gameName || '-'}</dd>
@@ -67,7 +67,7 @@ function StepConfirm() {
             <p className="text-muted-foreground w-[120px] text-center text-sm">
               게임 설명
             </p>
-            <p className="bg-muted mx-8 rounded-lg p-3 text-start text-sm leading-relaxed">
+            <p className="bg-muted mx-8 rounded-lg p-3 text-start text-sm leading-relaxed whitespace-pre-wrap">
               {gameContext}
             </p>
           </div>
@@ -76,7 +76,7 @@ function StepConfirm() {
 
       {/* 설문 정보 */}
       <section className="bg-surface border-border space-y-4 rounded-xl border p-5 shadow-sm">
-        <h4 className="text-sm font-semibold">설문 정보</h4>
+        <h4 className="pb-3 text-lg font-bold">설문 정보</h4>
         <dl className="grid grid-cols-[120px_1fr] gap-x-4 gap-y-3 text-sm">
           <dt className="text-muted-foreground">설문 이름</dt>
           <dd className="font-medium">{surveyName || '-'}</dd>
@@ -94,7 +94,7 @@ function StepConfirm() {
       {/* 선택된 질문 */}
       {selectedQuestions.length > 0 && (
         <section className="bg-surface border-border space-y-4 rounded-xl border p-5 shadow-sm">
-          <h4 className="text-sm font-semibold">
+          <h4 className="pb-3 text-lg font-bold">
             선택된 질문{' '}
             <span className="text-primary">({selectedQuestions.length}개)</span>
           </h4>

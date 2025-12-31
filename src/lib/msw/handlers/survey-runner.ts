@@ -68,106 +68,40 @@ const sessionTurns = new Map<string, number>();
 
 /**
  * Survey Runner (Chat) MSW Handlers
+ *
+ * NOTE: Handler order matters! More specific paths (with literal segments like '/stream')
+ * must come BEFORE more generic paths (with only params like '/:surveyId/:sessionId')
+ * to prevent incorrect route matching.
  */
 export const surveyRunnerHandlers = [
-  // POST /api/surveys/interview/{survey_id} - 새 대화 세션 생성
-  http.post(
-    `${MSW_API_BASE_URL}/surveys/interview/:surveyId`,
-    async ({ params }) => {
-      await delay(200);
+  // POST /api/interview/{survey_id} - 새 대화 세션 생성
+  http.post(`${MSW_API_BASE_URL}/interview/:surveyId`, async ({ params }) => {
+    await delay(200);
 
-      const surveyId = parseInt(params.surveyId as string, 10);
-      const sessionId = `session-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
+    const surveyId = parseInt(params.surveyId as string, 10);
+    const sessionId = `session-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
 
-      // 새 세션 턴 초기화
-      sessionTurns.set(sessionId, 0);
+    // 새 세션 턴 초기화
+    sessionTurns.set(sessionId, 0);
 
-      const response: CreateChatSessionResponse = {
-        result: {
-          session: {
-            session_id: sessionId,
-            survey_id: surveyId,
-            tester_id: `tester-uuid-${Date.now()}`,
-            status: 'IN_PROGRESS',
-          },
-          sse_url: `/interview/${sessionId}/stream`,
+    const response: CreateChatSessionResponse = {
+      result: {
+        session: {
+          session_id: sessionId,
+          survey_id: surveyId,
+          tester_id: `tester-uuid-${Date.now()}`,
+          status: 'IN_PROGRESS',
         },
-      };
+        sse_url: `/surveys/chat/sessions/${sessionId}`,
+      },
+    };
 
-      return HttpResponse.json(response, { status: 201 });
-    }
-  ),
-
-  // GET /api/surveys/interview/{survey_id}/{session_id} - 대화 세션 복원
-  http.get(
-    `${MSW_API_BASE_URL}/surveys/interview/:surveyId/:sessionId`,
-    async ({ params }) => {
-      await delay(250);
-
-      const surveyId = parseInt(params.surveyId as string, 10);
-      const sessionId = params.sessionId as string;
-
-      // 새 세션이면 턴 초기화 (기존 대화 없음)
-      if (!sessionTurns.has(sessionId)) {
-        sessionTurns.set(sessionId, 0);
-      }
-
-      const currentTurn = sessionTurns.get(sessionId) || 0;
-      // 기존 대화가 있는 경우에만 excerpts 반환
-      const excerpts = currentTurn > 0 ? generateMockExcerpts(currentTurn) : [];
-
-      const response: RestoreChatSessionResponse = {
-        result: {
-          session: {
-            session_id: sessionId,
-            survey_id: surveyId,
-            tester_id: 'tester-uuid-restored',
-            status: 'IN_PROGRESS',
-          },
-          excerpts,
-          sse_url: `/interview/${sessionId}/stream`,
-        },
-      };
-
-      return HttpResponse.json(response);
-    }
-  ),
-
-  // POST /api/interview/{session_id}/messages - 응답자 대답 전송
-  http.post(
-    `${MSW_API_BASE_URL}/interview/:sessionId/messages`,
-    async ({ params, request }) => {
-      await delay(200);
-
-      const sessionId = params.sessionId as string;
-      const body = (await request.json()) as SendMessageRequest;
-
-      // 턴 증가
-      const currentTurn = sessionTurns.get(sessionId) || body.turn_num;
-      sessionTurns.set(sessionId, currentTurn + 1);
-
-      const response: SendMessageResponse = {
-        result: {
-          accepted: true,
-          saved_log: {
-            turn_num: body.turn_num,
-            q_type: 'TAIL',
-            fixed_q_id: 10,
-            question_text: '어느 지점에서 막혔나요?',
-            answer_text: body.answer_text,
-            answered_at: new Date().toISOString(),
-          },
-        },
-      };
-
-      // sessionId를 사용하여 로그 출력 (사용되지 않는 변수 경고 방지)
-      console.log(`[MSW] Message saved for session ${sessionId}`);
-
-      return HttpResponse.json(response, { status: 201 });
-    }
-  ),
+    return HttpResponse.json(response, { status: 201 });
+  }),
 
   // GET /api/interview/{session_id}/stream - SSE 스트림
+  // NOTE: This handler MUST come before /:surveyId/:sessionId to prevent
+  // '/interview/xxx/stream' from matching as surveyId='xxx', sessionId='stream'
   http.get(
     `${MSW_API_BASE_URL}/interview/:sessionId/stream`,
     async ({ params }) => {
@@ -219,6 +153,76 @@ export const surveyRunnerHandlers = [
           Connection: 'keep-alive',
         },
       });
+    }
+  ),
+
+  // POST /api/interview/{session_id}/messages - 응답자 대답 전송
+  http.post(
+    `${MSW_API_BASE_URL}/interview/:sessionId/messages`,
+    async ({ params, request }) => {
+      await delay(200);
+
+      const sessionId = params.sessionId as string;
+      const body = (await request.json()) as SendMessageRequest;
+
+      // 턴 증가
+      const currentTurn = sessionTurns.get(sessionId) || body.turn_num;
+      sessionTurns.set(sessionId, currentTurn + 1);
+
+      const response: SendMessageResponse = {
+        result: {
+          accepted: true,
+          saved_log: {
+            turn_num: body.turn_num,
+            q_type: 'TAIL',
+            fixed_q_id: 10,
+            question_text: '어느 지점에서 막혔나요?',
+            answer_text: body.answer_text,
+            answered_at: new Date().toISOString(),
+          },
+        },
+      };
+
+      // sessionId를 사용하여 로그 출력 (사용되지 않는 변수 경고 방지)
+      console.log(`[MSW] Message saved for session ${sessionId}`);
+
+      return HttpResponse.json(response, { status: 201 });
+    }
+  ),
+
+  // GET /api/interview/{survey_id}/{session_id} - 대화 세션 복원
+  // NOTE: This handler MUST come after more specific paths like /:sessionId/stream
+  http.get(
+    `${MSW_API_BASE_URL}/interview/:surveyId/:sessionId`,
+    async ({ params }) => {
+      await delay(250);
+
+      const surveyId = parseInt(params.surveyId as string, 10);
+      const sessionId = params.sessionId as string;
+
+      // 새 세션이면 턴 초기화 (기존 대화 없음)
+      if (!sessionTurns.has(sessionId)) {
+        sessionTurns.set(sessionId, 0);
+      }
+
+      const currentTurn = sessionTurns.get(sessionId) || 0;
+      // 기존 대화가 있는 경우에만 excerpts 반환
+      const excerpts = currentTurn > 0 ? generateMockExcerpts(currentTurn) : [];
+
+      const response: RestoreChatSessionResponse = {
+        result: {
+          session: {
+            session_id: sessionId,
+            survey_id: surveyId,
+            tester_id: 'tester-uuid-restored',
+            status: 'IN_PROGRESS',
+          },
+          excerpts,
+          sse_url: `/surveys/chat/sessions/${sessionId}`,
+        },
+      };
+
+      return HttpResponse.json(response);
     }
   ),
 ];

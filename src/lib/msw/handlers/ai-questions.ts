@@ -30,7 +30,7 @@ export const aiQuestionsHandlers = [
         result: mockQuestions,
       };
 
-      return HttpResponse.json(response, { status: 200 });
+      return HttpResponse.json(response, { status: 201 });
     }
   ),
 ];

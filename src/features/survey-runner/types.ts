@@ -40,7 +40,7 @@ export interface SavedChatLog {
 }
 
 // ----------------------------------------
-// POST /surveys/interview/{survey_id} - 새 대화 세션 생성
+// POST /interview/{survey_id} - 새 대화 세션 생성
 // ----------------------------------------
 
 /** 새 대화 세션 생성 요청 파라미터 */
@@ -60,7 +60,7 @@ export interface CreateChatSessionResponse {
 }
 
 // ----------------------------------------
-// GET /surveys/interview/{survey_id}/{session_id} - 대화 세션 복원
+// GET /interview/{survey_id}/{session_id} - 대화 세션 복원
 // ----------------------------------------
 
 /** 대화 세션 복원 요청 파라미터 */

@@ -6,12 +6,12 @@ import type {
 } from '../types';
 
 /**
- * GET /surveys/interview/{survey_id}/{session_id} - 대화 세션 복원
+ * GET /interview/{survey_id}/{session_id} - 대화 세션 복원
  */
 export async function restoreChatSession(
   params: RestoreChatSessionParams
 ): Promise<RestoreChatSessionResponse> {
-  const url = `${API_BASE_URL}/surveys/interview/${params.surveyId}/${params.sessionId}`;
+  const url = `${API_BASE_URL}/interview/${params.surveyId}/${params.sessionId}`;
 
   const response = await fetch(url, {
     method: 'GET',

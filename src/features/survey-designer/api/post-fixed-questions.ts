@@ -6,12 +6,12 @@ import type {
 } from '../types';
 
 /**
- * POST /surveys/fixed_questions - 고정 질문 생성
+ * POST /surveys/fixed-questions - 고정 질문 생성
  */
 export async function postFixedQuestions(
   data: CreateFixedQuestionsRequest
 ): Promise<CreateFixedQuestionsResponse> {
-  const response = await fetch(`${API_BASE_URL}/surveys/fixed_questions`, {
+  const response = await fetch(`${API_BASE_URL}/surveys/fixed-questions`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

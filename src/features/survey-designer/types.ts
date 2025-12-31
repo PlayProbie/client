@@ -93,7 +93,7 @@ export interface QuestionFeedbackResponse {
 }
 
 // ----------------------------------------
-// POST /surveys/fixed_questions - 고정 질문 생성
+// POST /surveys/fixed-questions - 고정 질문 생성
 // ----------------------------------------
 
 /** 고정 질문 항목 */
