@@ -1,4 +1,4 @@
-import { Header } from '@/components/layout/Header';
+import { PageLayout } from '@/components/layout';
 import {
   SurveyResultsSummaryCard,
   SurveyResultsTable,
@@ -16,11 +16,8 @@ function SurveyResponsePage() {
   const { summary, list, isLoading, isError } = useSurveyResults({ gameId });
 
   return (
-    <div className="bg-background min-h-screen">
-      <Header />
+    <PageLayout>
       <main className="container mx-auto max-w-5xl px-4 py-8">
-        <h1 className="mb-8 text-2xl font-bold">설문 응답 결과</h1>
-
         {isLoading && (
           <div className="text-muted-foreground py-12 text-center">
             데이터를 불러오는 중...
@@ -40,7 +37,7 @@ function SurveyResponsePage() {
           </>
         )}
       </main>
-    </div>
+    </PageLayout>
   );
 }
 

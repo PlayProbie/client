@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { Header } from '@/components/layout/Header';
+import { PageLayout } from '@/components/layout';
 import {
   SurveyRegisterComplete,
   SurveyRegisterForm,
@@ -20,8 +20,7 @@ function SurveyCreatePage() {
   };
 
   return (
-    <div className="bg-background min-h-screen">
-      <Header />
+    <PageLayout>
       <main className="container mx-auto max-w-2xl px-4 py-8">
         {isCompleted && surveyUrl ? (
           <SurveyRegisterComplete surveyUrl={surveyUrl} />
@@ -32,7 +31,7 @@ function SurveyCreatePage() {
           </>
         )}
       </main>
-    </div>
+    </PageLayout>
   );
 }
 
