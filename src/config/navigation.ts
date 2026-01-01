@@ -36,13 +36,13 @@ export const NAV_ITEMS: NavItem[] = [
     ],
   },
   {
-    to: '/surveys',
+    to: '/survey',
     label: '설문 관리',
     icon: FlaskConical,
     children: [
-      { to: '/surveys', label: '설문 관리' },
-      { to: '/surveys/create/step-0', label: '설문 생성' },
-      { to: '/surveys/response', label: '설문 응답 결과' },
+      { to: '/survey', label: '설문 관리' },
+      { to: '/survey/create/step-0', label: '설문 생성' },
+      { to: '/survey/response', label: '설문 응답 결과' },
     ],
   },
   {
