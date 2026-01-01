@@ -7,7 +7,7 @@ import { Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import { createChatSession } from '@/features/survey-runner';
+import { createChatSession } from '@/features/survey-session';
 
 function SurveyChatStartPage() {
   const { surveyId } = useParams<{ surveyId: string }>();

@@ -1,5 +1,5 @@
 /**
- * Survey Runner Feature 타입 정의
+ * Survey Session Feature 타입 정의
  * 설문 진행(채팅) 관련 API 타입
  */
 

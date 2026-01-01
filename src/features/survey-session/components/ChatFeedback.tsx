@@ -1,6 +1,7 @@
 /**
  * ChatFeedback - 메시지 피드백 버튼
  * 좋아요/싫어요, 복사 기능
+ * TODO: 좋아요/싫어요 API 연동(컴포넌트 구현만 완료)
  */
 
 import { ClipboardCopy, ThumbsDown, ThumbsUp } from 'lucide-react';

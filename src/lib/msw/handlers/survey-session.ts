@@ -6,7 +6,7 @@ import type {
   RestoreChatSessionResponse,
   SendMessageRequest,
   SendMessageResponse,
-} from '@/features/survey-runner';
+} from '@/features/survey-session';
 
 import { MSW_API_BASE_URL } from '../constants';
 import { toKSTISOString } from '../utils';
@@ -89,7 +89,7 @@ const sessionTurns = new Map<string, number>();
  * must come BEFORE more generic paths (with only params like '/:surveyId/:sessionId')
  * to prevent incorrect route matching.
  */
-export const surveyRunnerHandlers = [
+export const surveySessionHandlers = [
   // POST /api/interview/{survey_id} - 새 대화 세션 생성
   http.post(`${MSW_API_BASE_URL}/interview/:surveyId`, async ({ params }) => {
     await delay(200);

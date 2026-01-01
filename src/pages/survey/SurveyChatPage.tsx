@@ -11,7 +11,7 @@ import {
   ChatInput,
   ChatMessageList,
   useChatSession,
-} from '@/features/survey-runner';
+} from '@/features/survey-session';
 
 function SurveyChatPage() {
   const { sessionId } = useParams<{ sessionId: string }>();
