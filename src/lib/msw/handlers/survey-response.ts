@@ -9,6 +9,7 @@ import type {
 } from '@/features/survey-response';
 
 import { MSW_API_BASE_URL } from '../constants';
+import { toKSTISOString } from '../utils';
 
 // 목업 데이터 생성 헬퍼 - Escape From Duckov 시연용
 const generateMockSessionItems = (count: number): SurveyResultListItem[] => {
@@ -32,7 +33,7 @@ const generateMockSessionItems = (count: number): SurveyResultListItem[] => {
     tester_id: `tester-uuid-${i}`,
     status: statuses[i % statuses.length],
     first_question: questions[i % questions.length],
-    ended_at: new Date(Date.now() - i * 3600000).toISOString(),
+    ended_at: toKSTISOString(new Date(Date.now() - i * 3600000)),
   }));
 };
 

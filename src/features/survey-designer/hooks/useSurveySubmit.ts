@@ -90,11 +90,20 @@ export function useSurveySubmit(options?: UseSurveySubmitOptions) {
       let surveyId: number;
       let surveyUrl: string;
       try {
+        // 날짜를 ISO 8601 형식으로 변환 (YYYY-MM-DD -> YYYY-MM-DDTHH:mm:ss+09:00)
+        const formatToISO = (dateStr: string): string => {
+          if (!dateStr) return '';
+          // 이미 ISO 형식이면 그대로 반환
+          if (dateStr.includes('T')) return dateStr;
+          // YYYY-MM-DD 형식이면 한국 시간(KST) 기준 시작 시간(00:00:00) 추가
+          return `${dateStr}T00:00:00+09:00`;
+        };
+
         const surveyResponse = await postSurvey({
           game_id: gameId,
           survey_name: surveyName || '',
-          started_at: startedAt || '',
-          ended_at: endedAt || '',
+          started_at: formatToISO(startedAt || ''),
+          ended_at: formatToISO(endedAt || ''),
           test_purpose: testPurpose!,
         });
         surveyId = surveyResponse.result.survey_id;

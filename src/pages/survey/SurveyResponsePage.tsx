@@ -10,7 +10,7 @@ import {
  */
 function SurveyResponsePage() {
   // TODO: gameId를 URL 파라미터 또는 상태에서 가져오기
-  const gameId = 'demo-game-id';
+  const gameId = '2';
 
   const { summary, list, isLoading, isError } = useSurveyResults({ gameId });
 

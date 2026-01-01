@@ -6,6 +6,7 @@ import type {
 } from '@/features/survey-designer';
 
 import { MSW_API_BASE_URL, MSW_CLIENT_BASE_URL } from '../constants';
+import { toKSTISOString } from '../utils';
 
 /**
  * POST /api/surveys - 설문 생성 핸들러
@@ -27,7 +28,7 @@ export const surveysHandlers = [
           started_at: body.started_at,
           ended_at: body.ended_at,
           test_purpose: body.test_purpose,
-          created_at: new Date().toISOString(),
+          created_at: toKSTISOString(new Date()),
         },
       };
 

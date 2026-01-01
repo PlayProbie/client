@@ -6,6 +6,7 @@ import type {
 } from '@/features/game/types';
 
 import { MSW_API_BASE_URL } from '../constants';
+import { toKSTISOString } from '../utils';
 
 /**
  * POST /api/games - 게임 생성 핸들러
@@ -24,7 +25,7 @@ export const gamesHandlers = [
           game_name: body.game_name,
           game_context: body.game_context,
           game_genre: body.game_genre,
-          created_at: new Date().toISOString(),
+          created_at: toKSTISOString(new Date()),
         },
       };
 

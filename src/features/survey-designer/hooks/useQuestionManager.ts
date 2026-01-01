@@ -1,8 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 
-import { MOCK_FEEDBACK_MAP } from '@/data/ai-questions.mock';
-
+import { postQuestionFeedback } from '../api';
 import { useSurveyFormStore } from '../store/useSurveyFormStore';
 import type { QuestionFeedbackItem, SurveyFormData } from '../types';
 
@@ -84,26 +83,28 @@ function useQuestionManager() {
   // 특정 질문에 대한 피드백 요청
   const fetchFeedbackForQuestion = useCallback(
     async (question: string): Promise<QuestionFeedbackItem> => {
-      // TODO: 실제 API 연동 - POST /surveys/question-feedback
-      // Mock API 응답 시뮬레이션
-      await new Promise((resolve) => setTimeout(resolve, 300));
+      const { gameName, gameGenre, gameContext, surveyName, testPurpose } =
+        formData;
 
-      const feedback = MOCK_FEEDBACK_MAP[question] || {
-        summary: `"${question}"에 대한 AI 피드백입니다.`,
-        suggestions: [
-          `${question} - 대안 1`,
-          `${question} - 대안 2`,
-          `${question} - 대안 3`,
-        ],
-      };
+      const response = await postQuestionFeedback({
+        game_name: gameName || '',
+        game_context: gameContext || '',
+        game_genre: gameGenre || [],
+        survey_name: surveyName || '',
+        test_purpose: testPurpose!,
+        questions: [question],
+      });
+
+      // API는 배열로 반환하므로 첫 번째 항목 사용
+      const feedback = response.result[0];
 
       return {
         question,
-        summary: feedback.summary,
-        suggestions: feedback.suggestions,
+        summary: feedback?.summary || '',
+        suggestions: feedback?.suggestions || [],
       };
     },
-    []
+    [formData]
   );
 
   // 질문 토글 (선택/해제)

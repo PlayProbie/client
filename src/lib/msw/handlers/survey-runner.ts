@@ -9,6 +9,7 @@ import type {
 } from '@/features/survey-runner';
 
 import { MSW_API_BASE_URL } from '../constants';
+import { toKSTISOString } from '../utils';
 
 // 목업 대화 발췌 데이터 - Escape From Duckov 시연용
 const generateMockExcerpts = (turnCount: number): ChatExcerpt[] => {
@@ -198,7 +199,7 @@ export const surveyRunnerHandlers = [
             fixed_q_id: currentQuestion.fixed_q_id,
             question_text: currentQuestion.question_text,
             answer_text: body.answer_text,
-            answered_at: new Date().toISOString(),
+            answered_at: toKSTISOString(new Date()),
           },
         },
       };
