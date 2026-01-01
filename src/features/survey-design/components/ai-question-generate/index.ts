@@ -1,6 +1,6 @@
 // Components
 export { QuestionEditForm } from './QuestionEditForm';
-export { QuestionFeedbackSummary } from './QuestionFeedbackSummary';
+export { QuestionFeedback } from './QuestionFeedback';
 export { QuestionItem } from './QuestionItem';
 export { QuestionLabel } from './QuestionLabel';
 export { QuestionList } from './QuestionList';
@@ -9,7 +9,7 @@ export { QuestionSuggestions } from './QuestionSuggestions';
 
 // Types
 export type { QuestionEditFormProps } from './QuestionEditForm';
-export type { QuestionFeedbackSummaryProps } from './QuestionFeedbackSummary';
+export type { QuestionFeedbackProps } from './QuestionFeedback';
 export type { QuestionItemProps } from './QuestionItem';
 export type { QuestionLabelProps } from './QuestionLabel';
 export type { QuestionListProps } from './QuestionList';

@@ -46,7 +46,7 @@ function useQuestionFeedback() {
 
       return {
         question,
-        summary: feedback?.summary || '',
+        aiFeedback: feedback?.ai_feedback || '',
         suggestions: feedback?.suggestions || [],
       };
     },

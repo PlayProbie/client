@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import { useQuestionEdit } from '../../hooks/useQuestionEdit';
 import type { QuestionFeedbackItem } from '../../types';
 import { QuestionEditForm } from './QuestionEditForm';
-import { QuestionFeedbackSummary } from './QuestionFeedbackSummary';
+import { QuestionFeedback } from './QuestionFeedback';
 import { QuestionLabel } from './QuestionLabel';
 import { QuestionSuggestions } from './QuestionSuggestions';
 
@@ -103,9 +103,9 @@ function QuestionItem({
         </div>
       </AccordionPrimitive.Header>
 
-      {/* AI Feedback Summary */}
-      <QuestionFeedbackSummary
-        summary={feedback?.summary || ''}
+      {/* AI Feedback */}
+      <QuestionFeedback
+        aiFeedback={feedback?.aiFeedback || ''}
         isFetchingFeedback={isFetchingFeedback}
         hasFeedback={!!feedback}
       />

@@ -83,13 +83,19 @@ export interface QuestionFeedbackRequest {
 /** 질문 피드백 항목 */
 export interface QuestionFeedbackItem {
   question: string;
-  summary: string;
+  aiFeedback: string;
+  suggestions: string[];
+}
+
+export interface QuestionFeedbackResponseItem {
+  question: string;
+  ai_feedback: string;
   suggestions: string[];
 }
 
 /** POST /surveys/question-feedback Response */
 export interface QuestionFeedbackResponse {
-  result: QuestionFeedbackItem[];
+  result: QuestionFeedbackResponseItem[];
 }
 
 // ----------------------------------------

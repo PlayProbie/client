@@ -1,5 +1,5 @@
-type QuestionFeedbackSummaryProps = {
-  summary: string;
+type QuestionFeedbackProps = {
+  aiFeedback: string;
   isFetchingFeedback: boolean;
   hasFeedback: boolean;
 };
@@ -8,11 +8,11 @@ type QuestionFeedbackSummaryProps = {
  * AI 피드백 요약 표시
  * - 피드백 로딩 중 또는 피드백 내용 표시
  */
-function QuestionFeedbackSummary({
-  summary,
+function QuestionFeedback({
+  aiFeedback,
   isFetchingFeedback,
   hasFeedback,
-}: QuestionFeedbackSummaryProps) {
+}: QuestionFeedbackProps) {
   // 피드백 로딩 중
   if (isFetchingFeedback && !hasFeedback) {
     return (
@@ -28,7 +28,7 @@ function QuestionFeedbackSummary({
       <div className="border-border border-t px-4 py-3">
         <p className="text-muted-foreground text-start text-sm">
           <span className="text-primary font-medium">AI: </span>
-          {summary}
+          {aiFeedback}
         </p>
       </div>
     );
@@ -37,5 +37,5 @@ function QuestionFeedbackSummary({
   return null;
 }
 
-export { QuestionFeedbackSummary };
-export type { QuestionFeedbackSummaryProps };
+export { QuestionFeedback };
+export type { QuestionFeedbackProps };

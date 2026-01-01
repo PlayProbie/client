@@ -1,9 +1,9 @@
 import { delay, http, HttpResponse } from 'msw';
 
 import type {
-  QuestionFeedbackItem,
   QuestionFeedbackRequest,
   QuestionFeedbackResponse,
+  QuestionFeedbackResponseItem,
 } from '@/features/survey-design';
 
 import { MSW_API_BASE_URL } from '../constants';
@@ -20,7 +20,7 @@ export const questionFeedbackHandlers = [
       const body = await request.json();
 
       // 각 질문에 대한 피드백 생성
-      const feedbackItems: QuestionFeedbackItem[] = body.questions.map(
+      const feedbackItems: QuestionFeedbackResponseItem[] = body.questions.map(
         (question) => generateFeedback(question)
       );
 
@@ -36,7 +36,7 @@ export const questionFeedbackHandlers = [
 /**
  * 질문에 대한 Mock 피드백 생성 - Escape From Duckov 시연용
  */
-function generateFeedback(question: string): QuestionFeedbackItem {
+function generateFeedback(question: string): QuestionFeedbackResponseItem {
   const summaries = [
     '하드코어 생존 게임의 핵심 경험을 측정하는 좋은 질문입니다.',
     'Extraction Shooter 장르의 특성을 잘 반영한 질문입니다.',
@@ -66,7 +66,7 @@ function generateFeedback(question: string): QuestionFeedbackItem {
 
   return {
     question,
-    summary: summaries[randomIndex],
+    ai_feedback: summaries[randomIndex],
     suggestions: suggestionSets[randomIndex],
   };
 }
