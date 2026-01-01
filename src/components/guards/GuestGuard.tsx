@@ -1,5 +1,6 @@
 import { Navigate, useLocation } from 'react-router-dom';
 
+import { PageSpinner } from '@/components/ui';
 import { useAuthStore } from '@/stores';
 
 interface GuestGuardProps {
@@ -16,11 +17,7 @@ export function GuestGuard({ children }: GuestGuardProps) {
 
   // 인증 상태 로딩 중
   if (isLoading) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="border-primary h-8 w-8 animate-spin rounded-full border-4 border-t-transparent" />
-      </div>
-    );
+    return <PageSpinner />;
   }
 
   // 이미 인증된 경우 원래 가려던 경로 또는 홈으로 리다이렉트
