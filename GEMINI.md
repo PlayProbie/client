@@ -17,6 +17,8 @@ You MUST strictly adhere to the following documentation located in
    in these documents.
 4. **ONLY THEN** proceed to analyze the user request and write code.
 
+---
+
 ## 1. Tech Stack & Versions
 
 - Reference: `.agent/instructions/tech_stack.md`
@@ -42,6 +44,18 @@ You MUST strictly adhere to the following documentation located in
 
 - Reference: `.agent/instructions/naming_conventions.md`
 - Reference: `.agent/instructions/project_structure.md`
+
+## 5. UI Conventions
+
+- Reference: `.agent/instructions/ui_conventions.md`
+- **Routing**: 중앙 집중식 라우팅 (`createBrowserRouter`)
+- **Guards**: `AuthGuard`, `GuestGuard` 사용
+- **Layout**: `PageLayout` (Sidebar + Topbar)
+- **Loading**: `PageSpinner`, `Spinner`, `ButtonLoading`, `Skeleton` 사용
+- **Toast**: `useToast` 훅으로 알림 표시
+- **Button**: `Button`, `SubmitButton`, `ResetButton` variants
+
+---
 
 # General Behavior
 
