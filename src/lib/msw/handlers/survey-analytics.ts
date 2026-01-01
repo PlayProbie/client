@@ -6,7 +6,7 @@ import type {
   GetSurveyResultsSummaryResponse,
   SurveyResultListItem,
   SurveySessionStatus,
-} from '@/features/survey-response';
+} from '@/features/survey-analytics';
 
 import { MSW_API_BASE_URL } from '../constants';
 import { toKSTISOString } from '../utils';
@@ -38,9 +38,9 @@ const generateMockSessionItems = (count: number): SurveyResultListItem[] => {
 };
 
 /**
- * Survey Response MSW Handlers
+ * Survey Analytics MSW Handlers
  */
-export const surveyResponseHandlers = [
+export const surveyAnalyticsHandlers = [
   // GET /api/surveys/results/{game_id} - 전체 응답 요약
   http.get(
     `${MSW_API_BASE_URL}/surveys/results/:gameId`,

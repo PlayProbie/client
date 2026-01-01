@@ -1,5 +1,5 @@
 /**
- * Survey Response Feature 타입 정의
+ * Survey Analytics Feature 타입 정의
  */
 
 // ----------------------------------------

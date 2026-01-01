@@ -2,13 +2,13 @@ import {
   SurveyResultsSummaryCard,
   SurveyResultsTable,
   useSurveyResults,
-} from '@/features/survey-response';
+} from '@/features/survey-analytics';
 
 /**
- * 설문 응답 결과 페이지
- * URL: /survey/response
+ * 설문 분석 결과 페이지
+ * URL: /survey/analytics
  */
-function SurveyResponsePage() {
+function SurveyAnalyticsPage() {
   // TODO: gameId를 URL 파라미터 또는 상태에서 가져오기
   const gameId = '2';
 
@@ -38,4 +38,4 @@ function SurveyResponsePage() {
   );
 }
 
-export default SurveyResponsePage;
+export default SurveyAnalyticsPage;

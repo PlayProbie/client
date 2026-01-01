@@ -31,7 +31,7 @@ src/
 │   ├── game/             # 게임 엔티티 관리, 출시 정보
 │   ├── survey-design/    # AI 실시간 검사, 엔티티 충돌 해결, 질문 설계
 │   ├── survey-runner/    # [핵심] LangGraph 연동, 실시간 꼬리 질문, 응답 로직
-│   ├── analytics/        # 이슈 클러스터링, NPS, IPA 분석, 차트 시각화
+│   ├── survey-analytics/ # 설문 결과 조회, 세션 상세, 응답 통계, 클러스터링
 │   └── reward-commerce/  # 상품 리스트, 장바구니, 결제(Portone), 크레딧
 ├── components/           # 전역 공통 UI (Design System)
 │   ├── ui/               # Button, Input, Modal (Radix UI/Shadcn 스타일)
