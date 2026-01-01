@@ -12,21 +12,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/Dialog';
+import {
+  getSessionStatusClassName,
+  getSessionStatusLabel,
+} from '@/features/survey-session';
 
 import { getSurveyResultDetails } from '../api/get-survey-result-details';
-import type { QuestionAnswerExcerpt, SurveySessionStatus } from '../types';
-
-const STATUS_LABELS: Record<string, string> = {
-  COMPLETED: '완료',
-  IN_PROGRESS: '진행 중',
-  ABANDONED: '중단',
-};
-
-function getStatusClassName(status: SurveySessionStatus): string {
-  if (status === 'COMPLETED') return 'text-success';
-  if (status === 'IN_PROGRESS') return 'text-info';
-  return 'text-destructive';
-}
+import type { QuestionAnswerExcerpt } from '../types';
 
 type SurveyResultDetailDialogProps = {
   open: boolean;
@@ -88,10 +80,9 @@ function SurveyResultDetailDialog({
                 <div>
                   <dt className="text-muted-foreground">상태</dt>
                   <dd
-                    className={`font-medium ${getStatusClassName(details.session.status)}`}
+                    className={`font-medium ${getSessionStatusClassName(details.session.status)}`}
                   >
-                    {STATUS_LABELS[details.session.status] ??
-                      details.session.status}
+                    {getSessionStatusLabel(details.session.status)}
                   </dd>
                 </div>
                 <div>

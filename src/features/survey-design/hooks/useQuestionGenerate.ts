@@ -4,6 +4,9 @@ import { postAiQuestions } from '../api';
 import { useSurveyFormStore } from '../store/useSurveyFormStore';
 import { useQuestionManager } from './useQuestionManager';
 
+/** 기본 AI 질문 생성 개수 */
+const DEFAULT_QUESTION_COUNT = 5;
+
 /**
  * AI 질문 생성 및 관리 훅
  * - 페이지 렌더링 시 POST /surveys/ai-questions API 호출
@@ -41,7 +44,7 @@ function useQuestionGenerate() {
         game_genre: gameGenre,
         survey_name: surveyName,
         test_purpose: testPurpose,
-        count: 5, // 기본 5개 질문 생성
+        count: DEFAULT_QUESTION_COUNT,
       });
 
       const generatedQuestions = response.result;

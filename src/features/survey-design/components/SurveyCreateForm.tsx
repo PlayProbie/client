@@ -113,6 +113,28 @@ function SurveyCreateForm({ className, onComplete }: SurveyCreateFormProps) {
   const stepLabels = SURVEY_FORM_STEPS.map((s) => s.label);
   const isLastStep = currentStep === SURVEY_FORM_STEPS.length - 1;
 
+  /** 현재 Step에 해당하는 컴포넌트 렌더링 */
+  const renderStepContent = () => {
+    const isUserGenerate = searchParams.get('actor') === 'user';
+
+    switch (currentStep) {
+      case 0:
+        return <StepGameInfo control={control} />;
+      case 1:
+        return <StepSurveyInfo control={control} />;
+      case 2:
+        return isUserGenerate ? (
+          <StepQuestionUserGenerate />
+        ) : (
+          <StepQuestionAIGenerate />
+        );
+      case 3:
+        return <StepConfirm />;
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className={cn('flex flex-col gap-8', className)}>
       {/* Step Indicator */}
@@ -125,17 +147,7 @@ function SurveyCreateForm({ className, onComplete }: SurveyCreateFormProps) {
       {/* Form Content */}
       <Form {...form}>
         <form className="flex flex-col gap-6">
-          <div className="min-h-[300px]">
-            {currentStep === 0 && <StepGameInfo control={control} />}
-            {currentStep === 1 && <StepSurveyInfo control={control} />}
-            {currentStep === 2 &&
-              (searchParams.get('actor') === 'user' ? (
-                <StepQuestionUserGenerate />
-              ) : (
-                <StepQuestionAIGenerate />
-              ))}
-            {currentStep === 3 && <StepConfirm />}
-          </div>
+          <div className="min-h-[300px]">{renderStepContent()}</div>
 
           {/* Navigation Buttons */}
           <div className="border-border flex justify-between border-t pt-4">

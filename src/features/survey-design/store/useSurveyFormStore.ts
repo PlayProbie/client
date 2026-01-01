@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-import { type SurveyFormData } from '../types';
+import { SURVEY_FORM_STEPS, type SurveyFormData } from '../types';
 
 type SurveyFormState = {
   // 현재 스텝 인덱스
@@ -24,6 +24,9 @@ type SurveyFormState = {
 
 const getToday = () => new Date().toISOString().split('T')[0];
 
+/** 최대 스텝 인덱스 (0부터 시작) */
+const MAX_STEP_INDEX = SURVEY_FORM_STEPS.length - 1;
+
 const INITIAL_STATE = {
   currentStep: 0,
   formData: {
@@ -40,7 +43,7 @@ export const useSurveyFormStore = create<SurveyFormState>()(
 
       nextStep: () =>
         set((state) => ({
-          currentStep: Math.min(state.currentStep + 1, 4),
+          currentStep: Math.min(state.currentStep + 1, MAX_STEP_INDEX),
         })),
 
       prevStep: () =>
@@ -50,7 +53,7 @@ export const useSurveyFormStore = create<SurveyFormState>()(
 
       goToStep: (step) =>
         set({
-          currentStep: Math.max(0, Math.min(step, 4)),
+          currentStep: Math.max(0, Math.min(step, MAX_STEP_INDEX)),
         }),
 
       updateFormData: (data) =>

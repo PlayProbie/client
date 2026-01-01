@@ -17,6 +17,11 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/Table';
+import {
+  getSessionStatusClassName,
+  getSessionStatusLabel,
+  type SurveySessionStatus,
+} from '@/features/survey-session';
 
 import type { SurveyResultListItem } from '../types';
 import { SurveyResultDetailDialog } from './SurveyResultDetailDialog';
@@ -24,12 +29,6 @@ import { TablePagination } from './TablePagination';
 
 type SurveyResultsTableProps = {
   data: SurveyResultListItem[];
-};
-
-const STATUS_LABELS: Record<string, string> = {
-  COMPLETED: '완료',
-  IN_PROGRESS: '진행 중',
-  ABANDONED: '중단',
 };
 
 // 컬럼별 너비 설정
@@ -78,18 +77,10 @@ function SurveyResultsTable({ data }: SurveyResultsTableProps) {
         header: '상태',
         size: 80,
         cell: (info) => {
-          const status = info.getValue<string>();
+          const status = info.getValue<SurveySessionStatus>();
           return (
-            <span
-              className={
-                status === 'COMPLETED'
-                  ? 'text-success'
-                  : status === 'IN_PROGRESS'
-                    ? 'text-info'
-                    : 'text-destructive'
-              }
-            >
-              {STATUS_LABELS[status] ?? status}
+            <span className={getSessionStatusClassName(status)}>
+              {getSessionStatusLabel(status)}
             </span>
           );
         },
