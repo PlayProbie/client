@@ -1,5 +1,5 @@
 /**
- * Survey Designer Feature 타입 정의
+ * Survey Design Feature 타입 정의
  */
 
 import type { GameGenre } from '@/features/game';

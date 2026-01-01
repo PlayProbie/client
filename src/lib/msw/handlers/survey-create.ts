@@ -3,7 +3,7 @@ import { delay, http, HttpResponse } from 'msw';
 import type {
   CreateSurveyRequest,
   CreateSurveyResponse,
-} from '@/features/survey-designer';
+} from '@/features/survey-design';
 
 import { MSW_API_BASE_URL, MSW_CLIENT_BASE_URL } from '../constants';
 import { toKSTISOString } from '../utils';
@@ -11,7 +11,7 @@ import { toKSTISOString } from '../utils';
 /**
  * POST /api/surveys - 설문 생성 핸들러
  */
-export const surveysHandlers = [
+export const surveyCreateHandlers = [
   http.post<never, CreateSurveyRequest>(
     `${MSW_API_BASE_URL}/surveys`,
     async ({ request }) => {

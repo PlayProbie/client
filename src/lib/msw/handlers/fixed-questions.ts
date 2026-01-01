@@ -3,7 +3,7 @@ import { delay, http, HttpResponse } from 'msw';
 import type {
   CreateFixedQuestionsRequest,
   CreateFixedQuestionsResponse,
-} from '@/features/survey-designer';
+} from '@/features/survey-design';
 
 import { MSW_API_BASE_URL } from '../constants';
 

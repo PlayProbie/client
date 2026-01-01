@@ -7,7 +7,7 @@ import { Form } from '@/components/ui/form';
 import { Step } from '@/components/ui/Step';
 import { cn } from '@/lib/utils';
 
-import { useSurveySubmit } from '../hooks/useSurveySubmit';
+import { useFormSubmit } from '../hooks/useFormSubmit';
 import { useSurveyFormStore } from '../store/useSurveyFormStore';
 import { SURVEY_FORM_STEPS, type SurveyFormData } from '../types';
 import {
@@ -18,15 +18,12 @@ import {
   StepSurveyInfo,
 } from './steps';
 
-type SurveyRegisterFormProps = {
+type SurveyCreateFormProps = {
   className?: string;
   onComplete?: (surveyUrl: string) => void;
 };
 
-function SurveyRegisterForm({
-  className,
-  onComplete,
-}: SurveyRegisterFormProps) {
+function SurveyCreateForm({ className, onComplete }: SurveyCreateFormProps) {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { step } = useParams<{ step: string }>();
@@ -44,7 +41,7 @@ function SurveyRegisterForm({
   const watchedData = useWatch({ control });
 
   // 설문 생성 API 호출 훅
-  const { mutate: submitSurvey, isPending } = useSurveySubmit({
+  const { mutate: submitSurvey, isPending } = useFormSubmit({
     onSuccess: (surveyUrl) => {
       // 임시 저장 초기화 후 완료 콜백 호출
       reset();
@@ -185,5 +182,5 @@ function SurveyRegisterForm({
   );
 }
 
-export { SurveyRegisterForm };
-export type { SurveyRegisterFormProps };
+export { SurveyCreateForm };
+export type { SurveyCreateFormProps };

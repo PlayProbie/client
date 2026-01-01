@@ -6,13 +6,13 @@ import { aiQuestionsHandlers } from './ai-questions';
 import { fixedQuestionsHandlers } from './fixed-questions';
 import { gamesHandlers } from './games';
 import { questionFeedbackHandlers } from './question-feedback';
+import { surveyCreateHandlers } from './survey-create';
 import { surveyResponseHandlers } from './survey-response';
 import { surveyRunnerHandlers } from './survey-runner';
-import { surveysHandlers } from './surveys';
 
 export const handlers = [
   ...gamesHandlers,
-  ...surveysHandlers,
+  ...surveyCreateHandlers,
   ...fixedQuestionsHandlers,
   ...aiQuestionsHandlers,
   ...questionFeedbackHandlers,

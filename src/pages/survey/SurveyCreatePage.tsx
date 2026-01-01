@@ -1,9 +1,7 @@
 import { useState } from 'react';
 
-import {
-  SurveyRegisterComplete,
-  SurveyRegisterForm,
-} from '@/features/survey-designer';
+import { Header } from '@/components/layout/Header';
+import { SurveyCreated, SurveyCreateForm } from '@/features/survey-design';
 
 /**
  * 설문 생성 페이지
@@ -19,16 +17,19 @@ function SurveyCreatePage() {
   };
 
   return (
-    <main className="container mx-auto max-w-2xl px-4 py-8">
-      {isCompleted && surveyUrl ? (
-        <SurveyRegisterComplete surveyUrl={surveyUrl} />
-      ) : (
-        <>
-          <h1 className="mb-8 text-2xl font-bold">설문 등록</h1>
-          <SurveyRegisterForm onComplete={handleComplete} />
-        </>
-      )}
-    </main>
+    <div className="bg-background min-h-screen">
+      <Header />
+      <main className="container mx-auto max-w-2xl px-4 py-8">
+        {isCompleted && surveyUrl ? (
+          <SurveyCreated surveyUrl={surveyUrl} />
+        ) : (
+          <>
+            <h1 className="mb-8 text-2xl font-bold">설문 등록</h1>
+            <SurveyCreateForm onComplete={handleComplete} />
+          </>
+        )}
+      </main>
+    </div>
   );
 }
 

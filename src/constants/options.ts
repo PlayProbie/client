@@ -3,10 +3,7 @@
  */
 
 import { type GameGenre, GameGenreConfig } from '@/features/game';
-import {
-  type TestPurpose,
-  TestPurposeConfig,
-} from '@/features/survey-designer';
+import { type TestPurpose, TestPurposeConfig } from '@/features/survey-design';
 
 /** 공통 Select Option 타입 */
 export interface SelectOption<T> {

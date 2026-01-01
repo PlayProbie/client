@@ -4,7 +4,7 @@ import { postFixedQuestions, postGame, postSurvey } from '../api';
 import { useSurveyFormStore } from '../store/useSurveyFormStore';
 import type { FixedQuestionItem, SurveyFormData } from '../types';
 
-type UseSurveySubmitOptions = {
+type UseFormSubmitOptions = {
   onSuccess?: (surveyUrl: string) => void;
   onError?: (error: Error, step: SubmitStep) => void;
 };
@@ -49,7 +49,7 @@ class SurveySubmitError extends Error {
  * - 롤백이 필요한 경우 transactionState 정보 제공
  * - 서버 측 트랜잭션/롤백 API가 있을 경우 확장 가능
  */
-export function useSurveySubmit(options?: UseSurveySubmitOptions) {
+export function useFormSubmit(options?: UseFormSubmitOptions) {
   const { setSurveyUrl } = useSurveyFormStore();
 
   return useMutation({

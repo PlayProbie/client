@@ -4,7 +4,7 @@ import { useState } from 'react';
 
 import { Button } from '@/components/ui';
 
-type SurveyRegisterCompleteProps = {
+type SurveyCreatedProps = {
   surveyUrl: string;
 };
 
@@ -12,7 +12,7 @@ type SurveyRegisterCompleteProps = {
  * 설문 생성 완료 화면
  * 설문 URL 및 QR 코드 표시
  */
-function SurveyRegisterComplete({ surveyUrl }: SurveyRegisterCompleteProps) {
+function SurveyCreated({ surveyUrl }: SurveyCreatedProps) {
   const [isCopied, setIsCopied] = useState(false);
 
   const handleCopyUrl = async () => {
@@ -95,5 +95,5 @@ function SurveyRegisterComplete({ surveyUrl }: SurveyRegisterCompleteProps) {
   );
 }
 
-export { SurveyRegisterComplete };
-export type { SurveyRegisterCompleteProps };
+export { SurveyCreated };
+export type { SurveyCreatedProps };
