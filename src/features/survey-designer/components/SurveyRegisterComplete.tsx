@@ -2,7 +2,7 @@ import { Check, Copy, PartyPopper } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useState } from 'react';
 
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/components/ui';
 
 type SurveyRegisterCompleteProps = {
   surveyUrl: string;

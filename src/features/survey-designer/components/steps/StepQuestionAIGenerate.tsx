@@ -1,6 +1,6 @@
 import { Plus } from 'lucide-react';
 
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/components/ui';
 
 import { useQuestionGenerate } from '../../hooks/useQuestionGenerate';
 import { QuestionList, QuestionStatusBar } from '../ai-question-generate';

@@ -1,4 +1,4 @@
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/components/ui';
 import { Input } from '@/components/ui/Input';
 
 import { useQuestionUserGenerate } from '../../hooks/useQuestionUserGenerate';

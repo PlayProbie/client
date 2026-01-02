@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/components/ui';
 import { Form } from '@/components/ui/form';
 import { Step } from '@/components/ui/Step';
 import { cn } from '@/lib/utils';

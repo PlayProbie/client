@@ -1,6 +1,6 @@
 import { Pencil } from 'lucide-react';
 
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/components/ui';
 import { Label } from '@/components/ui/Label';
 
 type QuestionLabelProps = {

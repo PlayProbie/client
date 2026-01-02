@@ -8,7 +8,7 @@ import {
 import { Eye } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/components/ui';
 import {
   Table,
   TableBody,
