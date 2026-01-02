@@ -1,4 +1,4 @@
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ScrollArea } from '@/components/ui/ScrollArea';
 import { NAV_ITEMS, SECONDARY_NAV_ITEMS } from '@/config/navigation';
 
 import NavItem from './NavItem';

@@ -3,7 +3,7 @@ import { type ComponentProps } from 'react';
 
 import { cn } from '@/lib/utils';
 
-import { buttonVariants } from './button-variants';
+import { buttonVariants } from './button';
 
 function Pagination({ className, ...props }: ComponentProps<'nav'>) {
   return (

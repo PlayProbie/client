@@ -1,6 +1,6 @@
 import { Check, X } from 'lucide-react';
 
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/components/ui';
 import { Textarea } from '@/components/ui/Textarea';
 
 type QuestionEditFormProps = {

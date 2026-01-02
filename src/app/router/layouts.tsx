@@ -2,7 +2,7 @@ import { Outlet } from 'react-router-dom';
 
 import { AuthGuard, GuestGuard } from '@/components/guards';
 import { PageLayout } from '@/components/layout';
-import { Toaster } from '@/components/ui/toaster';
+import { Toaster } from '@/components/ui/Toaster';
 
 /**
  * RootLayout - 전역 레이아웃 (Toast 등 전역 컴포넌트 포함)

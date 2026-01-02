@@ -1,6 +1,6 @@
 import { RefreshCw } from 'lucide-react';
 
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/components/ui';
 import { cn } from '@/lib/utils';
 
 type QuestionStatusBarProps = {

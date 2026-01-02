@@ -8,7 +8,7 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb';
+} from '@/components/ui/Breadcrumb';
 
 interface BreadcrumbNavProps {
   breadcrumbs: { label: string; to: string }[];
