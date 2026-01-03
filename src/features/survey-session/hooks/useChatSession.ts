@@ -45,12 +45,9 @@ export function useChatSession({
   const { connect } = useChatSSE({
     sessionUuid,
     onConnect: () => {
-      console.log('[Chat] SSE connected');
       setConnecting(true);
     },
     onQuestion: (data) => {
-      console.log('[Chat] Received question:', data.turnNum);
-
       // 첫 번째 질문 전에 인사말 표시
       if (!greetingShownRef.current && data.turnNum === 1) {
         addAIMessage(CHAT_MESSAGES.GREETING, 0, 'FIXED', 0);
@@ -62,28 +59,23 @@ export function useChatSession({
       setLoading(false);
     },
     onToken: (data) => {
-      console.log('[Chat] Received token:', data.questionText);
       appendStreamingToken(data.questionText, data.turnNum);
     },
     onStart: () => {
-      console.log('[Chat] AI processing started');
       setStreaming(true);
     },
-    onDone: (turnNum) => {
-      console.log('[Chat] AI response done:', turnNum);
+    onDone: (_turnNum) => {
       finalizeStreamingMessage();
       setStreaming(false);
       setLoading(false);
     },
     onInterviewComplete: () => {
-      console.log('[Chat] Interview completed');
       finalizeStreamingMessage();
       // 끝인사 메시지 추가
       addAIMessage(CHAT_MESSAGES.FAREWELL, -1, 'FIXED', -1);
       setComplete(true);
     },
     onError: (err) => {
-      console.error('[Chat] SSE error:', err);
       setError(err);
       setIsReady(false);
     },
@@ -100,11 +92,6 @@ export function useChatSession({
 
   // 세션 초기화 - 한 번만 실행
   useEffect(() => {
-    console.log('[Chat] Initializing session...', {
-      sessionUuid,
-      alreadyInitialized: initializedSessions.has(sessionUuid),
-    });
-
     // 이미 초기화됐으면 스킵 (모듈 레벨에서 체크하여 Strict Mode 대응)
     if (!sessionUuid || initializedSessions.has(sessionUuid)) {
       return;
@@ -122,9 +109,7 @@ export function useChatSession({
 
         // SSE 연결하여 첫 번째 질문 수신
         connect();
-        console.log('[Chat] Session initialized-------------------');
-      } catch (err) {
-        console.error('[Chat] Failed to init session:', err);
+      } catch {
         setError('세션 초기화에 실패했습니다.');
         // 실패 시 Set에서 제거하여 재시도 가능하게
         initializedSessions.delete(sessionUuid);
@@ -156,7 +141,6 @@ export function useChatSession({
         const fixedQId = currentQuestion?.fixedQId ?? currentFixedQId;
 
         if (fixedQId === null || fixedQId === undefined) {
-          console.error('[Chat] fixedQId is missing, cannot send message');
           setError('질문 정보가 누락되었습니다. 페이지를 새로고침해 주세요.');
           return;
         }
@@ -176,8 +160,7 @@ export function useChatSession({
         );
 
         // SSE 연결은 유지됨 - 서버에서 다음 질문을 전송
-      } catch (err) {
-        console.error('[Chat] Failed to send message:', err);
+      } catch {
         setError('메시지 전송에 실패했습니다.');
         setLoading(false);
       }

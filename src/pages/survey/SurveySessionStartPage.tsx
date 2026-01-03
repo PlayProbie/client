@@ -43,8 +43,7 @@ function SurveySessionStartPage() {
             sseUrl: sseUrl,
           },
         });
-      } catch (err) {
-        console.error('Failed to create session:', err);
+      } catch {
         setError('세션 생성에 실패했습니다. 잠시 후 다시 시도해주세요.');
       }
     };

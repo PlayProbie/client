@@ -1,5 +1,7 @@
 import { useCallback, useState } from 'react';
 
+import { useToast } from '@/hooks/useToast';
+
 import { useQuestionManager } from './useQuestionManager';
 
 /**
@@ -10,6 +12,7 @@ import { useQuestionManager } from './useQuestionManager';
 function useQuestionUserGenerate() {
   // 공통 질문 관리 로직
   const manager = useQuestionManager();
+  const { toast } = useToast();
 
   // 새 질문 입력 상태
   const [newQuestion, setNewQuestion] = useState('');
@@ -34,12 +37,16 @@ function useQuestionUserGenerate() {
 
       // 입력창 초기화
       setNewQuestion('');
-    } catch (error) {
-      console.error('Failed to add question:', error);
+    } catch {
+      toast({
+        variant: 'destructive',
+        title: '피드백 요청 실패',
+        description: '질문 피드백을 가져오는데 실패했습니다.',
+      });
     } finally {
       manager.setIsFetchingFeedback(false);
     }
-  }, [newQuestion, manager]);
+  }, [newQuestion, manager, toast]);
 
   // 질문 삭제
   const handleRemoveQuestion = useCallback(

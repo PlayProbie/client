@@ -7,6 +7,7 @@
 import { ClipboardCopy, ThumbsDown, ThumbsUp } from 'lucide-react';
 import { type ComponentProps, useState } from 'react';
 
+import { useToast } from '@/hooks/useToast';
 import { cn } from '@/lib/utils';
 
 type ChatFeedbackProps = ComponentProps<'div'> & {
@@ -23,6 +24,8 @@ export function ChatFeedback({
   const [feedback, setFeedback] = useState<'up' | 'down' | null>(null);
   const [copied, setCopied] = useState(false);
 
+  const { toast } = useToast();
+
   const handleFeedback = (type: 'up' | 'down') => {
     setFeedback(type);
     onFeedback?.(type);
@@ -33,8 +36,12 @@ export function ChatFeedback({
       await navigator.clipboard.writeText(messageContent);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error('Failed to copy:', err);
+    } catch {
+      toast({
+        variant: 'destructive',
+        title: '복사 실패',
+        description: '클립보드에 복사하는데 실패했습니다.',
+      });
     }
   };
 

@@ -5,6 +5,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui';
 import { Form } from '@/components/ui/form';
 import { Step } from '@/components/ui/Step';
+import { useToast } from '@/hooks/useToast';
 import { cn } from '@/lib/utils';
 
 import { useFormSubmit } from '../hooks/useFormSubmit';
@@ -27,6 +28,7 @@ function SurveyDesignForm({ className, onComplete }: SurveyDesignFormProps) {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { step } = useParams<{ step: string }>();
+  const { toast } = useToast();
 
   const { currentStep, goToStep, formData, updateFormData, reset } =
     useSurveyFormStore();
@@ -47,9 +49,12 @@ function SurveyDesignForm({ className, onComplete }: SurveyDesignFormProps) {
       reset();
       onComplete?.(surveyUrl);
     },
-    onError: (error) => {
-      console.error('설문 생성 실패:', error);
-      // TODO: 에러 토스트 표시
+    onError: () => {
+      toast({
+        variant: 'destructive',
+        title: '설문 생성 실패',
+        description: '설문 생성에 실패했습니다. 다시 시도해주세요.',
+      });
     },
   });
 

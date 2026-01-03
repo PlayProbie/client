@@ -122,6 +122,7 @@ function SurveyResultsTable({ data }: SurveyResultsTableProps) {
     [handleOpenDetail]
   );
 
+  // eslint-disable-next-line react-hooks/incompatible-library -- TanStack Table은 이 경고가 알려진 이슈이며 정상 동작함
   const table = useReactTable({
     data,
     columns,

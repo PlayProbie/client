@@ -91,7 +91,6 @@ export function useChatSSE({
 
     // connect 이벤트 핸들러
     eventSource.addEventListener('connect', () => {
-      console.log('[SSE] Connected');
       onConnectRef.current?.();
     });
 
@@ -101,8 +100,8 @@ export function useChatSSE({
         const apiData: ApiSSEQuestionEventData = JSON.parse(event.data);
         const data = toSSEQuestionEventData(apiData);
         onQuestionRef.current?.(data);
-      } catch (e) {
-        console.error('[SSE] Failed to parse question event:', e);
+      } catch {
+        // JSON 파싱 실패 무시
       }
     });
 
@@ -112,14 +111,13 @@ export function useChatSSE({
         const apiData: ApiSSETokenEventData = JSON.parse(event.data);
         const data = toSSETokenEventData(apiData);
         onTokenRef.current?.(data);
-      } catch (e) {
-        console.error('[SSE] Failed to parse token event:', e);
+      } catch {
+        // JSON 파싱 실패 무시
       }
     });
 
     // start 이벤트 핸들러 (AI 처리 시작)
     eventSource.addEventListener('start', () => {
-      console.log('[SSE] AI processing started');
       onStartRef.current?.();
     });
 
@@ -127,24 +125,20 @@ export function useChatSSE({
     eventSource.addEventListener('done', (event) => {
       try {
         const data = JSON.parse(event.data);
-        console.log('[SSE] AI response done:', data.turn_num);
         onDoneRef.current?.(data.turn_num);
-      } catch (e) {
-        console.error('[SSE] Failed to parse done event:', e);
+      } catch {
+        // JSON 파싱 실패 무시
       }
     });
 
     // interview_complete 이벤트 핸들러
     eventSource.addEventListener('interview_complete', () => {
-      console.log('[SSE] Interview completed');
       disconnect();
       onInterviewCompleteRef.current?.();
     });
 
     // error 이벤트 핸들러
     eventSource.addEventListener('error', (event) => {
-      console.error('[SSE] Error event:', event);
-
       // MessageEvent인 경우 data 파싱 시도
       if (event instanceof MessageEvent && event.data) {
         try {
@@ -159,8 +153,7 @@ export function useChatSSE({
     });
 
     // 일반 onerror (연결 끊김 등)
-    eventSource.onerror = (error) => {
-      console.error('[SSE] Connection error:', error);
+    eventSource.onerror = () => {
       setIsConnected(false);
 
       // EventSource.CLOSED 상태이면 재연결 시도하지 않음

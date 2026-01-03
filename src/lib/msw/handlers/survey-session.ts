@@ -125,7 +125,6 @@ export const surveySessionHandlers = [
     `${MSW_API_BASE_URL}/interview/:sessionUuid/stream`,
     async ({ params }) => {
       const sessionUuid = params.sessionUuid as string;
-      console.log(`[MSW] SSE stream started for session ${sessionUuid}`);
 
       // 현재 턴 가져오기
       const currentTurn = sessionTurns.get(sessionUuid) || 0;
@@ -139,7 +138,6 @@ export const surveySessionHandlers = [
           // 1. connect 이벤트 즉시 전송
           const connectEvent = `event: connect\ndata: "connected"\n\n`;
           controller.enqueue(encoder.encode(connectEvent));
-          console.log(`[MSW] Sent connect event`);
 
           await delay(300);
 
@@ -148,7 +146,6 @@ export const surveySessionHandlers = [
             // start 이벤트 전송
             const startEvent = `event: start\ndata: ${JSON.stringify({ status: 'processing' })}\n\n`;
             controller.enqueue(encoder.encode(startEvent));
-            console.log(`[MSW] Sent start event`);
 
             await delay(500);
 
@@ -182,7 +179,6 @@ export const surveySessionHandlers = [
           if (nextQuestion) {
             const questionEvent = `event: question\ndata: ${JSON.stringify(nextQuestion)}\n\n`;
             controller.enqueue(encoder.encode(questionEvent));
-            console.log(`[MSW] Sent question ${nextQuestion.turn_num}`);
 
             await delay(100);
             controller.close();
@@ -190,7 +186,7 @@ export const surveySessionHandlers = [
             // 질문이 없으면 interview_complete 이벤트 전송
             const completeEvent = `event: interview_complete\ndata: ${JSON.stringify({ status: 'completed' })}\n\n`;
             controller.enqueue(encoder.encode(completeEvent));
-            console.log(`[MSW] Sent interview_complete event`);
+
             controller.close();
           }
         },
@@ -239,10 +235,6 @@ export const surveySessionHandlers = [
           answer_text: body.answer_text,
         },
       };
-
-      console.log(
-        `[MSW] Message saved for session ${sessionUuid}, turn ${currentTurn} -> ${currentTurn + 1}`
-      );
 
       return HttpResponse.json(response, { status: 201 });
     }

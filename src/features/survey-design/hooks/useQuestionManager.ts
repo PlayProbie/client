@@ -6,6 +6,8 @@
 
 import { useCallback } from 'react';
 
+import { useToast } from '@/hooks/useToast';
+
 import { useQuestionFeedback } from './useQuestionFeedback';
 import { useQuestionSelection } from './useQuestionSelection';
 
@@ -19,6 +21,8 @@ function useQuestionManager() {
 
   // 피드백 관련 로직
   const feedback = useQuestionFeedback();
+
+  const { toast } = useToast();
 
   // 특정 질문에 대한 피드백 요청 (질문 수정 시)
   const handleRequestFeedback = useCallback(
@@ -38,13 +42,17 @@ function useQuestionManager() {
 
         // 피드백 맵 업데이트
         feedback.addFeedback(newQuestion, feedbackItem);
-      } catch (error) {
-        console.error('Failed to request feedback:', error);
+      } catch {
+        toast({
+          variant: 'destructive',
+          title: '피드백 요청 실패',
+          description: '질문 피드백을 가져오는데 실패했습니다.',
+        });
       } finally {
         feedback.setLoadingIndex(null);
       }
     },
-    [selection, feedback]
+    [selection, feedback, toast]
   );
 
   // 추천 대안 클릭 시 질문 변경 및 피드백 요청

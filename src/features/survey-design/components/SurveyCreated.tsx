@@ -3,6 +3,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui';
+import { useToast } from '@/hooks/useToast';
 
 type SurveyCreatedProps = {
   surveyUrl: string;
@@ -14,14 +15,19 @@ type SurveyCreatedProps = {
  */
 function SurveyCreated({ surveyUrl }: SurveyCreatedProps) {
   const [isCopied, setIsCopied] = useState(false);
+  const { toast } = useToast();
 
   const handleCopyUrl = async () => {
     try {
       await navigator.clipboard.writeText(surveyUrl);
       setIsCopied(true);
       setTimeout(() => setIsCopied(false), 2000);
-    } catch (error) {
-      console.error('클립보드 복사 실패:', error);
+    } catch {
+      toast({
+        variant: 'destructive',
+        title: '복사 실패',
+        description: '클립보드에 복사하는데 실패했습니다.',
+      });
     }
   };
 

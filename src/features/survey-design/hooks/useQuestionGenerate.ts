@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { useToast } from '@/hooks/useToast';
+
 import { postAiQuestions } from '../api';
 import { useSurveyFormStore } from '../store/useSurveyFormStore';
 import { useQuestionManager } from './useQuestionManager';
@@ -14,6 +16,7 @@ const DEFAULT_QUESTION_COUNT = 3;
  */
 function useQuestionGenerate() {
   const { formData, updateFormData } = useSurveyFormStore();
+  const { toast } = useToast();
 
   // 공통 질문 관리 로직
   const manager = useQuestionManager();
@@ -63,7 +66,6 @@ function useQuestionGenerate() {
       manager.setFeedbackMap({});
       setHasGenerated(true);
     } catch (error) {
-      console.error('Failed to generate questions:', error);
       setGenerateError(
         error instanceof Error
           ? error.message
@@ -107,8 +109,7 @@ function useQuestionGenerate() {
       // 이미 피드백이 있는 질문은 스킵
       const questionsToFetch = currentManager.questions.filter(
         (q) =>
-          !currentManager.feedbackMap[q] &&
-          !fetchingQuestionsRef.current.has(q)
+          !currentManager.feedbackMap[q] && !fetchingQuestionsRef.current.has(q)
       );
       if (questionsToFetch.length === 0) return;
 
@@ -131,12 +132,14 @@ function useQuestionGenerate() {
             }));
           })
         );
-      } catch (error) {
-        console.error('Failed to fetch feedback:', error);
+      } catch {
+        toast({
+          variant: 'destructive',
+          title: '피드백 요청 실패',
+          description: '질문 피드백을 가져오는데 실패했습니다.',
+        });
       } finally {
-        questionsToFetch.forEach((q) =>
-          fetchingQuestionsRef.current.delete(q)
-        );
+        questionsToFetch.forEach((q) => fetchingQuestionsRef.current.delete(q));
         setPendingFeedbackQuestions((prev) => {
           const next = new Set(prev);
           questionsToFetch.forEach((q) => next.delete(q));
@@ -147,7 +150,7 @@ function useQuestionGenerate() {
     };
 
     fetchAllFeedback();
-  }, [manager.questions]);
+  }, [manager.questions, toast]);
 
   // 질문 재생성
   const handleRegenerate = useCallback(async () => {
@@ -184,7 +187,6 @@ function useQuestionGenerate() {
       // 맨 앞에 추가 + 선택 인덱스 재조정
       manager.addQuestionAtFront(newQuestion);
     } catch (error) {
-      console.error('Failed to add question:', error);
       setGenerateError(
         error instanceof Error
           ? error.message
