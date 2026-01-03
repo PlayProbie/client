@@ -3,6 +3,8 @@ import { type ComponentProps } from 'react';
 
 import { cn } from '@/lib/utils';
 
+import { HeaderActionButton } from './HeaderActionButton';
+
 type HeaderProps = ComponentProps<'header'> & {
   logo?: React.ReactNode;
   showSearch?: boolean;
@@ -52,44 +54,33 @@ function Header({
       {/* Actions Section */}
       <div className="flex items-center gap-2">
         {showSearch && (
-          <button
-            type="button"
+          <HeaderActionButton
+            icon={<Search className="size-5" />}
+            label="검색"
             onClick={onSearchClick}
-            className="text-muted-foreground hover:bg-accent hover:text-accent-foreground flex size-9 items-center justify-center rounded-md transition-colors"
-            aria-label="검색"
-          >
-            <Search className="size-5" />
-          </button>
+          />
         )}
         {showAppGrid && (
-          <button
-            type="button"
+          <HeaderActionButton
+            icon={<Grid3X3 className="size-5" />}
+            label="앱 메뉴"
             onClick={onAppGridClick}
-            className="text-muted-foreground hover:bg-accent hover:text-accent-foreground flex size-9 items-center justify-center rounded-md transition-colors"
-            aria-label="앱 메뉴"
-          >
-            <Grid3X3 className="size-5" />
-          </button>
+          />
         )}
         {showProfile && (
-          <button
-            type="button"
+          <HeaderActionButton
+            icon={<User className="size-5" />}
+            label="프로필"
             onClick={onProfileClick}
-            className="bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground flex size-9 items-center justify-center rounded-full transition-colors"
-            aria-label="프로필"
-          >
-            <User className="size-5" />
-          </button>
+            rounded
+          />
         )}
         {showMenu && (
-          <button
-            type="button"
+          <HeaderActionButton
+            icon={<Menu className="size-5" />}
+            label="메뉴"
             onClick={onMenuClick}
-            className="text-muted-foreground hover:bg-accent hover:text-accent-foreground flex size-9 items-center justify-center rounded-md transition-colors"
-            aria-label="메뉴"
-          >
-            <Menu className="size-5" />
-          </button>
+          />
         )}
       </div>
     </header>

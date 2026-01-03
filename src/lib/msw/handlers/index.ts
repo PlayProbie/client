@@ -6,16 +6,16 @@ import { aiQuestionsHandlers } from './ai-questions';
 import { fixedQuestionsHandlers } from './fixed-questions';
 import { gamesHandlers } from './games';
 import { questionFeedbackHandlers } from './question-feedback';
-import { surveyResponseHandlers } from './survey-response';
-import { surveyRunnerHandlers } from './survey-runner';
-import { surveysHandlers } from './surveys';
+import { surveyAnalyticsHandlers } from './survey-analytics';
+import { surveyDesignHandlers } from './survey-design';
+import { surveySessionHandlers } from './survey-session';
 
 export const handlers = [
   ...gamesHandlers,
-  ...surveysHandlers,
+  ...surveyDesignHandlers,
   ...fixedQuestionsHandlers,
   ...aiQuestionsHandlers,
   ...questionFeedbackHandlers,
-  ...surveyResponseHandlers,
-  ...surveyRunnerHandlers,
+  ...surveyAnalyticsHandlers,
+  ...surveySessionHandlers,
 ];

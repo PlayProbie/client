@@ -9,7 +9,7 @@
 
 | 대상                | 컨벤션            | 예시                                     |
 | ------------------- | ----------------- | ---------------------------------------- |
-| **폴더**            | `kebab-case`      | `features/survey-designer/`, `api/`      |
+| **폴더**            | `kebab-case`      | `features/survey-design/`, `api/`        |
 | **컴포넌트 파일**   | `PascalCase.tsx`  | `QuestionInput.tsx`, `SurveyPreview.tsx` |
 | **Hooks 파일**      | `camelCase.ts`    | `useAuth.ts`, `useEntityMapping.ts`      |
 | **일반 TS/JS 파일** | `kebab-case.ts`   | `api-client.ts`, `date-formatter.ts`     |
@@ -94,7 +94,7 @@ export const surveyKeys = {
 ```tsx
 // use[Domain]Store
 const useAuthStore = create((set) => ({ ... }));
-const useDesignerStore = create((set) => ({ ... }));
+const useDesignStore = create((set) => ({ ... }));
 ```
 
 ### Actions

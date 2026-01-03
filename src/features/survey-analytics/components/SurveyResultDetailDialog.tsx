@@ -1,0 +1,168 @@
+import { useQuery } from '@tanstack/react-query';
+
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/Accordion';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/Dialog';
+import {
+  getSessionStatusClassName,
+  getSessionStatusLabel,
+} from '@/features/survey-session';
+
+import { getSurveyResultDetails } from '../api/get-survey-result-details';
+import type { QuestionAnswerExcerpt, SurveyResultDetails } from '../types';
+
+type SurveyResultDetailDialogProps = {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  surveyId: number;
+  sessionId: string;
+};
+
+/**
+ * 설문 응답 상세 다이얼로그
+ * - 세션별 상세 응답 정보 표시
+ * - 각 질문은 아코디언으로 펼쳐서 확인 가능
+ */
+function SurveyResultDetailDialog({
+  open,
+  onOpenChange,
+  surveyId,
+  sessionId,
+}: SurveyResultDetailDialogProps) {
+  const {
+    data: details,
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ['survey-result-details', surveyId, sessionId],
+    queryFn: () => getSurveyResultDetails({ surveyId, sessionId }),
+    select: (response) => response.result as unknown as SurveyResultDetails,
+    enabled: open && !!surveyId && !!sessionId,
+  });
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={onOpenChange}
+    >
+      <DialogContent className="max-h-[80vh] max-w-2xl overflow-y-auto">
+        <DialogHeader className="text-center">
+          <DialogTitle>응답 상세</DialogTitle>
+        </DialogHeader>
+
+        {isLoading && (
+          <div className="text-muted-foreground py-8 text-center">
+            데이터를 불러오는 중...
+          </div>
+        )}
+
+        {isError && (
+          <div className="text-destructive py-8 text-center">
+            데이터를 불러오는 중 오류가 발생했습니다.
+          </div>
+        )}
+
+        {details && (
+          <div className="space-y-4">
+            {/* 세션 정보 */}
+            <div className="bg-muted/50 rounded-lg p-4">
+              <dl className="grid grid-cols-2 gap-2 text-sm">
+                <div>
+                  <dt className="text-muted-foreground">설문명</dt>
+                  <dd className="font-medium">{details.session.surveyName}</dd>
+                </div>
+                <div>
+                  <dt className="text-muted-foreground">상태</dt>
+                  <dd
+                    className={`font-medium ${getSessionStatusClassName(details.session.status)}`}
+                  >
+                    {getSessionStatusLabel(details.session.status)}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-muted-foreground">테스터 ID</dt>
+                  <dd className="font-medium">{details.session.testerId}</dd>
+                </div>
+                <div>
+                  <dt className="text-muted-foreground">종료일시</dt>
+                  <dd className="font-medium">
+                    {details.session.endedAt
+                      ? new Date(details.session.endedAt).toLocaleString(
+                          'ko-KR'
+                        )
+                      : '-'}
+                  </dd>
+                </div>
+              </dl>
+            </div>
+
+            {/* 질문별 응답 아코디언 */}
+            <Accordion
+              type="single"
+              collapsible
+              className="w-full"
+            >
+              {details.byFixedQuestion.map((fq) => (
+                <AccordionItem
+                  key={fq.fixedQId}
+                  value={`q-${fq.fixedQId}`}
+                >
+                  <AccordionTrigger className="text-left font-bold">
+                    {fq.fixedQuestion}
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="space-y-3">
+                      {fq.excerpt.map((qa, idx) => (
+                        <QuestionAnswerBlock
+                          key={idx}
+                          qa={qa}
+                        />
+                      ))}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+type QuestionAnswerBlockProps = {
+  qa: QuestionAnswerExcerpt;
+};
+
+function QuestionAnswerBlock({ qa }: QuestionAnswerBlockProps) {
+  const isFixed = qa.qType === 'FIXED';
+
+  return (
+    <div className="border-border rounded-md border p-3">
+      <div className="mb-2 flex items-center gap-2">
+        <span
+          className={`rounded px-2 py-0.5 text-xs font-medium ${
+            isFixed
+              ? 'bg-primary/10 text-primary'
+              : 'bg-accent/10 text-accent-foreground'
+          }`}
+        >
+          {isFixed ? '고정 질문' : '꼬리 질문'}
+        </span>
+      </div>
+      <p className="text-muted-foreground mb-1 text-sm">{qa.questionText}</p>
+      <p className="text-sm font-medium">{qa.answerText}</p>
+    </div>
+  );
+}
+
+export { SurveyResultDetailDialog };

@@ -29,9 +29,9 @@ src/
 │   ├── auth/             # oAuth, 토큰 관리, 세션 상태
 │   ├── workspace/        # 권한 관리, 팀원 초대, 사업자 인증
 │   ├── game/             # 게임 엔티티 관리, 출시 정보
-│   ├── survey-designer/  # AI 실시간 검사, 엔티티 충돌 해결, 질문 설계
-│   ├── survey-runner/    # [핵심] LangGraph 연동, 실시간 꼬리 질문, 응답 로직
-│   ├── analytics/        # 이슈 클러스터링, NPS, IPA 분석, 차트 시각화
+│   ├── survey-design/    # AI 실시간 검사, 엔티티 충돌 해결, 질문 설계
+│   ├── survey-session/   # [핵심] LangGraph 연동, 실시간 꼬리 질문, 응답 로직
+│   ├── survey-analytics/ # 설문 결과 조회, 세션 상세, 응답 통계, 클러스터링
 │   └── reward-commerce/  # 상품 리스트, 장바구니, 결제(Portone), 크레딧
 ├── components/           # 전역 공통 UI (Design System)
 │   ├── ui/               # Button, Input, Modal (Radix UI/Shadcn 스타일)
@@ -70,7 +70,7 @@ features/<feature-name>/
 │   ├── useEntityMapping.ts
 │   └── useSurveyHealth.ts
 ├── store/                # 해당 feature 전용 상태 (Zustand)
-│   └── useDesignerStore.ts
+│   └── useSurveyFormStore.ts
 ├── types.ts              # 타입 정의
 └── index.ts              # Public API (외부 노출용)
 ```
