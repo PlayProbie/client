@@ -3,9 +3,10 @@
  * URL: /surveys/session/sessions/:sessionId
  */
 
-import { Loader2 } from 'lucide-react';
 import { useLocation, useParams } from 'react-router-dom';
 
+import { Button } from '@/components/ui';
+import { Spinner } from '@/components/ui/loading';
 import {
   ChatHeader,
   ChatInput,
@@ -43,7 +44,10 @@ function SurveySessionPage() {
   if (!isReady) {
     return (
       <div className="bg-background flex min-h-screen flex-col items-center justify-center">
-        <Loader2 className="text-primary mb-4 size-8 animate-spin" />
+        <Spinner
+          size="lg"
+          className="text-primary mb-4"
+        />
         <p className="text-muted-foreground">대화를 불러오고 있습니다...</p>
       </div>
     );
@@ -56,13 +60,7 @@ function SurveySessionPage() {
         <div className="text-center">
           <h1 className="text-destructive mb-4 text-xl font-semibold">오류</h1>
           <p className="text-muted-foreground mb-6">{error}</p>
-          <button
-            type="button"
-            onClick={() => window.location.reload()}
-            className="bg-primary text-primary-foreground rounded-md px-4 py-2"
-          >
-            다시 시도
-          </button>
+          <Button onClick={() => window.location.reload()}>다시 시도</Button>
         </div>
       </div>
     );

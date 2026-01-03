@@ -1,6 +1,8 @@
 import { Home, Search } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
+import { Button } from '@/components/ui';
+
 export default function NotFoundPage() {
   return (
     <div className="bg-background flex min-h-screen flex-col items-center justify-center px-4">
@@ -48,12 +50,12 @@ export default function NotFoundPage() {
             <Home className="size-4 stroke-2" />
             홈으로 돌아가기
           </Link>
-          <button
+          <Button
+            variant="ghost"
             onClick={() => window.history.back()}
-            className="text-muted-foreground hover:text-foreground hover:bg-muted inline-flex items-center gap-2 rounded-lg px-6 py-3 font-medium transition-colors"
           >
             이전 페이지로
-          </button>
+          </Button>
         </div>
 
         {/* Error Code Badge */}

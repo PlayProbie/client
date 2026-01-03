@@ -3,7 +3,7 @@ import { type ComponentProps } from 'react';
 
 import { cn } from '@/lib/utils';
 
-import { buttonVariants } from './button';
+import { Button } from './button';
 
 function Pagination({ className, ...props }: ComponentProps<'nav'>) {
   return (
@@ -44,16 +44,11 @@ function PaginationLink({
   ...props
 }: PaginationLinkProps) {
   return (
-    <button
+    <Button
+      variant={isActive ? 'outline' : 'ghost'}
+      size="icon"
       aria-current={isActive ? 'page' : undefined}
-      className={cn(
-        buttonVariants({
-          variant: isActive ? 'outline' : 'ghost',
-          size: 'icon',
-        }),
-        'size-9',
-        className
-      )}
+      className={cn('size-9', className)}
       {...props}
     />
   );
@@ -61,33 +56,29 @@ function PaginationLink({
 
 function PaginationPrevious({ className, ...props }: ComponentProps<'button'>) {
   return (
-    <button
+    <Button
+      variant="ghost"
+      size="icon"
       aria-label="이전 페이지"
-      className={cn(
-        buttonVariants({ variant: 'ghost', size: 'icon' }),
-        'size-9',
-        className
-      )}
+      className={cn('size-9', className)}
       {...props}
     >
       <ChevronLeft className="size-4" />
-    </button>
+    </Button>
   );
 }
 
 function PaginationNext({ className, ...props }: ComponentProps<'button'>) {
   return (
-    <button
+    <Button
+      variant="ghost"
+      size="icon"
       aria-label="다음 페이지"
-      className={cn(
-        buttonVariants({ variant: 'ghost', size: 'icon' }),
-        'size-9',
-        className
-      )}
+      className={cn('size-9', className)}
       {...props}
     >
       <ChevronRight className="size-4" />
-    </button>
+    </Button>
   );
 }
 

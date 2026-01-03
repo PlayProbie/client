@@ -1,3 +1,5 @@
+import { Spinner } from '@/components/ui/loading';
+
 type QuestionFeedbackProps = {
   aiFeedback: string;
   isFetchingFeedback: boolean;
@@ -16,8 +18,9 @@ function QuestionFeedback({
   // 피드백 로딩 중
   if (isFetchingFeedback && !hasFeedback) {
     return (
-      <div className="border-border border-t px-4 py-3">
-        <p className="text-muted-foreground text-sm">피드백 로딩 중...</p>
+      <div className="border-border flex items-center gap-2 border-t px-4 py-3">
+        <Spinner size="sm" />
+        <span className="text-muted-foreground text-sm">피드백 로딩 중...</span>
       </div>
     );
   }

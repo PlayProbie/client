@@ -6,6 +6,8 @@
 import { Mic, Paperclip, Send } from 'lucide-react';
 import { type ComponentProps, type FormEvent, useState } from 'react';
 
+import { Button } from '@/components/ui';
+import { Input } from '@/components/ui/Input';
 import { cn } from '@/lib/utils';
 
 type ChatInputProps = ComponentProps<'div'> & {
@@ -44,50 +46,55 @@ export function ChatInput({
         className="flex items-center gap-2"
       >
         {/* 첨부 버튼 (UI only) */}
-        <button
+        <Button
           type="button"
-          className="text-muted-foreground hover:text-foreground flex size-10 items-center justify-center rounded-full transition-colors"
+          variant="ghost"
+          size="icon"
           aria-label="첨부"
           disabled={disabled}
+          className="size-10 rounded-full"
         >
           <Paperclip className="size-5" />
-        </button>
+        </Button>
 
         {/* 입력 필드 */}
         <div className="border-input bg-background flex flex-1 items-center gap-2 rounded-full border px-4 py-2">
-          <input
+          <Input
             type="text"
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             placeholder={placeholder}
             disabled={disabled}
-            className="placeholder:text-muted-foreground flex-1 bg-transparent text-sm outline-none disabled:cursor-not-allowed"
+            className="h-auto flex-1 border-0 bg-transparent px-0 py-0 text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
           />
 
           {/* 마이크 버튼 (UI only) */}
-          <button
+          <Button
             type="button"
-            className="text-muted-foreground hover:text-foreground transition-colors"
+            variant="ghost"
+            size="icon"
             aria-label="음성 입력"
             disabled={disabled}
+            className="size-8"
           >
             <Mic className="size-5" />
-          </button>
+          </Button>
 
           {/* 전송 버튼 */}
-          <button
+          <Button
             type="submit"
+            size="icon"
             disabled={!message.trim() || disabled}
             className={cn(
-              'flex size-8 items-center justify-center rounded-xl transition-colors',
+              'size-8 rounded-xl',
               message.trim() && !disabled
-                ? 'bg-foreground text-background'
+                ? 'bg-foreground text-background hover:bg-foreground/90'
                 : 'bg-muted text-muted-foreground'
             )}
             aria-label="전송"
           >
             <Send className="size-4" />
-          </button>
+          </Button>
         </div>
       </form>
 

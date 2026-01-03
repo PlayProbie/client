@@ -5,6 +5,7 @@
 
 import { type ComponentProps, useEffect, useRef } from 'react';
 
+import { Spinner } from '@/components/ui/loading';
 import { cn } from '@/lib/utils';
 
 import type { ChatMessageData } from '../types';
@@ -47,21 +48,13 @@ export function ChatMessageList({
       {isLoading && (
         <div className="flex justify-start gap-3">
           <div className="bg-primary/10 text-primary flex size-8 shrink-0 items-center justify-center rounded-full">
-            <span className="animate-pulse">...</span>
+            <Spinner size="sm" />
           </div>
-          <div className="bg-muted flex items-center gap-1 rounded-2xl rounded-tl-none px-4 py-3">
-            <span
-              className="bg-muted-foreground size-2 animate-bounce rounded-full"
-              style={{ animationDelay: '0ms' }}
-            />
-            <span
-              className="bg-muted-foreground size-2 animate-bounce rounded-full"
-              style={{ animationDelay: '150ms' }}
-            />
-            <span
-              className="bg-muted-foreground size-2 animate-bounce rounded-full"
-              style={{ animationDelay: '300ms' }}
-            />
+          <div className="bg-muted flex items-center gap-2 rounded-2xl rounded-tl-none px-4 py-3">
+            <Spinner size="sm" />
+            <span className="text-muted-foreground text-sm">
+              응답 대기 중...
+            </span>
           </div>
         </div>
       )}

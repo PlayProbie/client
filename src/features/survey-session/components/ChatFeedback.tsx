@@ -7,6 +7,7 @@
 import { ClipboardCopy, ThumbsDown, ThumbsUp } from 'lucide-react';
 import { type ComponentProps, useState } from 'react';
 
+import { Button } from '@/components/ui';
 import { useToast } from '@/hooks/useToast';
 import { cn } from '@/lib/utils';
 
@@ -50,41 +51,38 @@ export function ChatFeedback({
       className={cn('flex items-center gap-2', className)}
       {...props}
     >
-      <button
+      <Button
         type="button"
+        variant="ghost"
+        size="icon"
         onClick={() => handleFeedback('up')}
-        className={cn(
-          'text-muted-foreground hover:text-foreground flex size-8 items-center justify-center rounded-md transition-colors',
-          feedback === 'up' && 'text-success'
-        )}
+        className={cn('size-8', feedback === 'up' && 'text-success')}
         aria-label="좋아요"
       >
         <ThumbsUp className="size-4" />
-      </button>
+      </Button>
 
-      <button
+      <Button
         type="button"
+        variant="ghost"
+        size="icon"
         onClick={() => handleFeedback('down')}
-        className={cn(
-          'text-muted-foreground hover:text-foreground flex size-8 items-center justify-center rounded-md transition-colors',
-          feedback === 'down' && 'text-destructive'
-        )}
+        className={cn('size-8', feedback === 'down' && 'text-destructive')}
         aria-label="싫어요"
       >
         <ThumbsDown className="size-4" />
-      </button>
+      </Button>
 
-      <button
+      <Button
         type="button"
+        variant="ghost"
+        size="icon"
         onClick={handleCopy}
-        className={cn(
-          'text-muted-foreground hover:text-foreground flex size-8 items-center justify-center rounded-md transition-colors',
-          copied && 'text-success'
-        )}
+        className={cn('size-8', copied && 'text-success')}
         aria-label="복사"
       >
         <ClipboardCopy className="size-4" />
-      </button>
+      </Button>
     </div>
   );
 }

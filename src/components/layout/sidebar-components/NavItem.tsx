@@ -2,6 +2,7 @@ import { ChevronDown } from 'lucide-react';
 import { useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 
+import { Button } from '@/components/ui';
 import { type NavItem as NavItemType } from '@/config/navigation';
 import { cn } from '@/lib/utils';
 
@@ -100,9 +101,12 @@ function NavItem({ item, isCollapsed }: NavItemProps) {
             )}
           </Link>
           {!isCollapsed && (
-            <button
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
               onClick={handleToggleExpand}
-              className="hover:bg-sidebar-accent rounded p-0.5 transition-colors"
+              className="size-6"
               aria-label={isExpanded ? '접기' : '펼치기'}
             >
               <ChevronDown
@@ -111,7 +115,7 @@ function NavItem({ item, isCollapsed }: NavItemProps) {
                   isExpanded && 'rotate-180'
                 )}
               />
-            </button>
+            </Button>
           )}
         </div>
 
