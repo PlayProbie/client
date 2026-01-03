@@ -1,9 +1,11 @@
+import { useMutation } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useToast } from '@/hooks/useToast';
 
 import { postAiQuestions } from '../api';
 import { useSurveyFormStore } from '../store/useSurveyFormStore';
+import type { ApiGenerateAiQuestionsRequest } from '../types';
 import { useQuestionManager } from './useQuestionManager';
 
 /** 기본 AI 질문 생성 개수 */
@@ -21,60 +23,61 @@ function useQuestionGenerate() {
   // 공통 질문 관리 로직
   const manager = useQuestionManager();
 
-  // API 호출 상태
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [generateError, setGenerateError] = useState<string | null>(null);
+  // 추가 상태
   const [hasGenerated, setHasGenerated] = useState(false);
   const [pendingFeedbackQuestions, setPendingFeedbackQuestions] = useState<
     Set<string>
   >(new Set());
   const initialGenerateRef = useRef(false);
 
+  // AI 질문 생성 mutation
+  const {
+    mutateAsync: generateMutateAsync,
+    isPending: isGenerating,
+    error: generateError,
+  } = useMutation({
+    mutationFn: async (
+      params: Pick<ApiGenerateAiQuestionsRequest, 'count'>
+    ) => {
+      const { gameName, gameGenre, gameContext, surveyName, testPurpose } =
+        formData;
+
+      return postAiQuestions({
+        game_name: gameName || '',
+        game_context: gameContext || '',
+        game_genre: gameGenre || [],
+        survey_name: surveyName || '',
+        test_purpose: testPurpose!,
+        count: params.count,
+      });
+    },
+  });
+
   // AI 질문 생성 API 호출
   const generateQuestions = useCallback(async () => {
-    const { gameName, gameGenre, gameContext, surveyName, testPurpose } =
-      formData;
+    const { gameName, gameGenre, surveyName, testPurpose } = formData;
 
     // 필수 데이터 확인
     if (!gameName || !gameGenre?.length || !surveyName || !testPurpose) {
-      setGenerateError('질문 생성에 필요한 정보가 부족합니다.');
       return;
     }
 
-    setIsGenerating(true);
-    setGenerateError(null);
+    const response = await generateMutateAsync({
+      count: DEFAULT_QUESTION_COUNT,
+    });
 
-    try {
-      const response = await postAiQuestions({
-        game_name: gameName,
-        game_context: gameContext || '',
-        game_genre: gameGenre,
-        survey_name: surveyName,
-        test_purpose: testPurpose,
-        count: DEFAULT_QUESTION_COUNT,
-      });
+    const generatedQuestions = response.result;
 
-      const generatedQuestions = response.result;
+    // Store에 질문 저장 + 전체 선택
+    updateFormData({
+      questions: generatedQuestions,
+      selectedQuestionIndices: generatedQuestions.map((_, i) => i),
+    });
 
-      // Store에 질문 저장 + 전체 선택
-      updateFormData({
-        questions: generatedQuestions,
-        selectedQuestionIndices: generatedQuestions.map((_, i) => i),
-      });
-
-      // feedbackMap 초기화 (새 질문이므로)
-      manager.setFeedbackMap({});
-      setHasGenerated(true);
-    } catch (error) {
-      setGenerateError(
-        error instanceof Error
-          ? error.message
-          : 'AI 질문 생성에 실패했습니다. 다시 시도해주세요.'
-      );
-    } finally {
-      setIsGenerating(false);
-    }
-  }, [formData, updateFormData, manager]);
+    // feedbackMap 초기화 (새 질문이므로)
+    manager.setFeedbackMap({});
+    setHasGenerated(true);
+  }, [formData, generateMutateAsync, updateFormData, manager]);
 
   // 페이지 렌더링 시 질문이 없으면 자동으로 API 호출
   useEffect(() => {
@@ -119,7 +122,6 @@ function useQuestionGenerate() {
         questionsToFetch.forEach((q) => next.add(q));
         return next;
       });
-      currentManager.setIsFetchingFeedback(true);
 
       try {
         await Promise.all(
@@ -145,7 +147,6 @@ function useQuestionGenerate() {
           questionsToFetch.forEach((q) => next.delete(q));
           return next;
         });
-        currentManager.setIsFetchingFeedback(false);
       }
     };
 
@@ -160,42 +161,24 @@ function useQuestionGenerate() {
 
   // AI 질문 1개 추가 생성
   const handleAddQuestion = useCallback(async () => {
-    const { gameName, gameGenre, gameContext, surveyName, testPurpose } =
-      formData;
+    const { gameName, gameGenre, surveyName, testPurpose } = formData;
 
     if (!gameName || !gameGenre?.length || !surveyName || !testPurpose) {
-      setGenerateError('질문 생성에 필요한 정보가 부족합니다.');
       return;
     }
 
-    setIsGenerating(true);
-    setGenerateError(null);
-
     try {
-      const response = await postAiQuestions({
-        game_name: gameName,
-        game_context: gameContext || '',
-        game_genre: gameGenre,
-        survey_name: surveyName,
-        test_purpose: testPurpose,
-        count: 1, // 1개 질문만 추가 생성
-      });
+      const response = await generateMutateAsync({ count: 1 });
 
       const newQuestion = response.result[0];
       if (!newQuestion) return;
 
       // 맨 앞에 추가 + 선택 인덱스 재조정
       manager.addQuestionAtFront(newQuestion);
-    } catch (error) {
-      setGenerateError(
-        error instanceof Error
-          ? error.message
-          : 'AI 질문 추가에 실패했습니다. 다시 시도해주세요.'
-      );
-    } finally {
-      setIsGenerating(false);
+    } catch {
+      // Error is handled by mutation.error
     }
-  }, [formData, manager]);
+  }, [formData, generateMutateAsync, manager]);
 
   return {
     // 공통 상태 (from manager)
@@ -211,7 +194,7 @@ function useQuestionGenerate() {
 
     // AI 전용 상태
     isGenerating,
-    generateError,
+    generateError: generateError?.message ?? null,
     pendingFeedbackQuestions,
 
     // 공통 핸들러 (from manager)

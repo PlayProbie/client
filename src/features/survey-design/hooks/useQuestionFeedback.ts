@@ -1,15 +1,19 @@
 /**
  * 질문 피드백 관리 훅
- * - 피드백 API 요청
+ * - 피드백 API 요청 (useMutation 사용)
  * - 피드백 캐싱
  * - 로딩 상태 관리
  */
 
+import { useMutation } from '@tanstack/react-query';
 import { useCallback, useState } from 'react';
 
 import { postQuestionFeedback } from '../api';
 import { useSurveyFormStore } from '../store/useSurveyFormStore';
 import type { QuestionFeedbackItem } from '../types';
+
+/** 재시도 횟수 */
+const RETRY_COUNT = 3;
 
 /**
  * useQuestionFeedback - 질문 피드백 관리
@@ -22,13 +26,12 @@ function useQuestionFeedback() {
     Record<string, QuestionFeedbackItem>
   >({});
 
-  // 로딩 상태
+  // 현재 로딩 중인 질문 인덱스
   const [loadingIndex, setLoadingIndex] = useState<number | null>(null);
-  const [isFetchingFeedback, setIsFetchingFeedback] = useState(false);
 
-  // 특정 질문에 대한 피드백 요청
-  const fetchFeedbackForQuestion = useCallback(
-    async (question: string): Promise<QuestionFeedbackItem> => {
+  // 피드백 요청 mutation
+  const { mutateAsync, isPending } = useMutation({
+    mutationFn: async (question: string): Promise<QuestionFeedbackItem> => {
       const { gameName, gameGenre, gameContext, surveyName, testPurpose } =
         formData;
 
@@ -50,7 +53,15 @@ function useQuestionFeedback() {
         suggestions: feedback.suggestions || [],
       };
     },
-    [formData]
+    retry: RETRY_COUNT,
+  });
+
+  // 특정 질문에 대한 피드백 요청
+  const fetchFeedbackForQuestion = useCallback(
+    async (question: string): Promise<QuestionFeedbackItem> => {
+      return mutateAsync(question);
+    },
+    [mutateAsync]
   );
 
   // 피드백 맵에서 특정 질문 삭제
@@ -82,12 +93,11 @@ function useQuestionFeedback() {
     // 상태
     feedbackMap,
     loadingIndex,
-    isFetchingFeedback,
+    isFetchingFeedback: isPending,
 
     // 상태 설정자
     setFeedbackMap,
     setLoadingIndex,
-    setIsFetchingFeedback,
 
     // 핸들러
     fetchFeedbackForQuestion,

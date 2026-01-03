@@ -3,12 +3,17 @@
  * 세션 복원, SSE 연결, 메시지 전송 통합 관리
  */
 
+import { useMutation } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { sendMessage } from '../api';
 import { CHAT_MESSAGES } from '../constants';
 import { useChatStore } from '../store/useChatStore';
-import type { UseChatSessionOptions, UseChatSessionReturn } from '../types';
+import type {
+  ApiSendMessageRequest,
+  UseChatSessionOptions,
+  UseChatSessionReturn,
+} from '../types';
 import { useChatSSE } from './useChatSSE';
 
 // Strict Mode에서 remount 시 중복 초기화 방지를 위한 모듈 레벨 Set
@@ -90,6 +95,17 @@ export function useChatSession({
     },
   });
 
+  // 메시지 전송 mutation
+  const { mutateAsync: sendMessageAsync } = useMutation({
+    mutationFn: async (body: ApiSendMessageRequest) => {
+      return sendMessage({ sessionUuid }, body);
+    },
+    onError: () => {
+      setError('메시지 전송에 실패했습니다.');
+      setLoading(false);
+    },
+  });
+
   // 세션 초기화 - 한 번만 실행
   useEffect(() => {
     // 이미 초기화됐으면 스킵 (모듈 레벨에서 체크하여 Strict Mode 대응)
@@ -131,42 +147,33 @@ export function useChatSession({
         return;
       }
 
-      try {
-        // 현재 턴의 AI 질문 텍스트 찾기
-        const currentQuestion = messages.find(
-          (m) => m.type === 'ai' && m.turnNum === currentTurnNum
-        );
-        const questionText = currentQuestion?.content ?? '';
-        // fixedQId는 null이 될 수 있으므로 안전하게 처리
-        const fixedQId = currentQuestion?.fixedQId ?? currentFixedQId;
+      // 현재 턴의 AI 질문 텍스트 찾기
+      const currentQuestion = messages.find(
+        (m) => m.type === 'ai' && m.turnNum === currentTurnNum
+      );
+      const questionText = currentQuestion?.content ?? '';
+      // fixedQId는 null이 될 수 있으므로 안전하게 처리
+      const fixedQId = currentQuestion?.fixedQId ?? currentFixedQId;
 
-        if (fixedQId === null || fixedQId === undefined) {
-          setError('질문 정보가 누락되었습니다. 페이지를 새로고침해 주세요.');
-          return;
-        }
-
-        // 낙관적 업데이트: UI에 먼저 표시
-        addUserMessage(answerText, currentTurnNum);
-
-        // 서버에 전송
-        await sendMessage(
-          { sessionUuid },
-          {
-            fixed_q_id: fixedQId,
-            turn_num: currentTurnNum,
-            answer_text: answerText,
-            question_text: questionText,
-          }
-        );
-
-        // SSE 연결은 유지됨 - 서버에서 다음 질문을 전송
-      } catch {
-        setError('메시지 전송에 실패했습니다.');
-        setLoading(false);
+      if (fixedQId === null || fixedQId === undefined) {
+        setError('질문 정보가 누락되었습니다. 페이지를 새로고침해 주세요.');
+        return;
       }
+
+      // 낙관적 업데이트: UI에 먼저 표시
+      addUserMessage(answerText, currentTurnNum);
+
+      // 서버에 전송 (useMutation 사용)
+      await sendMessageAsync({
+        fixed_q_id: fixedQId,
+        turn_num: currentTurnNum,
+        answer_text: answerText,
+        question_text: questionText,
+      });
+
+      // SSE 연결은 유지됨 - 서버에서 다음 질문을 전송
     },
     [
-      sessionUuid,
       currentTurnNum,
       currentFixedQId,
       messages,
@@ -174,7 +181,7 @@ export function useChatSession({
       isComplete,
       addUserMessage,
       setError,
-      setLoading,
+      sendMessageAsync,
     ]
   );
 

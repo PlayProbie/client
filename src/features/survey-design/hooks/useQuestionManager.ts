@@ -97,7 +97,6 @@ function useQuestionManager() {
 
     // Feedback 설정자
     setFeedbackMap: feedback.setFeedbackMap,
-    setIsFetchingFeedback: feedback.setIsFetchingFeedback,
 
     // Selection 핸들러
     handleToggle: selection.handleToggle,

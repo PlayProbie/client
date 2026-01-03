@@ -50,7 +50,7 @@ function StepQuestionAIGenerate() {
         selectedCount={selectedCount}
         totalCount={totalCount}
         isAllSelected={isAllSelected}
-        isRegenerating={isGenerating}
+        isRegenerating={isGenerating || pendingFeedbackQuestions.size > 0}
         onSelectAll={handleSelectAll}
         onRegenerate={handleRegenerate}
       />

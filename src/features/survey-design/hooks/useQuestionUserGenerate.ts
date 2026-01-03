@@ -22,8 +22,6 @@ function useQuestionUserGenerate() {
     const trimmedQuestion = newQuestion.trim();
     if (!trimmedQuestion) return;
 
-    manager.setIsFetchingFeedback(true);
-
     try {
       // 맨 앞에 추가 + 선택 인덱스 재조정
       manager.addQuestionAtFront(trimmedQuestion);
@@ -43,8 +41,6 @@ function useQuestionUserGenerate() {
         title: '피드백 요청 실패',
         description: '질문 피드백을 가져오는데 실패했습니다.',
       });
-    } finally {
-      manager.setIsFetchingFeedback(false);
     }
   }, [newQuestion, manager, toast]);
 
