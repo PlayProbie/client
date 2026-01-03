@@ -26,13 +26,15 @@ function QuestionStatusBar({
   return (
     <div className="border-border bg-muted/30 flex items-center justify-between rounded-lg border px-4 py-3">
       <div className="flex items-center gap-3">
-        <button
+        <Button
           type="button"
+          variant="link"
+          size="sm"
           onClick={onSelectAll}
-          className="text-primary hover:text-primary/80 text-sm font-medium transition-colors"
+          className="h-auto p-0"
         >
           {isAllSelected ? '전체 해제' : '전체 선택'}
-        </button>
+        </Button>
         <span className="text-muted-foreground text-sm">
           <span className="text-foreground font-medium">{selectedCount}</span>/
           {totalCount} 선택됨

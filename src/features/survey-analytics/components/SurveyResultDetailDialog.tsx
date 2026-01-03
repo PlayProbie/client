@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/Dialog';
+import { Spinner } from '@/components/ui/loading';
 import {
   getSessionStatusClassName,
   getSessionStatusLabel,
@@ -60,8 +61,11 @@ function SurveyResultDetailDialog({
         </DialogHeader>
 
         {isLoading && (
-          <div className="text-muted-foreground py-8 text-center">
-            데이터를 불러오는 중...
+          <div className="flex flex-col items-center justify-center gap-2 py-8">
+            <Spinner size="md" />
+            <span className="text-muted-foreground text-sm">
+              데이터를 불러오는 중...
+            </span>
           </div>
         )}
 

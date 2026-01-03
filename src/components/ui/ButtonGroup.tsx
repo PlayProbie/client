@@ -51,7 +51,7 @@ function ButtonGroup({
         {options.map((option) => (
           <label
             key={option.value}
-            className="border-input hover:bg-muted/50 has-[:checked]:border-primary has-[:checked]:bg-primary has-[:checked]:text-primary-foreground flex cursor-pointer items-center justify-center rounded-md border p-3 text-center transition-colors"
+            className="border-input hover:bg-muted/50 has-checked:border-primary has-checked:bg-primary has-checked:text-primary-foreground flex cursor-pointer items-center justify-center rounded-md border p-3 text-center transition-colors"
           >
             <input
               type="radio"

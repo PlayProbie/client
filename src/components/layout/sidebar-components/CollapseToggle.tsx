@@ -1,5 +1,6 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
+import { Button } from '@/components/ui';
 import { cn } from '@/lib/utils';
 
 interface CollapseToggleProps {
@@ -9,10 +10,12 @@ interface CollapseToggleProps {
 
 function CollapseToggle({ isCollapsed, onToggle }: CollapseToggleProps) {
   return (
-    <button
+    <Button
+      type="button"
+      variant="ghost"
       onClick={onToggle}
       className={cn(
-        'text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors',
+        'w-full justify-start gap-2',
         isCollapsed && 'justify-center px-2'
       )}
       aria-label={isCollapsed ? '사이드바 펼치기' : '사이드바 접기'}
@@ -25,7 +28,7 @@ function CollapseToggle({ isCollapsed, onToggle }: CollapseToggleProps) {
           <span>사이드바 접기</span>
         </>
       )}
-    </button>
+    </Button>
   );
 }
 

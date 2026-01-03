@@ -1,5 +1,7 @@
 import { Lightbulb } from 'lucide-react';
 
+import { Button } from '@/components/ui';
+
 type QuestionSuggestionsProps = {
   suggestions: string[];
   questionIndex: number;
@@ -31,15 +33,16 @@ function QuestionSuggestions({
         <span className="text-foreground text-xs font-medium">추천 대안</span>
         <div className="flex flex-col gap-1.5">
           {suggestions.map((suggestion, sugIdx) => (
-            <button
+            <Button
               key={sugIdx}
               type="button"
+              variant="outline"
               onClick={() => onSuggestionClick(questionIndex, suggestion)}
               disabled={disabled}
-              className="bg-muted/50 hover:bg-muted hover:border-primary/50 text-muted-foreground hover:text-foreground border-border rounded-md border px-3 py-2 text-left text-sm transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+              className="h-auto justify-start px-3 py-2 text-left whitespace-normal"
             >
               {suggestion}
-            </button>
+            </Button>
           ))}
         </div>
       </div>

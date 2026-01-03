@@ -1,5 +1,6 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 
+import { Button } from '@/components/ui';
 import { useAuthStore } from '@/stores';
 
 export default function LoginPage() {
@@ -36,10 +37,10 @@ export default function LoginPage() {
         </div>
 
         {/* Login Button */}
-        <button
+        <Button
           disabled
           onClick={handleLogin}
-          className="bg-muted text-muted-foreground flex w-full items-center justify-center gap-3 rounded-lg px-4 py-3 font-medium transition-colors"
+          className="w-full"
         >
           <svg
             className="h-5 w-5"
@@ -63,7 +64,7 @@ export default function LoginPage() {
             />
           </svg>
           Google로 계속하기
-        </button>
+        </Button>
 
         {/* Divider */}
         <div className="my-6 flex items-center gap-4">
@@ -73,12 +74,13 @@ export default function LoginPage() {
         </div>
 
         {/* Demo Login */}
-        <button
+        <Button
+          variant="outline"
           onClick={handleLogin}
-          className="border-border text-foreground hover:bg-muted w-full rounded-lg border px-4 py-3 font-medium transition-colors"
+          className="w-full"
         >
           데모 계정으로 시작하기
-        </button>
+        </Button>
       </div>
     </div>
   );

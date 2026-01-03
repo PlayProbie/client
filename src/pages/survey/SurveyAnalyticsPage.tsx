@@ -1,5 +1,6 @@
 import { useParams } from 'react-router-dom';
 
+import { Spinner } from '@/components/ui/loading';
 import {
   SurveyResultsSummaryCard,
   SurveyResultsTable,
@@ -20,8 +21,9 @@ function SurveyAnalyticsPage() {
   return (
     <main className="container mx-auto max-w-5xl px-4 py-8">
       {isLoading && (
-        <div className="text-muted-foreground py-12 text-center">
-          데이터를 불러오는 중...
+        <div className="flex flex-col items-center justify-center gap-2 py-12">
+          <Spinner size="lg" />
+          <span className="text-muted-foreground">데이터를 불러오는 중...</span>
         </div>
       )}
 
