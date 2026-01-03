@@ -1,11 +1,11 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { postAiQuestions } from '../api';
 import { useSurveyFormStore } from '../store/useSurveyFormStore';
 import { useQuestionManager } from './useQuestionManager';
 
 /** 기본 AI 질문 생성 개수 */
-const DEFAULT_QUESTION_COUNT = 5;
+const DEFAULT_QUESTION_COUNT = 3;
 
 /**
  * AI 질문 생성 및 관리 훅
@@ -79,34 +79,40 @@ function useQuestionGenerate() {
   }, [manager.questions.length, isGenerating, hasGenerated, generateQuestions]);
 
   // 전체 질문에 대한 피드백 요청 (초기 로드 시)
+  // useRef를 사용하여 최신 값을 참조하되, 불필요한 re-render를 방지
+  const managerRef = useRef(manager);
+  managerRef.current = manager;
+
   useEffect(() => {
     const fetchAllFeedback = async () => {
-      if (manager.questions.length === 0) return;
+      const currentManager = managerRef.current;
+
+      if (currentManager.questions.length === 0) return;
 
       // 이미 피드백이 있는 질문은 스킵
-      const questionsToFetch = manager.questions.filter(
-        (q) => !manager.feedbackMap[q]
+      const questionsToFetch = currentManager.questions.filter(
+        (q) => !currentManager.feedbackMap[q]
       );
       if (questionsToFetch.length === 0) return;
 
-      manager.setIsFetchingFeedback(true);
+      currentManager.setIsFetchingFeedback(true);
 
       try {
-        const newFeedbackMap = { ...manager.feedbackMap };
+        const newFeedbackMap = { ...currentManager.feedbackMap };
         for (const q of questionsToFetch) {
-          const feedback = await manager.fetchFeedbackForQuestion(q);
+          const feedback = await currentManager.fetchFeedbackForQuestion(q);
           newFeedbackMap[q] = feedback;
         }
-        manager.setFeedbackMap(newFeedbackMap);
+        currentManager.setFeedbackMap(newFeedbackMap);
       } catch (error) {
         console.error('Failed to fetch feedback:', error);
       } finally {
-        manager.setIsFetchingFeedback(false);
+        currentManager.setIsFetchingFeedback(false);
       }
     };
 
     fetchAllFeedback();
-  }, [manager.questions, manager.feedbackMap, manager]);
+  }, [manager.questions]);
 
   // 질문 재생성
   const handleRegenerate = useCallback(async () => {

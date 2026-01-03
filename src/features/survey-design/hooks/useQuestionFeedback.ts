@@ -41,13 +41,13 @@ function useQuestionFeedback() {
         questions: [question],
       });
 
-      // API는 배열로 반환하므로 첫 번째 항목 사용
-      const feedback = response.result[0];
+      // API는 단일 객체로 반환
+      const feedback = response.result;
 
       return {
         question,
-        aiFeedback: feedback?.ai_feedback || '',
-        suggestions: feedback?.suggestions || [],
+        aiFeedback: feedback.ai_feedback || '',
+        suggestions: feedback.suggestions || [],
       };
     },
     [formData]
