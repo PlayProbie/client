@@ -1,19 +1,19 @@
 import { API_BASE_URL } from '@/constants/api';
 
 import type {
+  ApiSendMessageRequest,
   SendMessageParams,
-  SendMessageRequest,
   SendMessageResponse,
 } from '../types';
 
 /**
- * POST /interview/{session_id}/messages - 응답자 대답 전송
+ * POST /interview/{sessionUuid}/messages - 응답자 대답 전송
  */
 export async function sendMessage(
   params: SendMessageParams,
-  body: SendMessageRequest
+  body: ApiSendMessageRequest
 ): Promise<SendMessageResponse> {
-  const url = `${API_BASE_URL}/interview/${params.sessionId}/messages`;
+  const url = `${API_BASE_URL}/interview/${params.sessionUuid}/messages`;
 
   const response = await fetch(url, {
     method: 'POST',

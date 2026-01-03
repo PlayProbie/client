@@ -11,7 +11,7 @@ import type {
 export async function createChatSession(
   params: CreateChatSessionParams
 ): Promise<CreateChatSessionResponse> {
-  const url = `${API_BASE_URL}/interview/${params.surveyId}`;
+  const url = `${API_BASE_URL}/interview/${params.surveyUuid}`;
 
   const response = await fetch(url, {
     method: 'POST',

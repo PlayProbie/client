@@ -8,18 +8,21 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { API_BASE_URL } from '@/constants/api';
 
 import type {
-  SSEQuestionEventData,
+  ApiSSEQuestionEventData,
+  ApiSSETokenEventData,
   UseChatSSEOptions,
   UseChatSSEReturn,
 } from '../types';
+import { toSSEQuestionEventData, toSSETokenEventData } from '../types';
 
 export function useChatSSE({
-  sessionId,
-  onQuestion,
-  onInfo,
-  onDone,
-  onError,
+  sessionUuid,
   onConnect,
+  onQuestion,
+  onToken,
+  onStart,
+  onInterviewComplete,
+  onError,
   onOpen,
   onDisconnect,
 }: UseChatSSEOptions): UseChatSSEReturn {
@@ -27,24 +30,35 @@ export function useChatSSE({
   const [isConnected, setIsConnected] = useState(false);
 
   // Refs for stable callback references
-  const onQuestionRef = useRef(onQuestion);
-  const onInfoRef = useRef(onInfo);
-  const onDoneRef = useRef(onDone);
-  const onErrorRef = useRef(onError);
   const onConnectRef = useRef(onConnect);
+  const onQuestionRef = useRef(onQuestion);
+  const onTokenRef = useRef(onToken);
+  const onStartRef = useRef(onStart);
+  const onInterviewCompleteRef = useRef(onInterviewComplete);
+  const onErrorRef = useRef(onError);
   const onOpenRef = useRef(onOpen);
   const onDisconnectRef = useRef(onDisconnect);
 
   // Keep refs up to date
   useEffect(() => {
-    onQuestionRef.current = onQuestion;
-    onInfoRef.current = onInfo;
-    onDoneRef.current = onDone;
-    onErrorRef.current = onError;
     onConnectRef.current = onConnect;
+    onQuestionRef.current = onQuestion;
+    onTokenRef.current = onToken;
+    onStartRef.current = onStart;
+    onInterviewCompleteRef.current = onInterviewComplete;
+    onErrorRef.current = onError;
     onOpenRef.current = onOpen;
     onDisconnectRef.current = onDisconnect;
-  }, [onQuestion, onInfo, onDone, onError, onConnect, onOpen, onDisconnect]);
+  }, [
+    onConnect,
+    onQuestion,
+    onToken,
+    onStart,
+    onInterviewComplete,
+    onError,
+    onOpen,
+    onDisconnect,
+  ]);
 
   const disconnect = useCallback(() => {
     if (eventSourceRef.current) {
@@ -62,9 +76,7 @@ export function useChatSSE({
       eventSourceRef.current = null;
     }
 
-    onConnectRef.current?.();
-
-    const url = `${API_BASE_URL}/interview/${sessionId}/stream`;
+    const url = `${API_BASE_URL}/interview/${sessionUuid}/stream`;
     const eventSource = new EventSource(url);
     eventSourceRef.current = eventSource;
 
@@ -73,26 +85,45 @@ export function useChatSSE({
       onOpenRef.current?.();
     };
 
+    // connect 이벤트 핸들러
+    eventSource.addEventListener('connect', () => {
+      console.log('[SSE] Connected');
+      onConnectRef.current?.();
+    });
+
     // question 이벤트 핸들러
     eventSource.addEventListener('question', (event) => {
       try {
-        const data: SSEQuestionEventData = JSON.parse(event.data);
+        const apiData: ApiSSEQuestionEventData = JSON.parse(event.data);
+        const data = toSSEQuestionEventData(apiData);
         onQuestionRef.current?.(data);
       } catch (e) {
         console.error('[SSE] Failed to parse question event:', e);
       }
     });
 
-    // info 이벤트 핸들러
-    eventSource.addEventListener('info', (event) => {
-      console.log('[SSE] Info:', event.data);
-      onInfoRef.current?.(event.data);
+    // token 이벤트 핸들러 (꼬리 질문 스트리밍)
+    eventSource.addEventListener('token', (event) => {
+      try {
+        const apiData: ApiSSETokenEventData = JSON.parse(event.data);
+        const data = toSSETokenEventData(apiData);
+        onTokenRef.current?.(data);
+      } catch (e) {
+        console.error('[SSE] Failed to parse token event:', e);
+      }
     });
 
-    // done 이벤트 핸들러
-    eventSource.addEventListener('done', () => {
+    // start 이벤트 핸들러 (AI 처리 시작)
+    eventSource.addEventListener('start', () => {
+      console.log('[SSE] AI processing started');
+      onStartRef.current?.();
+    });
+
+    // interview_complete 이벤트 핸들러
+    eventSource.addEventListener('interview_complete', () => {
+      console.log('[SSE] Interview completed');
       disconnect();
-      onDoneRef.current?.();
+      onInterviewCompleteRef.current?.();
     });
 
     // error 이벤트 핸들러
@@ -122,7 +153,7 @@ export function useChatSSE({
         disconnect();
       }
     };
-  }, [sessionId, disconnect]);
+  }, [sessionUuid, disconnect]);
 
   // 컴포넌트 언마운트 시 연결 해제
   useEffect(() => {
