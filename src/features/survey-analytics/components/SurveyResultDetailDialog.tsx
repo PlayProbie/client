@@ -19,6 +19,7 @@ import {
 
 import { getSurveyResultDetails } from '../api/get-survey-result-details';
 import type { QuestionAnswerExcerpt } from '../types';
+import { toSurveyResultDetails } from '../types';
 
 type SurveyResultDetailDialogProps = {
   open: boolean;
@@ -38,13 +39,16 @@ function SurveyResultDetailDialog({
   surveyId,
   sessionId,
 }: SurveyResultDetailDialogProps) {
-  const { data, isLoading, isError } = useQuery({
+  const {
+    data: details,
+    isLoading,
+    isError,
+  } = useQuery({
     queryKey: ['survey-result-details', surveyId, sessionId],
     queryFn: () => getSurveyResultDetails({ surveyId, sessionId }),
+    select: (response) => toSurveyResultDetails(response.result),
     enabled: open && !!surveyId && !!sessionId,
   });
-
-  const details = data?.result;
 
   return (
     <Dialog
@@ -75,7 +79,7 @@ function SurveyResultDetailDialog({
               <dl className="grid grid-cols-2 gap-2 text-sm">
                 <div>
                   <dt className="text-muted-foreground">설문명</dt>
-                  <dd className="font-medium">{details.session.survey_name}</dd>
+                  <dd className="font-medium">{details.session.surveyName}</dd>
                 </div>
                 <div>
                   <dt className="text-muted-foreground">상태</dt>
@@ -87,13 +91,13 @@ function SurveyResultDetailDialog({
                 </div>
                 <div>
                   <dt className="text-muted-foreground">테스터 ID</dt>
-                  <dd className="font-medium">{details.session.tester_id}</dd>
+                  <dd className="font-medium">{details.session.testerId}</dd>
                 </div>
                 <div>
                   <dt className="text-muted-foreground">종료일시</dt>
                   <dd className="font-medium">
-                    {details.session.ended_at
-                      ? new Date(details.session.ended_at).toLocaleString(
+                    {details.session.endedAt
+                      ? new Date(details.session.endedAt).toLocaleString(
                           'ko-KR'
                         )
                       : '-'}
@@ -108,13 +112,13 @@ function SurveyResultDetailDialog({
               collapsible
               className="w-full"
             >
-              {details.by_fixed_question.map((fq) => (
+              {details.byFixedQuestion.map((fq) => (
                 <AccordionItem
-                  key={fq.fixed_q_id}
-                  value={`q-${fq.fixed_q_id}`}
+                  key={fq.fixedQId}
+                  value={`q-${fq.fixedQId}`}
                 >
                   <AccordionTrigger className="text-left font-bold">
-                    {fq.fixed_question}
+                    {fq.fixedQuestion}
                   </AccordionTrigger>
                   <AccordionContent>
                     <div className="space-y-3">
@@ -141,7 +145,7 @@ type QuestionAnswerBlockProps = {
 };
 
 function QuestionAnswerBlock({ qa }: QuestionAnswerBlockProps) {
-  const isFixed = qa.q_type === 'FIXED';
+  const isFixed = qa.qType === 'FIXED';
 
   return (
     <div className="border-border rounded-md border p-3">
@@ -156,8 +160,8 @@ function QuestionAnswerBlock({ qa }: QuestionAnswerBlockProps) {
           {isFixed ? '고정 질문' : '꼬리 질문'}
         </span>
       </div>
-      <p className="text-muted-foreground mb-1 text-sm">{qa.question_text}</p>
-      <p className="text-sm font-medium">{qa.answer_text}</p>
+      <p className="text-muted-foreground mb-1 text-sm">{qa.questionText}</p>
+      <p className="text-sm font-medium">{qa.answerText}</p>
     </div>
   );
 }

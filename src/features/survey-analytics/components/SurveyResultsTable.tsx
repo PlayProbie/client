@@ -6,7 +6,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import { Eye } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { Button } from '@/components/ui';
 import {
@@ -33,11 +33,11 @@ type SurveyResultsTableProps = {
 
 // 컬럼별 너비 설정
 const COLUMN_WIDTHS = {
-  tester_id: 'w-[120px]',
-  survey_name: 'w-[180px]',
+  testerId: 'w-[120px]',
+  surveyName: 'w-[180px]',
   status: 'w-[80px]',
-  ended_at: 'w-[160px]',
-  first_question: 'w-auto',
+  endedAt: 'w-[160px]',
+  firstQuestion: 'w-auto',
 } as const;
 
 /**
@@ -52,20 +52,20 @@ function SurveyResultsTable({ data }: SurveyResultsTableProps) {
     null
   );
 
-  const handleOpenDetail = (item: SurveyResultListItem) => {
+  const handleOpenDetail = useCallback((item: SurveyResultListItem) => {
     setSelectedItem(item);
     setDialogOpen(true);
-  };
+  }, []);
 
   const columns: ColumnDef<SurveyResultListItem>[] = useMemo(
     () => [
       {
-        accessorKey: 'survey_name',
+        accessorKey: 'surveyName',
         header: '설문명',
         size: 180,
       },
       {
-        accessorKey: 'tester_id',
+        accessorKey: 'testerId',
         header: '테스터 ID',
         size: 140,
         cell: (info) => (
@@ -86,7 +86,7 @@ function SurveyResultsTable({ data }: SurveyResultsTableProps) {
         },
       },
       {
-        accessorKey: 'ended_at',
+        accessorKey: 'endedAt',
         header: '설문 일시',
         size: 160,
         cell: (info) => {
@@ -96,7 +96,7 @@ function SurveyResultsTable({ data }: SurveyResultsTableProps) {
         },
       },
       {
-        accessorKey: 'first_question',
+        accessorKey: 'firstQuestion',
         header: '첫 질문',
         cell: (info) => {
           const row = info.row.original;
@@ -119,7 +119,7 @@ function SurveyResultsTable({ data }: SurveyResultsTableProps) {
         },
       },
     ],
-    []
+    [handleOpenDetail]
   );
 
   const table = useReactTable({
@@ -219,8 +219,8 @@ function SurveyResultsTable({ data }: SurveyResultsTableProps) {
         <SurveyResultDetailDialog
           open={dialogOpen}
           onOpenChange={setDialogOpen}
-          surveyId={selectedItem.survey_id}
-          sessionId={selectedItem.session_id}
+          surveyId={selectedItem.surveyId}
+          sessionId={selectedItem.sessionId}
         />
       )}
     </div>
