@@ -161,9 +161,6 @@ export interface CreateFixedQuestionsRequest {
 // Survey Form (설문 등록 폼) - Client Only
 // ----------------------------------------
 
-/** 설문 폼 상태 */
-export type SurveyFormStatus = 'draft' | 'scheduled' | 'active' | 'completed';
-
 /** 설문 폼 데이터 */
 export type SurveyFormData = {
   // Step 0: 게임 정보
@@ -212,64 +209,3 @@ export const SURVEY_FORM_STEPS: SurveyFormStep[] = [
     description: '입력 내용을 확인하세요',
   },
 ];
-
-// ----------------------------------------
-// Transformer Functions (API <-> Client)
-// ----------------------------------------
-
-/** API 설문 -> 클라이언트 설문 변환 */
-export function toSurvey(api: ApiSurvey): Survey {
-  return {
-    surveyId: api.survey_id,
-    surveyName: api.survey_name,
-    surveyUrl: api.survey_url,
-    startedAt: api.started_at,
-    endedAt: api.ended_at,
-    testPurpose: api.test_purpose,
-    createdAt: api.created_at,
-  };
-}
-
-/** API 질문 피드백 -> 클라이언트 변환 */
-export function toQuestionFeedbackItem(
-  api: ApiQuestionFeedbackResponseItem
-): QuestionFeedbackItem {
-  return {
-    question: api.question,
-    aiFeedback: api.ai_feedback,
-    suggestions: api.suggestions,
-  };
-}
-
-/** 클라이언트 설문 생성 요청 -> API 요청 변환 */
-export function toApiCreateSurveyRequest(
-  client: CreateSurveyRequest
-): ApiCreateSurveyRequest {
-  return {
-    game_id: client.gameId,
-    survey_name: client.surveyName,
-    started_at: client.startedAt,
-    ended_at: client.endedAt,
-    test_purpose: client.testPurpose,
-  };
-}
-
-/** 클라이언트 고정 질문 -> API 변환 */
-export function toApiFixedQuestionItem(
-  client: FixedQuestionItem
-): ApiFixedQuestionItem {
-  return {
-    q_content: client.qContent,
-    q_order: client.qOrder,
-  };
-}
-
-/** 클라이언트 고정 질문 생성 요청 -> API 요청 변환 */
-export function toApiCreateFixedQuestionsRequest(
-  client: CreateFixedQuestionsRequest
-): ApiCreateFixedQuestionsRequest {
-  return {
-    survey_id: client.surveyId,
-    questions: client.questions.map(toApiFixedQuestionItem),
-  };
-}

@@ -1,6 +1,6 @@
 /**
  * 채팅 세션 관리 훅
- * 세션 복원, SSE 연결, 메시지 전송 통합 관리
+ * SSE 연결 및 메시지 전송 통합 관리
  */
 
 import { useMutation } from '@tanstack/react-query';

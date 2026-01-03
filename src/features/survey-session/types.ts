@@ -29,14 +29,6 @@ export interface ApiChatSession {
   status: SurveySessionStatus;
 }
 
-/** [API] 대화 발췌 (히스토리 아이템) */
-export interface ApiChatExcerpt {
-  turn_num: number;
-  q_type: InterviewLogQType;
-  question_text: string;
-  answer_text: string | null;
-}
-
 /** [API] 저장된 대화 로그 */
 export interface ApiSavedChatLog {
   turn_num: number;
@@ -56,18 +48,6 @@ export interface ApiCreateChatSessionResult {
 /** [API] POST /interview/{survey_id} Response */
 export interface CreateChatSessionResponse {
   result: ApiCreateChatSessionResult;
-}
-
-/** [API] 대화 세션 복원 결과 데이터 */
-export interface ApiRestoreChatSessionResult {
-  session: ApiChatSession;
-  excerpts: ApiChatExcerpt[];
-  sse_url: string;
-}
-
-/** [API] GET /interview/{survey_id}/{session_id} Response */
-export interface RestoreChatSessionResponse {
-  result: ApiRestoreChatSessionResult;
 }
 
 // ----------------------------------------
@@ -158,14 +138,6 @@ export interface ChatSession {
   status: SurveySessionStatus;
 }
 
-/** [Client] 대화 발췌 */
-export interface ChatExcerpt {
-  turnNum: number;
-  qType: InterviewLogQType;
-  questionText: string;
-  answerText: string | null;
-}
-
 /** [Client] 저장된 대화 로그 */
 export interface SavedChatLog {
   turnNum: number;
@@ -210,12 +182,6 @@ export interface ChatMessageData {
 /** 새 대화 세션 생성 요청 파라미터 */
 export interface CreateChatSessionParams {
   surveyUuid: string;
-}
-
-/** 대화 세션 복원 요청 파라미터 */
-export interface RestoreChatSessionParams {
-  surveyId: number;
-  sessionId: string;
 }
 
 /** 응답자 대답 전송 요청 파라미터 */
@@ -279,26 +245,6 @@ export interface UseChatSessionReturn {
 // Transformer Functions (API -> Client)
 // ----------------------------------------
 
-/** API 채팅 세션 -> 클라이언트 변환 */
-export function toChatSession(api: ApiChatSession): ChatSession {
-  return {
-    sessionId: api.session_id,
-    sessionUuid: api.session_uuid,
-    surveyId: api.survey_id,
-    status: api.status,
-  };
-}
-
-/** API 대화 발췌 -> 클라이언트 변환 */
-export function toChatExcerpt(api: ApiChatExcerpt): ChatExcerpt {
-  return {
-    turnNum: api.turn_num,
-    qType: api.q_type,
-    questionText: api.question_text,
-    answerText: api.answer_text,
-  };
-}
-
 /** API SSE Question 이벤트 -> 클라이언트 변환 */
 export function toSSEQuestionEventData(
   api: ApiSSEQuestionEventData
@@ -320,29 +266,5 @@ export function toSSETokenEventData(
     qType: api.q_type,
     questionText: api.question_text,
     turnNum: api.turn_num,
-  };
-}
-
-/** API 저장된 대화 로그 -> 클라이언트 변환 */
-export function toSavedChatLog(api: ApiSavedChatLog): SavedChatLog {
-  return {
-    turnNum: api.turn_num,
-    qType: api.q_type,
-    fixedQId: api.fixed_q_id,
-    questionText: api.question_text,
-    answerText: api.answer_text,
-    answeredAt: api.answered_at,
-  };
-}
-
-/** 클라이언트 메시지 요청 -> API 요청 변환 */
-export function toApiSendMessageRequest(
-  client: SendMessageRequest
-): ApiSendMessageRequest {
-  return {
-    fixed_q_id: client.fixedQId,
-    turn_num: client.turnNum,
-    answer_text: client.answerText,
-    question_text: client.questionText,
   };
 }

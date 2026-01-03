@@ -5,7 +5,6 @@
 import { create } from 'zustand';
 
 import type {
-  ChatExcerpt,
   ChatMessageData,
   InterviewLogQType,
   SurveySessionStatus,
@@ -48,7 +47,6 @@ interface ChatState {
     fixedQId: number | null
   ) => void;
   addUserMessage: (content: string, turnNum: number) => void;
-  restoreMessages: (excerpts: ChatExcerpt[]) => void;
   appendStreamingToken: (token: string, turnNum: number) => void;
   finalizeStreamingMessage: () => void;
   setLoading: (loading: boolean) => void;
@@ -119,45 +117,6 @@ export const useChatStore = create<ChatState>((set, get) => ({
       ],
       isLoading: true,
     })),
-
-  restoreMessages: (excerpts) =>
-    set(() => {
-      const messages: ChatMessageData[] = [];
-      let maxTurnNum = 0;
-
-      excerpts.forEach((excerpt) => {
-        // AI 질문
-        messages.push({
-          id: `ai-${excerpt.turnNum}-restored`,
-          type: 'ai',
-          content: excerpt.questionText,
-          turnNum: excerpt.turnNum,
-          qType: excerpt.qType,
-          timestamp: new Date(),
-        });
-
-        // 사용자 응답 (있는 경우)
-        if (excerpt.answerText) {
-          messages.push({
-            id: `user-${excerpt.turnNum}-restored`,
-            type: 'user',
-            content: excerpt.answerText,
-            turnNum: excerpt.turnNum,
-            timestamp: new Date(),
-          });
-        }
-
-        maxTurnNum = Math.max(maxTurnNum, excerpt.turnNum);
-      });
-
-      // 복원 시에는 fixedQId를 알 수 없으므로 null로 설정
-      // 다음 SSE question 이벤트에서 업데이트됨
-      return {
-        messages,
-        currentTurnNum: maxTurnNum,
-        currentFixedQId: null,
-      };
-    }),
 
   appendStreamingToken: (token, turnNum) =>
     set((state) => {

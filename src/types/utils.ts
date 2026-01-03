@@ -7,10 +7,3 @@
 export type ConfigValue<
   T extends Record<string, { value: string; label: string }>,
 > = T[keyof T]['value'];
-
-/**
- * Config 객체에서 label 타입 추출
- */
-export type ConfigLabel<
-  T extends Record<string, { value: string; label: string }>,
-> = T[keyof T]['label'];

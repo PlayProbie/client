@@ -70,28 +70,4 @@ export interface Game {
   createdAt: string;
 }
 
-// ----------------------------------------
-// Transformer Functions (API -> Client)
-// ----------------------------------------
-
-/** API 게임 -> 클라이언트 게임 변환 */
-export function toGame(api: ApiGame): Game {
-  return {
-    gameId: api.game_id,
-    gameName: api.game_name,
-    gameContext: api.game_context,
-    gameGenre: api.game_genre,
-    createdAt: api.created_at,
-  };
-}
-
-/** 클라이언트 게임 생성 요청 -> API 요청 변환 */
-export function toApiCreateGameRequest(
-  client: CreateGameRequest
-): ApiCreateGameRequest {
-  return {
-    game_name: client.gameName,
-    game_context: client.gameContext,
-    game_genre: client.gameGenre,
-  };
-}
+// NOTE: API <-> Client 변환기는 실제 사용 시점에 맞춰 추가합니다.

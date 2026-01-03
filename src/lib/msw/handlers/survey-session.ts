@@ -1,50 +1,12 @@
 import { delay, http, HttpResponse } from 'msw';
 
 import type {
-  ApiChatExcerpt,
   ApiSendMessageRequest,
   CreateChatSessionResponse,
-  RestoreChatSessionResponse,
   SendMessageResponse,
 } from '@/features/survey-session';
 
 import { MSW_API_BASE_URL } from '../constants';
-
-// 목업 대화 발췌 데이터 - Escape From Duckov 시연용
-const generateMockExcerpts = (turnCount: number): ApiChatExcerpt[] => {
-  const questions = [
-    {
-      q_type: 'FIXED' as const,
-      text: '레이드 중 긴장감을 느끼셨나요?',
-    },
-    {
-      q_type: 'TAIL' as const,
-      text: '어떤 상황에서 가장 긴장되셨나요?',
-    },
-    {
-      q_type: 'FIXED' as const,
-      text: '은신처 건설을 통한 성장이 체감되셨나요?',
-    },
-    {
-      q_type: 'TAIL' as const,
-      text: '어떤 업그레이드가 가장 도움이 되었나요?',
-    },
-  ];
-
-  const answers = [
-    '탈출 포인트까지 갈 때 정말 심장이 뛰었어요.',
-    '전리품을 많이 들고 있는데 적 발소리가 들렸을 때요.',
-    '은신처 레벨 올리니까 확실히 장비가 좋아졌어요.',
-    '무기 개조대 업그레이드가 제일 유용했어요.',
-  ];
-
-  return Array.from({ length: turnCount }, (_, i) => ({
-    turn_num: i + 1,
-    q_type: questions[i % questions.length].q_type,
-    question_text: questions[i % questions.length].text,
-    answer_text: i < turnCount - 1 ? answers[i % answers.length] : null, // 마지막 턴은 답변 대기 중
-  }));
-};
 
 // SSE 질문 목록 (목업) - Escape From Duckov 시연용
 // FIXED 질문은 AI 질문 생성 목록(ai-questions.ts)과 일치해야 함
@@ -237,41 +199,6 @@ export const surveySessionHandlers = [
       };
 
       return HttpResponse.json(response, { status: 201 });
-    }
-  ),
-
-  // GET /api/interview/{survey_id}/{session_id} - 대화 세션 복원
-  // NOTE: This handler MUST come after more specific paths like /:sessionUuid/stream
-  http.get(
-    `${MSW_API_BASE_URL}/interview/:surveyId/:sessionId`,
-    async ({ params }) => {
-      await delay(250);
-
-      const sessionId = params.sessionId as string;
-
-      // 새 세션이면 턴 초기화 (기존 대화 없음)
-      if (!sessionTurns.has(sessionId)) {
-        sessionTurns.set(sessionId, 0);
-      }
-
-      const currentTurn = sessionTurns.get(sessionId) || 0;
-      // 기존 대화가 있는 경우에만 excerpts 반환
-      const excerpts = currentTurn > 0 ? generateMockExcerpts(currentTurn) : [];
-
-      const response: RestoreChatSessionResponse = {
-        result: {
-          session: {
-            session_id: 1, // FIXME: 실제 session_id
-            session_uuid: sessionId,
-            survey_id: 1, // MSW mock: 실제로는 surveyUuid로 조회된 survey_id
-            status: 'IN_PROGRESS',
-          },
-          excerpts,
-          sse_url: `/interview/${sessionId}/stream`,
-        },
-      };
-
-      return HttpResponse.json(response);
     }
   ),
 ];
