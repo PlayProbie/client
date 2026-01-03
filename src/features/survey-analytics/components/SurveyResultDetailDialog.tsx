@@ -18,8 +18,7 @@ import {
 } from '@/features/survey-session';
 
 import { getSurveyResultDetails } from '../api/get-survey-result-details';
-import type { QuestionAnswerExcerpt } from '../types';
-import { toSurveyResultDetails } from '../types';
+import type { QuestionAnswerExcerpt, SurveyResultDetails } from '../types';
 
 type SurveyResultDetailDialogProps = {
   open: boolean;
@@ -46,7 +45,7 @@ function SurveyResultDetailDialog({
   } = useQuery({
     queryKey: ['survey-result-details', surveyId, sessionId],
     queryFn: () => getSurveyResultDetails({ surveyId, sessionId }),
-    select: (response) => toSurveyResultDetails(response.result),
+    select: (response) => response.result as unknown as SurveyResultDetails,
     enabled: open && !!surveyId && !!sessionId,
   });
 
