@@ -1,9 +1,9 @@
 import { delay, http, HttpResponse } from 'msw';
 
 import type {
-  QuestionFeedbackRequest,
+  ApiQuestionFeedbackRequest,
+  ApiQuestionFeedbackResponseItem,
   QuestionFeedbackResponse,
-  QuestionFeedbackResponseItem,
 } from '@/features/survey-design';
 
 import { MSW_API_BASE_URL } from '../constants';
@@ -12,7 +12,7 @@ import { MSW_API_BASE_URL } from '../constants';
  * POST /api/surveys/question-feedback - 질문 피드백 핸들러
  */
 export const questionFeedbackHandlers = [
-  http.post<never, QuestionFeedbackRequest>(
+  http.post<never, ApiQuestionFeedbackRequest>(
     `${MSW_API_BASE_URL}/surveys/question-feedback`,
     async ({ request }) => {
       await delay(1000); // AI 분석 시간 시뮬레이션
@@ -20,9 +20,8 @@ export const questionFeedbackHandlers = [
       const body = await request.json();
 
       // 각 질문에 대한 피드백 생성
-      const feedbackItems: QuestionFeedbackResponseItem[] = body.questions.map(
-        (question) => generateFeedback(question)
-      );
+      const feedbackItems: ApiQuestionFeedbackResponseItem[] =
+        body.questions.map((question: string) => generateFeedback(question));
 
       const response: QuestionFeedbackResponse = {
         result: feedbackItems,
@@ -36,7 +35,7 @@ export const questionFeedbackHandlers = [
 /**
  * 질문에 대한 Mock 피드백 생성 - Escape From Duckov 시연용
  */
-function generateFeedback(question: string): QuestionFeedbackResponseItem {
+function generateFeedback(question: string): ApiQuestionFeedbackResponseItem {
   const summaries = [
     '하드코어 생존 게임의 핵심 경험을 측정하는 좋은 질문입니다.',
     'Extraction Shooter 장르의 특성을 잘 반영한 질문입니다.',

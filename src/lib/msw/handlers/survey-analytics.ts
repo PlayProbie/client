@@ -1,10 +1,10 @@
 import { delay, http, HttpResponse } from 'msw';
 
 import type {
+  ApiSurveyResultListItem,
   GetSurveyResultDetailsResponse,
   GetSurveyResultsListResponse,
   GetSurveyResultsSummaryResponse,
-  SurveyResultListItem,
   SurveySessionStatus,
 } from '@/features/survey-analytics';
 
@@ -12,7 +12,7 @@ import { MSW_API_BASE_URL } from '../constants';
 import { toKSTISOString } from '../utils';
 
 // 목업 데이터 생성 헬퍼 - Escape From Duckov 시연용
-const generateMockSessionItems = (count: number): SurveyResultListItem[] => {
+const generateMockSessionItems = (count: number): ApiSurveyResultListItem[] => {
   const statuses: SurveySessionStatus[] = [
     'COMPLETED',
     'IN_PROGRESS',
@@ -85,8 +85,8 @@ export const surveyAnalyticsHandlers = [
       const response: GetSurveyResultsListResponse = {
         result: {
           content,
-          nextCursor: hasNext ? startIndex + limit : null,
-          hasNext,
+          next_cursor: hasNext ? startIndex + limit : null,
+          has_next: hasNext,
         },
       };
 

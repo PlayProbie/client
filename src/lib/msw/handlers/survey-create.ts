@@ -1,7 +1,7 @@
 import { delay, http, HttpResponse } from 'msw';
 
 import type {
-  CreateSurveyRequest,
+  ApiCreateSurveyRequest,
   CreateSurveyResponse,
 } from '@/features/survey-design';
 
@@ -12,7 +12,7 @@ import { toKSTISOString } from '../utils';
  * POST /api/surveys - 설문 생성 핸들러
  */
 export const surveyCreateHandlers = [
-  http.post<never, CreateSurveyRequest>(
+  http.post<never, ApiCreateSurveyRequest>(
     `${MSW_API_BASE_URL}/surveys`,
     async ({ request }) => {
       await delay(300);

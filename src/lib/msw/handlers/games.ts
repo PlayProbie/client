@@ -1,7 +1,7 @@
 import { delay, http, HttpResponse } from 'msw';
 
 import type {
-  CreateGameRequest,
+  ApiCreateGameRequest,
   CreateGameResponse,
 } from '@/features/game/types';
 
@@ -12,7 +12,7 @@ import { toKSTISOString } from '../utils';
  * POST /api/games - 게임 생성 핸들러
  */
 export const gamesHandlers = [
-  http.post<never, CreateGameRequest>(
+  http.post<never, ApiCreateGameRequest>(
     `${MSW_API_BASE_URL}/games`,
     async ({ request }) => {
       await delay(300);
