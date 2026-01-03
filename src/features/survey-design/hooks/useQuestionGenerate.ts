@@ -22,6 +22,10 @@ function useQuestionGenerate() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generateError, setGenerateError] = useState<string | null>(null);
   const [hasGenerated, setHasGenerated] = useState(false);
+  const [pendingFeedbackQuestions, setPendingFeedbackQuestions] = useState<
+    Set<string>
+  >(new Set());
+  const initialGenerateRef = useRef(false);
 
   // AI 질문 생성 API 호출
   const generateQuestions = useCallback(async () => {
@@ -72,15 +76,26 @@ function useQuestionGenerate() {
 
   // 페이지 렌더링 시 질문이 없으면 자동으로 API 호출
   useEffect(() => {
-    if (manager.questions.length > 0 || isGenerating || hasGenerated) {
+    if (
+      manager.questions.length > 0 ||
+      isGenerating ||
+      hasGenerated ||
+      initialGenerateRef.current
+    ) {
       return;
     }
-    generateQuestions();
+
+    initialGenerateRef.current = true;
+
+    generateQuestions().finally(() => {
+      initialGenerateRef.current = false;
+    });
   }, [manager.questions.length, isGenerating, hasGenerated, generateQuestions]);
 
   // 전체 질문에 대한 피드백 요청 (초기 로드 시)
   // useRef를 사용하여 최신 값을 참조하되, 불필요한 re-render를 방지
   const managerRef = useRef(manager);
+  const fetchingQuestionsRef = useRef<Set<string>>(new Set());
   managerRef.current = manager;
 
   useEffect(() => {
@@ -91,22 +106,42 @@ function useQuestionGenerate() {
 
       // 이미 피드백이 있는 질문은 스킵
       const questionsToFetch = currentManager.questions.filter(
-        (q) => !currentManager.feedbackMap[q]
+        (q) =>
+          !currentManager.feedbackMap[q] &&
+          !fetchingQuestionsRef.current.has(q)
       );
       if (questionsToFetch.length === 0) return;
 
+      questionsToFetch.forEach((q) => fetchingQuestionsRef.current.add(q));
+      setPendingFeedbackQuestions((prev) => {
+        const next = new Set(prev);
+        questionsToFetch.forEach((q) => next.add(q));
+        return next;
+      });
       currentManager.setIsFetchingFeedback(true);
 
       try {
-        const newFeedbackMap = { ...currentManager.feedbackMap };
-        for (const q of questionsToFetch) {
-          const feedback = await currentManager.fetchFeedbackForQuestion(q);
-          newFeedbackMap[q] = feedback;
-        }
-        currentManager.setFeedbackMap(newFeedbackMap);
+        await Promise.all(
+          questionsToFetch.map(async (question) => {
+            const feedback =
+              await currentManager.fetchFeedbackForQuestion(question);
+            currentManager.setFeedbackMap((prev) => ({
+              ...prev,
+              [question]: feedback,
+            }));
+          })
+        );
       } catch (error) {
         console.error('Failed to fetch feedback:', error);
       } finally {
+        questionsToFetch.forEach((q) =>
+          fetchingQuestionsRef.current.delete(q)
+        );
+        setPendingFeedbackQuestions((prev) => {
+          const next = new Set(prev);
+          questionsToFetch.forEach((q) => next.delete(q));
+          return next;
+        });
         currentManager.setIsFetchingFeedback(false);
       }
     };
@@ -175,6 +210,7 @@ function useQuestionGenerate() {
     // AI 전용 상태
     isGenerating,
     generateError,
+    pendingFeedbackQuestions,
 
     // 공통 핸들러 (from manager)
     handleToggle: manager.handleToggle,

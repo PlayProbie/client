@@ -20,6 +20,7 @@ function StepQuestionAIGenerate() {
     selectedQuestions,
     loadingIndex,
     isFetchingFeedback,
+    pendingFeedbackQuestions,
     isGenerating,
     selectedCount,
     totalCount,
@@ -72,6 +73,7 @@ function StepQuestionAIGenerate() {
         selectedQuestions={selectedQuestions}
         loadingIndex={loadingIndex}
         isFetchingFeedback={isFetchingFeedback}
+        pendingFeedbackQuestions={pendingFeedbackQuestions}
         feedbackMap={feedbackMap}
         onToggle={handleToggle}
         onSuggestionClick={handleSuggestionClick}

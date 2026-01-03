@@ -8,7 +8,8 @@ type QuestionListProps = {
   questions: string[];
   selectedQuestions: Set<number>;
   loadingIndex: number | null;
-  isFetchingFeedback: boolean;
+  isFetchingFeedback?: boolean;
+  pendingFeedbackQuestions?: Set<string>;
   feedbackMap: Record<string, QuestionFeedbackItem>;
   onToggle: (index: number) => void;
   onSuggestionClick: (index: number, suggestion: string) => void;
@@ -23,6 +24,7 @@ function QuestionList({
   selectedQuestions,
   loadingIndex,
   isFetchingFeedback,
+  pendingFeedbackQuestions,
   feedbackMap,
   onToggle,
   onSuggestionClick,
@@ -47,7 +49,10 @@ function QuestionList({
           question={question}
           isSelected={selectedQuestions.has(index)}
           isLoading={loadingIndex === index}
-          isFetchingFeedback={isFetchingFeedback}
+          isFetchingFeedback={
+            pendingFeedbackQuestions?.has(question) ??
+            Boolean(isFetchingFeedback)
+          }
           feedback={feedbackMap[question]}
           onToggle={onToggle}
           onSuggestionClick={onSuggestionClick}
