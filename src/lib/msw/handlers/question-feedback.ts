@@ -19,12 +19,12 @@ export const questionFeedbackHandlers = [
 
       const body = await request.json();
 
-      // 각 질문에 대한 피드백 생성
-      const feedbackItems: ApiQuestionFeedbackResponseItem[] =
-        body.questions.map((question: string) => generateFeedback(question));
+      // 단일 질문에 대한 피드백 생성 (API는 questions 배열의 첫 번째 항목 사용)
+      const question = body.questions[0] || '';
+      const feedback = generateFeedback(question);
 
       const response: QuestionFeedbackResponse = {
-        result: feedbackItems,
+        result: feedback,
       };
 
       return HttpResponse.json(response, { status: 200 });

@@ -20,17 +20,24 @@ function SurveyChatPage() {
   // SurveyChatStartPage에서 전달받은 state
   const state = location.state as {
     surveyId?: number;
-    sessionId?: number;
+    sessionUuid?: string;
   } | null;
 
   // sessionId는 문자열로 사용 (UUID 지원)
-  const chatSessionId = sessionId || '';
+  const sessionUuid = sessionId || '';
 
-  const { isReady, isComplete, isLoading, error, messages, sendAnswer } =
-    useChatSession({
-      sessionId: chatSessionId,
-      surveyId: state?.surveyId,
-    });
+  const {
+    isReady,
+    isComplete,
+    isLoading,
+    isStreaming,
+    error,
+    messages,
+    sendAnswer,
+  } = useChatSession({
+    sessionUuid,
+    surveyId: state?.surveyId,
+  });
 
   // 로딩 상태
   if (!isReady) {
@@ -69,7 +76,7 @@ function SurveyChatPage() {
       {/* 메시지 목록 */}
       <ChatMessageList
         messages={messages}
-        isLoading={isLoading}
+        isLoading={isLoading || isStreaming}
         className="flex-1"
       />
 

@@ -23,17 +23,18 @@ function SurveyChatStartPage() {
 
       try {
         const response = await createChatSession({
-          surveyId: parseInt(surveyId, 10),
+          surveyUuid: surveyId, // URL에서 받은 survey_uuid
         });
 
         const { session, sse_url: sseUrl } = response.result;
 
         // 세션 정보를 state로 전달하면서 리다이렉트
-        navigate(`/surveys/chat/sessions/${session.session_id}`, {
+        // 첫 질문은 SSE connect 후 question 이벤트로 수신됨
+        navigate(`/surveys/chat/sessions/${session.session_uuid}`, {
           replace: true,
           state: {
             surveyId: session.survey_id,
-            sessionId: session.session_id,
+            sessionUuid: session.session_uuid,
             sseUrl: sseUrl,
           },
         });

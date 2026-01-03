@@ -1,3 +1,5 @@
+import { useParams } from 'react-router-dom';
+
 import {
   SurveyResultsSummaryCard,
   SurveyResultsTable,
@@ -6,13 +8,14 @@ import {
 
 /**
  * 설문 분석 결과 페이지
- * URL: /survey/analytics
+ * URL: /survey/analytics/:gameId
  */
 function SurveyAnalyticsPage() {
-  // TODO: gameId를 URL 파라미터 또는 상태에서 가져오기
-  const gameId = '2';
+  const { gameId } = useParams<{ gameId: string }>();
 
-  const { summary, list, isLoading, isError } = useSurveyResults({ gameId });
+  const { summary, list, isLoading, isError } = useSurveyResults({
+    gameId: gameId || '',
+  });
 
   return (
     <main className="container mx-auto max-w-5xl px-4 py-8">
