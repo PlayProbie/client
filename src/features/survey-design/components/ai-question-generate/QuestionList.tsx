@@ -42,7 +42,7 @@ function QuestionList({
     >
       {questions.map((question, index) => (
         <QuestionItem
-          key={index}
+          key={question}
           index={index}
           question={question}
           isSelected={selectedQuestions.has(index)}

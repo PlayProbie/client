@@ -1,7 +1,7 @@
 import { API_BASE_URL } from '@/constants/api';
 
 import type {
-  CreateFixedQuestionsRequest,
+  ApiCreateFixedQuestionsRequest,
   CreateFixedQuestionsResponse,
 } from '../types';
 
@@ -9,7 +9,7 @@ import type {
  * POST /surveys/fixed-questions - 고정 질문 생성
  */
 export async function postFixedQuestions(
-  data: CreateFixedQuestionsRequest
+  data: ApiCreateFixedQuestionsRequest
 ): Promise<CreateFixedQuestionsResponse> {
   const response = await fetch(`${API_BASE_URL}/surveys/fixed-questions`, {
     method: 'POST',

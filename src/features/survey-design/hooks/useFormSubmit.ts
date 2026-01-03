@@ -2,7 +2,7 @@ import { useMutation } from '@tanstack/react-query';
 
 import { postFixedQuestions, postGame, postSurvey } from '../api';
 import { useSurveyFormStore } from '../store/useSurveyFormStore';
-import type { FixedQuestionItem, SurveyFormData } from '../types';
+import type { ApiFixedQuestionItem, SurveyFormData } from '../types';
 
 type UseFormSubmitOptions = {
   onSuccess?: (surveyUrl: string) => void;
@@ -121,7 +121,7 @@ export function useFormSubmit(options?: UseFormSubmitOptions) {
       }
 
       // 3. 고정 질문 생성 (선택된 질문만)
-      const selectedQuestions: FixedQuestionItem[] = (
+      const selectedQuestions: ApiFixedQuestionItem[] = (
         selectedQuestionIndices || []
       ).map((index, order) => ({
         q_content: questions?.[index] || '',

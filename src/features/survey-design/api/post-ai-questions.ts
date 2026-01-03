@@ -1,7 +1,7 @@
 import { API_BASE_URL } from '@/constants/api';
 
 import type {
-  GenerateAiQuestionsRequest,
+  ApiGenerateAiQuestionsRequest,
   GenerateAiQuestionsResponse,
 } from '../types';
 
@@ -9,7 +9,7 @@ import type {
  * POST /surveys/ai-questions - AI 질문 생성
  */
 export async function postAiQuestions(
-  data: GenerateAiQuestionsRequest
+  data: ApiGenerateAiQuestionsRequest
 ): Promise<GenerateAiQuestionsResponse> {
   const response = await fetch(`${API_BASE_URL}/surveys/ai-questions`, {
     method: 'POST',
