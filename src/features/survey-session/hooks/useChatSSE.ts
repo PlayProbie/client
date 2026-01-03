@@ -21,6 +21,7 @@ export function useChatSSE({
   onQuestion,
   onToken,
   onStart,
+  onDone,
   onInterviewComplete,
   onError,
   onOpen,
@@ -34,6 +35,7 @@ export function useChatSSE({
   const onQuestionRef = useRef(onQuestion);
   const onTokenRef = useRef(onToken);
   const onStartRef = useRef(onStart);
+  const onDoneRef = useRef(onDone);
   const onInterviewCompleteRef = useRef(onInterviewComplete);
   const onErrorRef = useRef(onError);
   const onOpenRef = useRef(onOpen);
@@ -45,6 +47,7 @@ export function useChatSSE({
     onQuestionRef.current = onQuestion;
     onTokenRef.current = onToken;
     onStartRef.current = onStart;
+    onDoneRef.current = onDone;
     onInterviewCompleteRef.current = onInterviewComplete;
     onErrorRef.current = onError;
     onOpenRef.current = onOpen;
@@ -54,6 +57,7 @@ export function useChatSSE({
     onQuestion,
     onToken,
     onStart,
+    onDone,
     onInterviewComplete,
     onError,
     onOpen,
@@ -117,6 +121,17 @@ export function useChatSSE({
     eventSource.addEventListener('start', () => {
       console.log('[SSE] AI processing started');
       onStartRef.current?.();
+    });
+
+    // done 이벤트 핸들러 (AI 응답 완료)
+    eventSource.addEventListener('done', (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        console.log('[SSE] AI response done:', data.turn_num);
+        onDoneRef.current?.(data.turn_num);
+      } catch (e) {
+        console.error('[SSE] Failed to parse done event:', e);
+      }
     });
 
     // interview_complete 이벤트 핸들러

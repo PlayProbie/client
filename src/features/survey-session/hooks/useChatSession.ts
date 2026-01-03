@@ -69,6 +69,12 @@ export function useChatSession({
       console.log('[Chat] AI processing started');
       setStreaming(true);
     },
+    onDone: (turnNum) => {
+      console.log('[Chat] AI response done:', turnNum);
+      finalizeStreamingMessage();
+      setStreaming(false);
+      setLoading(false);
+    },
     onInterviewComplete: () => {
       console.log('[Chat] Interview completed');
       finalizeStreamingMessage();
@@ -169,8 +175,7 @@ export function useChatSession({
           }
         );
 
-        // 메시지 전송 후 다음 질문을 받기 위해 SSE 재연결
-        connect();
+        // SSE 연결은 유지됨 - 서버에서 다음 질문을 전송
       } catch (err) {
         console.error('[Chat] Failed to send message:', err);
         setError('메시지 전송에 실패했습니다.');
@@ -187,7 +192,6 @@ export function useChatSession({
       addUserMessage,
       setError,
       setLoading,
-      connect,
     ]
   );
 

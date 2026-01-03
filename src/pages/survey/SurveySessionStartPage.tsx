@@ -4,7 +4,7 @@
  */
 
 import { Loader2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { createChatSession } from '@/features/survey-session';
@@ -13,8 +13,13 @@ function SurveySessionStartPage() {
   const { surveyId } = useParams<{ surveyId: string }>();
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
+  const isSessionStarted = useRef(false);
 
   useEffect(() => {
+    // StrictMode에서 이중 호출 방지
+    if (isSessionStarted.current) return;
+    isSessionStarted.current = true;
+
     const startSession = async () => {
       if (!surveyId) {
         setError('잘못된 설문 ID입니다.');

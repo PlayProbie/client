@@ -103,6 +103,11 @@ export interface ApiSSEInterviewCompleteEventData {
   status: 'completed';
 }
 
+/** [API] SSE done 이벤트 데이터 (AI 응답 완료) */
+export interface ApiSSEDoneEventData {
+  turn_num: number;
+}
+
 /** [API] SSE Error 이벤트 데이터 */
 export interface ApiSSEErrorEventData {
   code: string;
@@ -115,6 +120,7 @@ export type ApiSSEEvent =
   | { event: 'question'; data: ApiSSEQuestionEventData }
   | { event: 'token'; data: ApiSSETokenEventData }
   | { event: 'start'; data: ApiSSEStartEventData }
+  | { event: 'done'; data: ApiSSEDoneEventData }
   | { event: 'interview_complete'; data: ApiSSEInterviewCompleteEventData }
   | { event: 'error'; data: ApiSSEErrorEventData };
 
@@ -236,6 +242,7 @@ export interface UseChatSSEOptions {
   onQuestion?: (data: SSEQuestionEventData) => void;
   onToken?: (data: SSETokenEventData) => void;
   onStart?: () => void;
+  onDone?: (turnNum: number) => void;
   onInterviewComplete?: () => void;
   onError?: (error: string) => void;
   onOpen?: () => void;

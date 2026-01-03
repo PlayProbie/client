@@ -76,7 +76,7 @@ function SurveySessionPage() {
       {/* 메시지 목록 */}
       <ChatMessageList
         messages={messages}
-        isLoading={isLoading || isStreaming}
+        isLoading={isLoading && !isStreaming}
         className="flex-1"
       />
 
