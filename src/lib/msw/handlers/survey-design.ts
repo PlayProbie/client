@@ -11,7 +11,7 @@ import { toKSTISOString } from '../utils';
 /**
  * POST /api/surveys - 설문 생성 핸들러
  */
-export const surveysHandlers = [
+export const surveyDesignHandlers = [
   http.post<never, ApiCreateSurveyRequest>(
     `${MSW_API_BASE_URL}/surveys`,
     async ({ request }) => {
@@ -24,7 +24,7 @@ export const surveysHandlers = [
         result: {
           survey_id: surveyId,
           survey_name: body.survey_name,
-          survey_url: `${MSW_CLIENT_BASE_URL}/surveys/chat/sessions/84266fdbd31d4c2c6d0665f7e8380fa3`,
+          survey_url: `${MSW_CLIENT_BASE_URL}/surveys/session/sessions/84266fdbd31d4c2c6d0665f7e8380fa3`,
           started_at: body.started_at,
           ended_at: body.ended_at,
           test_purpose: body.test_purpose,

@@ -1,6 +1,6 @@
 /**
- * SurveyChatStartPage - 새 대화 세션 생성 및 리다이렉트
- * URL: /surveys/chat/:surveyId
+ * SurveySessionStartPage - 새 설문 세션 생성 및 리다이렉트
+ * URL: /surveys/session/:surveyId
  */
 
 import { Loader2 } from 'lucide-react';
@@ -9,7 +9,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 import { createChatSession } from '@/features/survey-session';
 
-function SurveyChatStartPage() {
+function SurveySessionStartPage() {
   const { surveyId } = useParams<{ surveyId: string }>();
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
@@ -30,7 +30,7 @@ function SurveyChatStartPage() {
 
         // 세션 정보를 state로 전달하면서 리다이렉트
         // 첫 질문은 SSE connect 후 question 이벤트로 수신됨
-        navigate(`/surveys/chat/sessions/${session.session_uuid}`, {
+        navigate(`/surveys/session/sessions/${session.session_uuid}`, {
           replace: true,
           state: {
             surveyId: session.survey_id,
@@ -39,7 +39,7 @@ function SurveyChatStartPage() {
           },
         });
       } catch (err) {
-        console.error('Failed to create chat session:', err);
+        console.error('Failed to create session:', err);
         setError('세션 생성에 실패했습니다. 잠시 후 다시 시도해주세요.');
       }
     };
@@ -73,4 +73,4 @@ function SurveyChatStartPage() {
   );
 }
 
-export default SurveyChatStartPage;
+export default SurveySessionStartPage;

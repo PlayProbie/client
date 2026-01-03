@@ -1,13 +1,12 @@
 import { useState } from 'react';
 
-import { Header } from '@/components/layout/Header';
-import { SurveyCreated, SurveyCreateForm } from '@/features/survey-design';
+import { SurveyCreated, SurveyDesignForm } from '@/features/survey-design';
 
 /**
- * 설문 생성 페이지
- * URL: /survey/create
+ * 설문 설계 페이지
+ * URL: /survey/design
  */
-function SurveyCreatePage() {
+function SurveyDesignPage() {
   const [isCompleted, setIsCompleted] = useState(false);
   const [surveyUrl, setSurveyUrl] = useState<string | null>(null);
 
@@ -18,14 +17,13 @@ function SurveyCreatePage() {
 
   return (
     <div className="bg-background min-h-screen">
-      <Header />
       <main className="container mx-auto max-w-2xl px-4 py-8">
         {isCompleted && surveyUrl ? (
           <SurveyCreated surveyUrl={surveyUrl} />
         ) : (
           <>
             <h1 className="mb-8 text-2xl font-bold">설문 등록</h1>
-            <SurveyCreateForm onComplete={handleComplete} />
+            <SurveyDesignForm onComplete={handleComplete} />
           </>
         )}
       </main>
@@ -33,4 +31,4 @@ function SurveyCreatePage() {
   );
 }
 
-export default SurveyCreatePage;
+export default SurveyDesignPage;

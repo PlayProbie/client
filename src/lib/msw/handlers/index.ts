@@ -7,12 +7,12 @@ import { fixedQuestionsHandlers } from './fixed-questions';
 import { gamesHandlers } from './games';
 import { questionFeedbackHandlers } from './question-feedback';
 import { surveyAnalyticsHandlers } from './survey-analytics';
-import { surveyCreateHandlers } from './survey-create';
+import { surveyDesignHandlers } from './survey-design';
 import { surveySessionHandlers } from './survey-session';
 
 export const handlers = [
   ...gamesHandlers,
-  ...surveyCreateHandlers,
+  ...surveyDesignHandlers,
   ...fixedQuestionsHandlers,
   ...aiQuestionsHandlers,
   ...questionFeedbackHandlers,

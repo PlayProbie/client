@@ -18,12 +18,12 @@ import {
   StepSurveyInfo,
 } from './steps';
 
-type SurveyCreateFormProps = {
+type SurveyDesignFormProps = {
   className?: string;
   onComplete?: (surveyUrl: string) => void;
 };
 
-function SurveyCreateForm({ className, onComplete }: SurveyCreateFormProps) {
+function SurveyDesignForm({ className, onComplete }: SurveyDesignFormProps) {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { step } = useParams<{ step: string }>();
@@ -90,7 +90,7 @@ function SurveyCreateForm({ className, onComplete }: SurveyCreateFormProps) {
 
       // 다음 단계로 이동
       const nextStepNum = currentStep + 1;
-      let path = `/survey/create/step-${nextStepNum}`;
+      let path = `/survey/design/step-${nextStepNum}`;
 
       // actor 파라미터가 전달되었거나 기존 searchParams에 있으면 추가
       const actorValue = actor || searchParams.get('actor');
@@ -102,12 +102,12 @@ function SurveyCreateForm({ className, onComplete }: SurveyCreateFormProps) {
 
   const handlePrev = () => {
     if (currentStep > 0) {
-      navigate(`/survey/create/step-${currentStep - 1}`);
+      navigate(`/survey/design/step-${currentStep - 1}`);
     }
   };
 
   const handleStepClick = (index: number) => {
-    navigate(`/survey/create/step-${index}`);
+    navigate(`/survey/design/step-${index}`);
   };
 
   const stepLabels = SURVEY_FORM_STEPS.map((s) => s.label);
@@ -194,5 +194,5 @@ function SurveyCreateForm({ className, onComplete }: SurveyCreateFormProps) {
   );
 }
 
-export { SurveyCreateForm };
-export type { SurveyCreateFormProps };
+export { SurveyDesignForm };
+export type { SurveyDesignFormProps };

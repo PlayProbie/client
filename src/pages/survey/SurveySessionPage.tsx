@@ -1,6 +1,6 @@
 /**
- * SurveyChatPage - 채팅 진행 페이지
- * URL: /surveys/chat/sessions/:sessionId
+ * SurveySessionPage - 설문 세션 진행 페이지
+ * URL: /surveys/session/sessions/:sessionId
  */
 
 import { Loader2 } from 'lucide-react';
@@ -13,11 +13,11 @@ import {
   useChatSession,
 } from '@/features/survey-session';
 
-function SurveyChatPage() {
+function SurveySessionPage() {
   const { sessionId } = useParams<{ sessionId: string }>();
   const location = useLocation();
 
-  // SurveyChatStartPage에서 전달받은 state
+  // SurveySessionStartPage에서 전달받은 state
   const state = location.state as {
     surveyId?: number;
     sessionUuid?: string;
@@ -92,4 +92,4 @@ function SurveyChatPage() {
   );
 }
 
-export default SurveyChatPage;
+export default SurveySessionPage;

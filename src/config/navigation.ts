@@ -41,7 +41,7 @@ export const NAV_ITEMS: NavItem[] = [
     icon: FlaskConical,
     children: [
       { to: '/survey', label: '설문 관리' },
-      { to: '/survey/create/step-0', label: '설문 생성' },
+      { to: '/survey/design/step-0', label: '설문 설계' },
       { to: '/survey/analytics/1', label: '설문 응답 결과' }, // NOTE: MVP 단계에서는 gameId를 하드코딩해서 사용
     ],
   },

@@ -5,7 +5,7 @@
 
 // Components
 export { SurveyCreated } from './components/SurveyCreated';
-export { SurveyCreateForm } from './components/SurveyCreateForm';
+export { SurveyDesignForm } from './components/SurveyDesignForm';
 
 // Store
 export { useSurveyFormStore } from './store/useSurveyFormStore';
