@@ -1,9 +1,17 @@
 /**
  * Survey Design Feature 타입 정의
+ *
+ * 명명 규칙:
+ * - API 응답/요청 타입: snake_case (서버 응답 그대로)
+ * - 클라이언트 상태 타입: camelCase (컴포넌트에서 사용)
  */
 
 import type { GameGenre } from '@/features/game';
 import type { ConfigValue } from '@/types';
+
+// ----------------------------------------
+// Common Types
+// ----------------------------------------
 
 /** 설문 목적 정의 (value + label) */
 export const TestPurposeConfig = {
@@ -19,11 +27,11 @@ export const TestPurposeConfig = {
 export type TestPurpose = ConfigValue<typeof TestPurposeConfig>;
 
 // ----------------------------------------
-// POST /surveys - 설문 생성
+// API Request/Response Types (snake_case)
 // ----------------------------------------
 
-/** POST /surveys Request */
-export interface CreateSurveyRequest {
+/** [API] POST /surveys Request */
+export interface ApiCreateSurveyRequest {
   game_id: number;
   survey_name: string;
   started_at: string;
@@ -31,8 +39,8 @@ export interface CreateSurveyRequest {
   test_purpose: TestPurpose;
 }
 
-/** 설문 엔티티 */
-export interface Survey {
+/** [API] 설문 엔티티 */
+export interface ApiSurvey {
   survey_id: number;
   survey_name: string;
   survey_url: string;
@@ -42,17 +50,13 @@ export interface Survey {
   created_at: string;
 }
 
-/** POST /surveys Response */
+/** [API] POST /surveys Response */
 export interface CreateSurveyResponse {
-  result: Survey;
+  result: ApiSurvey;
 }
 
-// ----------------------------------------
-// POST /surveys/ai-questions - AI 질문 생성
-// ----------------------------------------
-
-/** POST /surveys/ai-questions Request */
-export interface GenerateAiQuestionsRequest {
+/** [API] POST /surveys/ai-questions Request */
+export interface ApiGenerateAiQuestionsRequest {
   game_name: string;
   game_context: string;
   game_genre: GameGenre[];
@@ -61,17 +65,13 @@ export interface GenerateAiQuestionsRequest {
   count: number;
 }
 
-/** POST /surveys/ai-questions Response */
+/** [API] POST /surveys/ai-questions Response */
 export interface GenerateAiQuestionsResponse {
   result: string[];
 }
 
-// ----------------------------------------
-// POST /surveys/question-feedback - 질문 피드백
-// ----------------------------------------
-
-/** POST /surveys/question-feedback Request */
-export interface QuestionFeedbackRequest {
+/** [API] POST /surveys/question-feedback Request */
+export interface ApiQuestionFeedbackRequest {
   game_name: string;
   game_context: string;
   game_genre: GameGenre[];
@@ -80,52 +80,85 @@ export interface QuestionFeedbackRequest {
   questions: string[];
 }
 
-/** 질문 피드백 항목 */
+/** [API] 질문 피드백 응답 항목 */
+export interface ApiQuestionFeedbackResponseItem {
+  question: string;
+  ai_feedback: string;
+  suggestions: string[];
+}
+
+/** [API] POST /surveys/question-feedback Response */
+export interface QuestionFeedbackResponse {
+  result: ApiQuestionFeedbackResponseItem;
+}
+
+/** [API] 고정 질문 항목 */
+export interface ApiFixedQuestionItem {
+  q_content: string;
+  q_order: number;
+}
+
+/** [API] POST /surveys/fixed_questions Request */
+export interface ApiCreateFixedQuestionsRequest {
+  survey_id: number;
+  questions: ApiFixedQuestionItem[];
+}
+
+/** [API] 고정 질문 생성 결과 */
+export interface ApiFixedQuestionsCount {
+  count: number;
+}
+
+/** [API] POST /surveys/fixed_questions Response */
+export interface CreateFixedQuestionsResponse {
+  result: ApiFixedQuestionsCount;
+}
+
+// ----------------------------------------
+// Client State Types (camelCase)
+// ----------------------------------------
+
+/** [Client] 설문 생성 요청 */
+export interface CreateSurveyRequest {
+  gameId: number;
+  surveyName: string;
+  startedAt: string;
+  endedAt: string;
+  testPurpose: TestPurpose;
+}
+
+/** [Client] 설문 엔티티 */
+export interface Survey {
+  surveyId: number;
+  surveyName: string;
+  surveyUrl: string;
+  startedAt: string;
+  endedAt: string;
+  testPurpose: TestPurpose;
+  createdAt: string;
+}
+
+/** [Client] 질문 피드백 항목 */
 export interface QuestionFeedbackItem {
   question: string;
   aiFeedback: string;
   suggestions: string[];
 }
 
-export interface QuestionFeedbackResponseItem {
-  question: string;
-  ai_feedback: string;
-  suggestions: string[];
-}
-
-/** POST /surveys/question-feedback Response */
-export interface QuestionFeedbackResponse {
-  result: QuestionFeedbackResponseItem[];
-}
-
-// ----------------------------------------
-// POST /surveys/fixed-questions - 고정 질문 생성
-// ----------------------------------------
-
-/** 고정 질문 항목 */
+/** [Client] 고정 질문 항목 */
 export interface FixedQuestionItem {
-  q_content: string;
-  q_order: number;
+  qContent: string;
+  qOrder: number;
 }
 
-/** POST /surveys/fixed_questions Request */
+/** [Client] 고정 질문 생성 요청 */
 export interface CreateFixedQuestionsRequest {
-  survey_id: number;
+  surveyId: number;
   questions: FixedQuestionItem[];
 }
 
-/** 고정 질문 생성 결과 */
-export interface FixedQuestionsCount {
-  count: number;
-}
-
-/** POST /surveys/fixed_questions Response */
-export interface CreateFixedQuestionsResponse {
-  result: FixedQuestionsCount;
-}
-
 // ----------------------------------------
-// Survey Form (설문 등록 폼)
+// Survey Form (설문 등록 폼) - Client Only
 // ----------------------------------------
 
 /** 설문 폼 상태 */
@@ -146,7 +179,7 @@ export type SurveyFormData = {
 
   // Step 2: 질문 생성
   questions: string[];
-  selectedQuestionIndices: number[]; // 선택된 질문 인덱스 배열 (Set은 JSON 직렬화 불가)
+  selectedQuestionIndices: number[];
 };
 
 /** 설문 폼 스텝 */
@@ -179,3 +212,64 @@ export const SURVEY_FORM_STEPS: SurveyFormStep[] = [
     description: '입력 내용을 확인하세요',
   },
 ];
+
+// ----------------------------------------
+// Transformer Functions (API <-> Client)
+// ----------------------------------------
+
+/** API 설문 -> 클라이언트 설문 변환 */
+export function toSurvey(api: ApiSurvey): Survey {
+  return {
+    surveyId: api.survey_id,
+    surveyName: api.survey_name,
+    surveyUrl: api.survey_url,
+    startedAt: api.started_at,
+    endedAt: api.ended_at,
+    testPurpose: api.test_purpose,
+    createdAt: api.created_at,
+  };
+}
+
+/** API 질문 피드백 -> 클라이언트 변환 */
+export function toQuestionFeedbackItem(
+  api: ApiQuestionFeedbackResponseItem
+): QuestionFeedbackItem {
+  return {
+    question: api.question,
+    aiFeedback: api.ai_feedback,
+    suggestions: api.suggestions,
+  };
+}
+
+/** 클라이언트 설문 생성 요청 -> API 요청 변환 */
+export function toApiCreateSurveyRequest(
+  client: CreateSurveyRequest
+): ApiCreateSurveyRequest {
+  return {
+    game_id: client.gameId,
+    survey_name: client.surveyName,
+    started_at: client.startedAt,
+    ended_at: client.endedAt,
+    test_purpose: client.testPurpose,
+  };
+}
+
+/** 클라이언트 고정 질문 -> API 변환 */
+export function toApiFixedQuestionItem(
+  client: FixedQuestionItem
+): ApiFixedQuestionItem {
+  return {
+    q_content: client.qContent,
+    q_order: client.qOrder,
+  };
+}
+
+/** 클라이언트 고정 질문 생성 요청 -> API 요청 변환 */
+export function toApiCreateFixedQuestionsRequest(
+  client: CreateFixedQuestionsRequest
+): ApiCreateFixedQuestionsRequest {
+  return {
+    survey_id: client.surveyId,
+    questions: client.questions.map(toApiFixedQuestionItem),
+  };
+}
