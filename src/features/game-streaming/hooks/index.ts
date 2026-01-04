@@ -28,9 +28,8 @@ export {
   useUnsavedChanges,
   type UseUnsavedChangesOptions,
 } from './useUnsavedChanges';
-// [STASH] Screen D: Upload Build Modal
-// export {
-//   type UploadParams,
-//   useUploadState,
-//   type UseUploadStateOptions,
-// } from './useUploadState';
+export {
+  type UploadParams,
+  useUploadState,
+  type UseUploadStateOptions,
+} from './useUploadState';

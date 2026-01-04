@@ -3,18 +3,11 @@
  * Route: /studio/games/:gameUuid/builds
  */
 import { Plus } from 'lucide-react';
-// [STASH] Screen D: Upload Build Modal
-// import { useState } from 'react';
+import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/loading';
-import {
-  BuildsTable,
-  // [STASH] Screen D: Upload Build Modal
-  // BuildUploadModal,
-  InlineAlert,
-} from '@/features/game-streaming';
+import { Button, InlineAlert, Skeleton } from '@/components/ui';
+import { BuildsTable, BuildUploadModal } from '@/features/game-streaming';
 import { useBuildsQuery } from '@/features/game-streaming';
 
 export default function BuildsPage() {
@@ -25,8 +18,7 @@ export default function BuildsPage() {
     isError,
     refetch,
   } = useBuildsQuery(gameUuid || '');
-  // [STASH] Screen D: Upload Build Modal
-  // const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
   return (
     <div className="space-y-6">
@@ -38,11 +30,7 @@ export default function BuildsPage() {
             게임 실행 파일 패키지(.zip)를 업로드하고 상태를 확인합니다.
           </p>
         </div>
-        {/* [STASH] Screen D: Upload Build Modal */}
-        <Button
-          disabled
-          title="Upload Modal은 별도 커밋에서 추가됩니다"
-        >
+        <Button onClick={() => setIsUploadModalOpen(true)}>
           <Plus className="mr-2 size-4" />
           Upload Build
         </Button>
@@ -85,11 +73,7 @@ export default function BuildsPage() {
       ) : !builds || builds.length === 0 ? (
         <div className="bg-card flex flex-col items-center justify-center rounded-lg border py-16">
           <p className="text-muted-foreground mb-4">첫 빌드를 업로드하세요</p>
-          {/* [STASH] Screen D: Upload Build Modal */}
-          <Button
-            disabled
-            title="Upload Modal은 별도 커밋에서 추가됩니다"
-          >
+          <Button onClick={() => setIsUploadModalOpen(true)}>
             <Plus className="mr-2 size-4" />
             Upload Build
           </Button>
@@ -100,14 +84,14 @@ export default function BuildsPage() {
         </div>
       )}
 
-      {/* [STASH] Screen D: Upload Build Modal */}
-      {/* {gameUuid && (
+      {/* Upload Modal */}
+      {gameUuid && (
         <BuildUploadModal
           gameUuid={gameUuid}
           open={isUploadModalOpen}
           onOpenChange={setIsUploadModalOpen}
         />
-      )} */}
+      )}
     </div>
   );
 }

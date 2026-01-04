@@ -22,3 +22,9 @@ export {
   TableSkeleton,
   type TableSkeletonProps,
 } from './loading';
+
+// Dialog Components
+export { ConfirmDialog } from './ConfirmDialog';
+
+// Alert Components
+export { InlineAlert } from './InlineAlert';

@@ -19,10 +19,9 @@ export { getSourceGames } from './get-source-games';
 
 // Builds
 export { getBuilds } from './get-builds';
-// [STASH] Screen D: Upload Build Modal
-// export { postBuildComplete } from './post-build-complete';
-// export { postPresignedUrl } from './post-presigned-url';
-// export { putS3Upload, type S3UploadOptions } from './put-s3-upload';
+export { postBuildComplete } from './post-build-complete';
+export { postPresignedUrl } from './post-presigned-url';
+export { putS3Upload, type S3UploadOptions } from './put-s3-upload';
 // [STASH] Screen E~F: Stream Settings, Schedule
 // export { getSchedule, putSchedule } from './schedule';
 // export { getStreamSettings, putStreamSettings } from './stream-settings';
