@@ -1,8 +1,17 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 
+import { GameShell } from '@/features/game-streaming';
 import LoginPage from '@/pages/auth/LoginPage';
 import RegisterPage from '@/pages/auth/RegisterPage';
 import NotFoundPage from '@/pages/NotFoundPage';
+// [STASH] Screen G: Tester Placeholder
+// import TesterPlaceholderPage from '@/pages/play/TesterPlaceholderPage';
+import BuildsPage from '@/pages/studio/BuildsPage';
+import GameOverviewPage from '@/pages/studio/GameOverviewPage';
+import GamesListPage from '@/pages/studio/GamesListPage';
+// [STASH] Screen E~F: Stream Settings, Schedule
+// import SchedulePage from '@/pages/studio/SchedulePage';
+// import StreamSettingsPage from '@/pages/studio/StreamSettingsPage';
 import SurveyAnalyticsPage from '@/pages/survey/SurveyAnalyticsPage';
 import SurveyDesignPage from '@/pages/survey/SurveyDesignPage';
 import SurveySessionPage from '@/pages/survey/SurveySessionPage';
@@ -20,6 +29,28 @@ export const router = createBrowserRouter([
         element: <AuthLayout />,
         children: [
           { path: '/', element: <WorkspaceDashboard /> },
+          // Creator Studio - 게임 스트리밍
+          { path: '/studio/games', element: <GamesListPage /> },
+          {
+            path: '/studio/games/:gameUuid',
+            element: <GameShell />,
+            children: [
+              {
+                index: true,
+                element: (
+                  <Navigate
+                    to="overview"
+                    replace
+                  />
+                ),
+              },
+              { path: 'overview', element: <GameOverviewPage /> },
+              { path: 'builds', element: <BuildsPage /> },
+              // [STASH] Screen E~F: Stream Settings, Schedule
+              // { path: 'stream-settings', element: <StreamSettingsPage /> },
+              // { path: 'schedule', element: <SchedulePage /> },
+            ],
+          },
           // 설문 관리 (Redirect)
           {
             path: '/survey',
@@ -56,6 +87,8 @@ export const router = createBrowserRouter([
           { path: 'sessions/:sessionId', element: <SurveySessionPage /> },
         ],
       },
+      // [STASH] Screen G: Tester Placeholder
+      // { path: '/play/:gameUuid', element: <TesterPlaceholderPage /> },
       // 비인증 사용자 전용 라우트
       {
         element: <GuestLayout />,

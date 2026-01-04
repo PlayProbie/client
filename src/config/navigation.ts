@@ -4,6 +4,7 @@ import {
   Gift,
   LayoutDashboard,
   type LucideIcon,
+  MonitorPlay,
   Settings,
 } from 'lucide-react';
 
@@ -24,6 +25,12 @@ export const NAV_ITEMS: NavItem[] = [
     to: '/dashboard',
     label: '대시보드',
     icon: LayoutDashboard,
+  },
+  {
+    to: '/studio',
+    label: 'Creator Studio',
+    icon: MonitorPlay,
+    children: [{ to: '/studio/games', label: '스트리밍 게임 목록' }],
   },
   {
     to: '/games',
