@@ -22,9 +22,14 @@ export { getBuilds } from './get-builds';
 export { postBuildComplete } from './post-build-complete';
 export { postPresignedUrl } from './post-presigned-url';
 export { putS3Upload, type S3UploadOptions } from './put-s3-upload';
-// [STASH] Screen E~F: Stream Settings, Schedule
-// export { getSchedule, putSchedule } from './schedule';
-// export { getStreamSettings, putStreamSettings } from './stream-settings';
+
+// Stream Settings
+export { getStreamSettings } from './get-stream-settings';
+export { putStreamSettings } from './put-stream-settings';
+
+// Schedule
+export { getSchedule } from './get-schedule';
+export { putSchedule, type ScheduleInput } from './put-schedule';
 
 // Legacy exports (deprecated)
 /** @deprecated Use getStreamingGames instead */

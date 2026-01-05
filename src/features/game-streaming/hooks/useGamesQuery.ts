@@ -27,11 +27,14 @@ export function useGamesQuery() {
 }
 
 /** 게임 상세 조회 Hook */
-export function useGameDetailQuery(gameUuid: string) {
+export function useGameDetailQuery(
+  gameUuid: string,
+  options?: { enabled?: boolean }
+) {
   return useQuery<GameListItem | null>({
     queryKey: gameKeys.detail(gameUuid),
     queryFn: () => getGameByUuid(gameUuid),
-    enabled: !!gameUuid,
+    enabled: options?.enabled ?? !!gameUuid,
     staleTime: QUERY_CONFIG.STALE_TIME_DEFAULT,
   });
 }

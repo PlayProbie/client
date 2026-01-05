@@ -9,9 +9,8 @@ import NotFoundPage from '@/pages/NotFoundPage';
 import BuildsPage from '@/pages/studio/BuildsPage';
 import GameOverviewPage from '@/pages/studio/GameOverviewPage';
 import GamesListPage from '@/pages/studio/GamesListPage';
-// [STASH] Screen E~F: Stream Settings, Schedule
-// import SchedulePage from '@/pages/studio/SchedulePage';
-// import StreamSettingsPage from '@/pages/studio/StreamSettingsPage';
+import SchedulePage from '@/pages/studio/SchedulePage';
+import StreamSettingsPage from '@/pages/studio/StreamSettingsPage';
 import SurveyAnalyticsPage from '@/pages/survey/SurveyAnalyticsPage';
 import SurveyDesignPage from '@/pages/survey/SurveyDesignPage';
 import SurveySessionPage from '@/pages/survey/SurveySessionPage';
@@ -46,9 +45,8 @@ export const router = createBrowserRouter([
               },
               { path: 'overview', element: <GameOverviewPage /> },
               { path: 'builds', element: <BuildsPage /> },
-              // [STASH] Screen E~F: Stream Settings, Schedule
-              // { path: 'stream-settings', element: <StreamSettingsPage /> },
-              // { path: 'schedule', element: <SchedulePage /> },
+              { path: 'stream-settings', element: <StreamSettingsPage /> },
+              { path: 'schedule', element: <SchedulePage /> },
             ],
           },
           // 설문 관리 (Redirect)

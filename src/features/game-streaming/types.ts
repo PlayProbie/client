@@ -169,6 +169,14 @@ export type GpuProfile = 'entry' | 'performance' | 'high';
 /** 해상도/FPS 옵션 */
 export type ResolutionFps = '720p30' | '1080p60';
 
+/** [API] Stream Settings 엔티티 */
+export interface ApiStreamSettings {
+  gpu_profile: GpuProfile;
+  resolution_fps: ResolutionFps;
+  os: string;
+  region: string;
+}
+
 /** [Client] Stream Settings */
 export interface StreamSettings {
   gpuProfile: GpuProfile;
@@ -183,6 +191,17 @@ export interface StreamSettings {
 
 /** 스케줄 상태 */
 export type ScheduleStatus = 'ACTIVE' | 'INACTIVE';
+
+/** [API] Schedule 엔티티 */
+export interface ApiSchedule {
+  start_date_time: string;
+  end_date_time: string;
+  timezone: string;
+  max_sessions: number;
+  status: ScheduleStatus;
+  next_activation?: string;
+  next_deactivation?: string;
+}
 
 /** [Client] Schedule */
 export interface Schedule {
@@ -301,3 +320,51 @@ export function toStreamingGame(api: ApiStreamingGame): StreamingGame {
 
 /** @deprecated Use toStreamingGame instead */
 export const toGameListItem = toStreamingGame;
+
+/** ApiStreamSettings → StreamSettings 변환 */
+export function toStreamSettings(api: ApiStreamSettings): StreamSettings {
+  return {
+    gpuProfile: api.gpu_profile,
+    resolutionFps: api.resolution_fps,
+    os: api.os,
+    region: api.region,
+  };
+}
+
+/** StreamSettings → ApiStreamSettings 변환 */
+export function toApiStreamSettings(client: StreamSettings): ApiStreamSettings {
+  return {
+    gpu_profile: client.gpuProfile,
+    resolution_fps: client.resolutionFps,
+    os: client.os,
+    region: client.region,
+  };
+}
+
+/** ApiSchedule → Schedule 변환 */
+export function toSchedule(api: ApiSchedule): Schedule {
+  return {
+    startDateTime: api.start_date_time,
+    endDateTime: api.end_date_time,
+    timezone: api.timezone,
+    maxSessions: api.max_sessions,
+    status: api.status,
+    nextActivation: api.next_activation,
+    nextDeactivation: api.next_deactivation,
+  };
+}
+
+/** Schedule → ApiSchedule 변환 (status, nextActivation, nextDeactivation 제외) */
+export function toApiSchedule(
+  client: Pick<
+    Schedule,
+    'startDateTime' | 'endDateTime' | 'timezone' | 'maxSessions'
+  >
+): Omit<ApiSchedule, 'status' | 'next_activation' | 'next_deactivation'> {
+  return {
+    start_date_time: client.startDateTime,
+    end_date_time: client.endDateTime,
+    timezone: client.timezone,
+    max_sessions: client.maxSessions,
+  };
+}

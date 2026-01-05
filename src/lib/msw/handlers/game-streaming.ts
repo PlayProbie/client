@@ -8,8 +8,10 @@ import type {
   ApiBuild,
   ApiBuildCompleteResponse,
   ApiPresignedUrlResponse,
+  ApiSchedule,
   ApiSourceGame,
   ApiStreamingGame,
+  ApiStreamSettings,
 } from '@/features/game-streaming/types';
 
 const API_BASE_URL = '/api';
@@ -118,6 +120,48 @@ const MOCK_BUILDS: Record<string, ApiBuild[]> = {
 
 let buildCounter = 100;
 let gameCounter = 100;
+
+// ----------------------------------------
+// Mock Data: Stream Settings
+// ----------------------------------------
+const MOCK_STREAM_SETTINGS: Record<string, ApiStreamSettings> = {
+  'game-001-uuid-abcd': {
+    gpu_profile: 'performance',
+    resolution_fps: '1080p60',
+    os: 'Windows Server 2022',
+    region: 'ap-northeast-2',
+  },
+  'game-002-uuid-efgh': {
+    gpu_profile: 'entry',
+    resolution_fps: '720p30',
+    os: 'Windows Server 2022',
+    region: 'ap-northeast-2',
+  },
+};
+
+// ----------------------------------------
+// Mock Data: Schedules
+// ----------------------------------------
+const MOCK_SCHEDULES: Record<string, ApiSchedule> = {
+  'game-001-uuid-abcd': {
+    start_date_time: '2026-01-01T00:00:00Z',
+    end_date_time: '2026-12-31T23:59:59Z',
+    timezone: 'Asia/Seoul',
+    max_sessions: 10,
+    status: 'ACTIVE',
+    next_activation: undefined,
+    next_deactivation: '2026-12-31T23:59:59Z',
+  },
+  'game-002-uuid-efgh': {
+    start_date_time: '2026-02-01T09:00:00Z',
+    end_date_time: '2026-02-28T18:00:00Z',
+    timezone: 'Asia/Seoul',
+    max_sessions: 5,
+    status: 'INACTIVE',
+    next_activation: '2026-02-01T09:00:00Z',
+    next_deactivation: undefined,
+  },
+};
 
 export const gameStreamingHandlers = [
   // ----------------------------------------
@@ -299,6 +343,92 @@ export const gameStreamingHandlers = [
       };
 
       return HttpResponse.json(response);
+    }
+  ),
+
+  // ----------------------------------------
+  // Stream Settings API
+  // ----------------------------------------
+  http.get(
+    `${API_BASE_URL}/streaming-games/:gameUuid/stream-settings`,
+    async ({ params }) => {
+      await delay(300);
+      const { gameUuid } = params;
+
+      const settings = MOCK_STREAM_SETTINGS[gameUuid as string] || {
+        gpu_profile: 'entry',
+        resolution_fps: '720p30',
+        os: 'Windows Server 2022',
+        region: 'ap-northeast-2',
+      };
+
+      return HttpResponse.json(settings);
+    }
+  ),
+
+  http.put(
+    `${API_BASE_URL}/streaming-games/:gameUuid/stream-settings`,
+    async ({ params, request }) => {
+      await delay(300);
+      const { gameUuid } = params;
+      const body = (await request.json()) as ApiStreamSettings;
+
+      MOCK_STREAM_SETTINGS[gameUuid as string] = body;
+
+      return HttpResponse.json(body);
+    }
+  ),
+
+  // ----------------------------------------
+  // Schedule API
+  // ----------------------------------------
+  http.get(
+    `${API_BASE_URL}/streaming-games/:gameUuid/schedule`,
+    async ({ params }) => {
+      await delay(300);
+      const { gameUuid } = params;
+
+      const schedule = MOCK_SCHEDULES[gameUuid as string] || {
+        start_date_time: new Date().toISOString(),
+        end_date_time: new Date(
+          Date.now() + 7 * 24 * 60 * 60 * 1000
+        ).toISOString(),
+        timezone: 'Asia/Seoul',
+        max_sessions: 0,
+        status: 'INACTIVE' as const,
+      };
+
+      return HttpResponse.json(schedule);
+    }
+  ),
+
+  http.put(
+    `${API_BASE_URL}/streaming-games/:gameUuid/schedule`,
+    async ({ params, request }) => {
+      await delay(300);
+      const { gameUuid } = params;
+      const body = (await request.json()) as Partial<ApiSchedule>;
+
+      const now = new Date();
+      const start = new Date(body.start_date_time || '');
+      const end = new Date(body.end_date_time || '');
+
+      const status = now >= start && now <= end ? 'ACTIVE' : 'INACTIVE';
+
+      const updatedSchedule: ApiSchedule = {
+        start_date_time: body.start_date_time || '',
+        end_date_time: body.end_date_time || '',
+        timezone: body.timezone || 'Asia/Seoul',
+        max_sessions: body.max_sessions || 0,
+        status,
+        next_activation:
+          status === 'INACTIVE' ? start.toISOString() : undefined,
+        next_deactivation: status === 'ACTIVE' ? end.toISOString() : undefined,
+      };
+
+      MOCK_SCHEDULES[gameUuid as string] = updatedSchedule;
+
+      return HttpResponse.json(updatedSchedule);
     }
   ),
 ];
