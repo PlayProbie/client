@@ -1,17 +1,110 @@
+import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
-import { Button } from '@/components/ui';
+import { Button, SubmitButton } from '@/components/ui';
+import { Input } from '@/components/ui/Input';
+import { API_BASE_URL } from '@/constants/api';
+import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores';
+
+interface LoginFormData {
+  email: string;
+  password: string;
+}
+
+interface FormErrors {
+  email?: string;
+  password?: string;
+}
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { login } = useAuthStore();
 
+  const [isLoading, setIsLoading] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
+  const [formData, setFormData] = useState<LoginFormData>({
+    email: '',
+    password: '',
+  });
+  const [errors, setErrors] = useState<FormErrors>({});
+
   const from = (location.state as { from?: Location })?.from?.pathname || '/';
 
-  const handleLogin = () => {
-    // 임시 로그인 (추후 OAuth 연동)
+  const validateForm = (): boolean => {
+    const newErrors: FormErrors = {};
+
+    if (!formData.email) {
+      newErrors.email = '이메일을 입력해주세요';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = '올바른 이메일 형식이 아닙니다';
+    }
+
+    if (!formData.password) {
+      newErrors.password = '비밀번호를 입력해주세요';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    if (errors[name as keyof FormErrors]) {
+      setErrors(prev => ({ ...prev, [name]: undefined }));
+    }
+    if (apiError) {
+      setApiError(null);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setApiError(null);
+
+    if (!validateForm()) return;
+
+    setIsLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: 'POST',
+        credentials: 'include', // HttpOnly Cookie 수신
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || '로그인에 실패했습니다');
+      }
+
+      const data = await response.json();
+      const { user } = data.result;
+      
+      // 서버에서 반환한 사용자 정보 저장 (JWT는 HttpOnly Cookie에 저장됨)
+      login({
+        id: String(user.id),
+        email: user.email,
+        name: user.name,
+      });
+
+      navigate(from, { replace: true });
+    } catch (error) {
+      console.error('Login failed:', error);
+      setApiError(error instanceof Error ? error.message : '로그인 중 오류가 발생했습니다');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDemoLogin = () => {
     login({
       id: '1',
       email: 'user@example.com',
@@ -20,8 +113,12 @@ export default function LoginPage() {
     navigate(from, { replace: true });
   };
 
+  const handleRegister = () => {
+    navigate('/auth/register');
+  };
+
   return (
-    <div className="bg-background flex min-h-screen items-center justify-center">
+    <div className="bg-background flex min-h-screen items-center justify-center px-4">
       <div className="bg-surface border-border w-full max-w-md rounded-2xl border p-8 shadow-lg">
         {/* Logo */}
         <div className="mb-8 text-center">
@@ -36,11 +133,75 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {/* Login Button */}
+        {/* API Error Message */}
+        {apiError && (
+          <div className="bg-destructive/10 border-destructive text-destructive mb-4 rounded-md border p-3 text-sm">
+            {apiError}
+          </div>
+        )}
+
+        {/* Login Form */}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* 이메일 */}
+          <div className="space-y-2">
+            <label htmlFor="email" className="text-foreground text-sm font-medium">
+              이메일
+            </label>
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              placeholder="example@email.com"
+              value={formData.email}
+              onChange={handleChange}
+              className={cn(errors.email && 'border-destructive')}
+              autoComplete="email"
+            />
+            {errors.email && (
+              <p className="text-destructive text-sm">{errors.email}</p>
+            )}
+          </div>
+
+          {/* 비밀번호 */}
+          <div className="space-y-2">
+            <label htmlFor="password" className="text-foreground text-sm font-medium">
+              비밀번호
+            </label>
+            <Input
+              id="password"
+              name="password"
+              type="password"
+              placeholder="비밀번호를 입력해주세요"
+              value={formData.password}
+              onChange={handleChange}
+              className={cn(errors.password && 'border-destructive')}
+              autoComplete="current-password"
+            />
+            {errors.password && (
+              <p className="text-destructive text-sm">{errors.password}</p>
+            )}
+          </div>
+
+          {/* Submit Button */}
+          <SubmitButton
+            className="mt-6 w-full"
+            isPending={isLoading}
+          >
+            로그인
+          </SubmitButton>
+        </form>
+
+        {/* Divider */}
+        <div className="my-6 flex items-center gap-4">
+          <div className="bg-border h-px flex-1" />
+          <span className="text-muted-foreground text-sm">또는</span>
+          <div className="bg-border h-px flex-1" />
+        </div>
+
+        {/* Google Login */}
         <Button
           disabled
-          onClick={handleLogin}
-          className="w-full"
+          className="w-full mb-4"
         >
           <svg
             className="h-5 w-5"
@@ -66,17 +227,19 @@ export default function LoginPage() {
           Google로 계속하기
         </Button>
 
-        {/* Divider */}
-        <div className="my-6 flex items-center gap-4">
-          <div className="bg-border h-px flex-1" />
-          <span className="text-muted-foreground text-sm">또는</span>
-          <div className="bg-border h-px flex-1" />
-        </div>
+        {/* Register */}
+        <Button
+          variant="outline"
+          onClick={handleRegister}
+          className="w-full mb-4"
+        >
+          회원가입
+        </Button>
 
         {/* Demo Login */}
         <Button
           variant="outline"
-          onClick={handleLogin}
+          onClick={handleDemoLogin}
           className="w-full"
         >
           데모 계정으로 시작하기
