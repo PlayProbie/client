@@ -18,18 +18,23 @@ export {
 export { getSourceGames } from './get-source-games';
 
 // Builds
+export { deleteBuild, type DeleteBuildInput } from './delete-build';
 export { getBuilds } from './get-builds';
 export { postBuildComplete } from './post-build-complete';
-export { postStsCredentials } from './post-sts-credentials';
+export { postCreateBuild } from './post-sts-credentials';
 export {
   type FolderUploadOptions,
   putS3FolderUpload,
 } from './put-s3-folder-upload';
 
+// Temp: Game Creation (테스트용)
+export {
+  type CreateGameRequest,
+  type CreateGameResponse,
+  createTestGame,
+  postCreateGame,
+} from './post-create-game';
+
 // Stream Settings
 export { getStreamSettings } from './get-stream-settings';
 export { putStreamSettings } from './put-stream-settings';
-
-// Schedule
-export { getSchedule } from './get-schedule';
-export { putSchedule, type ScheduleInput } from './put-schedule';

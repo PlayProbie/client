@@ -25,7 +25,6 @@ export {
   DragDropFolderInput,
   GameShell,
   RegisterGameModal,
-  ScheduleForm,
   StreamSettingsForm,
   UnregisterGameDialog,
 } from './components';

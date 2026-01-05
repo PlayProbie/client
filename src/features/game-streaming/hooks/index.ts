@@ -8,11 +8,6 @@ export {
 } from './useGameMutations';
 export { gameKeys, useGameDetailQuery, useGamesQuery } from './useGamesQuery';
 export {
-  scheduleKeys,
-  useScheduleMutation,
-  useScheduleQuery,
-} from './useSchedule';
-export {
   useAvailableSourceGamesQuery,
   useSourceGamesQuery,
 } from './useSourceGamesQuery';

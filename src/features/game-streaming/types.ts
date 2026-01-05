@@ -46,25 +46,22 @@ export interface Build {
   updatedAt: string;
 }
 
-/** [API] STS Credentials 요청 */
-export interface ApiStsCredentialsRequest {
-  folder_name: string;
-  total_file_count: number;
-  total_size: number;
+/** [API] Create Build 요청 (Spring GameBuildApi.createBuild) */
+export interface ApiCreateBuildRequest {
+  version: string;
 }
 
-/** [API] STS Credentials 응답 */
-export interface ApiStsCredentialsResponse {
-  build_id: string;
+/** [API] Create Build 응답 (Spring GameBuildApi.createBuild) */
+export interface ApiCreateBuildResponse {
+  buildId: string;
+  version: string;
+  s3Prefix: string;
   credentials: {
-    access_key_id: string;
-    secret_access_key: string;
-    session_token: string;
-    expiration: string;
+    accessKeyId: string;
+    secretAccessKey: string;
+    sessionToken: string;
+    expiration: number; // epoch timestamp
   };
-  bucket: string;
-  key_prefix: string;
-  expires_in_seconds: number;
 }
 
 /** [Client] AWS Credentials */
@@ -72,28 +69,33 @@ export interface AwsCredentials {
   accessKeyId: string;
   secretAccessKey: string;
   sessionToken: string;
-  expiration: string;
+  expiration: string; // ISO 8601
 }
 
-/** [Client] STS Credentials 응답 */
-export interface StsCredentialsResponse {
+/** [Client] Create Build 응답 */
+export interface CreateBuildResponse {
   buildId: string;
+  version: string;
+  s3Prefix: string;
   credentials: AwsCredentials;
-  bucket: string;
-  keyPrefix: string;
-  expiresInSeconds: number;
 }
 
-/** [API] Build Complete 요청 */
+/** [API] Build Complete 요청 (Spring GameBuildApi.completeUpload) */
 export interface ApiBuildCompleteRequest {
-  key_prefix: string;
-  file_count: number;
-  total_size: number;
+  expectedFileCount: number;
+  expectedTotalSize: number;
 }
 
-/** [API] Build Complete 응답 */
+/** [API] Build Complete 응답 (Spring GameBuildApi.completeUpload) */
 export interface ApiBuildCompleteResponse {
-  status: BuildStatus;
+  id: string;
+  gameUuid: string;
+  version: string;
+  s3Prefix: string;
+  status: string;
+  totalFiles: number;
+  totalSize: number;
+  createdAt: string;
 }
 
 // ----------------------------------------
@@ -198,6 +200,7 @@ export interface ApiStreamSettings {
   resolution_fps: ResolutionFps;
   os: string;
   region: string;
+  max_sessions: number;
 }
 
 /** [Client] Stream Settings */
@@ -206,35 +209,7 @@ export interface StreamSettings {
   resolutionFps: ResolutionFps;
   os: string;
   region: string;
-}
-
-// ----------------------------------------
-// Schedule Types
-// ----------------------------------------
-
-/** 스케줄 상태 */
-export type ScheduleStatus = 'ACTIVE' | 'INACTIVE';
-
-/** [API] Schedule 엔티티 */
-export interface ApiSchedule {
-  start_date_time: string;
-  end_date_time: string;
-  timezone: string;
-  max_sessions: number;
-  status: ScheduleStatus;
-  next_activation?: string;
-  next_deactivation?: string;
-}
-
-/** [Client] Schedule */
-export interface Schedule {
-  startDateTime: string; // ISO 8601
-  endDateTime: string; // ISO 8601
-  timezone: string;
   maxSessions: number;
-  status: ScheduleStatus;
-  nextActivation?: string;
-  nextDeactivation?: string;
 }
 
 // ----------------------------------------
@@ -301,21 +276,20 @@ export function toBuild(api: ApiBuild): Build {
   };
 }
 
-/** ApiStsCredentialsResponse → StsCredentialsResponse 변환 */
-export function toStsCredentialsResponse(
-  api: ApiStsCredentialsResponse
-): StsCredentialsResponse {
+/** ApiCreateBuildResponse → CreateBuildResponse 변환 */
+export function toCreateBuildResponse(
+  api: ApiCreateBuildResponse
+): CreateBuildResponse {
   return {
-    buildId: api.build_id,
+    buildId: api.buildId,
+    version: api.version,
+    s3Prefix: api.s3Prefix,
     credentials: {
-      accessKeyId: api.credentials.access_key_id,
-      secretAccessKey: api.credentials.secret_access_key,
-      sessionToken: api.credentials.session_token,
-      expiration: api.credentials.expiration,
+      accessKeyId: api.credentials.accessKeyId,
+      secretAccessKey: api.credentials.secretAccessKey,
+      sessionToken: api.credentials.sessionToken,
+      expiration: new Date(api.credentials.expiration).toISOString(),
     },
-    bucket: api.bucket,
-    keyPrefix: api.key_prefix,
-    expiresInSeconds: api.expires_in_seconds,
   };
 }
 
@@ -348,6 +322,7 @@ export function toStreamSettings(api: ApiStreamSettings): StreamSettings {
     resolutionFps: api.resolution_fps,
     os: api.os,
     region: api.region,
+    maxSessions: api.max_sessions,
   };
 }
 
@@ -358,33 +333,6 @@ export function toApiStreamSettings(client: StreamSettings): ApiStreamSettings {
     resolution_fps: client.resolutionFps,
     os: client.os,
     region: client.region,
-  };
-}
-
-/** ApiSchedule → Schedule 변환 */
-export function toSchedule(api: ApiSchedule): Schedule {
-  return {
-    startDateTime: api.start_date_time,
-    endDateTime: api.end_date_time,
-    timezone: api.timezone,
-    maxSessions: api.max_sessions,
-    status: api.status,
-    nextActivation: api.next_activation,
-    nextDeactivation: api.next_deactivation,
-  };
-}
-
-/** Schedule → ApiSchedule 변환 (status, nextActivation, nextDeactivation 제외) */
-export function toApiSchedule(
-  client: Pick<
-    Schedule,
-    'startDateTime' | 'endDateTime' | 'timezone' | 'maxSessions'
-  >
-): Omit<ApiSchedule, 'status' | 'next_activation' | 'next_deactivation'> {
-  return {
-    start_date_time: client.startDateTime,
-    end_date_time: client.endDateTime,
-    timezone: client.timezone,
     max_sessions: client.maxSessions,
   };
 }

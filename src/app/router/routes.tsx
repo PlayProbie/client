@@ -9,7 +9,6 @@ import NotFoundPage from '@/pages/NotFoundPage';
 import BuildsPage from '@/pages/studio/BuildsPage';
 import GameOverviewPage from '@/pages/studio/GameOverviewPage';
 import GamesListPage from '@/pages/studio/GamesListPage';
-import SchedulePage from '@/pages/studio/SchedulePage';
 import StreamSettingsPage from '@/pages/studio/StreamSettingsPage';
 import SurveyAnalyticsPage from '@/pages/survey/SurveyAnalyticsPage';
 import SurveyDesignPage from '@/pages/survey/SurveyDesignPage';
@@ -46,7 +45,6 @@ export const router = createBrowserRouter([
               { path: 'overview', element: <GameOverviewPage /> },
               { path: 'builds', element: <BuildsPage /> },
               { path: 'stream-settings', element: <StreamSettingsPage /> },
-              { path: 'schedule', element: <SchedulePage /> },
             ],
           },
           // 설문 관리 (Redirect)

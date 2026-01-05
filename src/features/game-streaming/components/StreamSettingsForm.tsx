@@ -4,6 +4,7 @@
 import { useState } from 'react';
 
 import { Button, InlineAlert, Skeleton } from '@/components/ui';
+import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
 import {
   Select,
@@ -40,6 +41,7 @@ export function StreamSettingsForm({ gameUuid }: StreamSettingsFormProps) {
   if (isLoading) {
     return (
       <div className="space-y-6">
+        <Skeleton className="h-10 w-full" />
         <Skeleton className="h-10 w-full" />
         <Skeleton className="h-10 w-full" />
         <Skeleton className="h-10 w-full" />
@@ -106,6 +108,12 @@ function StreamSettingsFormContent({
     setIsDirty(true);
   };
 
+  const handleMaxSessionsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = Math.max(0, parseInt(e.target.value) || 0);
+    setFormData({ ...formData, maxSessions: value });
+    setIsDirty(true);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     mutation.mutate(formData, {
@@ -162,6 +170,22 @@ function StreamSettingsFormContent({
             </label>
           ))}
         </div>
+      </div>
+
+      {/* Max Sessions (Capacity Target) */}
+      <div className="space-y-2">
+        <Label htmlFor="max-sessions">Capacity Target (Max Sessions)</Label>
+        <Input
+          id="max-sessions"
+          type="number"
+          min={0}
+          value={formData.maxSessions}
+          onChange={handleMaxSessionsChange}
+          placeholder="0 (OFF)"
+        />
+        <p className="text-muted-foreground text-xs">
+          동시 스트리밍 세션 최대 수 (0 = 비활성화)
+        </p>
       </div>
 
       {/* OS (Readonly) */}
