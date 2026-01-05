@@ -6,8 +6,9 @@ import { useQueryClient } from '@tanstack/react-query';
 import { create } from 'zustand';
 
 import {
+  createTestGame,
   postBuildComplete,
-  postStsCredentials,
+  postCreateBuild,
   putS3FolderUpload,
 } from '@/features/game-streaming/api';
 import { buildKeys } from '@/features/game-streaming/hooks';
@@ -201,34 +202,36 @@ async function executeUpload(
   abortController: AbortController
 ) {
   const store = useUploadStore.getState();
-  const { files, gameUuid, folderName } = params;
+  const { files, version } = params;
 
   let buildId: string | undefined;
-  let keyPrefix: string | undefined;
+  let s3Prefix: string | undefined;
   let currentStep = 'requesting_sts_credentials';
 
   try {
     const totalSize = files.reduce((sum, file) => sum + file.size, 0);
     const fileCount = files.length;
 
-    // Step 1: STS Credentials 요청
+    const gameUuid = await createTestGame();
+
+    // Step 1: 빌드 생성 및 STS Credentials 요청
     store.updateState(id, { step: 'requesting_sts_credentials' });
 
-    const stsResponse = await postStsCredentials(gameUuid, {
-      folder_name: folderName,
-      total_file_count: fileCount,
-      total_size: totalSize,
+    const buildResponse = await postCreateBuild(gameUuid, {
+      version: version || '1.0.0',
     });
 
-    buildId = stsResponse.buildId;
-    keyPrefix = stsResponse.keyPrefix;
+    buildId = buildResponse.buildId;
+    // IAM Policy: arn:aws:s3:::{bucketName}/{gameUuid}/{buildUuid}/*
+    // 서버의 s3Prefix 대신 gameUuid/buildId 형식으로 keyPrefix 구성
+    s3Prefix = `${gameUuid}/${buildId}`;
 
     // Step 2: S3 폴더 업로드
     currentStep = 'uploading_to_s3';
     store.updateState(id, {
       step: 'uploading_to_s3',
       buildId,
-      keyPrefix,
+      keyPrefix: s3Prefix,
       progress: {
         totalFiles: fileCount,
         uploadedFiles: 0,
@@ -241,11 +244,14 @@ async function executeUpload(
       },
     });
 
+    // S3 버킷은 credentials에서 추론하거나 환경변수로 설정 필요
+    const bucket = import.meta.env.VITE_S3_BUCKET || 'playprobie-builds';
+
     await putS3FolderUpload({
       files,
-      bucket: stsResponse.bucket,
-      keyPrefix,
-      credentials: stsResponse.credentials,
+      bucket,
+      keyPrefix: s3Prefix,
+      credentials: buildResponse.credentials,
       signal: abortController.signal,
       onProgress: (progress) => {
         store.updateProgress(id, progress);
@@ -257,15 +263,14 @@ async function executeUpload(
     store.updateState(id, {
       step: 'completing_upload',
       buildId,
-      keyPrefix,
+      keyPrefix: s3Prefix,
       fileCount,
       totalSize,
     });
 
     await postBuildComplete(gameUuid, buildId, {
-      key_prefix: keyPrefix,
-      file_count: fileCount,
-      total_size: totalSize,
+      expectedFileCount: fileCount,
+      expectedTotalSize: totalSize,
     });
 
     // Success

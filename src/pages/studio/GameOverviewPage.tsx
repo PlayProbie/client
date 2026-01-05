@@ -1,8 +1,4 @@
-/**
- * GameOverviewPage - 게임 개요 페이지
- * Route: /studio/games/:gameUuid/overview
- */
-import { FileArchive, Settings, Timer } from 'lucide-react';
+import { FileArchive, Settings } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 
 import { Skeleton } from '@/components/ui/loading';
@@ -29,7 +25,7 @@ export default function GameOverviewPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2">
         {/* Builds Card */}
         <Link
           to={`/studio/games/${gameUuid}/builds`}
@@ -73,26 +69,7 @@ export default function GameOverviewPage() {
             </div>
           </div>
           <p className="text-muted-foreground mt-3 text-xs">
-            GPU, resolution, and performance options
-          </p>
-        </Link>
-
-        {/* Schedule Card */}
-        <Link
-          to={`/studio/games/${gameUuid}/schedule`}
-          className="bg-card hover:bg-muted/50 rounded-lg border p-6 transition-colors"
-        >
-          <div className="flex items-center gap-4">
-            <div className="bg-warning/10 rounded-lg p-3">
-              <Timer className="text-warning size-6" />
-            </div>
-            <div>
-              <p className="text-muted-foreground text-sm">Schedule</p>
-              <p className="mt-1 text-lg font-semibold">Set Active Window</p>
-            </div>
-          </div>
-          <p className="text-muted-foreground mt-3 text-xs">
-            Configure when streaming is available
+            GPU, resolution, capacity, and performance options
           </p>
         </Link>
       </div>
