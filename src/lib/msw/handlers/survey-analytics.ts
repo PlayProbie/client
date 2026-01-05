@@ -194,4 +194,286 @@ export const surveyAnalyticsHandlers = [
       return HttpResponse.json(response);
     }
   ),
+
+  // GET /api/analytics/{surveyId} - 질문별 AI 분석 결과 (SSE Mock - JSON 배열로 반환)
+  http.get(`${MSW_API_BASE_URL}/analytics/:surveyId`, async () => {
+    await delay(800); // 로딩 시뮬레이션
+
+    // 질문 1 분석 결과
+        const question1 = {
+          fixedQuestionId: 10,
+          resultJson: JSON.stringify({
+            question_id: 10,
+            total_answers: 45,
+            clusters: [
+              {
+                summary: '레이드 긴장감이 매우 높았다는 긍정적 반응',
+                percentage: 67,
+                count: 30,
+                emotion_type: '긴장감',
+                geq_scores: {
+                  competence: 65,
+                  immersion: 78,
+                  flow: 72,
+                  tension: 85,
+                  challenge: 70,
+                  positive_affect: 75,
+                  negative_affect: 15,
+                },
+                emotion_detail:
+                  '적과의 조우, 탈출 시 긴박함에서 강한 몰입감과 긴장감을 느낌',
+                answer_ids: ['ans1', 'ans2', 'ans3'],
+                satisfaction: 78,
+                keywords: ['심장박동', '탈출', '전리품', '적발견', '긴박함'],
+                representative_answer_ids: ['ans1', 'ans2'],
+                representative_answers: [
+                  '탈출할 때 적 발소리가 들리면 진짜 긴장되요. 전리품 많이 들었을 때는 특히 더요.',
+                  '탈출 포인트 주변에서 적과 마주칠 때가 가장 슬앨대요.',
+                ],
+              },
+              {
+                summary: '긴장감이 적절했지만 더 높이면 좋겠다는 의견',
+                percentage: 22,
+                count: 10,
+                emotion_type: '도전감',
+                geq_scores: {
+                  competence: 55,
+                  immersion: 60,
+                  flow: 58,
+                  tension: 50,
+                  challenge: 65,
+                  positive_affect: 60,
+                  negative_affect: 25,
+                },
+                emotion_detail: '긴장감이 있었지만 난이도를 더 높여도 좋겠다는 의견',
+                answer_ids: ['ans4', 'ans5'],
+                satisfaction: 55,
+                keywords: ['적절', '난이도', '더높게', '스릴'],
+                representative_answer_ids: ['ans4'],
+                representative_answers: [
+                  '긴장감이 있긴 한데, 좀 더 위험해도 재미있을 것 같아요.',
+                ],
+              },
+              {
+                summary: '긴장감이 부족하거나 스트레스만 받았다는 부정적 반응',
+                percentage: 11,
+                count: 5,
+                emotion_type: '불쾌감',
+                geq_scores: {
+                  competence: 30,
+                  immersion: 35,
+                  flow: 28,
+                  tension: 20,
+                  challenge: 40,
+                  positive_affect: 25,
+                  negative_affect: 70,
+                },
+                emotion_detail: '너무 어려워서 스트레스만 받거나 긴장감이 없었음',
+                answer_ids: ['ans6'],
+                satisfaction: 28,
+                keywords: ['어려움', '스트레스', '짜증', '밸런스'],
+                representative_answer_ids: ['ans6'],
+                representative_answers: [
+                  '탈출하기가 너무 어려워서 스트레스만 받았어요.',
+                ],
+              },
+            ],
+            sentiment: {
+              score: 68,
+              label: '긍정적',
+              distribution: {
+                positive: 67,
+                neutral: 22,
+                negative: 11,
+              },
+            },
+            outliers: {
+              count: 3,
+              summary:
+                '레이드 시스템 자체에 대한 개선 의견 (긴장감과 무관한 의견)',
+              answer_ids: ['out1', 'out2', 'out3'],
+            },
+            meta_summary:
+              '대부분의 플레이어가 레이드에서 높은 긴장감과 몰입감을 경험했으며, 특히 탈출 시점에서 가장 큰 긴장감을 느꼈다.',
+          }),
+        };
+
+        // 질문 2 분석 결과
+        const question2 = {
+          fixedQuestionId: 11,
+          resultJson: JSON.stringify({
+            question_id: 11,
+            total_answers: 42,
+            clusters: [
+              {
+                summary: '은신처 성장이 명확하게 체감되었다는 긍정적 반응',
+                percentage: 71,
+                count: 30,
+                emotion_type: '성취감',
+                geq_scores: {
+                  competence: 80,
+                  immersion: 70,
+                  flow: 68,
+                  tension: 45,
+                  challenge: 60,
+                  positive_affect: 82,
+                  negative_affect: 10,
+                },
+                emotion_detail:
+                  '업그레이드를 통해 장비와 능력이 강해지는 것을 실감하며 높은 성취감을 느낌',
+                answer_ids: ['ans7', 'ans8', 'ans9'],
+                satisfaction: 82,
+                keywords: ['업그레이드', '성장', '무기개조', '장비', '강화'],
+                representative_answer_ids: ['ans7', 'ans8'],
+                representative_answers: [
+                  '은신처 레벨 올리니까 장비 만드는 게 수월해졌어요.',
+                  '무기 개조대 업그레이드가 제일 유용했어요.',
+                ],
+              },
+              {
+                summary: '성장은 느껴지지만 속도가 너무 느리다는 의견',
+                percentage: 19,
+                count: 8,
+                emotion_type: '중립',
+                geq_scores: {
+                  competence: 50,
+                  immersion: 48,
+                  flow: 45,
+                  tension: 35,
+                  challenge: 55,
+                  positive_affect: 45,
+                  negative_affect: 40,
+                },
+                emotion_detail: '성장 시스템은 좋지만 진행 속도가 느려 답답함을 느낌',
+                answer_ids: ['ans10', 'ans11'],
+                satisfaction: 48,
+                keywords: ['느림', '그라인딩', '시간', '속도'],
+                representative_answer_ids: ['ans10'],
+                representative_answers: [
+                  '성장 시스템은 좋은데 진행이 좀 느리네요.',
+                ],
+              },
+              {
+                summary: '성장 체감이 부족하다는 부정적 반응',
+                percentage: 10,
+                count: 4,
+                emotion_type: '불쾌감',
+                geq_scores: {
+                  competence: 25,
+                  immersion: 30,
+                  flow: 28,
+                  tension: 40,
+                  challenge: 45,
+                  positive_affect: 22,
+                  negative_affect: 65,
+                },
+                emotion_detail: '업그레이드 효과가 미미하거나 체감이 잘 안 됨',
+                answer_ids: ['ans12'],
+                satisfaction: 25,
+                keywords: ['미미함', '효과없음', '별로', '실망'],
+                representative_answer_ids: ['ans12'],
+                representative_answers: [
+                  '업그레이드 효과가 잘 느껴지지 않아요.',
+                ],
+              },
+            ],
+            sentiment: {
+              score: 71,
+              label: '긍정적',
+              distribution: {
+                positive: 71,
+                neutral: 19,
+                negative: 10,
+              },
+            },
+            outliers: {
+              count: 2,
+              summary: '은신처 UI/UX 개선 의견',
+              answer_ids: ['out4', 'out5'],
+            },
+            meta_summary:
+              '대부분의 플레이어가 은신처 업그레이드를 통한 성장을 긍정적으로 평가했으며, 특히 무기 개조 시스템이 높은 만족도를 보였다.',
+          }),
+        };
+
+        // 질문 3 분석 결과
+        const question3 = {
+          fixedQuestionId: 12,
+          resultJson: JSON.stringify({
+            question_id: 12,
+            total_answers: 48,
+            clusters: [
+              {
+                summary: '재플레이 의향이 매우 높다는 긍정적 반응',
+                percentage: 85,
+                count: 41,
+                emotion_type: '즐거움',
+                geq_scores: {
+                  competence: 72,
+                  immersion: 80,
+                  flow: 78,
+                  tension: 70,
+                  challenge: 68,
+                  positive_affect: 88,
+                  negative_affect: 8,
+                },
+                emotion_detail:
+                  '게임이 재미있고 중독성이 있어 계속 플레이하고 싶다는 강한 의지를 보임',
+                answer_ids: ['ans13', 'ans14', 'ans15'],
+                satisfaction: 88,
+                keywords: ['재밌음', '중독성', '다시하고싶음', '한판더', '기대'],
+                representative_answer_ids: ['ans13', 'ans14'],
+                representative_answers: [
+                  '다음엔 다른 맵도 해보고 싶어요.',
+                  '한 판만 더 하다가 몇 시간이 가네요.',
+                ],
+              },
+              {
+                summary: '재플레이 의향은 있지만 개선점이 필요하다는 의견',
+                percentage: 10,
+                count: 5,
+                emotion_type: '중립',
+                geq_scores: {
+                  competence: 55,
+                  immersion: 52,
+                  flow: 50,
+                  tension: 48,
+                  challenge: 52,
+                  positive_affect: 50,
+                  negative_affect: 35,
+                },
+                emotion_detail: '기본은 재미있지만 밸런스나 콘텐츠가 개선되면 더 좋겠다는 의견',
+                answer_ids: ['ans16'],
+                satisfaction: 52,
+                keywords: ['개선필요', '밸런스', '콘텐츠', '추가'],
+                representative_answer_ids: ['ans16'],
+                representative_answers: [
+                  '재미있는데 밸런스가 조금 더 잘 맞으면 좋겠어요.',
+                ],
+              },
+            ],
+            sentiment: {
+              score: 85,
+              label: '매우 긍정적',
+              distribution: {
+                positive: 85,
+                neutral: 10,
+                negative: 5,
+              },
+            },
+            outliers: {
+              count: 2,
+              summary: '게임 장르 자체가 맞지 않는다는 의견',
+              answer_ids: ['out6', 'out7'],
+            },
+            meta_summary:
+              '압도적으로 높은 재플레이 의향을 보이며, 게임의 재미와 중독성이 핵심 강점으로 나타났다.',
+          }),
+        };
+
+        // Mock: 개발 환경에서는 배열로 반환 (SSE 대신)
+        const questions = [question1, question2, question3];
+
+    return HttpResponse.json(questions);
+  }),
 ];

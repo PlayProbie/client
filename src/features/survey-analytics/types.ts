@@ -91,6 +91,84 @@ export interface GetSurveyResultDetailsResponse {
 // Client State Types (camelCase - 컴포넌트에서 사용)
 // ----------------------------------------
 
+// ----------------------------------------
+// Question Analysis Types (AI 분석 결과)
+// ----------------------------------------
+
+/** 감정 타입 (GEQ 기반) */
+export type EmotionType =
+  | '성취감'
+  | '몰입감'
+  | '집중도'
+  | '긴장감'
+  | '도전감'
+  | '즐거움'
+  | '불쾌감'
+  | '중립';
+
+/** GEQ 7차원 감정 점수 */
+export interface GEQScores {
+  competence: number; // 성취감
+  immersion: number; // 몰입감
+  flow: number; // 집중도
+  tension: number; // 긴장감
+  challenge: number; // 도전감
+  positive_affect: number; // 즐거움
+  negative_affect: number; // 불쾌감
+}
+
+/** 클러스터 정보 */
+export interface ClusterInfo {
+  summary: string;
+  percentage: number;
+  count: number;
+  emotion_type: EmotionType;
+  geq_scores: GEQScores;
+  emotion_detail: string;
+  answer_ids: string[];
+  satisfaction: number;
+  keywords: string[];
+  representative_answer_ids: string[];
+  representative_answers?: string[]; // 대표 답변 텍스트 (Mock 및 Optional)
+}
+
+/** 감정 분포 */
+export interface SentimentDistribution {
+  positive: number;
+  neutral: number;
+  negative: number;
+}
+
+/** 전체 감정 통계 */
+export interface SentimentStats {
+  score: number;
+  label: string;
+  distribution: SentimentDistribution;
+}
+
+/** 이상치 정보 */
+export interface OutlierInfo {
+  count: number;
+  summary: string;
+  answer_ids: string[];
+}
+
+/** 질문별 AI 분석 결과 */
+export interface QuestionAnalysisResult {
+  question_id: number;
+  total_answers: number;
+  clusters: ClusterInfo[];
+  sentiment: SentimentStats;
+  outliers: OutlierInfo | null;
+  meta_summary: string | null;
+}
+
+/** SSE로 받는 질문 분석 래퍼 */
+export interface QuestionResponseAnalysisWrapper {
+  fixedQuestionId: number;
+  resultJson: string; // JSON.parse하면 QuestionAnalysisResult
+}
+
 /** [Client] 설문 세션 정보 */
 export interface SurveySession {
   sessionId: string;

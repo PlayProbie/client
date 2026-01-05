@@ -6,6 +6,7 @@ import { defineConfig, loadEnv } from 'vite';
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
+  const isMSWEnabled = env.VITE_MSW_ENABLED === 'true';
 
   return {
     plugins: [react(), tailwindcss()],

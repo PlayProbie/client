@@ -22,7 +22,7 @@ function BreadcrumbNav({ breadcrumbs }: BreadcrumbNavProps) {
           const isLast = index === breadcrumbs.length - 1;
 
           return (
-            <Fragment key={crumb.to}>
+            <Fragment key={`${crumb.to}-${index}`}>
               <BreadcrumbItem>
                 {isLast ? (
                   <BreadcrumbPage className="text-lg font-bold">
