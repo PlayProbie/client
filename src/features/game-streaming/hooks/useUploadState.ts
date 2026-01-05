@@ -1,16 +1,19 @@
 /**
  * 업로드 상태 머신 Hook
- * 핵심 업로드 로직을 캡슐화
+ * STS 토큰 인증 + 폴더 업로드 방식
  */
 import { useQueryClient } from '@tanstack/react-query';
-import type { AxiosProgressEvent } from 'axios';
 import { useCallback, useRef, useState } from 'react';
 
-import { postBuildComplete, postPresignedUrl, putS3Upload } from '../api';
-import type { UploadError, UploadProgress, UploadState } from '../types';
+import {
+  postBuildComplete,
+  postStsCredentials,
+  putS3FolderUpload,
+} from '../api';
+import type { FolderUploadProgress, UploadError, UploadState } from '../types';
 import {
   analyzeCompleteError,
-  analyzePresignedError,
+  analyzeStsError,
   analyzeUploadError,
 } from '../utils/upload-error-handler';
 import { buildKeys } from './useBuildsQuery';
@@ -22,7 +25,8 @@ export interface UseUploadStateOptions {
 }
 
 export interface UploadParams {
-  file: File;
+  files: File[];
+  folderName: string;
   executablePath: string;
   version?: string;
   note?: string;
@@ -36,83 +40,75 @@ export function useUploadState({
   const queryClient = useQueryClient();
   const [state, setState] = useState<UploadState>({ step: 'idle' });
   const abortControllerRef = useRef<AbortController | null>(null);
-  const startTimeRef = useRef<number>(0);
   const currentStepRef = useRef<string>('idle');
 
   /** 에러 상태로 전환 */
   const setError = useCallback(
-    (errorInfo: UploadError, prevBuildId?: string, prevS3Key?: string) => {
+    (errorInfo: UploadError, prevBuildId?: string, prevKeyPrefix?: string) => {
       setState({
         step: 'error',
         error: errorInfo,
         buildId: prevBuildId,
-        s3Key: prevS3Key,
+        keyPrefix: prevKeyPrefix,
       });
       onError?.(errorInfo);
     },
     [onError]
   );
 
-  /** 진행률 계산 */
-  const calculateProgress = useCallback(
-    (event: AxiosProgressEvent): UploadProgress => {
-      const uploaded = event.loaded;
-      const total = event.total || uploaded;
-      const percent = Math.round((uploaded / total) * 100);
-
-      const elapsed = (Date.now() - startTimeRef.current) / 1000;
-      const speed = elapsed > 0 ? uploaded / elapsed : 0;
-      const remaining = total - uploaded;
-      const eta = speed > 0 ? remaining / speed : 0;
-
-      return { percent, uploaded, total, speed, eta };
-    },
-    []
-  );
-
   /** 업로드 시작 */
   const startUpload = useCallback(
-    async ({ file }: UploadParams) => {
+    async ({ files, folderName }: UploadParams) => {
       let buildId: string | undefined;
-      let s3Key: string | undefined;
+      let keyPrefix: string | undefined;
+      let totalSize = 0;
+      let fileCount = 0;
 
       try {
-        // Step 1: Presigned URL 요청
-        currentStepRef.current = 'requesting_presigned_url';
-        setState({ step: 'requesting_presigned_url' });
+        // 파일 정보 계산
+        totalSize = files.reduce((sum, file) => sum + file.size, 0);
+        fileCount = files.length;
 
-        const presigned = await postPresignedUrl(gameUuid, {
-          filename: file.name,
-          file_size: file.size,
+        // Step 1: STS Credentials 요청
+        currentStepRef.current = 'requesting_sts_credentials';
+        setState({ step: 'requesting_sts_credentials' });
+
+        const stsResponse = await postStsCredentials(gameUuid, {
+          folder_name: folderName,
+          total_file_count: fileCount,
+          total_size: totalSize,
         });
 
-        buildId = presigned.buildId;
-        s3Key = presigned.s3Key;
+        buildId = stsResponse.buildId;
+        keyPrefix = stsResponse.keyPrefix;
 
-        // Step 2: S3 업로드
+        // Step 2: S3 폴더 업로드
         currentStepRef.current = 'uploading_to_s3';
         setState({
           step: 'uploading_to_s3',
           buildId,
-          s3Key,
+          keyPrefix,
           progress: {
+            totalFiles: fileCount,
+            uploadedFiles: 0,
+            totalBytes: totalSize,
+            uploadedBytes: 0,
             percent: 0,
-            uploaded: 0,
-            total: file.size,
             speed: 0,
             eta: 0,
+            currentFileName: '',
           },
         });
 
         abortControllerRef.current = new AbortController();
-        startTimeRef.current = Date.now();
 
-        await putS3Upload({
-          file,
-          uploadUrl: presigned.uploadUrl,
+        await putS3FolderUpload({
+          files,
+          bucket: stsResponse.bucket,
+          keyPrefix,
+          credentials: stsResponse.credentials,
           signal: abortControllerRef.current.signal,
-          onProgress: (event) => {
-            const progress = calculateProgress(event);
+          onProgress: (progress: FolderUploadProgress) => {
             setState((prev) => {
               if (prev.step === 'uploading_to_s3') {
                 return { ...prev, progress };
@@ -127,10 +123,16 @@ export function useUploadState({
         setState({
           step: 'completing_upload',
           buildId,
-          s3Key,
+          keyPrefix,
+          fileCount,
+          totalSize,
         });
 
-        await postBuildComplete(gameUuid, buildId, { s3_key: s3Key });
+        await postBuildComplete(gameUuid, buildId, {
+          key_prefix: keyPrefix,
+          file_count: fileCount,
+          total_size: totalSize,
+        });
 
         // Success
         currentStepRef.current = 'success';
@@ -154,13 +156,13 @@ export function useUploadState({
         } else if (currentStep === 'completing_upload') {
           errorInfo = analyzeCompleteError(error);
         } else {
-          errorInfo = analyzePresignedError(error);
+          errorInfo = analyzeStsError(error);
         }
 
-        setError(errorInfo, buildId, s3Key);
+        setError(errorInfo, buildId, keyPrefix);
       }
     },
-    [gameUuid, calculateProgress, setError, onSuccess, queryClient]
+    [gameUuid, setError, onSuccess, queryClient]
   );
 
   /** 업로드 취소 */
@@ -172,8 +174,8 @@ export function useUploadState({
 
   /** 재시도 */
   const retryUpload = useCallback(
-    (file: File, executablePath: string) => {
-      startUpload({ file, executablePath });
+    (files: File[], folderName: string, executablePath: string) => {
+      startUpload({ files, folderName, executablePath });
     },
     [startUpload]
   );
@@ -191,7 +193,7 @@ export function useUploadState({
     retryUpload,
     reset,
     isUploading: [
-      'requesting_presigned_url',
+      'requesting_sts_credentials',
       'uploading_to_s3',
       'completing_upload',
     ].includes(state.step),

@@ -16,4 +16,17 @@ export * from './api';
 export * from './hooks';
 
 // Components
-export * from './components';
+export {
+  BuildsTable,
+  BuildStatusBadge,
+  BuildUploadForm,
+  type BuildUploadFormData,
+  BuildUploadModal,
+  DragDropFolderInput,
+  GameShell,
+  RegisterGameModal,
+  ScheduleForm,
+  StreamSettingsForm,
+  UnregisterGameDialog,
+  UploadStatusDisplay,
+} from './components';

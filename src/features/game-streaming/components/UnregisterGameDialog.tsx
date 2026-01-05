@@ -12,12 +12,12 @@ import {
 } from '@/components/ui/Dialog';
 
 import { useUnregisterStreamingGameMutation } from '../hooks';
-import type { GameListItem } from '../types';
+import type { StreamingGame } from '../types';
 
 interface UnregisterGameDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  game: GameListItem | null;
+  game: StreamingGame | null;
 }
 
 export function UnregisterGameDialog({
@@ -81,7 +81,3 @@ export function UnregisterGameDialog({
     </Dialog>
   );
 }
-
-// Legacy alias
-/** @deprecated Use UnregisterGameDialog instead */
-export const DeleteGameDialog = UnregisterGameDialog;

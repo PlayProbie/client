@@ -69,13 +69,3 @@ export function useUnregisterStreamingGameMutation() {
     },
   });
 }
-
-// ----------------------------------------
-// Legacy exports (deprecated)
-// ----------------------------------------
-
-/** @deprecated Use useRegisterStreamingGameMutation instead */
-export const useCreateGameMutation = useRegisterStreamingGameMutation;
-
-/** @deprecated Use useUnregisterStreamingGameMutation instead */
-export const useDeleteGameMutation = useUnregisterStreamingGameMutation;

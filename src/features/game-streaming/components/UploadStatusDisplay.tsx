@@ -7,8 +7,11 @@ import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { InlineAlert } from '@/components/ui/InlineAlert';
 
-import type { UploadProgress, UploadState } from '../types';
-import { UploadProgressBar } from './UploadProgressBar';
+import type {
+  FolderUploadProgress as FolderUploadProgressType,
+  UploadState,
+} from '../types';
+import { FolderUploadProgress } from './FolderUploadProgress';
 
 interface UploadStatusDisplayProps {
   state: UploadState;
@@ -26,7 +29,7 @@ export function UploadStatusDisplay({
   onCancel,
 }: UploadStatusDisplayProps) {
   switch (state.step) {
-    case 'requesting_presigned_url':
+    case 'requesting_sts_credentials':
       return (
         <div className="flex flex-col items-center gap-4 py-8">
           <Loader2 className="text-primary size-10 animate-spin" />
@@ -37,13 +40,11 @@ export function UploadStatusDisplay({
     case 'uploading_to_s3':
       return (
         <div className="space-y-4 py-4">
-          <div className="flex items-center gap-2">
-            <Loader2 className="text-primary size-5 animate-spin" />
-            <span className="font-medium">업로드 중...</span>
-          </div>
-          <UploadProgressBar progress={state.progress as UploadProgress} />
+          <FolderUploadProgress
+            progress={state.progress as FolderUploadProgressType}
+          />
           {filename && (
-            <p className="text-muted-foreground text-xs">{filename}</p>
+            <p className="text-muted-foreground text-xs">폴더: {filename}</p>
           )}
         </div>
       );

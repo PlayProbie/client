@@ -21,7 +21,7 @@ import {
   UnregisterGameDialog,
 } from '@/features/game-streaming';
 import { useGamesQuery } from '@/features/game-streaming';
-import type { GameListItem } from '@/features/game-streaming/types';
+import type { StreamingGame } from '@/features/game-streaming/types';
 import { formatDate } from '@/features/game-streaming/utils';
 
 export default function GamesListPage() {
@@ -31,13 +31,13 @@ export default function GamesListPage() {
   // Modal states
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
   const [isUnregisterDialogOpen, setIsUnregisterDialogOpen] = useState(false);
-  const [selectedGame, setSelectedGame] = useState<GameListItem | null>(null);
+  const [selectedGame, setSelectedGame] = useState<StreamingGame | null>(null);
 
   const handleRowClick = (gameUuid: string) => {
     navigate(`/studio/games/${gameUuid}/overview`);
   };
 
-  const handleUnregisterClick = (e: React.MouseEvent, game: GameListItem) => {
+  const handleUnregisterClick = (e: React.MouseEvent, game: StreamingGame) => {
     e.stopPropagation();
     setSelectedGame(game);
     setIsUnregisterDialogOpen(true);

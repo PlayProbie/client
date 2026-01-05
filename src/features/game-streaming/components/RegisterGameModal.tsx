@@ -165,7 +165,3 @@ export function RegisterGameModal({
     </Dialog>
   );
 }
-
-// Legacy alias
-/** @deprecated Use RegisterGameModal instead */
-export const CreateGameModal = RegisterGameModal;

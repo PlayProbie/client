@@ -46,31 +46,49 @@ export interface Build {
   updatedAt: string;
 }
 
-/** [API] Presigned URL 요청 */
-export interface ApiPresignedUrlRequest {
-  filename: string;
-  file_size: number;
+/** [API] STS Credentials 요청 */
+export interface ApiStsCredentialsRequest {
+  folder_name: string;
+  total_file_count: number;
+  total_size: number;
 }
 
-/** [API] Presigned URL 응답 */
-export interface ApiPresignedUrlResponse {
+/** [API] STS Credentials 응답 */
+export interface ApiStsCredentialsResponse {
   build_id: string;
-  upload_url: string;
-  s3_key: string;
+  credentials: {
+    access_key_id: string;
+    secret_access_key: string;
+    session_token: string;
+    expiration: string;
+  };
+  bucket: string;
+  key_prefix: string;
   expires_in_seconds: number;
 }
 
-/** [Client] Presigned URL 응답 */
-export interface PresignedUrlResponse {
+/** [Client] AWS Credentials */
+export interface AwsCredentials {
+  accessKeyId: string;
+  secretAccessKey: string;
+  sessionToken: string;
+  expiration: string;
+}
+
+/** [Client] STS Credentials 응답 */
+export interface StsCredentialsResponse {
   buildId: string;
-  uploadUrl: string;
-  s3Key: string;
+  credentials: AwsCredentials;
+  bucket: string;
+  keyPrefix: string;
   expiresInSeconds: number;
 }
 
 /** [API] Build Complete 요청 */
 export interface ApiBuildCompleteRequest {
-  s3_key: string;
+  key_prefix: string;
+  file_count: number;
+  total_size: number;
 }
 
 /** [API] Build Complete 응답 */
@@ -85,14 +103,14 @@ export interface ApiBuildCompleteResponse {
 /** 업로드 상태 */
 export type UploadStep =
   | 'idle'
-  | 'requesting_presigned_url'
+  | 'requesting_sts_credentials'
   | 'uploading_to_s3'
   | 'completing_upload'
   | 'success'
   | 'error';
 
 /** 업로드 에러 단계 */
-export type UploadErrorStep = 'presigned' | 'upload' | 'complete';
+export type UploadErrorStep = 'sts' | 'upload' | 'complete';
 
 /** 업로드 에러 객체 */
 export interface UploadError {
@@ -102,13 +120,16 @@ export interface UploadError {
   retriable: boolean;
 }
 
-/** 업로드 진행 상태 */
-export interface UploadProgress {
+/** 폴더 업로드 진행 상태 */
+export interface FolderUploadProgress {
+  totalFiles: number;
+  uploadedFiles: number;
+  totalBytes: number;
+  uploadedBytes: number;
   percent: number;
-  uploaded: number;
-  total: number;
   speed: number; // bytes per second
   eta: number; // seconds remaining
+  currentFileName: string;
 }
 
 /** 업로드 상태 (idle) */
@@ -116,24 +137,26 @@ export interface UploadStateIdle {
   step: 'idle';
 }
 
-/** 업로드 상태 (requesting_presigned_url) */
-export interface UploadStateRequestingUrl {
-  step: 'requesting_presigned_url';
+/** 업로드 상태 (requesting_sts_credentials) */
+export interface UploadStateRequestingSts {
+  step: 'requesting_sts_credentials';
 }
 
 /** 업로드 상태 (uploading_to_s3) */
 export interface UploadStateUploading {
   step: 'uploading_to_s3';
   buildId: string;
-  s3Key: string;
-  progress: UploadProgress;
+  keyPrefix: string;
+  progress: FolderUploadProgress;
 }
 
 /** 업로드 상태 (completing_upload) */
 export interface UploadStateCompleting {
   step: 'completing_upload';
   buildId: string;
-  s3Key: string;
+  keyPrefix: string;
+  fileCount: number;
+  totalSize: number;
 }
 
 /** 업로드 상태 (success) */
@@ -147,13 +170,13 @@ export interface UploadStateError {
   step: 'error';
   error: UploadError;
   buildId?: string;
-  s3Key?: string;
+  keyPrefix?: string;
 }
 
 /** 업로드 상태 유니온 */
 export type UploadState =
   | UploadStateIdle
-  | UploadStateRequestingUrl
+  | UploadStateRequestingSts
   | UploadStateUploading
   | UploadStateCompleting
   | UploadStateSuccess
@@ -258,12 +281,6 @@ export interface StreamingGame {
   updatedAt: string;
 }
 
-// Legacy aliases for backward compatibility
-/** @deprecated Use StreamingGame instead */
-export type ApiGameListItem = ApiStreamingGame;
-/** @deprecated Use StreamingGame instead */
-export type GameListItem = StreamingGame;
-
 // ----------------------------------------
 // Transformers
 // ----------------------------------------
@@ -284,14 +301,20 @@ export function toBuild(api: ApiBuild): Build {
   };
 }
 
-/** ApiPresignedUrlResponse → PresignedUrlResponse 변환 */
-export function toPresignedUrlResponse(
-  api: ApiPresignedUrlResponse
-): PresignedUrlResponse {
+/** ApiStsCredentialsResponse → StsCredentialsResponse 변환 */
+export function toStsCredentialsResponse(
+  api: ApiStsCredentialsResponse
+): StsCredentialsResponse {
   return {
     buildId: api.build_id,
-    uploadUrl: api.upload_url,
-    s3Key: api.s3_key,
+    credentials: {
+      accessKeyId: api.credentials.access_key_id,
+      secretAccessKey: api.credentials.secret_access_key,
+      sessionToken: api.credentials.session_token,
+      expiration: api.credentials.expiration,
+    },
+    bucket: api.bucket,
+    keyPrefix: api.key_prefix,
     expiresInSeconds: api.expires_in_seconds,
   };
 }
@@ -317,9 +340,6 @@ export function toStreamingGame(api: ApiStreamingGame): StreamingGame {
     updatedAt: api.updated_at,
   };
 }
-
-/** @deprecated Use toStreamingGame instead */
-export const toGameListItem = toStreamingGame;
 
 /** ApiStreamSettings → StreamSettings 변환 */
 export function toStreamSettings(api: ApiStreamSettings): StreamSettings {

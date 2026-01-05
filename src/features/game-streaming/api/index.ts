@@ -20,8 +20,11 @@ export { getSourceGames } from './get-source-games';
 // Builds
 export { getBuilds } from './get-builds';
 export { postBuildComplete } from './post-build-complete';
-export { postPresignedUrl } from './post-presigned-url';
-export { putS3Upload, type S3UploadOptions } from './put-s3-upload';
+export { postStsCredentials } from './post-sts-credentials';
+export {
+  type FolderUploadOptions,
+  putS3FolderUpload,
+} from './put-s3-folder-upload';
 
 // Stream Settings
 export { getStreamSettings } from './get-stream-settings';
@@ -30,9 +33,3 @@ export { putStreamSettings } from './put-stream-settings';
 // Schedule
 export { getSchedule } from './get-schedule';
 export { putSchedule, type ScheduleInput } from './put-schedule';
-
-// Legacy exports (deprecated)
-/** @deprecated Use getStreamingGames instead */
-export { getStreamingGames as getGames } from './get-streaming-games';
-/** @deprecated Use getStreamingGameByUuid instead */
-export { getStreamingGameByUuid as getGameByUuid } from './get-streaming-games';

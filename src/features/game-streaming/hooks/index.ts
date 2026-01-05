@@ -3,8 +3,6 @@
 export { buildKeys, useBuildsQuery } from './useBuildsQuery';
 export {
   sourceGameKeys,
-  useCreateGameMutation,
-  useDeleteGameMutation,
   useRegisterStreamingGameMutation,
   useUnregisterStreamingGameMutation,
 } from './useGameMutations';

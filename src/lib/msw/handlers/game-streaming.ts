@@ -7,11 +7,11 @@ import { delay, http, HttpResponse } from 'msw';
 import type {
   ApiBuild,
   ApiBuildCompleteResponse,
-  ApiPresignedUrlResponse,
   ApiSchedule,
   ApiSourceGame,
   ApiStreamingGame,
   ApiStreamSettings,
+  ApiStsCredentialsResponse,
 } from '@/features/game-streaming/types';
 
 const API_BASE_URL = '/api';
@@ -288,25 +288,27 @@ export const gameStreamingHandlers = [
     return HttpResponse.json(builds);
   }),
 
-  // Presigned URL 발급
+  // STS Credentials 발급
   http.post(
-    `${API_BASE_URL}/streaming-games/:gameUuid/builds/presigned-url`,
-    async ({ params, request }) => {
+    `${API_BASE_URL}/streaming-games/:gameUuid/builds/sts-credentials`,
+    async ({ params }) => {
       await delay(500);
       const { gameUuid } = params;
-      const body = (await request.json()) as {
-        filename: string;
-        file_size: number;
-      };
 
       buildCounter++;
       const buildId = `build-${buildCounter}`;
-      const s3Key = `builds/${gameUuid}/${body.filename}`;
+      const keyPrefix = `builds/${gameUuid}/${buildId}`;
 
-      const response: ApiPresignedUrlResponse = {
+      const response: ApiStsCredentialsResponse = {
         build_id: buildId,
-        upload_url: `https://mock-s3-bucket.s3.amazonaws.com/${s3Key}?X-Amz-Signature=mock`,
-        s3_key: s3Key,
+        credentials: {
+          access_key_id: 'AKIAIOSFODNN7EXAMPLE',
+          secret_access_key: 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
+          session_token: 'FwoGZXIvYXdzEBYaDMockSessionToken==',
+          expiration: new Date(Date.now() + 3600000).toISOString(),
+        },
+        bucket: 'mock-s3-bucket',
+        key_prefix: keyPrefix,
         expires_in_seconds: 3600,
       };
 
@@ -320,14 +322,18 @@ export const gameStreamingHandlers = [
     async ({ params, request }) => {
       await delay(300);
       const { gameUuid, buildId } = params;
-      const body = (await request.json()) as { s3_key: string };
+      const body = (await request.json()) as {
+        key_prefix: string;
+        file_count: number;
+        total_size: number;
+      };
 
       const newBuild: ApiBuild = {
         build_id: buildId as string,
-        filename: body.s3_key.split('/').pop() || 'unknown.zip',
+        filename: body.key_prefix.split('/').pop() || 'unknown',
         status: 'UPLOADED',
-        size: 1_000_000_000,
-        s3_key: body.s3_key,
+        size: body.total_size,
+        s3_key: body.key_prefix,
         executable_path: '/Game/MyGame.exe',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),

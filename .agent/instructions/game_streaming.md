@@ -11,7 +11,7 @@
 
 | 기능               | 상태               | 설명                                                   |
 | ------------------ | ------------------ | ------------------------------------------------------ |
-| Build 업로드       | ✅ 핵심            | Presigned URL → S3 PUT → 완료 처리(complete)           |
+| Build 업로드       | ✅ 핵심            | STS 토큰 발급 → S3 폴더 업로드 → 완료 처리(complete)   |
 | Stream Settings UI | 🔧 필수 (API 없음) | GPU / 해상도·FPS 설정 폼                               |
 | Schedule UI        | 🔧 필수 (API 없음) | 활성 기간(start/end), timezone, capacity(max sessions) |
 
@@ -122,10 +122,10 @@
 
 - **PageHeader**
   - Title: "Builds"
-  - Subtitle: "게임 실행 파일 패키지(.zip)를 업로드하고 상태를 확인합니다."
+  - Subtitle: "게임 빌드 폴더를 업로드하고 상태를 확인합니다."
 - **CTA**: Upload Build (모달 오픈)
-- **Hint Box**: "ExecutablePath는 zip 내부 실행 파일의 상대 경로입니다. 예)
-  `/Game/Binaries/Win64/MyGame.exe`"
+- **Hint Box**: "ExecutablePath는 업로드 폴더 내 실행 파일의 상대 경로입니다.
+  예) `{game uuid}/{build uuid}/{executable path}`"
 
 #### 테이블 컬럼
 
@@ -155,12 +155,12 @@
 
 #### 입력 Step (Idle)
 
-| 필드           | 타입                    | 필수 | 설명                  |
-| -------------- | ----------------------- | ---- | --------------------- |
-| Build File     | Drag&Drop + Choose File | ✅   | `.zip` only, 최대 5GB |
-| ExecutablePath | 텍스트 입력             | ✅   |                       |
-| Version        | 텍스트 입력             | ❌   |                       |
-| Note           | 텍스트 입력             | ❌   |                       |
+| 필드           | 타입                      | 필수 | 설명                         |
+| -------------- | ------------------------- | ---- | ---------------------------- |
+| Build Folder   | Drag&Drop + Choose Folder | ✅   | 폴더 선택, 총 용량 최대 10GB |
+| ExecutablePath | 텍스트 입력               | ✅   | 폴더 내 상대 경로            |
+| Version        | 텍스트 입력               | ❌   |                              |
+| Note           | 텍스트 입력               | ❌   |                              |
 
 **버튼**: Cancel / Start Upload
 
@@ -169,11 +169,11 @@
 ```mermaid
 stateDiagram-v2
     [*] --> idle
-    idle --> requesting_presigned_url
-    requesting_presigned_url --> uploading_to_s3
+    idle --> requesting_sts_credentials
+    requesting_sts_credentials --> uploading_to_s3
     uploading_to_s3 --> completing_upload
     completing_upload --> success
-    requesting_presigned_url --> error
+    requesting_sts_credentials --> error
     uploading_to_s3 --> error
     completing_upload --> error
     success --> [*]
@@ -184,7 +184,7 @@ stateDiagram-v2
 
 ```ts
 type UploadError = {
-  step: 'presigned' | 'upload' | 'complete';
+  step: 'sts' | 'upload' | 'complete';
   code?: string;
   message: string;
   retriable: boolean;
@@ -193,28 +193,45 @@ type UploadError = {
 
 #### API 연동 (명세 확정)
 
-##### 1. Presigned URL 발급
+##### 1. STS 임시 자격 증명 발급
 
 ```http
-POST /games/{gameUuid}/builds/presigned-url
+POST /games/{gameUuid}/builds/sts-credentials
 
 Request Body:
-{ filename, fileSize }
+{ folderName, totalFileCount, totalSize }
 
 Response:
-{ buildId, uploadUrl, s3Key, expiresInSeconds }
+{
+  buildId,
+  credentials: {
+    accessKeyId,
+    secretAccessKey,
+    sessionToken,
+    expiration
+  },
+  bucket,
+  keyPrefix,           // S3 업로드 경로 prefix (예: builds/{gameUuid}/{buildId}/)
+  expiresInSeconds
+}
 ```
 
-##### 2. S3 업로드
+##### 2. S3 폴더 업로드
 
-```http
-PUT {uploadUrl}
+```text
+AWS SDK (PutObjectCommand) 사용
+
+업로드 대상:
+- 선택된 폴더 내 모든 파일을 재귀적으로 업로드
+- 각 파일의 S3 Key: {keyPrefix}/{상대경로}
 
 진행률 표시 필수:
+- 전체 파일 수 / 완료된 파일 수
+- 전체 bytes / 업로드된 bytes
 - percent
-- uploaded / total
 - speed (대략)
 - eta (대략)
+- 현재 업로드 중인 파일명
 ```
 
 ##### 3. 완료 처리
@@ -223,7 +240,7 @@ PUT {uploadUrl}
 POST /games/{gameUuid}/builds/{buildId}/complete
 
 Request Body:
-{ s3Key }
+{ keyPrefix, fileCount, totalSize }
 
 Response:
 { status: "UPLOADED" }
@@ -231,15 +248,16 @@ Response:
 
 #### 실패 UX
 
-| 실패 단계 | 조건      | 메시지                                      | 액션                     |
-| --------- | --------- | ------------------------------------------- | ------------------------ |
-| Presigned | 발급 실패 | "업로드 URL 발급 실패"                      | Retry / Cancel           |
-| Upload    | 네트워크  | "네트워크 문제로 업로드가 중단되었습니다."  | Retry / Restart / Cancel |
-| Upload    | URL 만료  | "업로드 URL이 만료되었을 수 있습니다…"      | Restart (new URL)        |
-| Upload    | CORS      | "CORS 설정 문제로 업로드가 차단되었습니다." | Restart / Cancel         |
-| Complete  | G003      | "업로드된 파일을 찾을 수 없습니다"          | Restart                  |
-| Complete  | G002      | "빌드 세션을 찾을 수 없습니다"              | Restart                  |
-| Complete  | G004      | "S3 확인 중 오류가 발생했습니다"            | Retry / Cancel           |
+| 실패 단계 | 조건           | 메시지                                       | 액션                     |
+| --------- | -------------- | -------------------------------------------- | ------------------------ |
+| STS       | 발급 실패      | "업로드 인증 정보 발급 실패"                 | Retry / Cancel           |
+| Upload    | 네트워크       | "네트워크 문제로 업로드가 중단되었습니다."   | Retry / Restart / Cancel |
+| Upload    | 자격증명 만료  | "업로드 인증이 만료되었습니다. 다시 시작..." | Restart (새 STS 발급)    |
+| Upload    | AccessDenied   | "S3 접근 권한이 없습니다."                   | Restart / Cancel         |
+| Upload    | 파일 읽기 실패 | "파일을 읽을 수 없습니다: {filename}"        | Skip / Retry / Cancel    |
+| Complete  | G003           | "업로드된 파일을 찾을 수 없습니다"           | Restart                  |
+| Complete  | G002           | "빌드 세션을 찾을 수 없습니다"               | Restart                  |
+| Complete  | G004           | "S3 확인 중 오류가 발생했습니다"             | Retry / Cancel           |
 
 #### 업로드 성공 후
 
@@ -355,8 +373,8 @@ Response:
 ### Build Upload
 
 - `BuildUploadModal` - props: `gameUuid`, `onSuccess(build)`
-- `DragDropFileInput` - `.zip` only
-- `UploadProgressBar` - percent/speed/eta/transferred
+- `DragDropFolderInput` - 폴더 선택 (webkitdirectory)
+- `FolderUploadProgress` - 파일 수/bytes/percent/speed/eta/현재파일
 
 ### Forms
 

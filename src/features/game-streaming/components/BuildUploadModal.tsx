@@ -28,7 +28,8 @@ interface BuildUploadModalProps {
 }
 
 const INITIAL_FORM_DATA: BuildUploadFormData = {
-  file: null,
+  files: [],
+  folderName: '',
   executablePath: '',
   version: '',
   note: '',
@@ -87,9 +88,15 @@ export function BuildUploadModal({
 
   /** 업로드 시작 */
   const handleStartUpload = useCallback(() => {
-    const { file, executablePath, version, note } = formData;
-    if (!file || !executablePath.trim()) return;
-    startUpload({ file, executablePath: executablePath.trim(), version, note });
+    const { files, folderName, executablePath, version, note } = formData;
+    if (files.length === 0 || !executablePath.trim()) return;
+    startUpload({
+      files,
+      folderName,
+      executablePath: executablePath.trim(),
+      version,
+      note,
+    });
   }, [formData, startUpload]);
 
   /** Stream Settings로 이동 */
@@ -100,18 +107,25 @@ export function BuildUploadModal({
 
   /** 재시도 */
   const handleRetry = useCallback(() => {
-    const { file, executablePath, version, note } = formData;
-    if (!file || !executablePath.trim()) return;
-    startUpload({ file, executablePath: executablePath.trim(), version, note });
+    const { files, folderName, executablePath, version, note } = formData;
+    if (files.length === 0 || !executablePath.trim()) return;
+    startUpload({
+      files,
+      folderName,
+      executablePath: executablePath.trim(),
+      version,
+      note,
+    });
   }, [formData, startUpload]);
 
   /** 새로 시작 */
   const handleRestart = useCallback(() => {
     reset();
-    const { file, executablePath, version, note } = formData;
-    if (file && executablePath.trim()) {
+    const { files, folderName, executablePath, version, note } = formData;
+    if (files.length > 0 && executablePath.trim()) {
       startUpload({
-        file,
+        files,
+        folderName,
         executablePath: executablePath.trim(),
         version,
         note,
@@ -119,7 +133,8 @@ export function BuildUploadModal({
     }
   }, [formData, reset, startUpload]);
 
-  const isFormValid = !!formData.file && !!formData.executablePath.trim();
+  const isFormValid =
+    formData.files.length > 0 && !!formData.executablePath.trim();
 
   return (
     <>
@@ -131,7 +146,7 @@ export function BuildUploadModal({
           <DialogHeader>
             <DialogTitle>Upload Build</DialogTitle>
             <DialogDescription>
-              게임 실행 파일 패키지(.zip)를 업로드합니다.
+              게임 빌드 폴더를 업로드합니다.
             </DialogDescription>
           </DialogHeader>
 
@@ -148,7 +163,7 @@ export function BuildUploadModal({
             {state.step !== 'idle' && (
               <UploadStatusDisplay
                 state={state}
-                filename={formData.file?.name}
+                filename={formData.folderName}
                 onRetry={handleRetry}
                 onRestart={handleRestart}
                 onCancel={handleClose}

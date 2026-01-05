@@ -4,9 +4,9 @@
  */
 import { useQuery } from '@tanstack/react-query';
 
-import { getGameByUuid, getGames } from '../api';
+import { getStreamingGameByUuid, getStreamingGames } from '../api';
 import { QUERY_CONFIG } from '../constants';
-import type { GameListItem } from '../types';
+import type { StreamingGame } from '../types';
 
 /** Query Keys */
 export const gameKeys = {
@@ -19,9 +19,9 @@ export const gameKeys = {
 
 /** 게임 목록 조회 Hook */
 export function useGamesQuery() {
-  return useQuery<GameListItem[]>({
+  return useQuery<StreamingGame[]>({
     queryKey: gameKeys.list(),
-    queryFn: getGames,
+    queryFn: getStreamingGames,
     staleTime: QUERY_CONFIG.STALE_TIME_DEFAULT,
   });
 }
@@ -31,9 +31,9 @@ export function useGameDetailQuery(
   gameUuid: string,
   options?: { enabled?: boolean }
 ) {
-  return useQuery<GameListItem | null>({
+  return useQuery<StreamingGame | null>({
     queryKey: gameKeys.detail(gameUuid),
-    queryFn: () => getGameByUuid(gameUuid),
+    queryFn: () => getStreamingGameByUuid(gameUuid),
     enabled: options?.enabled ?? !!gameUuid,
     staleTime: QUERY_CONFIG.STALE_TIME_DEFAULT,
   });
