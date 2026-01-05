@@ -17,6 +17,7 @@ export interface BuildUploadFormData {
   executablePath: string;
   version: string;
   note: string;
+  isStreaming: boolean;
 }
 
 interface BuildUploadFormProps {

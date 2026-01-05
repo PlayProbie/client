@@ -2,6 +2,7 @@ import { Outlet } from 'react-router-dom';
 
 import { AuthGuard, GuestGuard } from '@/components/guards';
 import { PageLayout } from '@/components/layout';
+import { UploadStatusWidget } from '@/components/layout/UploadStatusWidget';
 import { Toaster } from '@/components/ui/Toaster';
 
 /**
@@ -12,6 +13,7 @@ export function RootLayout() {
     <>
       <Outlet />
       <Toaster />
+      <UploadStatusWidget />
     </>
   );
 }

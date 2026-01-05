@@ -1,12 +1,10 @@
 /**
  * BuildUploadModal - 빌드 업로드 모달
- * 역할: 업로드 폼과 상태 표시를 조합하고 모달 동작을 관리
+ * 역할: 업로드 폼 입력 및 전역 업로드 시작
  */
 import { useCallback, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
-import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import {
   Dialog,
   DialogContent,
@@ -16,13 +14,13 @@ import {
   DialogTitle,
 } from '@/components/ui/Dialog';
 import { useToast } from '@/hooks/useToast';
+import { useUploadStore } from '@/stores';
 
-import { useUploadState } from '../hooks';
 import { BuildUploadForm, type BuildUploadFormData } from './BuildUploadForm';
-import { UploadStatusDisplay } from './UploadStatusDisplay';
 
 interface BuildUploadModalProps {
   gameUuid: string;
+  gameName: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -33,203 +31,92 @@ const INITIAL_FORM_DATA: BuildUploadFormData = {
   executablePath: '',
   version: '',
   note: '',
+  isStreaming: false,
 };
 
 export function BuildUploadModal({
   gameUuid,
+  gameName,
   open,
   onOpenChange,
 }: BuildUploadModalProps) {
-  const navigate = useNavigate();
   const { toast } = useToast();
+  const startUpload = useUploadStore((state) => state.startUpload);
 
   // Form state
   const [formData, setFormData] =
     useState<BuildUploadFormData>(INITIAL_FORM_DATA);
 
-  // Cancel confirmation
-  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
-
-  // Upload state machine
-  const { state, startUpload, cancelUpload, reset, isUploading } =
-    useUploadState({
-      gameUuid,
-      onSuccess: () => {
-        toast({
-          variant: 'success',
-          title: '업로드 완료',
-          description: '업로드가 완료되었습니다.',
-        });
-      },
-    });
-
   const resetForm = useCallback(() => {
     setFormData(INITIAL_FORM_DATA);
-    reset();
-  }, [reset]);
+  }, []);
 
-  /** 모달 닫기 시도 */
+  /** 모달 닫기 */
   const handleClose = useCallback(() => {
-    if (isUploading) {
-      setShowCancelConfirm(true);
-    } else {
-      resetForm();
-      onOpenChange(false);
-    }
-  }, [isUploading, resetForm, onOpenChange]);
-
-  /** 업로드 취소 확인 */
-  const handleCancelConfirm = useCallback(() => {
-    setShowCancelConfirm(false);
-    cancelUpload();
     resetForm();
     onOpenChange(false);
-  }, [cancelUpload, resetForm, onOpenChange]);
+  }, [resetForm, onOpenChange]);
 
   /** 업로드 시작 */
   const handleStartUpload = useCallback(() => {
     const { files, folderName, executablePath, version, note } = formData;
     if (files.length === 0 || !executablePath.trim()) return;
+
+    // 전역 스토어를 통해 업로드 시작
     startUpload({
+      gameUuid,
+      gameName: gameName || 'Unknown Game', // Fallback for safety
       files,
       folderName,
       executablePath: executablePath.trim(),
       version,
       note,
     });
-  }, [formData, startUpload]);
 
-  /** Stream Settings로 이동 */
-  const handleGoToStreamSettings = useCallback(() => {
-    onOpenChange(false);
-    navigate(`/studio/games/${gameUuid}/stream-settings`);
-  }, [gameUuid, navigate, onOpenChange]);
-
-  /** 재시도 */
-  const handleRetry = useCallback(() => {
-    const { files, folderName, executablePath, version, note } = formData;
-    if (files.length === 0 || !executablePath.trim()) return;
-    startUpload({
-      files,
-      folderName,
-      executablePath: executablePath.trim(),
-      version,
-      note,
+    toast({
+      title: '업로드가 시작되었습니다',
+      description: '우측 하단 위젯에서 진행 상황을 확인할 수 있습니다.',
     });
-  }, [formData, startUpload]);
 
-  /** 새로 시작 */
-  const handleRestart = useCallback(() => {
-    reset();
-    const { files, folderName, executablePath, version, note } = formData;
-    if (files.length > 0 && executablePath.trim()) {
-      startUpload({
-        files,
-        folderName,
-        executablePath: executablePath.trim(),
-        version,
-        note,
-      });
-    }
-  }, [formData, reset, startUpload]);
+    handleClose();
+  }, [formData, gameUuid, gameName, startUpload, toast, handleClose]);
 
   const isFormValid =
     formData.files.length > 0 && !!formData.executablePath.trim();
 
   return (
-    <>
-      <Dialog
-        open={open}
-        onOpenChange={handleClose}
-      >
-        <DialogContent className="sm:max-w-[720px]">
-          <DialogHeader>
-            <DialogTitle>Upload Build</DialogTitle>
-            <DialogDescription>
-              게임 빌드 폴더를 업로드합니다.
-            </DialogDescription>
-          </DialogHeader>
+    <Dialog
+      open={open}
+      onOpenChange={handleClose}
+    >
+      <DialogContent className="sm:max-w-[720px]">
+        <DialogHeader>
+          <DialogTitle>Upload Build</DialogTitle>
+          <DialogDescription>게임 빌드 폴더를 업로드합니다.</DialogDescription>
+        </DialogHeader>
 
-          <div className="space-y-4 py-4">
-            {/* Idle: 입력 폼 표시 */}
-            {state.step === 'idle' && (
-              <BuildUploadForm
-                data={formData}
-                onChange={setFormData}
-              />
-            )}
+        <div className="space-y-4 py-4">
+          <BuildUploadForm
+            data={formData}
+            onChange={setFormData}
+          />
+        </div>
 
-            {/* 업로드 진행 상태 표시 */}
-            {state.step !== 'idle' && (
-              <UploadStatusDisplay
-                state={state}
-                filename={formData.folderName}
-                onRetry={handleRetry}
-                onRestart={handleRestart}
-                onCancel={handleClose}
-              />
-            )}
-          </div>
-
-          <DialogFooter>
-            {/* Idle State */}
-            {state.step === 'idle' && (
-              <>
-                <Button
-                  variant="outline"
-                  onClick={handleClose}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleStartUpload}
-                  disabled={!isFormValid}
-                >
-                  Start Upload
-                </Button>
-              </>
-            )}
-
-            {/* Uploading States */}
-            {isUploading && (
-              <Button
-                variant="outline"
-                onClick={() => setShowCancelConfirm(true)}
-              >
-                Cancel
-              </Button>
-            )}
-
-            {/* Success State */}
-            {state.step === 'success' && (
-              <>
-                <Button
-                  variant="outline"
-                  onClick={handleClose}
-                >
-                  Close
-                </Button>
-                <Button onClick={handleGoToStreamSettings}>
-                  Go to Stream Settings
-                </Button>
-              </>
-            )}
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Cancel Confirmation */}
-      <ConfirmDialog
-        open={showCancelConfirm}
-        onOpenChange={setShowCancelConfirm}
-        title="업로드를 취소할까요?"
-        description="지금까지 전송된 데이터는 저장되지 않을 수 있습니다."
-        cancelLabel="계속 업로드"
-        confirmLabel="취소하고 닫기"
-        confirmVariant="destructive"
-        onCancel={() => setShowCancelConfirm(false)}
-        onConfirm={handleCancelConfirm}
-      />
-    </>
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={handleClose}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleStartUpload}
+            disabled={!isFormValid}
+          >
+            Start Upload
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

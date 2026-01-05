@@ -8,7 +8,7 @@ import { useParams } from 'react-router-dom';
 
 import { Button, InlineAlert, Skeleton } from '@/components/ui';
 import { BuildsTable, BuildUploadModal } from '@/features/game-streaming';
-import { useBuildsQuery } from '@/features/game-streaming';
+import { useBuildsQuery, useGameDetailQuery } from '@/features/game-streaming';
 
 export default function BuildsPage() {
   const { gameUuid } = useParams<{ gameUuid: string }>();
@@ -18,6 +18,7 @@ export default function BuildsPage() {
     isError,
     refetch,
   } = useBuildsQuery(gameUuid || '');
+  const { data: game } = useGameDetailQuery(gameUuid || '');
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
   return (
@@ -88,6 +89,7 @@ export default function BuildsPage() {
       {gameUuid && (
         <BuildUploadModal
           gameUuid={gameUuid}
+          gameName={game?.gameName || ''}
           open={isUploadModalOpen}
           onOpenChange={setIsUploadModalOpen}
         />

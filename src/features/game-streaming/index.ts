@@ -28,5 +28,4 @@ export {
   ScheduleForm,
   StreamSettingsForm,
   UnregisterGameDialog,
-  UploadStatusDisplay,
 } from './components';
