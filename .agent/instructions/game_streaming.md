@@ -9,11 +9,10 @@
 
 ### A. Creator Studio (관리자 웹, Desktop only)
 
-| 기능               | 상태               | 설명                                                   |
-| ------------------ | ------------------ | ------------------------------------------------------ |
-| Build 업로드       | ✅ 핵심            | STS 토큰 발급 → S3 폴더 업로드 → 완료 처리(complete)   |
-| Stream Settings UI | 🔧 필수 (API 없음) | GPU / 해상도·FPS 설정 폼                               |
-| Schedule UI        | 🔧 필수 (API 없음) | 활성 기간(start/end), timezone, capacity(max sessions) |
+| 기능               | 상태               | 설명                                                 |
+| ------------------ | ------------------ | ---------------------------------------------------- |
+| Build 업로드       | ✅ 핵심            | STS 토큰 발급 → S3 폴더 업로드 → 완료 처리(complete) |
+| Stream Settings UI | 🔧 필수 (API 없음) | GPU / 해상도·FPS / Capacity(max sessions) 설정 폼    |
 
 ### B. Tester Experience (Phase 1)
 
@@ -50,8 +49,7 @@
 /studio/games                           # Screen A: 게임 목록
 /studio/games/:gameUuid/overview        # Screen B: 게임 개요 + 탭 쉘
 /studio/games/:gameUuid/builds          # Screen C: 빌드 목록
-/studio/games/:gameUuid/stream-settings # Screen E: 스트리밍 설정
-/studio/games/:gameUuid/schedule        # Screen F: 스케줄 설정
+/studio/games/:gameUuid/stream-settings # Screen E: 스트리밍 설정 (+ Capacity)
 /play/:gameUuid                         # Screen G: 테스터 플레이 (placeholder)
 ```
 
@@ -100,7 +98,7 @@
   - Breadcrumb: `Games / {GameName}`
   - Title: `{GameName}`
   - Secondary: `UUID: {gameUuid}` + Copy 버튼
-- **Tabs**: Overview | Builds | Stream Settings | Schedule
+- **Tabs**: Overview | Builds | Stream Settings
 
 #### 탭 이동 규칙
 
@@ -282,12 +280,13 @@ Response:
 
 #### Form 필드
 
-| 필드           | 타입     | 옵션                       |
-| -------------- | -------- | -------------------------- |
-| GPU Profile    | Select   | Entry / Performance / High |
-| Resolution/FPS | Radio    | 720p30 / 1080p60 (권장)    |
-| OS             | Readonly | Windows Server 2022        |
-| Region         | Readonly | ap-northeast-2             |
+| 필드            | 타입     | 옵션                             |
+| --------------- | -------- | -------------------------------- |
+| GPU Profile     | Select   | Entry / Performance / High       |
+| Resolution/FPS  | Radio    | 720p30 / 1080p60 (권장)          |
+| Capacity Target | Number   | 동시 세션 최대 수 (0 = 비활성화) |
+| OS              | Readonly | Windows Server 2022              |
+| Region          | Readonly | ap-northeast-1                   |
 
 #### 동작
 
@@ -296,32 +295,6 @@ Response:
 
 > **NOTE**: 저장/조회 API가 없으므로 임시로 local mock store
 > (Zustand/localStorage)로 동작
-
----
-
-### Screen F. Schedule 탭 (UI 중심, API 없음)
-
-- **Route**: `/studio/games/:gameUuid/schedule`
-
-#### Form 필드
-
-| 필드            | 타입                  | 설명                    |
-| --------------- | --------------------- | ----------------------- |
-| Active Window   | DateTime Range Picker | start < end validation  |
-| Timezone        | Select                | 기본 Asia/Seoul (UTC+9) |
-| Capacity Target | Number Input          | maxSessions (0이면 OFF) |
-
-#### Status Preview
-
-- 현재 상태: `ACTIVE` / `INACTIVE`
-- 다음 활성화/비활성화 시간 프리뷰
-
-#### 동작
-
-- **성공 Toast**: "스케줄이 저장되었습니다."
-- **실패 InlineAlert**: "스케줄 저장에 실패했습니다."
-
-> **NOTE**: API 없으므로 mock store로 동작
 
 ---
 
@@ -346,14 +319,12 @@ Response:
 
 클라이언트 완전 동작을 위해 필요한 API 목록 (없으면 mock 대체):
 
-| API                  | Method | Endpoint                             |
-| -------------------- | ------ | ------------------------------------ |
-| Builds 목록          | GET    | `/games/{gameUuid}/builds`           |
-| Stream Settings 조회 | GET    | `/games/{gameUuid}/stream-settings`  |
-| Stream Settings 저장 | PUT    | `/games/{gameUuid}/stream-settings`  |
-| Schedule 조회        | GET    | `/games/{gameUuid}/schedule`         |
-| Schedule 저장        | PUT    | `/games/{gameUuid}/schedule`         |
-| Build 상세 (선택)    | GET    | `/games/{gameUuid}/builds/{buildId}` |
+| API | Method | Endpoint |\n| -------------------- | ------ |
+------------------------------------ |\n| Builds \ubaa9\ub85d | GET |
+`/games/{gameUuid}/builds` |\n| Stream Settings \uc870\ud68c | GET |
+`/games/{gameUuid}/stream-settings` |\n| Stream Settings \uc800\uc7a5 | PUT |
+`/games/{gameUuid}/stream-settings` |\n| Build \uc0c1\uc138 (\uc120\ud0dd) | GET
+| `/games/{gameUuid}/builds/{buildId}` |
 
 ---
 
