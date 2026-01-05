@@ -1,12 +1,11 @@
 /**
  * GameShell - 게임 관리 Shell 레이아웃
- * Breadcrumb + Title + UUID Copy + Tabs + Outlet
+ * Title + UUID Copy + Tabs + Outlet
  */
 import { Check, Copy } from 'lucide-react';
 import { useState } from 'react';
 import { NavLink, Outlet, useParams } from 'react-router-dom';
 
-import BreadcrumbNav from '@/components/layout/topbar-components/BreadcrumbNav';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/loading';
 import { cn } from '@/lib/utils';
@@ -36,20 +35,6 @@ export function GameShell() {
     <div className="flex h-full flex-col">
       {/* Header */}
       <div className="bg-background border-b px-6 py-4">
-        {/* Breadcrumb */}
-        {isLoading ? (
-          <Skeleton className="mb-2 h-6 w-48" />
-        ) : (
-          <div className="mb-2">
-            <BreadcrumbNav
-              breadcrumbs={[
-                { label: 'Games', to: '/studio/games' },
-                { label: game?.gameName || 'Unknown', to: '' },
-              ]}
-            />
-          </div>
-        )}
-
         {/* Title */}
         <div className="flex items-center gap-4">
           <h1 className="text-2xl font-bold">
