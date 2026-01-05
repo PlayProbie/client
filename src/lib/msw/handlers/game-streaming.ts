@@ -7,11 +7,10 @@ import { delay, http, HttpResponse } from 'msw';
 import type {
   ApiBuild,
   ApiBuildCompleteResponse,
-  ApiSchedule,
+  ApiCreateBuildResponse,
   ApiSourceGame,
   ApiStreamingGame,
   ApiStreamSettings,
-  ApiStsCredentialsResponse,
 } from '@/features/game-streaming/types';
 
 const API_BASE_URL = '/api';
@@ -23,35 +22,35 @@ const SOURCE_GAMES: ApiSourceGame[] = [
   {
     game_id: 1,
     game_name: 'Dark Souls Clone',
-    game_genre: ['ACTION', 'RPG'],
+    game_genre: ['rpg', 'casual'],
     created_at: '2025-12-15T10:00:00Z',
     is_streaming: true,
   },
   {
     game_id: 2,
     game_name: 'Racing Simulator Pro',
-    game_genre: ['RACING', 'SIMULATION'],
+    game_genre: ['simulation', 'sports'],
     created_at: '2025-12-16T11:00:00Z',
     is_streaming: true,
   },
   {
     game_id: 3,
     game_name: 'Puzzle Adventure',
-    game_genre: ['PUZZLE', 'ADVENTURE'],
+    game_genre: ['casual'],
     created_at: '2025-12-17T09:00:00Z',
     is_streaming: false,
   },
   {
     game_id: 4,
     game_name: 'Space Shooter X',
-    game_genre: ['SHOOTER', 'SCI_FI'],
+    game_genre: ['shooter'],
     created_at: '2025-12-18T14:00:00Z',
     is_streaming: false,
   },
   {
     game_id: 5,
     game_name: 'Fantasy Kingdom',
-    game_genre: ['RPG', 'STRATEGY'],
+    game_genre: ['rpg', 'strategy'],
     created_at: '2025-12-19T16:00:00Z',
     is_streaming: false,
   },
@@ -129,37 +128,15 @@ const MOCK_STREAM_SETTINGS: Record<string, ApiStreamSettings> = {
     gpu_profile: 'performance',
     resolution_fps: '1080p60',
     os: 'Windows Server 2022',
-    region: 'ap-northeast-2',
+    region: 'ap-northeast-1',
+    max_sessions: 10,
   },
   'game-002-uuid-efgh': {
     gpu_profile: 'entry',
     resolution_fps: '720p30',
     os: 'Windows Server 2022',
-    region: 'ap-northeast-2',
-  },
-};
-
-// ----------------------------------------
-// Mock Data: Schedules
-// ----------------------------------------
-const MOCK_SCHEDULES: Record<string, ApiSchedule> = {
-  'game-001-uuid-abcd': {
-    start_date_time: '2026-01-01T00:00:00Z',
-    end_date_time: '2026-12-31T23:59:59Z',
-    timezone: 'Asia/Seoul',
-    max_sessions: 10,
-    status: 'ACTIVE',
-    next_activation: undefined,
-    next_deactivation: '2026-12-31T23:59:59Z',
-  },
-  'game-002-uuid-efgh': {
-    start_date_time: '2026-02-01T09:00:00Z',
-    end_date_time: '2026-02-28T18:00:00Z',
-    timezone: 'Asia/Seoul',
+    region: 'ap-northeast-1',
     max_sessions: 5,
-    status: 'INACTIVE',
-    next_activation: '2026-02-01T09:00:00Z',
-    next_deactivation: undefined,
   },
 };
 
@@ -288,52 +265,52 @@ export const gameStreamingHandlers = [
     return HttpResponse.json(builds);
   }),
 
-  // STS Credentials 발급
+  // 빌드 생성 및 STS Credentials 발급 (Spring GameBuildApi.createBuild)
   http.post(
-    `${API_BASE_URL}/streaming-games/:gameUuid/builds/sts-credentials`,
-    async ({ params }) => {
+    `${API_BASE_URL}/games/:gameUuid/builds`,
+    async ({ params, request }) => {
       await delay(500);
       const { gameUuid } = params;
+      const body = (await request.json()) as { version: string };
 
       buildCounter++;
-      const buildId = `build-${buildCounter}`;
-      const keyPrefix = `builds/${gameUuid}/${buildId}`;
+      const buildId = `build-${buildCounter}-${crypto.randomUUID().slice(0, 8)}`;
+      const s3Prefix = `builds/${gameUuid}/${buildId}`;
 
-      const response: ApiStsCredentialsResponse = {
-        build_id: buildId,
+      const response: ApiCreateBuildResponse = {
+        buildId,
+        version: body.version,
+        s3Prefix,
         credentials: {
-          access_key_id: 'AKIAIOSFODNN7EXAMPLE',
-          secret_access_key: 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
-          session_token: 'FwoGZXIvYXdzEBYaDMockSessionToken==',
-          expiration: new Date(Date.now() + 3600000).toISOString(),
+          accessKeyId: 'AKIAIOSFODNN7EXAMPLE',
+          secretAccessKey: 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
+          sessionToken: 'FwoGZXIvYXdzEBYaDMockSessionToken==',
+          expiration: Date.now() + 3600000, // epoch timestamp
         },
-        bucket: 'mock-s3-bucket',
-        key_prefix: keyPrefix,
-        expires_in_seconds: 3600,
       };
 
-      return HttpResponse.json(response);
+      return HttpResponse.json(response, { status: 201 });
     }
   ),
 
-  // Build Complete
+  // Build Complete (Spring GameBuildApi.completeUpload)
   http.post(
-    `${API_BASE_URL}/streaming-games/:gameUuid/builds/:buildId/complete`,
+    `${API_BASE_URL}/games/:gameUuid/builds/:buildId/complete`,
     async ({ params, request }) => {
       await delay(300);
       const { gameUuid, buildId } = params;
       const body = (await request.json()) as {
-        key_prefix: string;
-        file_count: number;
-        total_size: number;
+        expectedFileCount: number;
+        expectedTotalSize: number;
       };
 
+      // MOCK_BUILDS에 빌드 추가
       const newBuild: ApiBuild = {
         build_id: buildId as string,
-        filename: body.key_prefix.split('/').pop() || 'unknown',
+        filename: `build-${buildId}`,
         status: 'UPLOADED',
-        size: body.total_size,
-        s3_key: body.key_prefix,
+        size: body.expectedTotalSize,
+        s3_key: `builds/${gameUuid}/${buildId}`,
         executable_path: '/Game/MyGame.exe',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -345,10 +322,36 @@ export const gameStreamingHandlers = [
       MOCK_BUILDS[gameUuid as string].push(newBuild);
 
       const response: ApiBuildCompleteResponse = {
+        id: buildId as string,
+        gameUuid: gameUuid as string,
+        version: '1.0.0',
+        s3Prefix: `builds/${gameUuid}/${buildId}`,
         status: 'UPLOADED',
+        totalFiles: body.expectedFileCount,
+        totalSize: body.expectedTotalSize,
+        createdAt: new Date().toISOString(),
       };
 
       return HttpResponse.json(response);
+    }
+  ),
+
+  // Build Delete (Spring GameBuildApi.deleteBuild)
+  http.delete(
+    `${API_BASE_URL}/games/:gameUuid/builds/:buildId`,
+    async ({ params }) => {
+      await delay(300);
+      const { gameUuid, buildId } = params;
+
+      const builds = MOCK_BUILDS[gameUuid as string];
+      if (builds) {
+        const index = builds.findIndex((b) => b.build_id === buildId);
+        if (index !== -1) {
+          builds.splice(index, 1);
+        }
+      }
+
+      return new HttpResponse(null, { status: 204 });
     }
   ),
 
@@ -365,7 +368,8 @@ export const gameStreamingHandlers = [
         gpu_profile: 'entry',
         resolution_fps: '720p30',
         os: 'Windows Server 2022',
-        region: 'ap-northeast-2',
+        region: 'ap-northeast-1',
+        max_sessions: 0,
       };
 
       return HttpResponse.json(settings);
@@ -382,59 +386,6 @@ export const gameStreamingHandlers = [
       MOCK_STREAM_SETTINGS[gameUuid as string] = body;
 
       return HttpResponse.json(body);
-    }
-  ),
-
-  // ----------------------------------------
-  // Schedule API
-  // ----------------------------------------
-  http.get(
-    `${API_BASE_URL}/streaming-games/:gameUuid/schedule`,
-    async ({ params }) => {
-      await delay(300);
-      const { gameUuid } = params;
-
-      const schedule = MOCK_SCHEDULES[gameUuid as string] || {
-        start_date_time: new Date().toISOString(),
-        end_date_time: new Date(
-          Date.now() + 7 * 24 * 60 * 60 * 1000
-        ).toISOString(),
-        timezone: 'Asia/Seoul',
-        max_sessions: 0,
-        status: 'INACTIVE' as const,
-      };
-
-      return HttpResponse.json(schedule);
-    }
-  ),
-
-  http.put(
-    `${API_BASE_URL}/streaming-games/:gameUuid/schedule`,
-    async ({ params, request }) => {
-      await delay(300);
-      const { gameUuid } = params;
-      const body = (await request.json()) as Partial<ApiSchedule>;
-
-      const now = new Date();
-      const start = new Date(body.start_date_time || '');
-      const end = new Date(body.end_date_time || '');
-
-      const status = now >= start && now <= end ? 'ACTIVE' : 'INACTIVE';
-
-      const updatedSchedule: ApiSchedule = {
-        start_date_time: body.start_date_time || '',
-        end_date_time: body.end_date_time || '',
-        timezone: body.timezone || 'Asia/Seoul',
-        max_sessions: body.max_sessions || 0,
-        status,
-        next_activation:
-          status === 'INACTIVE' ? start.toISOString() : undefined,
-        next_deactivation: status === 'ACTIVE' ? end.toISOString() : undefined,
-      };
-
-      MOCK_SCHEDULES[gameUuid as string] = updatedSchedule;
-
-      return HttpResponse.json(updatedSchedule);
     }
   ),
 ];

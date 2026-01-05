@@ -2,8 +2,9 @@
  * Game Streaming Feature 상수
  */
 
-/** API Base URL */
-export const API_BASE_URL = '/api';
+/** API Base URL - 환경변수에서 직접 사용 */
+export const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || 'https://dev-api.playprobie.shop';
 
 /** Query/Mutation 기본 설정 */
 export const QUERY_CONFIG = {
@@ -16,7 +17,6 @@ export const QUERY_CONFIG = {
 /** localStorage Key Prefix */
 export const STORAGE_KEYS = {
   STREAM_SETTINGS: 'game-streaming:stream-settings:',
-  SCHEDULE: 'game-streaming:schedule:',
 } as const;
 
 /** 업로드 에러 메시지 매핑 */

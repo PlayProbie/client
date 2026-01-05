@@ -22,7 +22,7 @@ export async function putS3FolderUpload({
   bucket,
   keyPrefix,
   credentials,
-  region = 'ap-northeast-2',
+  region = 'ap-northeast-1',
   onProgress,
   signal,
 }: FolderUploadOptions): Promise<void> {
