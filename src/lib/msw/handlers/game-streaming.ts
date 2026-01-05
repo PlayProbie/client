@@ -6,6 +6,7 @@ import { delay, http, HttpResponse } from 'msw';
 
 import type {
   ApiBuild,
+  ApiBuildCompleteRequest,
   ApiBuildCompleteResponse,
   ApiCreateBuildResponse,
   ApiSourceGame,
@@ -253,7 +254,7 @@ export const gameStreamingHandlers = [
       await delay(300);
       const { gameUuid } = params;
       const builds = MOCK_BUILDS[gameUuid as string] || [];
-      return HttpResponse.json(builds);
+      return HttpResponse.json({ result: builds });
     }
   ),
 
@@ -262,7 +263,7 @@ export const gameStreamingHandlers = [
     await delay(300);
     const { gameUuid } = params;
     const builds = MOCK_BUILDS[gameUuid as string] || [];
-    return HttpResponse.json(builds);
+    return HttpResponse.json({ result: builds });
   }),
 
   // 빌드 생성 및 STS Credentials 발급 (Spring GameBuildApi.createBuild)
@@ -275,7 +276,7 @@ export const gameStreamingHandlers = [
 
       buildCounter++;
       const buildId = `build-${buildCounter}-${crypto.randomUUID().slice(0, 8)}`;
-      const s3Prefix = `builds/${gameUuid}/${buildId}`;
+      const s3Prefix = `${gameUuid}/${buildId}/`;
 
       const response: ApiCreateBuildResponse = {
         buildId,
@@ -299,19 +300,16 @@ export const gameStreamingHandlers = [
     async ({ params, request }) => {
       await delay(300);
       const { gameUuid, buildId } = params;
-      const body = (await request.json()) as {
-        expectedFileCount: number;
-        expectedTotalSize: number;
-      };
+      const body = (await request.json()) as ApiBuildCompleteRequest;
 
       // MOCK_BUILDS에 빌드 추가
       const newBuild: ApiBuild = {
         build_id: buildId as string,
         filename: `build-${buildId}`,
         status: 'UPLOADED',
-        size: body.expectedTotalSize,
-        s3_key: `builds/${gameUuid}/${buildId}`,
-        executable_path: '/Game/MyGame.exe',
+        size: body.expected_total_size,
+        s3_key: `${gameUuid}/${buildId}/`,
+        executable_path: body.executable_path,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
@@ -322,14 +320,12 @@ export const gameStreamingHandlers = [
       MOCK_BUILDS[gameUuid as string].push(newBuild);
 
       const response: ApiBuildCompleteResponse = {
-        id: buildId as string,
-        gameUuid: gameUuid as string,
-        version: '1.0.0',
-        s3Prefix: `builds/${gameUuid}/${buildId}`,
-        status: 'UPLOADED',
-        totalFiles: body.expectedFileCount,
-        totalSize: body.expectedTotalSize,
-        createdAt: new Date().toISOString(),
+        result: {
+          id: buildId as string,
+          status: 'UPLOADED',
+          executable_path: body.executable_path,
+          max_capacity: body.max_capacity,
+        },
       };
 
       return HttpResponse.json(response);

@@ -191,26 +191,27 @@ type UploadError = {
 
 #### API 연동 (명세 확정)
 
-##### 1. STS 임시 자격 증명 발급
+> **참조**: `game_streaming_api.md` - Phase 1: 빌드 자산 관리 (S3)
+
+##### 1. 빌드 생성 및 STS 임시 자격 증명 발급
 
 ```http
-POST /games/{gameUuid}/builds/sts-credentials
+POST /games/{gameUuid}/builds
 
 Request Body:
-{ folderName, totalFileCount, totalSize }
+{ "version": "1.0.0" }
 
 Response:
 {
-  buildId,
-  credentials: {
-    accessKeyId,
-    secretAccessKey,
-    sessionToken,
-    expiration
-  },
-  bucket,
-  keyPrefix,           // S3 업로드 경로 prefix (예: builds/{gameUuid}/{buildId}/)
-  expiresInSeconds
+  "buildId": "uuid",
+  "version": "1.0.0",
+  "s3Prefix": "gameUuid/buildUuid/",
+  "credentials": {
+    "accessKeyId": "ASIA...",
+    "secretAccessKey": "...",
+    "sessionToken": "...",
+    "expiration": 1704456000000
+  }
 }
 ```
 
@@ -221,7 +222,7 @@ AWS SDK (PutObjectCommand) 사용
 
 업로드 대상:
 - 선택된 폴더 내 모든 파일을 재귀적으로 업로드
-- 각 파일의 S3 Key: {keyPrefix}/{상대경로}
+- 각 파일의 S3 Key: {s3Prefix}/{상대경로}
 
 진행률 표시 필수:
 - 전체 파일 수 / 완료된 파일 수
@@ -238,10 +239,24 @@ AWS SDK (PutObjectCommand) 사용
 POST /games/{gameUuid}/builds/{buildId}/complete
 
 Request Body:
-{ keyPrefix, fileCount, totalSize }
+{
+  "expected_file_count": 150,
+  "expected_total_size": 1073741824,
+  "executable_path": "game.exe",
+  "os_type": "WINDOWS",
+  "instance_type": "g4dn.xlarge",
+  "max_capacity": 10
+}
 
 Response:
-{ status: "UPLOADED" }
+{
+  "result": {
+    "id": "uuid",
+    "status": "UPLOADED",
+    "executable_path": "game.exe",
+    "max_capacity": 10
+  }
+}
 ```
 
 #### 실패 UX

@@ -82,20 +82,25 @@ export interface CreateBuildResponse {
 
 /** [API] Build Complete 요청 (Spring GameBuildApi.completeUpload) */
 export interface ApiBuildCompleteRequest {
-  expectedFileCount: number;
-  expectedTotalSize: number;
+  expected_file_count: number;
+  expected_total_size: number;
+  executable_path: string;
+  os_type: 'WINDOWS' | 'LINUX';
+  instance_type: string;
+  max_capacity: number;
+}
+
+/** [API] Build Complete 응답 내부 데이터 */
+export interface ApiBuildCompleteResult {
+  id: string;
+  status: string;
+  executable_path: string;
+  max_capacity: number;
 }
 
 /** [API] Build Complete 응답 (Spring GameBuildApi.completeUpload) */
 export interface ApiBuildCompleteResponse {
-  id: string;
-  gameUuid: string;
-  version: string;
-  s3Prefix: string;
-  status: string;
-  totalFiles: number;
-  totalSize: number;
-  createdAt: string;
+  result: ApiBuildCompleteResult;
 }
 
 // ----------------------------------------

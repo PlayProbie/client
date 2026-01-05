@@ -269,8 +269,12 @@ async function executeUpload(
     });
 
     await postBuildComplete(gameUuid, buildId, {
-      expectedFileCount: fileCount,
-      expectedTotalSize: totalSize,
+      expected_file_count: fileCount,
+      expected_total_size: totalSize,
+      executable_path: params.executablePath,
+      os_type: 'WINDOWS', // 현재는 Windows만 지원
+      instance_type: 'g4dn.xlarge', // 기본값
+      max_capacity: 10, // 기본값 (나중에 StreamSettings에서 관리)
     });
 
     // Success
