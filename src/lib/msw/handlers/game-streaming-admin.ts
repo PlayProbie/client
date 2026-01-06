@@ -11,12 +11,12 @@ export const gameStreamingAdminHandlers = [
 
   // 관리자 테스트 시작
   http.post(
-    `${API_BASE_URL}/surveys/:surveyId/streaming-resource/start-test`,
+    `${API_BASE_URL}/surveys/:surveyUuid/streaming-resource/start-test`,
     async ({ params }) => {
       await delay(500);
-      const surveyId = params.surveyId as string;
+      const surveyUuid = params.surveyUuid as string;
 
-      const resource = MOCK_STREAMING_RESOURCES[surveyId];
+      const resource = MOCK_STREAMING_RESOURCES[surveyUuid];
       if (!resource) {
         return HttpResponse.json(
           {
@@ -34,10 +34,10 @@ export const gameStreamingAdminHandlers = [
       // 3초 후 instances_ready 상태로 변경 (비동기 시뮬레이션)
       setTimeout(() => {
         if (
-          MOCK_STREAMING_RESOURCES[surveyId] &&
-          MOCK_STREAMING_RESOURCES[surveyId].status === 'TESTING'
+          MOCK_STREAMING_RESOURCES[surveyUuid] &&
+          MOCK_STREAMING_RESOURCES[surveyUuid].status === 'TESTING'
         ) {
-          MOCK_STREAMING_RESOURCES[surveyId].instances_ready = true;
+          MOCK_STREAMING_RESOURCES[surveyUuid].instances_ready = true;
         }
       }, 3000);
 
@@ -52,12 +52,12 @@ export const gameStreamingAdminHandlers = [
 
   // 리소스 상태 조회 (테스트 중 instances_ready 확인용)
   http.get(
-    `${API_BASE_URL}/surveys/:surveyId/streaming-resource/status`,
+    `${API_BASE_URL}/surveys/:surveyUuid/streaming-resource/status`,
     async ({ params }) => {
       await delay(200);
-      const surveyId = params.surveyId as string;
+      const surveyUuid = params.surveyUuid as string;
 
-      const resource = MOCK_STREAMING_RESOURCES[surveyId];
+      const resource = MOCK_STREAMING_RESOURCES[surveyUuid];
 
       if (!resource) {
         return HttpResponse.json(
@@ -81,12 +81,12 @@ export const gameStreamingAdminHandlers = [
 
   // 관리자 테스트 종료
   http.post(
-    `${API_BASE_URL}/surveys/:surveyId/streaming-resource/stop-test`,
+    `${API_BASE_URL}/surveys/:surveyUuid/streaming-resource/stop-test`,
     async ({ params }) => {
       await delay(500);
-      const surveyId = params.surveyId as string;
+      const surveyUuid = params.surveyUuid as string;
 
-      const resource = MOCK_STREAMING_RESOURCES[surveyId];
+      const resource = MOCK_STREAMING_RESOURCES[surveyUuid];
 
       if (!resource) {
         return HttpResponse.json(

@@ -1,6 +1,6 @@
 /**
  * 스트리밍 리소스 조회 API
- * GET /surveys/{surveyId}/streaming-resource
+ * GET /surveys/{surveyUuid}/streaming-resource
  */
 import { API_BASE_URL } from '../constants';
 import type { ApiStreamingResourceResponse, StreamingResource } from '../types';

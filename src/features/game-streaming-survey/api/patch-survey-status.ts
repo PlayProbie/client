@@ -1,6 +1,6 @@
 /**
  * 설문 상태 업데이트 API
- * PATCH /surveys/{surveyId}/status
+ * PATCH /surveys/{surveyUuid}/status
  */
 import { API_BASE_URL } from '../constants';
 import type {

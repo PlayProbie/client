@@ -1,6 +1,6 @@
 /**
  * 관리자 테스트 시작 API
- * POST /surveys/{surveyId}/streaming-resource/start-test
+ * POST /surveys/{surveyUuid}/streaming-resource/start-test
  */
 import { API_BASE_URL } from '../constants';
 import type { AdminTestResult, ApiAdminTestResponse } from '../types';

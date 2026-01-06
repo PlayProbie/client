@@ -1,6 +1,6 @@
 /**
  * 리소스 상태 조회 API
- * GET /surveys/{surveyId}/streaming-resource/status
+ * GET /surveys/{surveyUuid}/streaming-resource/status
  */
 import { API_BASE_URL } from '../constants';
 import type { ApiResourceStatusResponse, ResourceStatus } from '../types';

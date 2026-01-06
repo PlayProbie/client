@@ -1,6 +1,6 @@
 /**
  * 관리자 테스트 종료 API
- * POST /surveys/{surveyId}/streaming-resource/stop-test
+ * POST /surveys/{surveyUuid}/streaming-resource/stop-test
  */
 import { API_BASE_URL } from '../constants';
 import type { AdminTestResult, ApiAdminTestResponse } from '../types';

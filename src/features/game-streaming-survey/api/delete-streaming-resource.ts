@@ -1,6 +1,6 @@
 /**
  * 스트리밍 리소스 삭제 API
- * DELETE /surveys/{surveyId}/streaming-resource
+ * DELETE /surveys/{surveyUuid}/streaming-resource
  */
 import { API_BASE_URL } from '../constants';
 

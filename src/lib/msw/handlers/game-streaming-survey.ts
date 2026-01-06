@@ -40,6 +40,12 @@ const MOCK_SURVEYS: ApiSurvey[] = [
   },
 ];
 
+const SURVEY_GAME_MAP: Record<string, string> = {
+  'survey-001-uuid': 'game-001-uuid-abcd',
+  'survey-002-uuid': 'game-001-uuid-abcd',
+  'survey-003-uuid': 'game-002-uuid-efgh',
+};
+
 let resourceIdCounter = 100;
 
 export const gameStreamingSurveyHandlers = [
@@ -56,12 +62,40 @@ export const gameStreamingSurveyHandlers = [
 
     const surveys = [...MOCK_SURVEYS];
 
-    // game_uuid 필터링 (실제 구현에서는 DB 조인)
     if (gameUuidParam) {
-      // Mock에서는 필터링 로직 생략 (모든 설문 반환)
+      const filtered = surveys.filter(
+        (survey) => SURVEY_GAME_MAP[survey.survey_uuid] === gameUuidParam
+      );
+      return HttpResponse.json({ result: filtered });
     }
 
     return HttpResponse.json({ result: surveys });
+  }),
+
+  // 설문 단건 조회
+  http.get(`${API_BASE_URL}/surveys/:surveyUuid`, async ({ params }) => {
+    await delay(300);
+    const surveyUuid = params.surveyUuid as string;
+
+    const survey = MOCK_SURVEYS.find((s) => s.survey_uuid === surveyUuid);
+    if (!survey) {
+      return HttpResponse.json(
+        { message: '설문을 찾을 수 없습니다.', code: 'S001' },
+        { status: 404 }
+      );
+    }
+
+    return HttpResponse.json({ result: survey });
+  }),
+
+  // 게임 종속 설문 목록
+  http.get(`${API_BASE_URL}/games/:gameUuid/surveys`, async ({ params }) => {
+    await delay(350);
+    const gameUuid = params.gameUuid as string;
+    const filtered = MOCK_SURVEYS.filter(
+      (survey) => SURVEY_GAME_MAP[survey.survey_uuid] === gameUuid
+    );
+    return HttpResponse.json({ result: filtered });
   }),
 
   // ----------------------------------------
@@ -70,12 +104,12 @@ export const gameStreamingSurveyHandlers = [
 
   // 스트리밍 리소스 조회
   http.get(
-    `${API_BASE_URL}/surveys/:surveyId/streaming-resource`,
+    `${API_BASE_URL}/surveys/:surveyUuid/streaming-resource`,
     async ({ params }) => {
       await delay(300);
-      const surveyId = params.surveyId as string;
+      const surveyUuid = params.surveyUuid as string;
 
-      const resource = MOCK_STREAMING_RESOURCES[surveyId];
+      const resource = MOCK_STREAMING_RESOURCES[surveyUuid];
 
       if (!resource) {
         return HttpResponse.json(
@@ -93,14 +127,14 @@ export const gameStreamingSurveyHandlers = [
 
   // 스트리밍 리소스 생성 (빌드 연결)
   http.post(
-    `${API_BASE_URL}/surveys/:surveyId/streaming-resource`,
+    `${API_BASE_URL}/surveys/:surveyUuid/streaming-resource`,
     async ({ params, request }) => {
       await delay(500);
-      const surveyId = params.surveyId as string;
+      const surveyUuid = params.surveyUuid as string;
       const body = (await request.json()) as ApiCreateStreamingResourceRequest;
 
       // 이미 연결된 경우
-      if (MOCK_STREAMING_RESOURCES[surveyId]) {
+      if (MOCK_STREAMING_RESOURCES[surveyUuid]) {
         return HttpResponse.json(
           {
             message: '이미 스트리밍 리소스가 연결되어 있습니다.',
@@ -111,7 +145,7 @@ export const gameStreamingSurveyHandlers = [
       }
 
       // 설문 존재 확인
-      const survey = MOCK_SURVEYS.find((s) => s.survey_uuid === surveyId);
+      const survey = MOCK_SURVEYS.find((s) => s.survey_uuid === surveyUuid);
       if (!survey) {
         return HttpResponse.json(
           { message: '설문을 찾을 수 없습니다.', code: 'S001' },
@@ -130,12 +164,12 @@ export const gameStreamingSurveyHandlers = [
         created_at: new Date().toISOString(),
       };
 
-      MOCK_STREAMING_RESOURCES[surveyId] = newResource;
+      MOCK_STREAMING_RESOURCES[surveyUuid] = newResource;
 
       // 3초 후 READY 상태로 변경 (비동기 시뮬레이션)
       setTimeout(() => {
-        if (MOCK_STREAMING_RESOURCES[surveyId]) {
-          MOCK_STREAMING_RESOURCES[surveyId].status = 'READY';
+        if (MOCK_STREAMING_RESOURCES[surveyUuid]) {
+          MOCK_STREAMING_RESOURCES[surveyUuid].status = 'READY';
         }
       }, 3000);
 
@@ -145,12 +179,12 @@ export const gameStreamingSurveyHandlers = [
 
   // 스트리밍 리소스 삭제 (연결 해제)
   http.delete(
-    `${API_BASE_URL}/surveys/:surveyId/streaming-resource`,
+    `${API_BASE_URL}/surveys/:surveyUuid/streaming-resource`,
     async ({ params }) => {
       await delay(300);
-      const surveyId = params.surveyId as string;
+      const surveyUuid = params.surveyUuid as string;
 
-      if (!MOCK_STREAMING_RESOURCES[surveyId]) {
+      if (!MOCK_STREAMING_RESOURCES[surveyUuid]) {
         return HttpResponse.json(
           {
             message: '스트리밍 리소스가 연결되어 있지 않습니다.',
@@ -160,7 +194,7 @@ export const gameStreamingSurveyHandlers = [
         );
       }
 
-      delete MOCK_STREAMING_RESOURCES[surveyId];
+      delete MOCK_STREAMING_RESOURCES[surveyUuid];
 
       return new HttpResponse(null, { status: 204 });
     }
@@ -172,13 +206,13 @@ export const gameStreamingSurveyHandlers = [
 
   // 설문 상태 업데이트 (ACTIVE/CLOSED)
   http.patch(
-    `${API_BASE_URL}/surveys/:surveyId/status`,
+    `${API_BASE_URL}/surveys/:surveyUuid/status`,
     async ({ params, request }) => {
       await delay(500);
-      const surveyId = params.surveyId as string;
+      const surveyUuid = params.surveyUuid as string;
       const body = (await request.json()) as { status: 'ACTIVE' | 'CLOSED' };
 
-      const survey = MOCK_SURVEYS.find((s) => s.survey_uuid === surveyId);
+      const survey = MOCK_SURVEYS.find((s) => s.survey_uuid === surveyUuid);
       if (!survey) {
         return HttpResponse.json(
           { message: '설문을 찾을 수 없습니다.', code: 'S001' },
@@ -187,7 +221,7 @@ export const gameStreamingSurveyHandlers = [
       }
 
       survey.status = body.status;
-      const resource = MOCK_STREAMING_RESOURCES[surveyId];
+      const resource = MOCK_STREAMING_RESOURCES[surveyUuid];
 
       if (body.status === 'ACTIVE') {
         // 확장 중 시뮬레이션

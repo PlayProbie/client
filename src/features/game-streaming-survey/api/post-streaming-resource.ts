@@ -1,6 +1,6 @@
 /**
  * 스트리밍 리소스 생성 API
- * POST /surveys/{surveyId}/streaming-resource
+ * POST /surveys/{surveyUuid}/streaming-resource
  */
 import { API_BASE_URL, ERROR_MESSAGES } from '../constants';
 import type {
