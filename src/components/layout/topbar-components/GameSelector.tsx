@@ -8,18 +8,37 @@ import {
   SelectItem,
   SelectTrigger,
 } from '@/components/ui/Select';
-import { useGamesQuery } from '@/features/game-streaming';
+import { useGameDetailQuery, useGamesQuery } from '@/features/game';
+import { useCurrentGameStore } from '@/stores/useCurrentGameStore';
 
 /**
  * GameSelector - Topbar 게임 선택 드롭다운
  * - URL 파라미터에서 현재 게임 표시
  * - 게임 선택 시 /games/:gameUuid로 이동
+ * - gameUuid 변경 시 전역 상태 업데이트
  */
 function GameSelector() {
   const navigate = useNavigate();
   const { gameUuid } = useParams<{ gameUuid: string }>();
   const { data: games, isLoading } = useGamesQuery();
   const location = useLocation();
+
+  // 게임 상세 조회 (gameUuid가 있을 때만)
+  const { data: gameDetail } = useGameDetailQuery(gameUuid ?? '', {
+    enabled: !!gameUuid,
+  });
+
+  // 전역 상태 관리
+  const { setCurrentGame, clearCurrentGame } = useCurrentGameStore();
+
+  // gameUuid 변경 시 전역 상태 업데이트
+  useEffect(() => {
+    if (gameDetail) {
+      setCurrentGame(gameDetail);
+    } else if (!gameUuid) {
+      clearCurrentGame();
+    }
+  }, [gameDetail, gameUuid, setCurrentGame, clearCurrentGame]);
 
   const currentGame = games?.find((game) => game.gameUuid === gameUuid);
 

@@ -20,5 +20,6 @@ export function fetchWithAuth(
   return fetch(input, {
     ...init,
     headers,
+    credentials: 'include',
   });
 }
