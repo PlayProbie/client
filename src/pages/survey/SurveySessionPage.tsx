@@ -1,6 +1,6 @@
 /**
  * SurveySessionPage - 설문 세션 진행 페이지
- * URL: /surveys/session/sessions/:sessionId
+ * URL: /surveys/session/sessions/:sessionUuid
  */
 
 import { useLocation, useParams } from 'react-router-dom';
@@ -15,17 +15,17 @@ import {
 } from '@/features/survey-session';
 
 function SurveySessionPage() {
-  const { sessionId } = useParams<{ sessionId: string }>();
+  const { sessionUuid: sessionUuidParam } = useParams<{ sessionUuid: string }>();
   const location = useLocation();
 
   // SurveySessionStartPage에서 전달받은 state
   const state = location.state as {
-    surveyId?: number;
+    surveyUuid?: string;
     sessionUuid?: string;
   } | null;
 
-  // sessionId는 문자열로 사용 (UUID 지원)
-  const sessionUuid = sessionId || '';
+  // sessionUuid는 문자열로 사용
+  const sessionUuid = sessionUuidParam || '';
 
   const {
     isReady,
@@ -37,7 +37,7 @@ function SurveySessionPage() {
     sendAnswer,
   } = useChatSession({
     sessionUuid,
-    surveyId: state?.surveyId,
+    surveyUuid: state?.surveyUuid,
   });
 
   // 로딩 상태

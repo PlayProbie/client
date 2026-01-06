@@ -18,11 +18,11 @@ export const surveyDesignHandlers = [
       await delay(300);
 
       const body = await request.json();
-      const surveyId = Math.floor(Math.random() * 10000) + 1;
+      const surveyUuid = crypto.randomUUID();
 
       const response: CreateSurveyResponse = {
         result: {
-          survey_id: surveyId,
+          survey_uuid: surveyUuid,
           survey_name: body.survey_name,
           survey_url: `${MSW_CLIENT_BASE_URL}/surveys/session/sessions/84266fdbd31d4c2c6d0665f7e8380fa3`,
           started_at: body.started_at,

@@ -220,8 +220,8 @@ function SurveyResultsTable({ data }: SurveyResultsTableProps) {
         <SurveyResultDetailDialog
           open={dialogOpen}
           onOpenChange={setDialogOpen}
-          surveyId={selectedItem.surveyId}
-          sessionId={selectedItem.sessionId}
+          surveyUuid={selectedItem.surveyUuid}
+          sessionUuid={selectedItem.sessionUuid}
         />
       )}
     </div>

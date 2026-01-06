@@ -50,15 +50,15 @@ const sessionNeedsTail = new Map<string, boolean>();
  * Survey Runner (Chat) MSW Handlers
  *
  * NOTE: Handler order matters! More specific paths (with literal segments like '/stream')
- * must come BEFORE more generic paths (with only params like '/:surveyId/:sessionId')
+ * must come BEFORE more generic paths (with only params like '/:surveyUuid/:sessionUuid')
  * to prevent incorrect route matching.
  */
 export const surveySessionHandlers = [
-  // POST /api/interview/{survey_id} - 새 대화 세션 생성
-  http.post(`${MSW_API_BASE_URL}/interview/:surveyId`, async () => {
+  // POST /api/interview/{survey_uuid} - 새 대화 세션 생성
+  http.post(`${MSW_API_BASE_URL}/interview/:surveyUuid`, async () => {
     await delay(200);
 
-    const sessionUuid = `session-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
+    const sessionUuid = crypto.randomUUID();
 
     // 새 세션 턴 초기화
     sessionTurns.set(sessionUuid, 0);
@@ -68,9 +68,8 @@ export const surveySessionHandlers = [
     const response: CreateChatSessionResponse = {
       result: {
         session: {
-          session_id: 1, // FIXME: 실제 session_id
           session_uuid: sessionUuid,
-          survey_id: 1, // MSW mock: 실제로는 surveyUuid로 조회된 survey_id
+          survey_uuid: 'survey-uuid-mock',
           status: 'IN_PROGRESS',
         },
         sse_url: `/interview/${sessionUuid}/stream`,
@@ -81,8 +80,8 @@ export const surveySessionHandlers = [
   }),
 
   // GET /api/interview/{sessionUuid}/stream - SSE 스트림
-  // NOTE: This handler MUST come before /:surveyId/:sessionId to prevent
-  // '/interview/xxx/stream' from matching as surveyId='xxx', sessionId='stream'
+  // NOTE: This handler MUST come before /:surveyUuid/:sessionUuid to prevent
+  // '/interview/xxx/stream' from matching as surveyUuid='xxx', sessionUuid='stream'
   http.get(
     `${MSW_API_BASE_URL}/interview/:sessionUuid/stream`,
     async ({ params }) => {

@@ -14,12 +14,14 @@ import type { ConfigValue } from '@/types';
 
 /** 게임 장르 정의 (value + label) */
 export const GameGenreConfig = {
-  SHOOTER: { value: 'shooter', label: '슈팅' },
-  STRATEGY: { value: 'strategy', label: '전략' },
-  RPG: { value: 'rpg', label: 'RPG' },
-  SPORTS: { value: 'sports', label: '스포츠' },
-  SIMULATION: { value: 'simulation', label: '시뮬레이션' },
-  CASUAL: { value: 'casual', label: '캐주얼' },
+  shooter: { value: 'shooter', label: '슈팅' },
+  strategy: { value: 'strategy', label: '전략' },
+  rpg: { value: 'rpg', label: 'RPG' },
+  action: { value: 'action', label: '액션' },
+  // adventure: { value: 'adventure', label: '어드벤처' },
+  // sports: { value: 'sports', label: '스포츠' },
+  // simulation: { value: 'simulation', label: '시뮬레이션' },
+  // casual: { value: 'casual', label: '캐주얼' },
 } as const;
 
 /** 게임 장르 타입 */
@@ -77,11 +79,6 @@ export interface Game {
   gameContext: string;
   createdAt: string;
   updatedAt: string;
-}
-
-/** [API] POST /games Response */
-export interface CreateGameResponse {
-  result: ApiGame;
 }
 
 /** [Client] 게임 생성 요청 */

@@ -41,7 +41,7 @@ src/
 ├── services/             # 인프라 성격의 외부 API 클라이언트
 │   ├── api-client.ts     # Axios/Fetch 인스턴스 설정 (Interceptors)
 │   └── langgraph-client.ts # AI 에이전트 통신 라이브러리
-├── store/                # 전역 상태 (Zustand)
+├── stores/               # 전역 상태 (Zustand)
 │   ├── useAuthStore.ts   # 사용자 세션
 │   └── useSharedStore.ts # 워크스페이스 선택 정보 등 전역 상태
 ├── types/                # 전역 타입 정의

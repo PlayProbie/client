@@ -27,9 +27,9 @@ const generateMockSessionItems = (count: number): ApiSurveyResultListItem[] => {
   ];
 
   return Array.from({ length: count }, (_, i) => ({
-    session_id: `session-uuid-${1000 + i}`,
+    session_uuid: `session-uuid-${1000 + i}`,
     survey_name: `Escape From Duckov 플레이테스트 #${i + 1}`,
-    survey_id: 100 + Math.floor(i / 10),
+    survey_uuid: `survey-uuid-${Math.floor(i / 10)}`,
     tester_id: `tester-uuid-${i}`,
     status: statuses[i % statuses.length],
     first_question: questions[i % questions.length],
@@ -41,9 +41,9 @@ const generateMockSessionItems = (count: number): ApiSurveyResultListItem[] => {
  * Survey Analytics MSW Handlers
  */
 export const surveyAnalyticsHandlers = [
-  // GET /api/surveys/results/{game_id} - 전체 응답 요약
+  // GET /api/surveys/results/{game_uuid} - 전체 응답 요약
   http.get(
-    `${MSW_API_BASE_URL}/surveys/results/:gameId`,
+    `${MSW_API_BASE_URL}/surveys/results/:gameUuid`,
     async ({ request }) => {
       await delay(200);
 
@@ -67,9 +67,9 @@ export const surveyAnalyticsHandlers = [
     }
   ),
 
-  // GET /api/surveys/results/{game_id}/listup - 전체 응답 리스트
+  // GET /api/surveys/results/{game_uuid}/listup - 전체 응답 리스트
   http.get(
-    `${MSW_API_BASE_URL}/surveys/results/:gameId/listup`,
+    `${MSW_API_BASE_URL}/surveys/results/:gameUuid/listup`,
     async ({ request }) => {
       await delay(300);
 
@@ -94,21 +94,21 @@ export const surveyAnalyticsHandlers = [
     }
   ),
 
-  // GET /api/surveys/results/{survey_id}/details/{session_id} - 응답 세부내용
+  // GET /api/surveys/results/{survey_uuid}/details/{session_uuid} - 응답 세부내용
   http.get(
-    `${MSW_API_BASE_URL}/surveys/results/:surveyId/details/:sessionId`,
+    `${MSW_API_BASE_URL}/surveys/results/:surveyUuid/details/:sessionUuid`,
     async ({ params }) => {
       await delay(250);
 
-      const surveyId = parseInt(params.surveyId as string, 10);
-      const sessionId = params.sessionId as string;
+      const surveyUuid = params.surveyUuid as string;
+      const sessionUuid = params.sessionUuid as string;
 
       const response: GetSurveyResultDetailsResponse = {
         result: {
           session: {
-            session_id: sessionId,
+            session_uuid: sessionUuid,
             survey_name: 'Escape From Duckov 플레이테스트',
-            survey_id: surveyId,
+            survey_uuid: surveyUuid,
             tester_id: 'tester-uuid-123',
             status: 'COMPLETED',
             ended_at: '2025-12-27T16:40:00+09:00',

@@ -1,4 +1,5 @@
 import { API_BASE_URL } from '@/constants/api';
+import { fetchWithAuth } from '@/services/api-client';
 
 import type {
   GetSurveyResultsListParams,
@@ -6,7 +7,7 @@ import type {
 } from '../types';
 
 /**
- * GET /surveys/results/{game_id}/listup - 전체 응답 리스트
+ * GET /surveys/results/{game_uuid}/listup - 전체 응답 리스트
  */
 export async function getSurveyResultsList(
   params: GetSurveyResultsListParams
@@ -19,11 +20,11 @@ export async function getSurveyResultsList(
     searchParams.set('cursor', params.cursor);
   }
 
-  const url = `${API_BASE_URL}/surveys/results/${params.gameId}/listup${
+  const url = `${API_BASE_URL}/surveys/results/${params.gameUuid}/listup${
     searchParams.toString() ? `?${searchParams.toString()}` : ''
   }`;
 
-  const response = await fetch(url, {
+  const response = await fetchWithAuth(url, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',

@@ -13,14 +13,15 @@ import {
 
 /**
  * 설문 분석 결과 페이지
- * URL: /survey/analytics/:gameId
+ * URL: /survey/analytics/:gameUuid
  */
 function SurveyAnalyticsPage() {
-  const { gameId } = useParams<{ gameId: string }>();
-  const [activeTab, setActiveTab] = useState<Tab>('overview');
+  //const { gameId } = useParams<{ gameId: string }>();
+  //const [activeTab, setActiveTab] = useState<Tab>('overview');
+  const { gameUuid } = useParams<{ gameUuid: string }>();
 
   const { summary, list, isLoading, isError } = useSurveyResults({
-    gameId: gameId || '',
+    gameUuid: gameUuid || '',
   });
 
   // MVP: surveyId 임시 고정 (나중에 list[0]?.surveyId 또는 URL param으로 변경)

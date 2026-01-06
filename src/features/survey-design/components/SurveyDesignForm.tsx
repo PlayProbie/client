@@ -1,6 +1,11 @@
 import { useEffect } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import {
+  useLocation,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from 'react-router-dom';
 
 import { Button } from '@/components/ui';
 import { Form } from '@/components/ui/form';
@@ -27,7 +32,8 @@ type SurveyDesignFormProps = {
 function SurveyDesignForm({ className, onComplete }: SurveyDesignFormProps) {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { step } = useParams<{ step: string }>();
+  const location = useLocation();
+  const { step } = useParams<{ step?: string }>();
   const { toast } = useToast();
 
   const { currentStep, goToStep, formData, updateFormData, reset } =
@@ -59,6 +65,8 @@ function SurveyDesignForm({ className, onComplete }: SurveyDesignFormProps) {
   });
 
   // URL에서 step 파라미터가 변경되면 store 동기화
+  const pathWithoutStep = location.pathname.replace(/\/step-\d+$/, '');
+
   useEffect(() => {
     if (step) {
       const stepMatch = step.match(/^step-(\d+)$/);
@@ -95,24 +103,24 @@ function SurveyDesignForm({ className, onComplete }: SurveyDesignFormProps) {
 
       // 다음 단계로 이동
       const nextStepNum = currentStep + 1;
-      let path = `/survey/design/step-${nextStepNum}`;
 
       // actor 파라미터가 전달되었거나 기존 searchParams에 있으면 추가
       const actorValue = actor || searchParams.get('actor');
+      let nextPath = `${pathWithoutStep}/step-${nextStepNum}`;
       if (actorValue) {
-        path += `?actor=${actorValue}`;
+        nextPath += `?actor=${actorValue}`;
       }
-      navigate(path);
+      navigate(nextPath);
     });
 
   const handlePrev = () => {
     if (currentStep > 0) {
-      navigate(`/survey/design/step-${currentStep - 1}`);
+      navigate(`${pathWithoutStep}/step-${currentStep - 1}`);
     }
   };
 
   const handleStepClick = (index: number) => {
-    navigate(`/survey/design/step-${index}`);
+    navigate(`${pathWithoutStep}/step-${index}`);
   };
 
   const stepLabels = SURVEY_FORM_STEPS.map((s) => s.label);

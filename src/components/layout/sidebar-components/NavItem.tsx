@@ -1,6 +1,6 @@
 import { ChevronDown } from 'lucide-react';
 import { useState } from 'react';
-import { Link, NavLink, useLocation } from 'react-router-dom';
+import { generatePath, Link, NavLink, useLocation } from 'react-router-dom';
 
 import { Button } from '@/components/ui';
 import { type NavItem as NavItemType } from '@/config/navigation';
@@ -12,6 +12,22 @@ import {
   NAV_ITEM_INACTIVE_STYLES,
   NAV_ITEM_PARTIAL_ACTIVE_STYLES,
 } from './styles';
+
+const resolveDynamicPath = (path: string, gameUuid?: string) => {
+  if (!path.includes(':gameUuid')) {
+    return path;
+  }
+
+  if (!gameUuid) {
+    return path;
+  }
+
+  try {
+    return generatePath(path, { gameUuid });
+  } catch {
+    return path;
+  }
+};
 
 // =============================================================================
 // NavChildItem Component
@@ -26,7 +42,7 @@ function NavChildItem({ to, label }: NavChildItemProps) {
   return (
     <NavLink
       to={to}
-      className={(isActive) =>
+      className={({ isActive }) =>
         cn(
           'rounded-md px-3 py-2 text-sm transition-colors',
           isActive
@@ -47,31 +63,38 @@ function NavChildItem({ to, label }: NavChildItemProps) {
 interface NavItemProps {
   item: NavItemType;
   isCollapsed: boolean;
+  activeGameUuid?: string;
 }
 
-function NavItem({ item, isCollapsed }: NavItemProps) {
+function NavItem({ item, isCollapsed, activeGameUuid }: NavItemProps) {
   const location = useLocation();
+  const resolvedItemPath = resolveDynamicPath(item.to, activeGameUuid);
+  const resolvedChildren = item.children?.map((child) => ({
+    ...child,
+    resolvedTo: resolveDynamicPath(child.to, activeGameUuid),
+  }));
 
   const [isExpanded, setIsExpanded] = useState(() => {
-    if (location.pathname.startsWith(item.to)) return true;
+    if (location.pathname.startsWith(resolvedItemPath)) return true;
     return (
-      item.children?.some((child) => location.pathname.startsWith(child.to)) ??
-      false
+      resolvedChildren?.some((child) =>
+        location.pathname.startsWith(child.resolvedTo)
+      ) ?? false
     );
   });
 
   const Icon = item.icon;
   const hasChildren = Boolean(item.children?.length);
 
-  const isChildActive = item.children?.some(
+  const isChildActive = resolvedChildren?.some(
     (child) =>
-      location.pathname === child.to ||
-      location.pathname.startsWith(child.to + '/')
+      location.pathname === child.resolvedTo ||
+      location.pathname.startsWith(child.resolvedTo + '/')
   );
-  const isExactActive = location.pathname === item.to;
+  const isExactActive = location.pathname === resolvedItemPath;
   const isActive =
-    location.pathname === item.to ||
-    location.pathname.startsWith(item.to + '/');
+    location.pathname === resolvedItemPath ||
+    location.pathname.startsWith(resolvedItemPath + '/');
 
   const handleToggleExpand = () => setIsExpanded((prev) => !prev);
 
@@ -91,7 +114,7 @@ function NavItem({ item, isCollapsed }: NavItemProps) {
       <div className="flex flex-col">
         <div className={getItemClassName()}>
           <Link
-            to={item.to}
+            to={resolvedItemPath}
             title={isCollapsed ? item.label : undefined}
             className="flex flex-1 items-center gap-3"
           >
@@ -121,10 +144,10 @@ function NavItem({ item, isCollapsed }: NavItemProps) {
 
         {!isCollapsed && isExpanded && (
           <div className="border-sidebar-border mt-1 ml-4 flex flex-col gap-0.5 border-l pl-3">
-            {item.children!.map((child) => (
+            {resolvedChildren?.map((child) => (
               <NavChildItem
                 key={child.to}
-                to={child.to}
+                to={child.resolvedTo}
                 label={child.label}
               />
             ))}
@@ -136,9 +159,9 @@ function NavItem({ item, isCollapsed }: NavItemProps) {
 
   return (
     <NavLink
-      to={item.to}
+      to={resolvedItemPath}
       title={isCollapsed ? item.label : undefined}
-      className={(isActive) =>
+      className={({ isActive }) =>
         cn(
           NAV_ITEM_BASE_STYLES,
           isCollapsed && 'justify-center px-2',

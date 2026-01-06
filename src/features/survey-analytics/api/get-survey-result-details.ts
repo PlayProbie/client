@@ -1,4 +1,5 @@
 import { API_BASE_URL } from '@/constants/api';
+import { fetchWithAuth } from '@/services/api-client';
 
 import type {
   GetSurveyResultDetailsParams,
@@ -6,14 +7,14 @@ import type {
 } from '../types';
 
 /**
- * GET /surveys/results/{survey_id}/details/{session_id} - 응답 세부내용
+ * GET /surveys/results/{survey_uuid}/details/{session_uuid} - 응답 세부내용
  */
 export async function getSurveyResultDetails(
   params: GetSurveyResultDetailsParams
 ): Promise<GetSurveyResultDetailsResponse> {
-  const url = `${API_BASE_URL}/surveys/results/${params.surveyId}/details/${params.sessionId}`;
+  const url = `${API_BASE_URL}/surveys/results/${params.surveyUuid}/details/${params.sessionUuid}`;
 
-  const response = await fetch(url, {
+  const response = await fetchWithAuth(url, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',

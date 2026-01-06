@@ -1,4 +1,5 @@
 import { API_BASE_URL } from '@/constants/api';
+import { fetchWithAuth } from '@/services/api-client';
 
 import type {
   ApiSendMessageRequest,
@@ -15,7 +16,7 @@ export async function sendMessage(
 ): Promise<SendMessageResponse> {
   const url = `${API_BASE_URL}/interview/${params.sessionUuid}/messages`;
 
-  const response = await fetch(url, {
+  const response = await fetchWithAuth(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
