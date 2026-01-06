@@ -28,3 +28,6 @@ export { ConfirmDialog } from './ConfirmDialog';
 
 // Alert Components
 export { InlineAlert } from './InlineAlert';
+
+// Input Components
+export { Input, type InputProps } from './Input';

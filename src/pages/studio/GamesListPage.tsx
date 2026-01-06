@@ -38,9 +38,6 @@ import {
 } from '@/features/game';
 import { useToast } from '@/hooks/useToast';
 
-// 기본 워크스페이스 UUID (임시)
-const DEFAULT_WORKSPACE_UUID = '550e8400-e29b-41d4-a716-446655440000';
-
 /** 날짜 포맷팅 */
 function formatDate(dateString: string): string {
   const date = new Date(dateString);
@@ -111,15 +108,12 @@ export default function GamesListPage() {
   };
 
   const handleCreate = () => {
-    createMutation.mutate(
-      { workspaceUuid: DEFAULT_WORKSPACE_UUID, data: formData },
-      {
-        onSuccess: () => {
-          setIsCreateModalOpen(false);
-          setFormData({ gameName: '', gameGenre: [], gameContext: '' });
-        },
-      }
-    );
+    createMutation.mutate(formData, {
+      onSuccess: () => {
+        setIsCreateModalOpen(false);
+        setFormData({ gameName: '', gameGenre: [], gameContext: '' });
+      },
+    });
   };
 
   const handleUpdate = () => {

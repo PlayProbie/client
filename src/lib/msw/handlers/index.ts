@@ -13,6 +13,7 @@ import { questionFeedbackHandlers } from './question-feedback';
 import { surveyAnalyticsHandlers } from './survey-analytics';
 import { surveyDesignHandlers } from './survey-design';
 import { surveySessionHandlers } from './survey-session';
+import { workspacesHandlers } from './workspaces';
 
 export const handlers = [
   ...gamesHandlers,
@@ -26,4 +27,5 @@ export const handlers = [
   ...questionFeedbackHandlers,
   ...surveyAnalyticsHandlers,
   ...surveySessionHandlers,
+  ...workspacesHandlers,
 ];

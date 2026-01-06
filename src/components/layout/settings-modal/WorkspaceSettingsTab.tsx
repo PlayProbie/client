@@ -1,82 +1,150 @@
-import { Building2, Users } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
-import { MOCK_USER } from '@/components/layout/types';
-import { Button } from '@/components/ui';
+import { Button, InlineAlert } from '@/components/ui';
+import { Spinner } from '@/components/ui/loading';
+import type { Workspace } from '@/features/workspace';
+import { getWorkspaces } from '@/features/workspace';
+import { useToast } from '@/hooks/useToast';
+import { useCurrentWorkspaceStore } from '@/stores/useCurrentWorkspaceStore';
+
+import {
+  WorkspaceCreateButton,
+  WorkspaceCreateForm,
+} from './WorkspaceCreateForm';
+import WorkspaceListItem from './WorkspaceListItem';
 
 /**
  * WorkspaceSettingsTab - 워크스페이스 관리 탭
- * - 워크스페이스 정보 표시
- * - 팀원 관리 링크
+ * - 워크스페이스 목록 표시
+ * - 워크스페이스 선택 기능
+ * - 워크스페이스 생성 폼
  */
 function WorkspaceSettingsTab() {
+  const { currentWorkspace, setCurrentWorkspace } = useCurrentWorkspaceStore();
+  const { toast } = useToast();
+  const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
+
+  // 워크스페이스 목록 조회
+  useEffect(() => {
+    async function fetchWorkspaces() {
+      try {
+        setIsLoading(true);
+        const data = await getWorkspaces();
+        setWorkspaces(data);
+
+        // 현재 선택된 워크스페이스가 없으면 첫 번째 워크스페이스 선택
+        if (!currentWorkspace && data.length > 0) {
+          setCurrentWorkspace(data[0]);
+        }
+      } catch (err) {
+        const message =
+          err instanceof Error
+            ? err.message
+            : '워크스페이스를 불러오는데 실패했습니다.';
+        setError(message);
+
+        toast({
+          variant: 'destructive',
+          title: '워크스페이스 목록 조회 실패',
+          description: message,
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchWorkspaces();
+  }, [currentWorkspace, setCurrentWorkspace, toast]);
+
+  // 워크스페이스 선택 핸들러
+  const handleSelectWorkspace = (workspace: Workspace) => {
+    setCurrentWorkspace(workspace);
+    toast({
+      variant: 'success',
+      title: '워크스페이스 선택',
+      description: `"${workspace.name}" 워크스페이스로 전환되었습니다.`,
+    });
+  };
+
+  // 워크스페이스 생성 완료 핸들러
+  const handleCreateComplete = (created: Workspace) => {
+    setWorkspaces((prev) => [...prev, created]);
+    setCurrentWorkspace(created);
+    setIsCreating(false);
+  };
+
+  // 로딩 상태
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center gap-2 py-12">
+        <Spinner size="md" />
+        <span className="text-muted-foreground text-sm">
+          워크스페이스 불러오는 중...
+        </span>
+      </div>
+    );
+  }
+
+  // 에러 상태
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-4 py-12">
+        <InlineAlert
+          variant="error"
+          title="오류"
+        >
+          {error}
+        </InlineAlert>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => window.location.reload()}
+        >
+          다시 시도
+        </Button>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col gap-6">
-      {/* 워크스페이스 정보 */}
-      <div className="bg-muted/50 flex items-center gap-4 rounded-lg p-4">
-        <div className="bg-primary/10 flex size-12 items-center justify-center rounded-lg">
-          <Building2 className="text-primary size-6" />
-        </div>
-        <div className="flex flex-col">
-          <p className="text-foreground text-lg font-semibold">
-            {MOCK_USER.workspace.name}
-          </p>
-          <div className="flex items-center gap-2">
-            <span className="bg-primary/10 text-primary rounded px-2 py-0.5 text-xs font-medium">
-              {MOCK_USER.workspace.role}
-            </span>
-            <span className="text-muted-foreground text-xs">
-              {MOCK_USER.workspace.permission}
-            </span>
-          </div>
-        </div>
+    <div className="flex flex-col gap-6 pt-4">
+      {/* 헤더 */}
+      <div className="flex items-center justify-between">
+        <h3 className="text-foreground text-sm font-medium">
+          워크스페이스 목록
+        </h3>
+        <WorkspaceCreateButton onClick={() => setIsCreating(!isCreating)} />
       </div>
 
-      {/* 구분선 */}
-      <div className="bg-border h-px" />
+      {/* 생성 폼 */}
+      {isCreating && (
+        <WorkspaceCreateForm
+          onCreated={handleCreateComplete}
+          onCancel={() => setIsCreating(false)}
+        />
+      )}
 
-      {/* 워크스페이스 관리 섹션 */}
-      <div className="flex flex-col gap-4">
-        <h3 className="text-foreground text-sm font-medium">
-          워크스페이스 관리
-        </h3>
-
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Users className="text-muted-foreground size-4" />
-            <div className="flex flex-col">
-              <span className="text-foreground/80 text-sm">팀원 관리</span>
-              <span className="text-muted-foreground text-xs">
-                팀원 초대 및 권한 관리
-              </span>
-            </div>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-          >
-            관리
-          </Button>
-        </div>
-
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Building2 className="text-muted-foreground size-4" />
-            <div className="flex flex-col">
-              <span className="text-foreground/80 text-sm">
-                워크스페이스 설정
-              </span>
-              <span className="text-muted-foreground text-xs">
-                워크스페이스 이름 및 설정 변경
-              </span>
-            </div>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-          >
-            설정
-          </Button>
-        </div>
+      {/* 워크스페이스 목록 */}
+      <div className="flex flex-col gap-2">
+        {workspaces.length === 0 ? (
+          <p className="text-muted-foreground py-8 text-center text-sm">
+            워크스페이스가 없습니다. 새로 만들어보세요.
+          </p>
+        ) : (
+          workspaces.map((workspace) => (
+            <WorkspaceListItem
+              key={workspace.workspaceUuid}
+              workspace={workspace}
+              isSelected={
+                currentWorkspace?.workspaceUuid === workspace.workspaceUuid
+              }
+              onSelect={handleSelectWorkspace}
+            />
+          ))
+        )}
       </div>
     </div>
   );

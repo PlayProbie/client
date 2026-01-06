@@ -7,18 +7,29 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { useToast } from '@/hooks/useToast';
+import { useCurrentWorkspaceStore } from '@/stores/useCurrentWorkspaceStore';
 
-import type { PostGameInput, PutGameInput } from '../api';
+import type { PutGameInput } from '../api';
 import { deleteGame, postGame, putGame } from '../api';
+import type { CreateGameRequest } from '../types';
 import { gameKeys } from './useGamesQuery';
 
 /** 게임 생성 mutation */
 export function useCreateGameMutation() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { currentWorkspace } = useCurrentWorkspaceStore();
 
   return useMutation({
-    mutationFn: (input: PostGameInput) => postGame(input),
+    mutationFn: (data: CreateGameRequest) => {
+      if (!currentWorkspace) {
+        throw new Error('워크스페이스를 선택해주세요.');
+      }
+      return postGame({
+        workspaceUuid: currentWorkspace.workspaceUuid,
+        data,
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: gameKeys.all });
       toast({
