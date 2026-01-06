@@ -41,9 +41,12 @@ export async function getQuestionAnalysis(
   }
 
   // 프로덕션: 실제 SSE 사용
-  const eventSource = new EventSource(
-    `${API_BASE_URL}/analytics/${surveyId}`
-  );
+  // 개발 환경에서는 Vite proxy를 통해야 하므로 상대 경로 사용
+  const sseUrl = import.meta.env.DEV
+    ? `/api/analytics/${surveyId}`
+    : `${API_BASE_URL}/analytics/${surveyId}`;
+
+  const eventSource = new EventSource(sseUrl);
 
   eventSource.onmessage = (event) => {
     try {
@@ -57,21 +60,20 @@ export async function getQuestionAnalysis(
     }
   };
 
+  // 서버에서 보내는 'complete' 이벤트 리스닝
+  eventSource.addEventListener('complete', () => {
+    eventSource.close();
+    onComplete?.();
+  });
+
   eventSource.onerror = (event) => {
+    // readyState가 CONNECTING(0)이면 재연결 시도 중이므로 무시
+    if (eventSource.readyState === EventSource.CONNECTING) {
+      return;
+    }
     console.error('SSE connection error:', event);
     eventSource.close();
     onError?.(new Error('SSE connection failed'));
-  };
-
-  // SSE 완료 감지 (서버에서 연결 종료 시)
-  const originalOnError = eventSource.onerror;
-  eventSource.onerror = (event) => {
-    // readyState가 CLOSED(2)면 정상 종료로 간주
-    if (eventSource.readyState === EventSource.CLOSED) {
-      onComplete?.();
-    } else {
-      originalOnError?.call(eventSource, event);
-    }
   };
 
   // cleanup 함수 반환

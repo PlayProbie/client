@@ -3,8 +3,7 @@ import { BarChart3, MessageSquare, Smile, Users } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { PageSpinner } from '@/components/ui/loading';
 
-import { useQuestionAnalysis } from '../hooks';
-import type { SurveyResultsSummary } from '../types';
+import type { ApiSurveyResultsSummary, QuestionAnalysisResult } from '../types';
 import {
   calculateAverageGEQ,
   calculateAverageSentiment,
@@ -13,9 +12,20 @@ import {
 } from '../utils';
 import { GEQRadarChart } from './GEQRadarChart';
 
+type QuestionAnalysisState = {
+  [questionId: number]: QuestionAnalysisResult;
+};
+
+type QuestionAnalysisData = {
+  data: QuestionAnalysisState;
+  questionIds: number[];
+  isLoading: boolean;
+  isError: boolean;
+};
+
 type SurveyOverviewProps = {
-  readonly summary: SurveyResultsSummary;
-  readonly surveyId: number;
+  readonly summary: ApiSurveyResultsSummary;
+  readonly questionAnalysis: QuestionAnalysisData;
 };
 
 function getSentimentBadgeClass(score: number): string {
@@ -30,10 +40,8 @@ function getSentimentBadgeClass(score: number): string {
  * - 전체 감정 분석
  * - 전체 GEQ 레이더 차트
  */
-function SurveyOverview({ summary, surveyId }: SurveyOverviewProps) {
-  const { data, questionIds, isLoading, isError } = useQuestionAnalysis({
-    surveyId,
-  });
+function SurveyOverview({ summary, questionAnalysis }: SurveyOverviewProps) {
+  const { data, questionIds, isLoading, isError } = questionAnalysis;
 
   const averageGEQ = calculateAverageGEQ(data);
   const sentimentStats = calculateAverageSentiment(data);

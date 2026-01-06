@@ -22,21 +22,33 @@ type QuestionAnalysisDetailProps = {
 function QuestionAnalysisDetail({ data }: QuestionAnalysisDetailProps) {
   const [selectedClusterIndex, setSelectedClusterIndex] = useState(0);
 
+  // 데이터 유효성 검사: clusters가 없거나 비어있으면 로딩 표시
+  if (!data?.clusters || data.clusters.length === 0) {
+    return (
+      <div className="py-12 text-center text-muted-foreground">
+        클러스터 데이터를 불러오는 중...
+      </div>
+    );
+  }
+
+  // 선택된 인덱스가 범위를 벗어나면 0으로 리셋
+  const safeClusterIndex = selectedClusterIndex < data.clusters.length ? selectedClusterIndex : 0;
+
   // 현재 선택된 클러스터
-  const selectedCluster = data.clusters[selectedClusterIndex];
+  const selectedCluster = data.clusters[safeClusterIndex];
 
   // 현재 선택된 클러스터의 대표 답변 텍스트 매핑
-  const answerList: AnswerListItem[] =
-    selectedCluster?.representative_answers?.map((text, index) => ({
-      id: selectedCluster.representative_answer_ids[index] || `answer-${index}`,
-      text,
-      sentiment:
-        selectedCluster.satisfaction >= 60
-          ? 'positive'
-          : selectedCluster.satisfaction <= 40
-            ? 'negative'
-            : 'neutral',
-    })) || [];
+  const representativeAnswerIds = selectedCluster?.representative_answer_ids ?? [];
+  const answerList: AnswerListItem[] = representativeAnswerIds.map((id, index) => ({
+    id: id || `answer-${index}`,
+    text: id, // representative_answer_ids를 텍스트로 사용 (실제 답변 텍스트가 별도로 있다면 수정 필요)
+    sentiment:
+      selectedCluster.satisfaction >= 60
+        ? 'positive'
+        : selectedCluster.satisfaction <= 40
+          ? 'negative'
+          : 'neutral',
+  }));
 
   const getSentimentColor = (score: number) => {
     if (score >= 60) return 'bg-success text-success-foreground';
@@ -81,7 +93,7 @@ function QuestionAnalysisDetail({ data }: QuestionAnalysisDetailProps) {
         </h3>
         <ClusterSelector
           clusters={data.clusters}
-          selectedClusterIndex={selectedClusterIndex}
+          selectedClusterIndex={safeClusterIndex}
           onSelectCluster={setSelectedClusterIndex}
         />
       </div>
@@ -91,7 +103,7 @@ function QuestionAnalysisDetail({ data }: QuestionAnalysisDetailProps) {
         <>
           <ClusterDetailPanel
             cluster={selectedCluster}
-            clusterIndex={selectedClusterIndex}
+            clusterIndex={safeClusterIndex}
           />
 
           {/* 대표 답변 */}

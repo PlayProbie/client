@@ -2,12 +2,23 @@ import { useState } from 'react';
 
 import { PageSpinner } from '@/components/ui/loading';
 
-import { useQuestionAnalysis } from '../hooks';
+import type { QuestionAnalysisResult } from '../types';
 import { QuestionAnalysisDetail } from './QuestionAnalysisDetail';
 import { QuestionListSidebar } from './QuestionListSidebar';
 
+type QuestionAnalysisState = {
+  [questionId: number]: QuestionAnalysisResult;
+};
+
+type QuestionAnalysisData = {
+  data: QuestionAnalysisState;
+  questionIds: number[];
+  isLoading: boolean;
+  isError: boolean;
+};
+
 type QuestionAnalysisViewProps = {
-  readonly surveyId: number;
+  readonly questionAnalysis: QuestionAnalysisData;
 };
 
 /**
@@ -15,10 +26,8 @@ type QuestionAnalysisViewProps = {
  * - 왼쪽: 질문 목록
  * - 오른쪽: 선택한 질문의 상세 분석
  */
-function QuestionAnalysisView({ surveyId }: QuestionAnalysisViewProps) {
-  const { data, questionIds, isLoading, isError } = useQuestionAnalysis({
-    surveyId,
-  });
+function QuestionAnalysisView({ questionAnalysis }: QuestionAnalysisViewProps) {
+  const { data, questionIds, isLoading, isError } = questionAnalysis;
 
   const [selectedQuestionId, setSelectedQuestionId] = useState<number | null>(
     null

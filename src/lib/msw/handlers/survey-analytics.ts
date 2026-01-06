@@ -29,11 +29,12 @@ const generateMockSessionItems = (count: number): ApiSurveyResultListItem[] => {
   return Array.from({ length: count }, (_, i) => ({
     session_uuid: `session-uuid-${1000 + i}`,
     survey_name: `Escape From Duckov 플레이테스트 #${i + 1}`,
-    survey_uuid: `survey-uuid-${Math.floor(i / 10)}`,
+    survey_uuid: `survey-uuid-${100 + Math.floor(i / 10)}`,
+    surveyId: 100 + Math.floor(i / 10),
     tester_id: `tester-uuid-${i}`,
     status: statuses[i % statuses.length],
-    first_question: questions[i % questions.length],
-    ended_at: toKSTISOString(new Date(Date.now() - i * 3600000)),
+    firstQuestion: questions[i % questions.length],
+    endedAt: toKSTISOString(new Date(Date.now() - i * 3600000)),
   }));
 };
 
@@ -41,9 +42,9 @@ const generateMockSessionItems = (count: number): ApiSurveyResultListItem[] => {
  * Survey Analytics MSW Handlers
  */
 export const surveyAnalyticsHandlers = [
-  // GET /api/surveys/results/{game_uuid} - 전체 응답 요약
+  // GET /api/surveys/results/{game_id} - 전체 응답 요약
   http.get(
-    `${MSW_API_BASE_URL}/surveys/results/:gameUuid`,
+    `${MSW_API_BASE_URL}/surveys/results/:gameId`,
     async ({ request }) => {
       await delay(200);
 
@@ -58,8 +59,8 @@ export const surveyAnalyticsHandlers = [
 
       const response: GetSurveyResultsSummaryResponse = {
         result: {
-          survey_count: 12,
-          response_count: 100,
+          surveyCount: 12,
+          responseCount: 100,
         },
       };
 
@@ -67,9 +68,9 @@ export const surveyAnalyticsHandlers = [
     }
   ),
 
-  // GET /api/surveys/results/{game_uuid}/listup - 전체 응답 리스트
+  // GET /api/surveys/results/{game_id}/listup - 전체 응답 리스트
   http.get(
-    `${MSW_API_BASE_URL}/surveys/results/:gameUuid/listup`,
+    `${MSW_API_BASE_URL}/surveys/results/:gameId/listup`,
     async ({ request }) => {
       await delay(300);
 
@@ -85,8 +86,8 @@ export const surveyAnalyticsHandlers = [
       const response: GetSurveyResultsListResponse = {
         result: {
           content,
-          next_cursor: hasNext ? startIndex + limit : null,
-          has_next: hasNext,
+          nextCursor: hasNext ? startIndex + limit : null,
+          hasNext: hasNext,
         },
       };
 
@@ -94,14 +95,14 @@ export const surveyAnalyticsHandlers = [
     }
   ),
 
-  // GET /api/surveys/results/{survey_uuid}/details/{session_uuid} - 응답 세부내용
+  // GET /api/surveys/results/{survey_id}/details/{session_id} - 응답 세부내용
   http.get(
-    `${MSW_API_BASE_URL}/surveys/results/:surveyUuid/details/:sessionUuid`,
+    `${MSW_API_BASE_URL}/surveys/results/:surveyId/details/:sessionId`,
     async ({ params }) => {
       await delay(250);
 
-      const surveyUuid = params.surveyUuid as string;
-      const sessionUuid = params.sessionUuid as string;
+      const surveyUuid = params.surveyId as string;
+      const sessionUuid = params.sessionId as string;
 
       const response: GetSurveyResultDetailsResponse = {
         result: {
@@ -109,80 +110,77 @@ export const surveyAnalyticsHandlers = [
             session_uuid: sessionUuid,
             survey_name: 'Escape From Duckov 플레이테스트',
             survey_uuid: surveyUuid,
+            surveyId: 100,
             tester_id: 'tester-uuid-123',
             status: 'COMPLETED',
-            ended_at: '2025-12-27T16:40:00+09:00',
+            endedAt: '2025-12-27T16:40:00+09:00',
           },
-          by_fixed_question: [
+          byFixedQuestion: [
             {
-              fixed_q_id: 10,
-              fixed_question: '레이드 중 긴장감을 느끼셨나요?',
+              fixedQuestion: '레이드 중 긴장감을 느끼셨나요?',
               excerpt: [
                 {
-                  q_type: 'FIXED',
-                  question_text: '레이드 중 긴장감을 느끼셨나요?',
-                  answer_text:
+                  qType: 'FIXED',
+                  questionText: '레이드 중 긴장감을 느끼셨나요?',
+                  answerText:
                     '네, 정말 심장이 쿵쾅쿵쾅 뛰었어요! 특히 전리품을 많이 들었을 때요.',
                 },
                 {
-                  q_type: 'TAIL',
-                  question_text: '어떤 상황에서 가장 긴장되셨나요?',
-                  answer_text:
+                  qType: 'TAIL',
+                  questionText: '어떤 상황에서 가장 긴장되셨나요?',
+                  answerText:
                     '탈출 포인트 근처에서 적 발소리가 들렸을 때 손에 땀이 났어요.',
                 },
               ],
             },
             {
-              fixed_q_id: 11,
-              fixed_question: '은신처 건설을 통한 성장이 체감되셨나요?',
+              fixedQuestion: '은신처 건설을 통한 성장이 체감되셨나요?',
               excerpt: [
                 {
-                  q_type: 'FIXED',
-                  question_text: '은신처 건설을 통한 성장이 체감되셨나요?',
-                  answer_text:
+                  qType: 'FIXED',
+                  questionText: '은신처 건설을 통한 성장이 체감되셨나요?',
+                  answerText:
                     '은신처 레벨을 올리니까 좋은 장비를 만들 수 있어서 확실히 성장한 느낌이에요.',
                 },
                 {
-                  q_type: 'TAIL',
-                  question_text: '어떤 업그레이드가 가장 도움이 되었나요?',
-                  answer_text:
+                  qType: 'TAIL',
+                  questionText: '어떤 업그레이드가 가장 도움이 되었나요?',
+                  answerText:
                     '무기 개조대 업그레이드가 가장 유용했어요. 총기 성능이 확 달라졌어요.',
                 },
               ],
             },
             {
-              fixed_q_id: 12,
-              fixed_question: '게임을 다시 플레이하고 싶은 마음이 드시나요?',
+              fixedQuestion: '게임을 다시 플레이하고 싶은 마음이 드시나요?',
               excerpt: [
                 {
-                  q_type: 'FIXED',
-                  question_text: '게임을 다시 플레이하고 싶은 마음이 드시나요?',
-                  answer_text:
+                  qType: 'FIXED',
+                  questionText: '게임을 다시 플레이하고 싶은 마음이 드시나요?',
+                  answerText:
                     '당연하죠! 다음에는 다른 맵도 도전해보고 싶어요.',
                 },
                 {
-                  q_type: 'TAIL',
-                  question_text:
+                  qType: 'TAIL',
+                  questionText:
                     '다음 레이드에서 시도해보고 싶은 전략이 있나요?',
-                  answer_text:
+                  answerText:
                     '이번에는 은신 위주로 플레이해서 다음에는 적극적으로 교전해볼 거예요.',
                 },
               ],
             },
             {
-              fixed_q_id: 13,
-              fixed_question: '초반 난이도가 적절하다고 느끼셨나요?',
+              fixedQuestion: '초반 난이도가 적절하다고 느끼셨나요?',
               excerpt: [
                 {
-                  q_type: 'FIXED',
-                  question_text: '초반 난이도가 적절하다고 느끼셨나요?',
-                  answer_text:
+                  qType: 'FIXED',
+                  questionText: '초반 난이도가 적절하다고 느끼셨나요?',
+                  answerText:
                     '처음 몇 판은 좀 어려웠지만 적응하니까 괜찮았어요.',
                 },
                 {
-                  q_type: 'TAIL',
-                  question_text: '어떤 부분이 특히 어려우셨나요?',
-                  answer_text:
+                  qType: 'TAIL',
+                  questionText: '어떤 부분이 특히 어려우셨나요?',
+                  answerText:
                     '맵 구조를 모르니까 탈출 포인트 찾기가 힘들었어요. 익숙해지니까 훨씬 나아졌어요.',
                 },
               ],
@@ -196,10 +194,11 @@ export const surveyAnalyticsHandlers = [
   ),
 
   // GET /api/analytics/{surveyId} - 질문별 AI 분석 결과 (SSE Mock - JSON 배열로 반환)
-  http.get(`${MSW_API_BASE_URL}/analytics/:surveyId`, async () => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  http.get(`${MSW_API_BASE_URL}/analytics/:surveyId`, async ({ params: _params }) => {
     await delay(800); // 로딩 시뮬레이션
 
-    // 질문 1 분석 결과
+        // 질문 1 분석 결과
         const question1 = {
           fixedQuestionId: 10,
           resultJson: JSON.stringify({
@@ -226,10 +225,6 @@ export const surveyAnalyticsHandlers = [
                 satisfaction: 78,
                 keywords: ['심장박동', '탈출', '전리품', '적발견', '긴박함'],
                 representative_answer_ids: ['ans1', 'ans2'],
-                representative_answers: [
-                  '탈출할 때 적 발소리가 들리면 진짜 긴장되요. 전리품 많이 들었을 때는 특히 더요.',
-                  '탈출 포인트 주변에서 적과 마주칠 때가 가장 슬앨대요.',
-                ],
               },
               {
                 summary: '긴장감이 적절했지만 더 높이면 좋겠다는 의견',
@@ -250,9 +245,6 @@ export const surveyAnalyticsHandlers = [
                 satisfaction: 55,
                 keywords: ['적절', '난이도', '더높게', '스릴'],
                 representative_answer_ids: ['ans4'],
-                representative_answers: [
-                  '긴장감이 있긴 한데, 좀 더 위험해도 재미있을 것 같아요.',
-                ],
               },
               {
                 summary: '긴장감이 부족하거나 스트레스만 받았다는 부정적 반응',
@@ -273,9 +265,6 @@ export const surveyAnalyticsHandlers = [
                 satisfaction: 28,
                 keywords: ['어려움', '스트레스', '짜증', '밸런스'],
                 representative_answer_ids: ['ans6'],
-                representative_answers: [
-                  '탈출하기가 너무 어려워서 스트레스만 받았어요.',
-                ],
               },
             ],
             sentiment: {
@@ -325,10 +314,6 @@ export const surveyAnalyticsHandlers = [
                 satisfaction: 82,
                 keywords: ['업그레이드', '성장', '무기개조', '장비', '강화'],
                 representative_answer_ids: ['ans7', 'ans8'],
-                representative_answers: [
-                  '은신처 레벨 올리니까 장비 만드는 게 수월해졌어요.',
-                  '무기 개조대 업그레이드가 제일 유용했어요.',
-                ],
               },
               {
                 summary: '성장은 느껴지지만 속도가 너무 느리다는 의견',
@@ -349,9 +334,6 @@ export const surveyAnalyticsHandlers = [
                 satisfaction: 48,
                 keywords: ['느림', '그라인딩', '시간', '속도'],
                 representative_answer_ids: ['ans10'],
-                representative_answers: [
-                  '성장 시스템은 좋은데 진행이 좀 느리네요.',
-                ],
               },
               {
                 summary: '성장 체감이 부족하다는 부정적 반응',
@@ -372,9 +354,6 @@ export const surveyAnalyticsHandlers = [
                 satisfaction: 25,
                 keywords: ['미미함', '효과없음', '별로', '실망'],
                 representative_answer_ids: ['ans12'],
-                representative_answers: [
-                  '업그레이드 효과가 잘 느껴지지 않아요.',
-                ],
               },
             ],
             sentiment: {
@@ -423,10 +402,6 @@ export const surveyAnalyticsHandlers = [
                 satisfaction: 88,
                 keywords: ['재밌음', '중독성', '다시하고싶음', '한판더', '기대'],
                 representative_answer_ids: ['ans13', 'ans14'],
-                representative_answers: [
-                  '다음엔 다른 맵도 해보고 싶어요.',
-                  '한 판만 더 하다가 몇 시간이 가네요.',
-                ],
               },
               {
                 summary: '재플레이 의향은 있지만 개선점이 필요하다는 의견',
@@ -447,9 +422,6 @@ export const surveyAnalyticsHandlers = [
                 satisfaction: 52,
                 keywords: ['개선필요', '밸런스', '콘텐츠', '추가'],
                 representative_answer_ids: ['ans16'],
-                representative_answers: [
-                  '재미있는데 밸런스가 조금 더 잘 맞으면 좋겠어요.',
-                ],
               },
             ],
             sentiment: {

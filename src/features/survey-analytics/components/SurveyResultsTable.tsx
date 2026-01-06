@@ -23,12 +23,12 @@ import {
   type SurveySessionStatus,
 } from '@/features/survey-session';
 
-import type { SurveyResultListItem } from '../types';
+import type { ApiSurveyResultListItem } from '../types';
 import { SurveyResultDetailDialog } from './SurveyResultDetailDialog';
 import { TablePagination } from './TablePagination';
 
 type SurveyResultsTableProps = {
-  data: SurveyResultListItem[];
+  data: ApiSurveyResultListItem[];
 };
 
 // 컬럼별 너비 설정
@@ -48,16 +48,16 @@ const COLUMN_WIDTHS = {
  */
 function SurveyResultsTable({ data }: SurveyResultsTableProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<SurveyResultListItem | null>(
+  const [selectedItem, setSelectedItem] = useState<ApiSurveyResultListItem | null>(
     null
   );
 
-  const handleOpenDetail = useCallback((item: SurveyResultListItem) => {
+  const handleOpenDetail = useCallback((item: ApiSurveyResultListItem) => {
     setSelectedItem(item);
     setDialogOpen(true);
   }, []);
 
-  const columns: ColumnDef<SurveyResultListItem>[] = useMemo(
+  const columns: ColumnDef<ApiSurveyResultListItem>[] = useMemo(
     () => [
       {
         accessorKey: 'surveyName',

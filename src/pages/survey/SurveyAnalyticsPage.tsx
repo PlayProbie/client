@@ -9,6 +9,7 @@ import {
   SurveyResultsTable,
   type Tab,
   useSurveyResults,
+  useQuestionAnalysis,
 } from '@/features/survey-analytics';
 
 /**
@@ -16,16 +17,21 @@ import {
  * URL: /survey/analytics/:gameUuid
  */
 function SurveyAnalyticsPage() {
-  //const { gameId } = useParams<{ gameId: string }>();
-  //const [activeTab, setActiveTab] = useState<Tab>('overview');
   const { gameUuid } = useParams<{ gameUuid: string }>();
+  const [activeTab, setActiveTab] = useState<Tab>('overview');
 
   const { summary, list, isLoading, isError } = useSurveyResults({
     gameUuid: gameUuid || '',
   });
 
   // MVP: surveyId 임시 고정 (나중에 list[0]?.surveyId 또는 URL param으로 변경)
-  const surveyId = list[0]?.surveyId || 100;
+  const surveyId = list[0]?.surveyId || 0;
+
+  // 페이지 레벨에서 SSE 분석 요청 (한 번만 실행)
+  const questionAnalysis = useQuestionAnalysis({
+    surveyId: surveyId || null,
+    enabled: Boolean(surveyId),
+  });
 
   return (
     <main className="container mx-auto max-w-7xl px-4 py-8">
@@ -53,13 +59,18 @@ function SurveyAnalyticsPage() {
           </div>
 
           {/* 설문 개요 탭 */}
-          {activeTab === 'overview' && (
-            <SurveyOverview summary={summary} surveyId={surveyId} />
+          {activeTab === 'overview' && Boolean(surveyId) && (
+            <SurveyOverview
+              summary={summary}
+              questionAnalysis={questionAnalysis}
+            />
           )}
 
           {/* 질문별 분석 탭 */}
           {activeTab === 'questions' && Boolean(surveyId) && (
-            <QuestionAnalysisView surveyId={surveyId} />
+            <QuestionAnalysisView
+              questionAnalysis={questionAnalysis}
+            />
           )}
 
           {activeTab === 'questions' && surveyId === 0 && (
@@ -79,3 +90,4 @@ function SurveyAnalyticsPage() {
 }
 
 export default SurveyAnalyticsPage;
+

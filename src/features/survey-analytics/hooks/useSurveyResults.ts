@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import { getSurveyResultsList } from '../api/get-survey-results-list';
 import { getSurveyResultsSummary } from '../api/get-survey-results-summary';
-import type { SurveyResultsList, SurveyResultsSummary } from '../types';
+import type { ApiSurveyResultsList, ApiSurveyResultsSummary } from '../types';
 
 type UseSurveyResultsOptions = {
   gameUuid: string;
@@ -16,14 +16,14 @@ function useSurveyResults({ gameUuid }: UseSurveyResultsOptions) {
   const summaryQuery = useQuery({
     queryKey: ['survey-results-summary', gameUuid],
     queryFn: () => getSurveyResultsSummary({ gameUuid }),
-    select: (response) => response.result as unknown as SurveyResultsSummary,
+    select: (response) => response.result as unknown as ApiSurveyResultsSummary,
     enabled: !!gameUuid,
   });
 
   const listQuery = useQuery({
     queryKey: ['survey-results-list', gameUuid],
     queryFn: () => getSurveyResultsList({ gameUuid }),
-    select: (response) => response.result as unknown as SurveyResultsList,
+    select: (response) => response.result as unknown as ApiSurveyResultsList,
     enabled: !!gameUuid,
   });
 

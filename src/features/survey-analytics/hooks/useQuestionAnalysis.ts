@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { getQuestionAnalysis } from '../api';
 import type {
@@ -28,13 +28,23 @@ function useQuestionAnalysis({
   const [error, setError] = useState<Error | null>(null);
   const [isComplete, setIsComplete] = useState(false);
 
+  // ref를 사용해 중복 요청 방지 (React StrictMode 대응)
+  const requestedSurveyIdRef = useRef<number | null>(null);
+  const isRequestingRef = useRef(false);
+
   useEffect(() => {
     if (!surveyId || !enabled) {
       return;
     }
 
-    // SSE 스트림 구독을 위한 상태 초기화 - 외부 시스템 동기화 패턴
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    // 이미 요청 중이거나 같은 surveyId로 완료된 요청이 있으면 스킵
+    if (isRequestingRef.current || surveyId === requestedSurveyIdRef.current) {
+      return;
+    }
+
+    requestedSurveyIdRef.current = surveyId;
+    isRequestingRef.current = true;
+
     setIsLoading(true);
     setIsError(false);
     setError(null);
@@ -42,10 +52,12 @@ function useQuestionAnalysis({
     setData({});
 
     let cleanupFn: (() => void) | null = null;
+    let isCancelled = false;
 
     getQuestionAnalysis(
       surveyId,
       (wrapper: QuestionResponseAnalysisWrapper) => {
+        if (isCancelled) return;
         try {
           const parsed: QuestionAnalysisResult = JSON.parse(
             wrapper.resultJson
@@ -59,20 +71,30 @@ function useQuestionAnalysis({
         }
       },
       (err: Error) => {
+        if (isCancelled) return;
         setIsError(true);
         setError(err);
         setIsLoading(false);
+        isRequestingRef.current = false;
+        // 에러 시에는 재시도할 수 있도록 requestedSurveyIdRef 초기화
+        requestedSurveyIdRef.current = null;
       },
       () => {
+        if (isCancelled) return;
         setIsLoading(false);
         setIsComplete(true);
+        isRequestingRef.current = false;
+        // 성공 완료 시에는 requestedSurveyIdRef 유지 (중복 요청 방지)
       }
     ).then((cleanup) => {
       cleanupFn = cleanup;
     });
 
     return () => {
+      isCancelled = true;
       cleanupFn?.();
+      isRequestingRef.current = false;
+      // 언마운트 시에는 requestedSurveyIdRef는 유지 (리마운트 시 중복 요청 방지)
     };
   }, [surveyId, enabled]);
 
