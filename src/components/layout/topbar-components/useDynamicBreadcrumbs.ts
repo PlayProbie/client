@@ -18,7 +18,18 @@ export function useDynamicBreadcrumbs(): {
   isLoading: boolean;
 } {
   const location = useLocation();
-  const params = useParams<{ gameUuid?: string; surveyUuid?: string }>();
+  const rawParams = useParams<{ gameUuid?: string; surveyUuid?: string }>();
+  // route placeholder(':gameUuid', ':surveyUuid')가 아닌 유효한 UUID만 사용
+  const params = {
+    gameUuid:
+      rawParams.gameUuid && !rawParams.gameUuid.startsWith(':')
+        ? rawParams.gameUuid
+        : undefined,
+    surveyUuid:
+      rawParams.surveyUuid && !rawParams.surveyUuid.startsWith(':')
+        ? rawParams.surveyUuid
+        : undefined,
+  };
   const pathname = location.pathname;
 
   const isGameRoute = pathname.startsWith('/games/') && !!params.gameUuid;

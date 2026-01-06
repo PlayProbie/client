@@ -1,6 +1,9 @@
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useParams } from 'react-router-dom';
 
-import { postFixedQuestions, postGame, postSurvey } from '../api';
+import { surveyKeys } from '@/features/game-streaming-survey/hooks/useSurveys';
+
+import { postFixedQuestions, postSurvey } from '../api';
 import { useSurveyFormStore } from '../store/useSurveyFormStore';
 import type { ApiFixedQuestionItem, SurveyFormData } from '../types';
 
@@ -51,13 +54,16 @@ class SurveySubmitError extends Error {
  */
 export function useFormSubmit(options?: UseFormSubmitOptions) {
   const { setSurveyUrl } = useSurveyFormStore();
+  const queryClient = useQueryClient();
+
+  const { gameUuid: routeGameUuid } = useParams<{ gameUuid?: string }>();
+  // route placeholder(':gameUuid')가 아닌 유효한 UUID만 사용
+  const gameUuid =
+    routeGameUuid && !routeGameUuid.startsWith(':') ? routeGameUuid : undefined;
 
   return useMutation({
     mutationFn: async (formData: Partial<SurveyFormData>) => {
       const {
-        gameName,
-        gameGenre,
-        gameContext,
         surveyName,
         testPurpose,
         startedAt,
@@ -67,24 +73,6 @@ export function useFormSubmit(options?: UseFormSubmitOptions) {
       } = formData;
 
       const transactionState: TransactionState = {};
-
-      // 1. 게임 생성
-      let gameUuid: string;
-      try {
-        const gameResponse = await postGame({
-          game_name: gameName || '',
-          game_context: gameContext || '',
-          game_genre: gameGenre || [],
-        });
-        gameUuid = gameResponse.result.game_uuid;
-        transactionState.gameUuid = gameUuid;
-      } catch (error) {
-        throw new SurveySubmitError(
-          '게임 생성에 실패했습니다.',
-          'game',
-          error instanceof Error ? error : undefined
-        );
-      }
 
       // 2. 설문 생성
       let surveyUuid: string;
@@ -100,7 +88,7 @@ export function useFormSubmit(options?: UseFormSubmitOptions) {
         };
 
         const surveyResponse = await postSurvey({
-          game_uuid: gameUuid,
+          game_uuid: gameUuid!,
           survey_name: surveyName || '',
           started_at: formatToISO(startedAt || ''),
           ended_at: formatToISO(endedAt || ''),
@@ -151,6 +139,7 @@ export function useFormSubmit(options?: UseFormSubmitOptions) {
     },
     onSuccess: (surveyUrl) => {
       setSurveyUrl(surveyUrl);
+      queryClient.invalidateQueries({ queryKey: surveyKeys.all });
       options?.onSuccess?.(surveyUrl);
     },
     onError: (error: Error) => {

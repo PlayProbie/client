@@ -14,7 +14,6 @@ export async function getWorkspaces(): Promise<Workspace[]> {
     headers: {
       'Content-Type': 'application/json',
     },
-    credentials: 'include',
   });
 
   if (!response.ok) {

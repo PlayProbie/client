@@ -19,10 +19,17 @@ export interface SurveyShellContext {
 }
 
 export function SurveyShell() {
-  const { gameUuid, surveyUuid } = useParams<{
+  const { gameUuid: routeGameUuid, surveyUuid: routeSurveyUuid } = useParams<{
     gameUuid: string;
     surveyUuid: string;
   }>();
+  // route placeholder(':gameUuid', ':surveyUuid')가 아닌 유효한 UUID만 사용
+  const gameUuid =
+    routeGameUuid && !routeGameUuid.startsWith(':') ? routeGameUuid : undefined;
+  const surveyUuid =
+    routeSurveyUuid && !routeSurveyUuid.startsWith(':')
+      ? routeSurveyUuid
+      : undefined;
   const {
     data: surveys,
     isLoading,
