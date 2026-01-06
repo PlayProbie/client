@@ -51,9 +51,9 @@ export default function LoginPage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
     if (errors[name as keyof FormErrors]) {
-      setErrors(prev => ({ ...prev, [name]: undefined }));
+      setErrors((prev) => ({ ...prev, [name]: undefined }));
     }
     if (apiError) {
       setApiError(null);
@@ -70,7 +70,6 @@ export default function LoginPage() {
     try {
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
-        credentials: 'include', // HttpOnly Cookie 수신
         headers: {
           'Content-Type': 'application/json',
         },
@@ -86,9 +85,14 @@ export default function LoginPage() {
       }
 
       const data = await response.json();
-      const { user } = data.result;
-      
-      // 서버에서 반환한 사용자 정보 저장 (JWT는 HttpOnly Cookie에 저장됨)
+      const { user, access_token: accessToken } = data.result;
+
+      // accessToken을 localStorage에 저장 (전역 fetch 인터셉터가 자동으로 헤더에 추가)
+      if (accessToken) {
+        localStorage.setItem('accessToken', accessToken);
+      }
+
+      // 사용자 정보 저장
       login({
         id: String(user.id),
         email: user.email,
@@ -98,7 +102,9 @@ export default function LoginPage() {
       navigate(from, { replace: true });
     } catch (error) {
       console.error('Login failed:', error);
-      setApiError(error instanceof Error ? error.message : '로그인 중 오류가 발생했습니다');
+      setApiError(
+        error instanceof Error ? error.message : '로그인 중 오류가 발생했습니다'
+      );
     } finally {
       setIsLoading(false);
     }
@@ -141,10 +147,16 @@ export default function LoginPage() {
         )}
 
         {/* Login Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-4"
+        >
           {/* 이메일 */}
           <div className="space-y-2">
-            <label htmlFor="email" className="text-foreground text-sm font-medium">
+            <label
+              htmlFor="email"
+              className="text-foreground text-sm font-medium"
+            >
               이메일
             </label>
             <Input
@@ -164,7 +176,10 @@ export default function LoginPage() {
 
           {/* 비밀번호 */}
           <div className="space-y-2">
-            <label htmlFor="password" className="text-foreground text-sm font-medium">
+            <label
+              htmlFor="password"
+              className="text-foreground text-sm font-medium"
+            >
               비밀번호
             </label>
             <Input
@@ -201,7 +216,7 @@ export default function LoginPage() {
         {/* Google Login */}
         <Button
           disabled
-          className="w-full mb-4"
+          className="mb-4 w-full"
         >
           <svg
             className="h-5 w-5"
@@ -231,7 +246,7 @@ export default function LoginPage() {
         <Button
           variant="outline"
           onClick={handleRegister}
-          className="w-full mb-4"
+          className="mb-4 w-full"
         >
           회원가입
         </Button>

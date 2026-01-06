@@ -32,7 +32,7 @@ export type TestPurpose = ConfigValue<typeof TestPurposeConfig>;
 
 /** [API] POST /surveys Request */
 export interface ApiCreateSurveyRequest {
-  game_id: number;
+  game_uuid: string;
   survey_name: string;
   started_at: string;
   ended_at: string;
@@ -120,7 +120,7 @@ export interface CreateFixedQuestionsResponse {
 
 /** [Client] 설문 생성 요청 */
 export interface CreateSurveyRequest {
-  gameId: number;
+  gameUuid: string;
   surveyName: string;
   startedAt: string;
   endedAt: string;

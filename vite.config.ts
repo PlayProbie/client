@@ -15,20 +15,18 @@ export default defineConfig(({ mode }) => {
       },
     },
     server: {
-      proxy: {
-        '/api': {
-          target: env.VITE_API_BASE_URL || 'http://localhost:8080',
-          changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api/, ''),
-          secure: false,
-          configure: (proxy, _options) => {
-            proxy.on('proxyReq', (proxyReq, _req, _res) => {
-              // 서버가 Origin 헤더가 있으면 엄격하게 검사하므로 아예 제거합니다.
-              proxyReq.removeHeader('Origin');
-            });
-          },
-        },
-      },
+      // MSW 활성화 시 proxy를 비활성화하여 Service Worker가 요청을 가로채도록 함
+      proxy:
+        env.VITE_MSW_ENABLED === 'true'
+          ? undefined
+          : {
+              '/api': {
+                target: env.VITE_API_BASE_URL || 'http://localhost:8080',
+                changeOrigin: true,
+                rewrite: (path) => path.replace(/^\/api/, ''),
+                secure: false,
+              },
+            },
     },
   };
 });

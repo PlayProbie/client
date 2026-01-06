@@ -21,11 +21,13 @@ export const gamesHandlers = [
 
       const response: CreateGameResponse = {
         result: {
-          game_id: Math.floor(Math.random() * 10000) + 1,
+          game_uuid: crypto.randomUUID(),
+          workspace_uuid: crypto.randomUUID(),
           game_name: body.game_name,
-          game_context: body.game_context,
           game_genre: body.game_genre,
+          game_context: body.game_context,
           created_at: toKSTISOString(new Date()),
+          updated_at: toKSTISOString(new Date()),
         },
       };
 

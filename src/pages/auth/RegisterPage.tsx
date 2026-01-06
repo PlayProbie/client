@@ -72,10 +72,10 @@ export default function RegisterPage() {
   const formatPhoneNumber = (value: string): string => {
     // 숫자만 추출
     const numbers = value.replace(/\D/g, '');
-    
+
     // 최대 11자리까지만 허용
     const limited = numbers.slice(0, 11);
-    
+
     // 포맷 적용
     if (limited.length <= 3) {
       return limited;
@@ -88,14 +88,14 @@ export default function RegisterPage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    
+
     // 전화번호 필드는 포맷팅 적용
     const formattedValue = name === 'phone' ? formatPhoneNumber(value) : value;
-    
-    setFormData(prev => ({ ...prev, [name]: formattedValue }));
+
+    setFormData((prev) => ({ ...prev, [name]: formattedValue }));
     // 입력 시 해당 필드 에러 및 API 에러 제거
     if (errors[name as keyof FormErrors]) {
-      setErrors(prev => ({ ...prev, [name]: undefined }));
+      setErrors((prev) => ({ ...prev, [name]: undefined }));
     }
     if (apiError) {
       setApiError(null);
@@ -125,13 +125,13 @@ export default function RegisterPage() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        
+
         // 이메일 중복 에러 (code: U002)
         if (errorData.code === 'U002') {
-          setErrors(prev => ({ ...prev, email: errorData.message }));
+          setErrors((prev) => ({ ...prev, email: errorData.message }));
           return;
         }
-        
+
         throw new Error(errorData.message || '회원가입에 실패했습니다');
       }
 
@@ -139,7 +139,11 @@ export default function RegisterPage() {
       navigate('/login', { state: { registered: true } });
     } catch (error) {
       console.error('Registration failed:', error);
-      setApiError(error instanceof Error ? error.message : '회원가입 중 오류가 발생했습니다');
+      setApiError(
+        error instanceof Error
+          ? error.message
+          : '회원가입 중 오류가 발생했습니다'
+      );
     } finally {
       setIsLoading(false);
     }
@@ -173,10 +177,16 @@ export default function RegisterPage() {
         )}
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-4"
+        >
           {/* 이메일 */}
           <div className="space-y-2">
-            <label htmlFor="email" className="text-foreground text-sm font-medium">
+            <label
+              htmlFor="email"
+              className="text-foreground text-sm font-medium"
+            >
               이메일 <span className="text-destructive">*</span>
             </label>
             <Input
@@ -196,7 +206,10 @@ export default function RegisterPage() {
 
           {/* 비밀번호 */}
           <div className="space-y-2">
-            <label htmlFor="password" className="text-foreground text-sm font-medium">
+            <label
+              htmlFor="password"
+              className="text-foreground text-sm font-medium"
+            >
               비밀번호 <span className="text-destructive">*</span>
             </label>
             <Input
@@ -216,7 +229,10 @@ export default function RegisterPage() {
 
           {/* 비밀번호 확인 */}
           <div className="space-y-2">
-            <label htmlFor="passwordConfirm" className="text-foreground text-sm font-medium">
+            <label
+              htmlFor="passwordConfirm"
+              className="text-foreground text-sm font-medium"
+            >
               비밀번호 확인 <span className="text-destructive">*</span>
             </label>
             <Input
@@ -230,13 +246,18 @@ export default function RegisterPage() {
               autoComplete="new-password"
             />
             {errors.passwordConfirm && (
-              <p className="text-destructive text-sm">{errors.passwordConfirm}</p>
+              <p className="text-destructive text-sm">
+                {errors.passwordConfirm}
+              </p>
             )}
           </div>
 
           {/* 이름 */}
           <div className="space-y-2">
-            <label htmlFor="name" className="text-foreground text-sm font-medium">
+            <label
+              htmlFor="name"
+              className="text-foreground text-sm font-medium"
+            >
               이름 <span className="text-destructive">*</span>
             </label>
             <Input
@@ -256,8 +277,12 @@ export default function RegisterPage() {
 
           {/* 전화번호 (선택) */}
           <div className="space-y-2">
-            <label htmlFor="phone" className="text-foreground text-sm font-medium">
-              전화번호 <span className="text-muted-foreground text-xs">(선택)</span>
+            <label
+              htmlFor="phone"
+              className="text-foreground text-sm font-medium"
+            >
+              전화번호{' '}
+              <span className="text-muted-foreground text-xs">(선택)</span>
             </label>
             <Input
               id="phone"
