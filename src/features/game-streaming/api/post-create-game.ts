@@ -48,7 +48,7 @@ export async function postCreateGame(
 export async function createTestGame(): Promise<string> {
   const testGame: CreateGameRequest = {
     game_name: 'Test Game for Build Upload',
-    game_genre: ['shooter'],
+    game_genre: ['SHOOTER'],
     game_context: 'Test game created for build upload testing',
   };
 

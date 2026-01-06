@@ -26,6 +26,7 @@ export function useStreamingResource(surveyUuid: string, enabled = true) {
     queryKey: streamingResourceKeys.detail(surveyUuid),
     queryFn: () => getStreamingResource(surveyUuid),
     enabled,
+    refetchOnMount: 'always',
     refetchInterval: (query) => {
       // PROVISIONING 상태일 때 5초마다 폴링
       const data = query.state.data;

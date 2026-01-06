@@ -100,10 +100,6 @@ export function BuildUploadModal({
 
   const handleDialogOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
-      if (isUploading) {
-        setIsCancelConfirmOpen(true);
-        return;
-      }
       handleClose();
     }
   };
@@ -185,13 +181,7 @@ export function BuildUploadModal({
         open={open}
         onOpenChange={handleDialogOpenChange}
       >
-        <DialogContent
-          className="sm:max-w-[720px]"
-          closeDisabled={isUploading}
-          closeTitle={
-            isUploading ? '업로드 진행 중에는 닫을 수 없습니다.' : '닫기'
-          }
-        >
+        <DialogContent className="sm:max-w-[720px]">
           <DialogHeader>
             <DialogTitle>Upload Build</DialogTitle>
             <DialogDescription>
