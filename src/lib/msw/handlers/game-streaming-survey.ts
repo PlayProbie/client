@@ -6,9 +6,13 @@ import { delay, http, HttpResponse } from 'msw';
 
 import type {
   ApiCreateStreamingResourceRequest,
-  ApiStreamingResource,
   ApiSurvey,
 } from '@/features/game-streaming-survey/types';
+
+import {
+  MOCK_STREAMING_RESOURCES,
+  type MockStreamingResource,
+} from './streaming-resource-store';
 
 const API_BASE_URL = '/api';
 
@@ -35,21 +39,6 @@ const MOCK_SURVEYS: ApiSurvey[] = [
     created_at: '2025-12-15T09:00:00Z',
   },
 ];
-
-// ----------------------------------------
-// Mock Data: Streaming Resources (surveyId -> resource)
-// ----------------------------------------
-const MOCK_STREAMING_RESOURCES: Record<string, ApiStreamingResource> = {
-  'survey-002-uuid': {
-    uuid: 'resource-001-uuid',
-    status: 'READY',
-    current_capacity: 0,
-    max_capacity: 10,
-    instance_type: 'g4dn.xlarge',
-    build_uuid: 'build-001',
-    created_at: '2025-12-18T14:30:00Z',
-  },
-};
 
 let resourceIdCounter = 100;
 
@@ -131,7 +120,7 @@ export const gameStreamingSurveyHandlers = [
       }
 
       resourceIdCounter++;
-      const newResource: ApiStreamingResource = {
+      const newResource: MockStreamingResource = {
         uuid: `resource-${resourceIdCounter}-uuid`,
         status: 'PROVISIONING',
         current_capacity: 0,

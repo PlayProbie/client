@@ -5,6 +5,7 @@
 import { aiQuestionsHandlers } from './ai-questions';
 import { fixedQuestionsHandlers } from './fixed-questions';
 import { gameStreamingHandlers } from './game-streaming';
+import { gameStreamingAdminHandlers } from './game-streaming-admin';
 import { gameStreamingSurveyHandlers } from './game-streaming-survey';
 import { gamesHandlers } from './games';
 import { questionFeedbackHandlers } from './question-feedback';
@@ -15,6 +16,7 @@ import { surveySessionHandlers } from './survey-session';
 export const handlers = [
   ...gamesHandlers,
   ...gameStreamingHandlers,
+  ...gameStreamingAdminHandlers,
   ...gameStreamingSurveyHandlers,
   ...surveyDesignHandlers,
   ...fixedQuestionsHandlers,

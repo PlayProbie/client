@@ -1,25 +1,10 @@
 import { delay, http, HttpResponse } from 'msw';
 
-import type { ApiStreamingResource } from '@/features/game-streaming-survey/types';
+import { MOCK_STREAMING_RESOURCES } from './streaming-resource-store';
 
 const API_BASE_URL = '/api';
 
-// ----------------------------------------
-// Mock Data: Streaming Resources (surveyId -> resource)
-// ----------------------------------------
-const MOCK_STREAMING_RESOURCES: Record<string, ApiStreamingResource> = {
-  'survey-002-uuid': {
-    uuid: 'resource-001-uuid',
-    status: 'READY',
-    current_capacity: 0,
-    max_capacity: 10,
-    instance_type: 'g4dn.xlarge',
-    build_uuid: 'build-001',
-    created_at: '2025-12-18T14:30:00Z',
-  },
-};
-
-export const gameStreamingSurveyHandlers = [
+export const gameStreamingAdminHandlers = [
   // ----------------------------------------
   // Admin Test API
   // ----------------------------------------
@@ -52,11 +37,7 @@ export const gameStreamingSurveyHandlers = [
           MOCK_STREAMING_RESOURCES[surveyId] &&
           MOCK_STREAMING_RESOURCES[surveyId].status === 'TESTING'
         ) {
-          (
-            MOCK_STREAMING_RESOURCES[surveyId] as typeof resource & {
-              instances_ready?: boolean;
-            }
-          ).instances_ready = true;
+          MOCK_STREAMING_RESOURCES[surveyId].instances_ready = true;
         }
       }, 3000);
 
@@ -76,11 +57,7 @@ export const gameStreamingSurveyHandlers = [
       await delay(200);
       const surveyId = params.surveyId as string;
 
-      const resource = MOCK_STREAMING_RESOURCES[
-        surveyId
-      ] as (typeof MOCK_STREAMING_RESOURCES)[number] & {
-        instances_ready?: boolean;
-      };
+      const resource = MOCK_STREAMING_RESOURCES[surveyId];
 
       if (!resource) {
         return HttpResponse.json(
@@ -109,11 +86,7 @@ export const gameStreamingSurveyHandlers = [
       await delay(500);
       const surveyId = params.surveyId as string;
 
-      const resource = MOCK_STREAMING_RESOURCES[
-        surveyId
-      ] as (typeof MOCK_STREAMING_RESOURCES)[number] & {
-        instances_ready?: boolean;
-      };
+      const resource = MOCK_STREAMING_RESOURCES[surveyId];
 
       if (!resource) {
         return HttpResponse.json(

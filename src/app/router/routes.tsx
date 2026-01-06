@@ -14,6 +14,7 @@ import StreamSettingsPage from '@/pages/studio/StreamSettingsPage';
 import SurveyListPage from '@/pages/studio/SurveyListPage';
 import SurveyAnalyticsPage from '@/pages/survey/SurveyAnalyticsPage';
 import SurveyDesignPage from '@/pages/survey/SurveyDesignPage';
+import SurveyDistributePage from '@/pages/survey/SurveyDistributePage';
 import SurveyOverviewPage from '@/pages/survey/SurveyOverviewPage';
 import SurveyPlaceholderPage from '@/pages/survey/SurveyPlaceholderPage';
 import SurveySessionPage from '@/pages/survey/SurveySessionPage';
@@ -90,12 +91,7 @@ export const router = createBrowserRouter([
               },
               {
                 path: 'distribute',
-                element: (
-                  <SurveyPlaceholderPage
-                    title="배포/연동"
-                    description="빌드 연결 및 테스트 기능은 다음 단계에서 구현됩니다."
-                  />
-                ),
+                element: <SurveyDistributePage />,
               },
               {
                 path: 'analyze',
