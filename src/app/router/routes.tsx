@@ -1,6 +1,7 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 
 import LoginPage from '@/pages/auth/LoginPage';
+import RegisterPage from '@/pages/auth/RegisterPage';
 import NotFoundPage from '@/pages/NotFoundPage';
 import SurveyAnalyticsPage from '@/pages/survey/SurveyAnalyticsPage';
 import SurveyDesignPage from '@/pages/survey/SurveyDesignPage';
@@ -58,7 +59,10 @@ export const router = createBrowserRouter([
       // 비인증 사용자 전용 라우트
       {
         element: <GuestLayout />,
-        children: [{ path: '/login', element: <LoginPage /> }],
+        children: [
+          { path: '/login', element: <LoginPage /> },
+          { path: '/auth/register', element: <RegisterPage /> },
+        ],
       },
       // 404 페이지
       { path: '*', element: <NotFoundPage /> },
