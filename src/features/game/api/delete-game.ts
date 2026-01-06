@@ -11,7 +11,6 @@ export async function deleteGame(gameUuid: string): Promise<void> {
     headers: {
       'Content-Type': 'application/json',
     },
-    credentials: 'include',
   });
 
   if (!response.ok) {

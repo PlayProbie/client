@@ -2,7 +2,6 @@
  * 설문 목록 API
  * GET /surveys
  */
-import { fetchWithAuth } from '@/services/api-client';
 
 import { API_BASE_URL } from '../constants';
 import type { ApiSurveysResponse, Survey } from '../types';
@@ -20,7 +19,7 @@ export async function getSurveys(params?: GetSurveysParams): Promise<Survey[]> {
     url.searchParams.set('game_uuid', params.gameUuid);
   }
 
-  const response = await fetchWithAuth(url.toString(), {
+  const response = await fetch(url.toString(), {
     method: 'GET',
   });
 

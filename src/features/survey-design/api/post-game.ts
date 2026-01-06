@@ -1,6 +1,5 @@
 import { API_BASE_URL } from '@/constants/api';
 import type { ApiCreateGameRequest, ApiGameResponse } from '@/features/game';
-import { fetchWithAuth } from '@/services/api-client';
 
 /**
  * POST /games - 게임 생성
@@ -8,7 +7,7 @@ import { fetchWithAuth } from '@/services/api-client';
 export async function postGame(
   data: ApiCreateGameRequest
 ): Promise<ApiGameResponse> {
-  const response = await fetchWithAuth(`${API_BASE_URL}/games`, {
+  const response = await fetch(`${API_BASE_URL}/games`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

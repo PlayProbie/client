@@ -2,7 +2,6 @@
  * 스트리밍 리소스 조회 API
  * GET /surveys/{surveyUuid}/streaming-resource
  */
-import { fetchWithAuth } from '@/services/api-client';
 
 import { API_BASE_URL } from '../constants';
 import type { ApiStreamingResourceResponse, StreamingResource } from '../types';
@@ -12,7 +11,7 @@ import { toStreamingResource } from '../types';
 export async function getStreamingResource(
   surveyUuid: string
 ): Promise<StreamingResource | null> {
-  const response = await fetchWithAuth(
+  const response = await fetch(
     `${API_BASE_URL}/surveys/${surveyUuid}/streaming-resource`,
     { method: 'GET' }
   );

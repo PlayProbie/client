@@ -10,11 +10,23 @@ interface SidebarNavProps {
   isCollapsed: boolean;
 }
 
+/** gameUuid가 유효한 UUID인지 확인 (route placeholder가 아닌지) */
+const isValidGameUuid = (uuid?: string): boolean => {
+  if (!uuid) return false;
+  // ':gameUuid' 같은 route placeholder는 무효
+  if (uuid.startsWith(':')) return false;
+  return true;
+};
+
 function SidebarNav({ isCollapsed }: SidebarNavProps) {
   const { gameUuid: routeGameUuid } = useParams<{ gameUuid?: string }>();
   const { data: games } = useGamesQuery();
   const fallbackGameUuid = games?.[0]?.gameUuid;
-  const activeGameUuid = routeGameUuid ?? fallbackGameUuid;
+  // route param이 유효한 UUID가 아니면 fallback 사용
+  const validRouteGameUuid = isValidGameUuid(routeGameUuid)
+    ? routeGameUuid
+    : undefined;
+  const activeGameUuid = validRouteGameUuid ?? fallbackGameUuid;
 
   return (
     <ScrollArea className="flex-1 overflow-hidden">

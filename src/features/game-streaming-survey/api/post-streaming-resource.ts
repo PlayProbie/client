@@ -2,7 +2,6 @@
  * 스트리밍 리소스 생성 API
  * POST /surveys/{surveyUuid}/streaming-resource
  */
-import { fetchWithAuth } from '@/services/api-client';
 
 import { API_BASE_URL, ERROR_MESSAGES } from '../constants';
 import type {
@@ -20,7 +19,7 @@ export async function createStreamingResource(
   surveyUuid: string,
   request: CreateStreamingResourceRequest
 ): Promise<StreamingResource> {
-  const response = await fetchWithAuth(
+  const response = await fetch(
     `${API_BASE_URL}/surveys/${surveyUuid}/streaming-resource`,
     {
       method: 'POST',

@@ -1,5 +1,4 @@
 import { API_BASE_URL } from '@/constants/api';
-import { fetchWithAuth } from '@/services/api-client';
 
 import type {
   GetSurveyResultsListParams,
@@ -24,7 +23,7 @@ export async function getSurveyResultsList(
     searchParams.toString() ? `?${searchParams.toString()}` : ''
   }`;
 
-  const response = await fetchWithAuth(url, {
+  const response = await fetch(url, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
