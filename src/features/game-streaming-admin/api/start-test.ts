@@ -7,9 +7,9 @@ import type { AdminTestResult, ApiAdminTestResponse } from '../types';
 import { toAdminTestResult } from '../types';
 
 /** 관리자 테스트 시작 */
-export async function startTest(surveyId: number): Promise<AdminTestResult> {
+export async function startTest(surveyUuid: string): Promise<AdminTestResult> {
   const response = await fetch(
-    `${API_BASE_URL}/surveys/${surveyId}/streaming-resource/start-test`,
+    `${API_BASE_URL}/surveys/${surveyUuid}/streaming-resource/start-test`,
     { method: 'POST' }
   );
 

@@ -102,7 +102,7 @@ export default function GameOverviewPage() {
             <div className="space-y-2">
               {builds.slice(0, 3).map((build) => (
                 <div
-                  key={build.buildId}
+                  key={build.uuid}
                   className="bg-muted/50 flex items-center justify-between rounded-lg px-4 py-3"
                 >
                   <div>

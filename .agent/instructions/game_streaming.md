@@ -1,7 +1,7 @@
 # Game Streaming - Phase 1 클라이언트 구현 가이드
 
 > 클라우드 스트리밍 기반 게임 플레이테스트 플랫폼 - Creator Studio + Tester
-> Placeholder
+> Phase 1 ~ 3 Implementation Guide
 
 ---
 
@@ -14,10 +14,10 @@
 | Build 업로드       | ✅ 핵심            | STS 토큰 발급 → S3 폴더 업로드 → 완료 처리(complete) |
 | Stream Settings UI | 🔧 필수 (API 없음) | GPU / 해상도·FPS / Capacity(max sessions) 설정 폼    |
 
-### B. Tester Experience (Phase 1)
+### B. Tester Experience (Phase 2)
 
-- WebRTC/Signaling 명세가 없으므로 `/play/:gameUuid` 페이지는 **placeholder**
-  수준으로만 구현
+- WebRTC/Signaling 기반 스트리밍 플레이 구현
+- `StartStreamSession`, `Signaling`, `Terminate` API 연동
 
 ---
 
@@ -243,9 +243,7 @@ Request Body:
   "expected_file_count": 150,
   "expected_total_size": 1073741824,
   "executable_path": "game.exe",
-  "os_type": "WINDOWS",
-  "instance_type": "g4dn.xlarge",
-  "max_capacity": 10
+  "os_type": "WINDOWS"
 }
 
 Response:
@@ -254,7 +252,7 @@ Response:
     "id": "uuid",
     "status": "UPLOADED",
     "executable_path": "game.exe",
-    "max_capacity": 10
+    "os_type": "WINDOWS"
   }
 }
 ```
@@ -303,6 +301,11 @@ Response:
 | OS              | Readonly | Windows Server 2022              |
 | Region          | Readonly | ap-northeast-1                   |
 
+> **CHANGED**: Phase 2에서 `StreamingResource` 생성 시
+> (`POST /surveys/{surveyId}/streaming-resource`) Instance Type과 Max Capacity를
+> 설정하게 변경되었습니다. 이 화면의 설정값은 로컬 스토어에 보관했다가,
+> 배포(Provisioning) 시점에 사용합니다.
+
 #### 동작
 
 - **성공 Toast**: "스트리밍 설정이 저장되었습니다."
@@ -320,11 +323,15 @@ Response:
 #### Requirements Check
 
 - WebRTC 지원 여부
-- Desktop 환경 여부 (모바일이면 차단)
+- **Active Session Check**: 진입 시 `GET /surveys/{surveyUuid}/session` 호출하여
+  스트리밍 가능 여부(`is_available`) 확인
 
 #### 동작
 
-- `Start Streaming` 버튼은 placeholder (동작 X)
+- `Start Streaming` 버튼:
+  1. SDK 초기화
+  2. `POST /surveys/{surveyUuid}/signal` 호출
+  3. 연결 수립
 - **Unsupported 문구**: "지원하지 않는 환경입니다. Chrome 최신버전/PC로
   접속하세요."
 
@@ -332,14 +339,15 @@ Response:
 
 ## 📡 추가 필요 API (명세 없음)
 
-클라이언트 완전 동작을 위해 필요한 API 목록 (없으면 mock 대체):
+클라이언트 완전 동작을 위해 필요한 API 목록:
 
-| API | Method | Endpoint |\n| -------------------- | ------ |
------------------------------------- |\n| Builds \ubaa9\ub85d | GET |
-`/games/{gameUuid}/builds` |\n| Stream Settings \uc870\ud68c | GET |
-`/games/{gameUuid}/stream-settings` |\n| Stream Settings \uc800\uc7a5 | PUT |
-`/games/{gameUuid}/stream-settings` |\n| Build \uc0c1\uc138 (\uc120\ud0dd) | GET
-| `/games/{gameUuid}/builds/{buildId}` |
+| API                  | Method | Endpoint                                            |
+| -------------------- | ------ | --------------------------------------------------- |
+| Builds 목록          | GET    | `/games/{gameUuid}/builds`                          |
+| Build 상세 (선택)    | GET    | `/games/{gameUuid}/builds/{buildId}`                |
+| Survey Resource 생성 | POST   | `/surveys/{surveyId}/streaming-resource`            |
+| Test 시작            | POST   | `/surveys/{surveyId}/streaming-resource/start-test` |
+| Test 종료            | POST   | `/surveys/{surveyId}/streaming-resource/stop-test`  |
 
 ---
 
@@ -395,6 +403,40 @@ Response:
 
 ---
 
+## ☁️ Phase 2 & 3: Resource & Access Management
+
+> **Note**: Survey 단위로 스트리밍 리소스를 할당하고 관리합니다.
+
+### 1. Resource Provisioning (Phase 2)
+
+- **Context**: 설문 배포 탭
+- **Action**: "빌드 연결" (S3 Build -> GameLift Application / Stream Group)
+- **API**: `POST /surveys/{surveyId}/streaming-resource`
+  - `build_uuid`
+  - `instance_type` (e.g. `gen4n_win2022`)
+  - `max_capacity` (Service Capacity)
+- **Status Lifecycle**: `PENDING` -> `PROVISIONING` -> `READY` (Cap=0)
+
+### 2. Admin Test (Phase 3)
+
+- **Context**: 설문 배포 탭 (Ready 상태일 때)
+- **Test Start**: `POST .../start-test`
+  - Capacity: 0 -> 1
+  - Status: `TESTING`
+- **Test Stop**: `POST .../stop-test`
+  - Capacity: 1 -> 0
+  - Status: `READY`
+
+### 3. Service Open (Phase 4)
+
+- **Context**: 설문 "개요" 탭 -> Status 변경
+- **Action**: Survey Status `ACTIVE`로 변경
+- **Logic**:
+  - Survey Status -> `ACTIVE`
+  - Resource Status -> `SCALING` (Backend triggers scaling to `max_capacity`)
+
+---
+
 ## 🎮 Tester Experience 작업 태스크 (Phase 2)
 
 > Amazon GameLift Streams Web SDK를 활용하여 Tester Experience 프론트엔드 구현
@@ -414,12 +456,22 @@ Response:
     - `detachOnWindowBlur: true`
     - `resetOnDetach: true`
 
-#### Signaling 플로우
+#### Signaling 플로우 (API 명세 반영)
 
-- [ ] `generateSignalRequest()` 호출하여 WebRTC Offer 생성
-- [ ] Backend API로 SignalRequest 전송
-- [ ] Backend에서 받은 SignalResponse로 `completeConnection()` 호출
-- [ ] 연결 성공/실패 이벤트 리스너 등록
+1. **Session Check**: `GET /surveys/{surveyUuid}/session`
+   - `is_available` 확인
+   - `stream_settings` (resolution, fps) 정보 획득
+
+2. **Signal Request**: `POST /surveys/{surveyUuid}/signal`
+   - Client: SDK `generateSignalRequest()` -> Offer 생성
+   - Server: GameLift `StartStreamSession` -> Answer 반환
+   - Response: `signal_response`, `survey_session_uuid`
+
+3. **Connection**:
+   - Client: `completeConnection(signal_response)`
+
+4. **Termination**: `POST /surveys/{surveyUuid}/session/terminate`
+   - 페이지 이탈, 종료 버튼, 또는 에러 발생 시 호출
 
 ---
 

@@ -7,11 +7,7 @@
 모든 성공 응답은 `result` 객체 내에 데이터를 포함합니다.
 
 ```json
-{
-	"result": {
-		...
-	}
-}
+{ "result": { ... } }
 ```
 
 ### **Error Response**
@@ -27,20 +23,9 @@
 }
 ```
 
-### **구현 상태 아이콘**
-
-- ✅ **구현됨**: 현재 서버에 이미 개발되어 있는 API
-- 🔧 **수정 필요**: 기능 확장이 필요한 기존 API
-- 🆕 **신규**: 이번 Phase에서 새로 개발해야 할 API
-
 ---
 
 # **🎮 Phase 1: 빌드 자산 관리 (S3)**
-
-> 목표: 게임 빌드 파일을 S3에 업로드하고 메타데이터를 DB에 저장합니다. 이때
-> GameLift 리소스는 생성하지 않아 비용을 절감합니다.
-
----
 
 ## **🆕 `GET /games/{gameUuid}/builds`**
 
@@ -52,34 +37,28 @@
 
 ### **Path Parameters**
 
-| **Name** | **Type** | **Required** | **Description** |
-| -------- | -------- | ------------ | --------------- |
-| gameUuid | UUID     | ✅           | 게임 UUID       |
+| **Field** | **Type** | **Required** | **Description** |
+| --------- | -------- | ------------ | --------------- |
+| gameUuid  | UUID     | ✅           | 게임 UUID       |
 
 ### **Response `200 OK`**
 
 ```json
 {
-"result": [
+  "result": [
     {
-			"id":"550e8400-e29b-41d4-a716-446655440000",
-			"version":"1.0.0",
-			"status":"UPLOADED",
-			"total_files":150,
-			"total_size":1073741824,
-			"executable_path":"game.exe",
-			"os_type":"WINDOWS",
-			"instance_type":"g4dn.xlarge",
-			"max_capacity":10,
-			"created_at":"2026-01-05T12:00:00+09:00"
+      "uuid": "550e8400-e29b-41d4-a716-446655440000",
+      "version": "1.0.0",
+      "status": "UPLOADED",
+      "total_files": 150,
+      "total_size": 1073741824,
+      "executable_path": "game.exe",
+      "os_type": "WINDOWS",
+      "created_at": "2026-01-05T12:00:00+09:00"
     }
-  ],
-  {...}
+  ]
 }
-
 ```
-
-**참고**: `status`는 `PENDING`(업로드 중) 또는 `UPLOADED`(완료) 값을 가집니다.
 
 ---
 
@@ -96,6 +75,10 @@
 
 ### **Request Body**
 
+| **Field** | **Type** | **Required** | **Description**      |
+| --------- | -------- | ------------ | -------------------- |
+| version   | string   | ✅           | 버전명 (예: "1.0.0") |
+
 ```json
 { "version": "1.0.0" }
 ```
@@ -104,21 +87,23 @@
 
 ```json
 {
-  "buildId": "uuid",
-  "version": "1.0.0",
-  "s3Prefix": "gameUuid/buildUuid/",
-  "credentials": {
-    "accessKeyId": "ASIA...",
-    "secretAccessKey": "...",
-    "sessionToken": "...",
-    "expiration": 1704456000000
+  "result": {
+    "buildId": "550e8400-e29b-41d4-a716-446655440000",
+    "version": "1.0.0",
+    "s3Prefix": "gameUuid/buildUuid/",
+    "credentials": {
+      "accessKeyId": "ASIA...",
+      "secretAccessKey": "...",
+      "sessionToken": "...",
+      "expiration": 1704456000000
+    }
   }
 }
 ```
 
 ---
 
-## **🔧 `POST /games/{gameUuid}/builds/{buildId}/complete`**
+## **🔧 `POST /games/{gameUuid}/builds/{buildUuid}/complete`**
 
 ### **📝 설명**
 
@@ -126,9 +111,8 @@
 - **Logic**:
   1. S3에 실제 파일이 존재하는지 검증합니다.
   2. 빌드 상태를 `UPLOADED`로 변경합니다.
-  3. **중요**: 스트리밍에
-     필요한 `executable_path`, `instance_type`, `max_capacity` 등의 설정을 **이
-     시점에 저장**합니다. 추후 JIT 프로비저닝 시 이 설정을 사용합니다.
+  3. 실행 파일 경로 및 OS 타입을 저장합니다. (Capacity, Stream Class 설정은
+     Phase 2에서 진행)
 
 ### **Request Body**
 
@@ -138,16 +122,13 @@
 | expected_total_size | number   | ✅           | 총 크기 (bytes)                                     |
 | executable_path     | string   | ✅           | 게임 실행 파일 경로 (예: `Binaries/Win64/Game.exe`) |
 | os_type             | string   | ✅           | `WINDOWS` or `LINUX`                                |
-| instance_type       | string   | ✅           | EC2 인스턴스 타입 (예: `g4dn.xlarge`)               |
-| max_capacity        | number   | ✅           | 최대 동시 접속자 수                                 |
 
 ```json
 {
   "expected_file_count": 150,
   "expected_total_size": 1073741824,
   "executable_path": "game.exe",
-  "os_type": "WINDOWS",
-  "max_capacity": 10
+  "os_type": "WINDOWS"
 }
 ```
 
@@ -156,10 +137,10 @@
 ```json
 {
   "result": {
-    "id": "uuid",
+    "uuid": "550e8400-e29b-41d4-a716-446655440000",
     "status": "UPLOADED",
     "executable_path": "game.exe",
-    "max_capacity": 10
+    "os_type": "WINDOWS"
   }
 }
 ```
@@ -179,61 +160,88 @@
 
 # **📋 Phase 2: 설문 & 리소스 할당 (JIT Provisioning)**
 
-> 목표: 설문 배포 탭에서 빌드를 선택하면, 그 시점에(Just-In-Time) GameLift
-> 리소스를 생성합니다. 초기 용량은 0으로 설정하여 비용을 방지합니다.
-
----
-
 ## **🆕 `GET /surveys`**
 
 ### **📝 설명**
 
 - **Context**: 설문 관리 페이지 진입 시
-- **Logic**: 워크스페이스 내 모든 설문 목록을 조회합니다. `game_id` 파라미터로
-  필터링 가능합니다.
+- **Logic**: 워크스페이스 내 모든 설문 목록을 조회합니다.
 
 ### **Query Parameters**
 
-- `game_id`: (Optional) 특정 게임의 설문만 조회
+| **Field** | **Type** | **Required** | **Description** |
+| --------- | -------- | ------------ | --------------- |
+| game_uuid | String   | ❌           | 게임 UUID 필터  |
 
 ### **Response `200 OK`**
 
 ```json
 {
-	"result": [
-		{
-		"survey_id":1,
-		"survey_name":"알파 테스트 설문",
-		"status":"DRAFT",
-		"created_at":"..."
-	  },
-	  {...}
+  "result": [
+    {
+      "survey_uuid": "8e367850-...",
+      "survey_name": "플레이테스트 설문",
+      "status": "DRAFT",
+      "created_at": "2026-01-05T12:00:00+09:00"
+    }
   ]
 }
-
 ```
 
 ---
 
-## **🆕 `POST /surveys/{surveyId}/streaming-resource` (핵심 API)**
+## **🆕 `POST /surveys/{surveyId}/streaming-resource`**
 
 ### **📝 설명**
 
-- **Context**: 설문 설계 > '배포' 탭 > '빌드 연결' 버튼 클릭 시
+- **Context**: 설문 배포 탭 > '빌드 연결' 버튼 클릭 시
 - **Logic**:
-  1. **GameLift Application 생성**: 선택된 빌드(S3 경로)를 기반으로
-     Application을 생성합니다.
-  2. **GameLift StreamGroup 생성**: `StreamGroup`을
-     생성하되, `MinCapacity=0`, `DesiredCapacity=0`으로 설정합니다.
-  3. **Associate**: Application과 StreamGroup을 연결합니다.
-  4. DB에 `StreamingResource` 레코드를 생성하고 상태를 `PROVISIONING`으로
-     설정합니다.
+  1. **GameLift Application 생성**: 빌드(S3)를 기반으로 Application을
+     생성합니다.
+  2. **DB 저장**: `StreamingResource` 저장.
+     - _Note_: OS와 Instance Type 간의 호환성 검증은 클라이언트 및 공통 Enum
+       수준에서 관리하며, API 레벨에서는 별도의 Blocking Validtion을 수행하지
+       않습니다.
+
+<aside>
+⚠️
+
+### **AWS Stream Class Reference**
+
+| **Generation** | **OS Support** | **Stream Class ID (Value)** | **vCPU** | **RAM** | **VRAM** | **GPU**     |
+| -------------- | -------------- | --------------------------- | -------- | ------- | -------- | ----------- |
+| **Gen6**       | **Windows**    | `gen6n_pro_win2022`         | 16       | 64GB    | 24GB     | NVIDIA L4   |
+|                |                | `gen6n_ultra_win2022`       | 8        | 32GB    | 24GB     | NVIDIA L4   |
+|                | **Linux**      | `gen6n_pro`                 | 16       | 64GB    | 24GB     | NVIDIA L4   |
+|                |                | `gen6n_ultra`               | 8        | 32GB    | 24GB     | NVIDIA L4   |
+|                |                | `gen6n_high`                | 4        | 16GB    | 12GB     | NVIDIA L4   |
+|                |                | `gen6n_medium`              | 2        | 8GB     | 6GB      | NVIDIA L4   |
+|                |                | `gen6n_small`               | 1        | 4GB     | 2GB      | NVIDIA L4   |
+| **Gen5**       | **Windows**    | `gen5n_win2022`             | 8        | 32GB    | 24GB     | NVIDIA A10G |
+|                | **Linux**      | `gen5n_ultra`               | 8        | 32GB    | 24GB     | NVIDIA A10G |
+|                |                | `gen5n_high`                | 4        | 16GB    | 12GB     | NVIDIA A10G |
+| **Gen4**       | **Windows**    | `gen4n_win2022`             | 8        | 32GB    | 16GB     | NVIDIA T4   |
+|                | **Linux**      | `gen4n_ultra`               | 8        | 32GB    | 16GB     | NVIDIA T4   |
+|                |                | `gen4n_high`                | 4        | 16GB    | 8GB      | NVIDIA T4   |
+
+(프론트엔드 개발 시 `instance_type` 값으로 사용하세요)
+
+> 호환성 규칙: _win2022 접미사가 있는 ID는 WINDOWS 빌드 전용, 없는
+> ID는 LINUX 빌드 전용입니다.
+
+</aside>
 
 ### **Request Body**
 
+| **Field**     | **Type** | **Required** | **Description**                                |
+| ------------- | -------- | ------------ | ---------------------------------------------- |
+| build_uuid    | UUID     | ✅           | 연결할 빌드 UUID                               |
+| instance_type | string   | ✅           | 사용할 EC2 인스턴스 타입 (예: `gen4n_win2022`) |
+| max_capacity  | number   | ✅           | 서비스 시 목표 동시 접속자 수                  |
+
 ```json
 {
-  "build_id": "uuid",
+  "build_uuid": "550e8400-e29b-41d4-a716-446655440000",
   "instance_type": "g4dn.xlarge",
   "max_capacity": 10
 }
@@ -244,18 +252,19 @@
 ```json
 {
   "result": {
-    "id": 1,
+    "uuid": "e45f9...", // UUID
     "status": "PROVISIONING",
     "current_capacity": 0,
     "max_capacity": 10,
-    "instance_type": "g4dn.xlarge"
+    "instance_type": "gen4n_win2022",
+    "created_at": "2026-01-05T12:00:00+09:00"
   }
 }
 ```
 
 ---
 
-## **🆕 `GET /surveys/{surveyId}/streaming-resource`**
+## **🆕 `GET /surveys/{surveyUuid}/streaming-resource`**
 
 ### **📝 설명**
 
@@ -267,16 +276,25 @@
 ```json
 {
   "result": {
-    "id": 1,
+    "uuid": "e45f9...",
     "status": "READY",
     "current_capacity": 0,
     "max_capacity": 10,
-    "instance_type": "g4dn.xlarge"
+    "instance_type": "gen4n_win2022"
   }
 }
 ```
 
-**Status Flow**: `PROVISIONING` (생성요청) → `READY` (생성완료/Cap=0)
+**Status Flow:**
+
+- `PENDING`: 연결 대기
+- `PROVISIONING`: 리소스 생성 중
+- `READY`: 준비 완료 (Capacity=0)
+- `TESTING`: 관리자 테스트 (Capacity=1)
+- `SCALING`: 확장이 진행 중인 상태
+- `ACTIVE`: 서비스 중 (Capacity=N)
+- `CLEANING`: 정리 중
+- `TERMINATED`: 삭제됨
 
 ---
 
@@ -294,11 +312,6 @@
 
 # **🧪 Phase 3: 관리자 테스트 (0 ↔ 1)**
 
-> 목표: 실제 배포 전 관리자가 게임을 확인해볼 수 있도록, 일시적으로 인스턴스를
-> 1개만 띄웁니다.
-
----
-
 ## **🆕 `POST /surveys/{surveyId}/streaming-resource/start-test`**
 
 ### **📝 설명**
@@ -313,7 +326,8 @@
 {
   "result": {
     "status": "TESTING",
-    "current_capacity": 1
+    "current_capacity": 1,
+    "message": "인스턴스 준비 중입니다."
   }
 }
 ```
@@ -325,9 +339,9 @@
 ### **📝 설명**
 
 - **Context**: 테스트 시작 후 로딩 스피너 및 '플레이' 버튼 활성화 여부 판단
+  (Polling)
 - **Logic**: GameLift API를 호출하여 실제 인스턴스가 `ACTIVE` 상태인지
-  확인합니다.
-- **Backend**: `GetStreamGroup` 호출 -> `Status` == `ACTIVE` 확인
+  확인합니다. `instances_ready`가 `true`면 접속 가능함을 의미합니다.
 
 ### **Response `200 OK`**
 
@@ -336,7 +350,7 @@
   "result": {
     "status": "TESTING",
     "current_capacity": 1,
-    "instances_ready": true // true면 '플레이' 버튼 활성화
+    "instances_ready": true
   }
 }
 ```
@@ -364,11 +378,7 @@
 
 ---
 
-# **🚀 Phase 4-5: 서비스 오픈 & 종료 (Auto Scaling)**
-
-> 목표: 설문 상태에 따라 자동으로 인스턴스 수를 조절합니다.
-
----
+# **🚀 Phase 4-5: 서비스 오픈 & 종료**
 
 ## **🆕 `PATCH /surveys/{surveyId}/status`**
 
@@ -376,29 +386,36 @@
 
 - **Context**: 설문 '개요' 탭 > 설문 시작/종료 버튼
 - **Logic**:
-  - `ACTIVE` 요청 시:
-    1. 설문 상태를 `ACTIVE`로 변경.
-    2. StreamGroup Capacity를 빌드 설정의 `max_capacity` (예: 10)로 Scale Out.
-  - `CLOSED` 요청 시:
-    1. 설문 상태를 `CLOSED`로 변경.
-    2. **비동기(`@Async`)**로 리소스 정리 작업(Delete App/Group)을 트리거합니다.
+  - `Status: ACTIVE` 요청 시:
+    1. 설문 상태를 `ACTIVE`로 변경합니다.
+    2. StreamGroup Capacity를 DB에 저장된 `max_capacity`로 확장 요청합니다.
+    3. StreamingResource 상태를 `SCALING`으로 설정하여 클라이언트가 대기하도록
+       유도합니다.
+  - `Status: CLOSED` 요청 시:
+    1. 설문 상태를 `CLOSED`로 변경합니다.
+    2. `비동기(@Async)`로 리소스 정리 작업(Delete App/Group)을 트리거합니다.
 
 ### **Request Body**
+
+| **Field** | **Type** | **Required** | **Description**      |
+| --------- | -------- | ------------ | -------------------- |
+| status    | string   | ✅           | `ACTIVE` or `CLOSED` |
 
 ```json
 { "status": "ACTIVE" }
 ```
 
-### **Response `200 OK`**
+### **Response `200 OK` (ACTIVE 요청 시)**
 
 ```json
 {
   "result": {
-    "survey_id": 1,
+    "survey_uuid": "8e367850-...",
     "status": "ACTIVE",
     "streaming_resource": {
-      "status": "ACTIVE",
-      "current_capacity": 10
+      "status": "SCALING",
+      "current_capacity": 0,
+      "message": "서버 확장 중입니다."
     }
   }
 }
@@ -408,110 +425,125 @@
 
 # **🎮 Tester 스트리밍 API (Client Side)**
 
-> Context: 설문 참여자가 초대 링크로 접속하여 게임을 플레이하는 과정입니다. Base
-> Path: /streaming-games/{gameUuid}
-
----
-
-## **🆕 `GET /streaming-games/{gameUuid}/session`**
+## **🆕 `GET /surveys/{surveyUuid}/session`**
 
 ### **📝 설명**
 
-- **Context**: 테스터가 링크 접속 직후 로딩 화면
+- **Context**: 테스터가 플레이 화면에 진입했을 때 (로딩 중)
 - **Logic**:
-  1. 게임 및 설문 유효성 검사 (기간 체크).
-  2. 현재 StreamGroup의 가용 슬롯 확인.
-  3. 접속 가능하면 스트리밍 설정 정보 반환.
+  1. **유효성 검증**: `surveyUuid`로 설문을 찾고 상태가 `ACTIVE`인지 확인합니다.
+  2. **가용성 확인**: 연결된 StreamGroup의 현재 Capacity와 활성 세션 수를
+     비교하여 여유 슬롯이 있는지 확인합니다.
+  3. 서버가 확장 중(`SCALING`)이거나 꽉 찬 경우 `is_available: false`를
+     반환합니다.
+
+### **Path Parameters**
+
+| **Field**  | **Type** | **Required** | **Description**          |
+| ---------- | -------- | ------------ | ------------------------ |
+| surveyUuid | UUID     | ✅           | 설문 UUID (PK 노출 방지) |
 
 ### **Response `200 OK`**
 
 ```json
 {
   "result": {
-    "game_name": "Demo Game",
+    "survey_uuid": "550e8400-...",
+    "game_name": "My RPG Game",
     "is_available": true,
-    "stream_settings": { "resolution": "1080p", "fps": 60 }
+    "stream_settings": {
+      "resolution": "1080p",
+      "fps": 60
+    }
   }
 }
 ```
 
 ---
 
-## **🆕 `POST /streaming-games/{gameUuid}/signal`**
+## **🆕 `POST /surveys/{surveyUuid}/signal`**
 
 ### **📝 설명**
 
-- **Context**: WebRTC 연결 초기화 단계 (SDP 교환)
+- **Context**: WebRTC 연결 초기화 (SDP Offer/Answer 교환)
 - **Logic**:
-  1. 클라이언트가 GameLift SDK `generateSignalRequest()`로 생성한 SDP Offer를
-     받습니다.
-  2. 백엔드는 이를 GameLift `StartStageSession`? (또는 Stream API) 에 전달하여
-     Signal Answer를 받아옵니다.
-  3. 클라이언트에게 Answer를 반환하여 P2P 연결을 성립시킵니다.
+  1. DB에 `SurveySession` 엔티티를 생성합니다.
+  2. AWS GameLift `StartStreamSession`을 호출하여 세션을 시작합니다.
+     - `survey_session_uuid`는 AWS Session ID가 아닌 DB Entity의 UUID입니다.
+  3. AWS로부터 받은 Signal Answer와 생성된 세션 UUID를 반환합니다.
 
 ### **Request Body**
 
-```
-{"signal_request":"base64-encoded-offer..." }
+| **Field**      | **Type** | **Required** | **Description**                                        |
+| -------------- | -------- | ------------ | ------------------------------------------------------ |
+| signal_request | string   | ✅           | GameLift SDK `generateSignalRequest()` 반환값 (Base64) |
 
+```json
+{ "signal_request": "base64-encoded-offer-string..." }
 ```
 
 ### **Response `200 OK`**
 
-```
+```json
 {
-"result": {
-"signal_response":"base64-encoded-answer...",
-"expires_in_seconds":120
+  "result": {
+    "signal_response": "base64-encoded-answer-string...",
+    "survey_session_uuid": "7a3b3...",
+    "expires_in_seconds": 120
   }
 }
-
 ```
 
 ---
 
-## **🆕 `GET /streaming-games/{gameUuid}/status`**
+## **🆕 `GET /surveys/{surveyUuid}/session/status`**
 
 ### **📝 설명**
 
-- **Context**: 게임 플레이 중 주기적 호출 (Heartbeat) - 1분 간격 등
-- **Logic**: 세션이 여전히 유효한지 확인하고, 남은 시간을 반환합니다.
+- **Context**: 게임 플레이 중 Heartbeat (1분 간격)
+- **Logic**: 세션 유효성 확인.
 
 ### **Response `200 OK`**
 
-```
+```json
 {
-"result": {
-"is_active":true,
-"remaining_time_seconds":850,
-"session_id":"session-uuid"
+  "result": {
+    "is_active": true,
+    "survey_session_uuid": "7a3b3..."
   }
 }
-
 ```
 
 ---
 
-## **🆕 `POST /streaming-games/{gameUuid}/terminate`**
+## **🆕 `POST /surveys/{surveyUuid}/session/terminate`**
 
 ### **📝 설명**
 
 - **Context**: 테스터가 '게임 종료' 또는 '설문 하러 가기' 버튼 클릭 시
-- **Logic**: 해당 세션을 명시적으로 종료하여 다른 대기자가 슬롯을 사용할 수 있게
-  반환합니다.
+- **Logic**:
+  1. AWS GameLift SDK `TerminateStreamSession`을 호출하여 리소스를 즉시
+     반환합니다.
+  2. DB `SurveySession` 상태를 종료(`TERMINATED`)로 업데이트합니다.
 
 ### **Request Body**
 
-```
-{"session_id":"uuid","reason":"user_exit" }
+| **Field**           | **Type** | **Required** | **Description**                             |
+| ------------------- | -------- | ------------ | ------------------------------------------- |
+| survey_session_uuid | UUID     | ✅           | 종료할 세션 UUID                            |
+| reason              | string   | ❌           | 종료 사유 (`user_exit`, `timeout`, `error`) |
 
+```json
+{
+  "survey_session_uuid": "7a3b3...",
+  "reason": "user_exit"
+}
 ```
 
 ### **Response `200 OK`**
 
-```
-{"result": {"success":true } }
-
+```json
+{ "result": { "success": true } }
 ```
 
 ---
@@ -524,6 +556,6 @@
 | S001     | 404      | 설문을 찾을 수 없습니다.                             |
 | SR001    | 409      | 이미 스트리밍 리소스가 연결되어 있습니다.            |
 | T001     | 400      | 잘못된 Signal Request입니다.                         |
-| T002     | 404      | 스트리밍 가능한 게임이 아닙니다 (리소스 미할당).     |
-| T003     | 503      | GameLift 서비스 연결 실패.                           |
+| T002     | 404      | 리소스 미할당 또는 세션 불가                         |
+| T003     | 503      | GameLift 서비스 오류                                 |
 | T004     | 429      | 현재 접속 가능한 세션이 꽉 찼습니다 (Capacity 초과). |

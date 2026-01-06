@@ -7,14 +7,15 @@ const API_BASE_URL = '/api';
 // ----------------------------------------
 // Mock Data: Streaming Resources (surveyId -> resource)
 // ----------------------------------------
-const MOCK_STREAMING_RESOURCES: Record<number, ApiStreamingResource> = {
-  2: {
-    id: 1,
+const MOCK_STREAMING_RESOURCES: Record<string, ApiStreamingResource> = {
+  'survey-002-uuid': {
+    uuid: 'resource-001-uuid',
     status: 'READY',
     current_capacity: 0,
     max_capacity: 10,
     instance_type: 'g4dn.xlarge',
-    build_id: 'build-001',
+    build_uuid: 'build-001',
+    created_at: '2025-12-18T14:30:00Z',
   },
 };
 
@@ -28,7 +29,7 @@ export const gameStreamingSurveyHandlers = [
     `${API_BASE_URL}/surveys/:surveyId/streaming-resource/start-test`,
     async ({ params }) => {
       await delay(500);
-      const surveyId = Number(params.surveyId);
+      const surveyId = params.surveyId as string;
 
       const resource = MOCK_STREAMING_RESOURCES[surveyId];
       if (!resource) {
@@ -73,7 +74,7 @@ export const gameStreamingSurveyHandlers = [
     `${API_BASE_URL}/surveys/:surveyId/streaming-resource/status`,
     async ({ params }) => {
       await delay(200);
-      const surveyId = Number(params.surveyId);
+      const surveyId = params.surveyId as string;
 
       const resource = MOCK_STREAMING_RESOURCES[
         surveyId
@@ -106,7 +107,7 @@ export const gameStreamingSurveyHandlers = [
     `${API_BASE_URL}/surveys/:surveyId/streaming-resource/stop-test`,
     async ({ params }) => {
       await delay(500);
-      const surveyId = Number(params.surveyId);
+      const surveyId = params.surveyId as string;
 
       const resource = MOCK_STREAMING_RESOURCES[
         surveyId

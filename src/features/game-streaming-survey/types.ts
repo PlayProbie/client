@@ -17,7 +17,7 @@ export type SurveyStatus = 'DRAFT' | 'ACTIVE' | 'CLOSED';
 
 /** [API] Survey 엔티티 (목록용) */
 export interface ApiSurvey {
-  survey_id: number;
+  survey_uuid: string;
   survey_name: string;
   status: SurveyStatus;
   created_at: string;
@@ -25,7 +25,7 @@ export interface ApiSurvey {
 
 /** [Client] Survey 엔티티 */
 export interface Survey {
-  surveyId: number;
+  surveyUuid: string;
   surveyName: string;
   status: SurveyStatus;
   createdAt: string;
@@ -37,42 +37,47 @@ export interface Survey {
 
 /** 스트리밍 리소스 상태 */
 export type StreamingResourceStatus =
+  | 'PENDING'
   | 'PROVISIONING'
   | 'READY'
   | 'TESTING'
+  | 'SCALING'
   | 'ACTIVE'
-  | 'DELETING';
+  | 'CLEANING'
+  | 'TERMINATED';
 
 /** [API] Streaming Resource 엔티티 */
 export interface ApiStreamingResource {
-  id: number;
+  uuid: string;
   status: StreamingResourceStatus;
   current_capacity: number;
   max_capacity: number;
   instance_type: string;
-  build_id?: string;
+  build_uuid?: string;
+  created_at?: string;
 }
 
 /** [Client] Streaming Resource 엔티티 */
 export interface StreamingResource {
-  id: number;
+  uuid: string;
   status: StreamingResourceStatus;
   currentCapacity: number;
   maxCapacity: number;
   instanceType: string;
-  buildId?: string;
+  buildUuid?: string;
+  createdAt?: string;
 }
 
 /** [API] Streaming Resource 생성 요청 */
 export interface ApiCreateStreamingResourceRequest {
-  build_id: string;
+  build_uuid: string;
   instance_type: string;
   max_capacity: number;
 }
 
 /** [Client] Streaming Resource 생성 요청 */
 export interface CreateStreamingResourceRequest {
-  buildId: string;
+  buildUuid: string;
   instanceType: string;
   maxCapacity: number;
 }
@@ -98,7 +103,7 @@ export interface ApiStreamingResourceResponse {
 /** ApiSurvey → Survey 변환 */
 export function toSurvey(api: ApiSurvey): Survey {
   return {
-    surveyId: api.survey_id,
+    surveyUuid: api.survey_uuid,
     surveyName: api.survey_name,
     status: api.status,
     createdAt: api.created_at,
@@ -110,12 +115,13 @@ export function toStreamingResource(
   api: ApiStreamingResource
 ): StreamingResource {
   return {
-    id: api.id,
+    uuid: api.uuid,
     status: api.status,
     currentCapacity: api.current_capacity,
     maxCapacity: api.max_capacity,
     instanceType: api.instance_type,
-    buildId: api.build_id,
+    buildUuid: api.build_uuid,
+    createdAt: api.created_at,
   };
 }
 
@@ -124,7 +130,7 @@ export function toApiCreateStreamingResourceRequest(
   client: CreateStreamingResourceRequest
 ): ApiCreateStreamingResourceRequest {
   return {
-    build_id: client.buildId,
+    build_uuid: client.buildUuid,
     instance_type: client.instanceType,
     max_capacity: client.maxCapacity,
   };

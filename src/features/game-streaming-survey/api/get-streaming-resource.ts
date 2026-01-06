@@ -8,10 +8,10 @@ import { toStreamingResource } from '../types';
 
 /** 스트리밍 리소스 조회 */
 export async function getStreamingResource(
-  surveyId: number
+  surveyUuid: string
 ): Promise<StreamingResource | null> {
   const response = await fetch(
-    `${API_BASE_URL}/surveys/${surveyId}/streaming-resource`,
+    `${API_BASE_URL}/surveys/${surveyUuid}/streaming-resource`,
     { method: 'GET' }
   );
 

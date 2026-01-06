@@ -80,7 +80,7 @@ const STREAMING_GAMES: ApiStreamingGame[] = [
 const MOCK_BUILDS: Record<string, ApiBuild[]> = {
   'game-001-uuid-abcd': [
     {
-      build_id: 'build-001',
+      uuid: 'build-001',
       filename: 'dark-souls-v1.0.0.zip',
       status: 'READY',
       size: 2_500_000_000,
@@ -92,7 +92,7 @@ const MOCK_BUILDS: Record<string, ApiBuild[]> = {
       updated_at: '2025-12-20T10:30:00Z',
     },
     {
-      build_id: 'build-002',
+      uuid: 'build-002',
       filename: 'dark-souls-v1.1.0.zip',
       status: 'UPLOADED',
       size: 2_600_000_000,
@@ -105,7 +105,7 @@ const MOCK_BUILDS: Record<string, ApiBuild[]> = {
   ],
   'game-002-uuid-efgh': [
     {
-      build_id: 'build-004',
+      uuid: 'build-004',
       filename: 'racing-sim-v2.0.0.zip',
       status: 'READY',
       size: 4_000_000_000,
@@ -304,7 +304,7 @@ export const gameStreamingHandlers = [
 
       // MOCK_BUILDS에 빌드 추가
       const newBuild: ApiBuild = {
-        build_id: buildId as string,
+        uuid: buildId as string,
         filename: `build-${buildId}`,
         status: 'UPLOADED',
         size: body.expected_total_size,
@@ -321,10 +321,10 @@ export const gameStreamingHandlers = [
 
       const response: ApiBuildCompleteResponse = {
         result: {
-          id: buildId as string,
+          uuid: buildId as string,
           status: 'UPLOADED',
           executable_path: body.executable_path,
-          max_capacity: body.max_capacity,
+          os_type: body.os_type,
         },
       };
 
@@ -341,7 +341,7 @@ export const gameStreamingHandlers = [
 
       const builds = MOCK_BUILDS[gameUuid as string];
       if (builds) {
-        const index = builds.findIndex((b) => b.build_id === buildId);
+        const index = builds.findIndex((b) => b.uuid === buildId);
         if (index !== -1) {
           builds.splice(index, 1);
         }

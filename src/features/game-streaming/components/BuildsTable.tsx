@@ -48,7 +48,7 @@ export function BuildsTable({ builds, onViewDetails }: BuildsTableProps) {
       </TableHeader>
       <TableBody>
         {builds.map((build) => (
-          <TableRow key={build.buildId}>
+          <TableRow key={build.uuid}>
             <TableCell className="font-medium">
               <div>
                 <span>{build.filename}</span>

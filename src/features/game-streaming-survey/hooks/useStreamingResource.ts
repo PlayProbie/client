@@ -16,15 +16,15 @@ import type {
 /** Query Key Factory */
 export const streamingResourceKeys = {
   all: ['streamingResources'] as const,
-  detail: (surveyId: number) =>
-    [...streamingResourceKeys.all, surveyId] as const,
+  detail: (surveyUuid: string) =>
+    [...streamingResourceKeys.all, surveyUuid] as const,
 };
 
 /** 스트리밍 리소스 조회 훅 */
-export function useStreamingResource(surveyId: number, enabled = true) {
+export function useStreamingResource(surveyUuid: string, enabled = true) {
   return useQuery<StreamingResource | null, Error>({
-    queryKey: streamingResourceKeys.detail(surveyId),
-    queryFn: () => getStreamingResource(surveyId),
+    queryKey: streamingResourceKeys.detail(surveyUuid),
+    queryFn: () => getStreamingResource(surveyUuid),
     enabled,
     refetchInterval: (query) => {
       // PROVISIONING 상태일 때 5초마다 폴링
@@ -38,25 +38,25 @@ export function useStreamingResource(surveyId: number, enabled = true) {
 }
 
 /** 스트리밍 리소스 생성 훅 */
-export function useCreateStreamingResource(surveyId: number) {
+export function useCreateStreamingResource(surveyUuid: string) {
   const queryClient = useQueryClient();
 
   return useMutation<StreamingResource, Error, CreateStreamingResourceRequest>({
-    mutationFn: (request) => createStreamingResource(surveyId, request),
+    mutationFn: (request) => createStreamingResource(surveyUuid, request),
     onSuccess: (data) => {
-      queryClient.setQueryData(streamingResourceKeys.detail(surveyId), data);
+      queryClient.setQueryData(streamingResourceKeys.detail(surveyUuid), data);
     },
   });
 }
 
 /** 스트리밍 리소스 삭제 훅 */
-export function useDeleteStreamingResource(surveyId: number) {
+export function useDeleteStreamingResource(surveyUuid: string) {
   const queryClient = useQueryClient();
 
   return useMutation<void, Error>({
-    mutationFn: () => deleteStreamingResource(surveyId),
+    mutationFn: () => deleteStreamingResource(surveyUuid),
     onSuccess: () => {
-      queryClient.setQueryData(streamingResourceKeys.detail(surveyId), null);
+      queryClient.setQueryData(streamingResourceKeys.detail(surveyUuid), null);
     },
   });
 }

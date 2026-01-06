@@ -8,10 +8,10 @@ import { toResourceStatus } from '../types';
 
 /** 리소스 상태 조회 */
 export async function getResourceStatus(
-  surveyId: number
+  surveyUuid: string
 ): Promise<ResourceStatus> {
   const response = await fetch(
-    `${API_BASE_URL}/surveys/${surveyId}/streaming-resource/status`,
+    `${API_BASE_URL}/surveys/${surveyUuid}/streaming-resource/status`,
     { method: 'GET' }
   );
 

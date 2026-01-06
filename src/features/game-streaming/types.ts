@@ -20,7 +20,7 @@ export type BuildStatus =
 
 /** [API] Build 엔티티 */
 export interface ApiBuild {
-  build_id: string;
+  uuid: string;
   filename: string;
   status: BuildStatus;
   size: number;
@@ -34,7 +34,7 @@ export interface ApiBuild {
 
 /** [Client] Build 엔티티 */
 export interface Build {
-  buildId: string;
+  uuid: string;
   filename: string;
   status: BuildStatus;
   size: number;
@@ -86,16 +86,14 @@ export interface ApiBuildCompleteRequest {
   expected_total_size: number;
   executable_path: string;
   os_type: 'WINDOWS' | 'LINUX';
-  instance_type: string;
-  max_capacity: number;
 }
 
 /** [API] Build Complete 응답 내부 데이터 */
 export interface ApiBuildCompleteResult {
-  id: string;
+  uuid: string;
   status: string;
   executable_path: string;
-  max_capacity: number;
+  os_type: string;
 }
 
 /** [API] Build Complete 응답 (Spring GameBuildApi.completeUpload) */
@@ -268,7 +266,7 @@ export interface StreamingGame {
 /** ApiBuild → Build 변환 */
 export function toBuild(api: ApiBuild): Build {
   return {
-    buildId: api.build_id,
+    uuid: api.uuid,
     filename: api.filename,
     status: api.status,
     size: api.size,

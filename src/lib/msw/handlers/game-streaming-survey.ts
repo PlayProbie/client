@@ -17,19 +17,19 @@ const API_BASE_URL = '/api';
 // ----------------------------------------
 const MOCK_SURVEYS: ApiSurvey[] = [
   {
-    survey_id: 1,
+    survey_uuid: 'survey-001-uuid',
     survey_name: '알파 테스트 설문',
     status: 'DRAFT',
     created_at: '2025-12-20T10:00:00Z',
   },
   {
-    survey_id: 2,
+    survey_uuid: 'survey-002-uuid',
     survey_name: '베타 테스트 피드백',
     status: 'ACTIVE',
     created_at: '2025-12-18T14:00:00Z',
   },
   {
-    survey_id: 3,
+    survey_uuid: 'survey-003-uuid',
     survey_name: 'UX 개선 설문',
     status: 'CLOSED',
     created_at: '2025-12-15T09:00:00Z',
@@ -39,14 +39,15 @@ const MOCK_SURVEYS: ApiSurvey[] = [
 // ----------------------------------------
 // Mock Data: Streaming Resources (surveyId -> resource)
 // ----------------------------------------
-const MOCK_STREAMING_RESOURCES: Record<number, ApiStreamingResource> = {
-  2: {
-    id: 1,
+const MOCK_STREAMING_RESOURCES: Record<string, ApiStreamingResource> = {
+  'survey-002-uuid': {
+    uuid: 'resource-001-uuid',
     status: 'READY',
     current_capacity: 0,
     max_capacity: 10,
     instance_type: 'g4dn.xlarge',
-    build_id: 'build-001',
+    build_uuid: 'build-001',
+    created_at: '2025-12-18T14:30:00Z',
   },
 };
 
@@ -83,7 +84,7 @@ export const gameStreamingSurveyHandlers = [
     `${API_BASE_URL}/surveys/:surveyId/streaming-resource`,
     async ({ params }) => {
       await delay(300);
-      const surveyId = Number(params.surveyId);
+      const surveyId = params.surveyId as string;
 
       const resource = MOCK_STREAMING_RESOURCES[surveyId];
 
@@ -106,7 +107,7 @@ export const gameStreamingSurveyHandlers = [
     `${API_BASE_URL}/surveys/:surveyId/streaming-resource`,
     async ({ params, request }) => {
       await delay(500);
-      const surveyId = Number(params.surveyId);
+      const surveyId = params.surveyId as string;
       const body = (await request.json()) as ApiCreateStreamingResourceRequest;
 
       // 이미 연결된 경우
@@ -121,7 +122,7 @@ export const gameStreamingSurveyHandlers = [
       }
 
       // 설문 존재 확인
-      const survey = MOCK_SURVEYS.find((s) => s.survey_id === surveyId);
+      const survey = MOCK_SURVEYS.find((s) => s.survey_uuid === surveyId);
       if (!survey) {
         return HttpResponse.json(
           { message: '설문을 찾을 수 없습니다.', code: 'S001' },
@@ -131,12 +132,13 @@ export const gameStreamingSurveyHandlers = [
 
       resourceIdCounter++;
       const newResource: ApiStreamingResource = {
-        id: resourceIdCounter,
+        uuid: `resource-${resourceIdCounter}-uuid`,
         status: 'PROVISIONING',
         current_capacity: 0,
         max_capacity: body.max_capacity,
         instance_type: body.instance_type,
-        build_id: body.build_id,
+        build_uuid: body.build_uuid,
+        created_at: new Date().toISOString(),
       };
 
       MOCK_STREAMING_RESOURCES[surveyId] = newResource;
@@ -157,7 +159,7 @@ export const gameStreamingSurveyHandlers = [
     `${API_BASE_URL}/surveys/:surveyId/streaming-resource`,
     async ({ params }) => {
       await delay(300);
-      const surveyId = Number(params.surveyId);
+      const surveyId = params.surveyId as string;
 
       if (!MOCK_STREAMING_RESOURCES[surveyId]) {
         return HttpResponse.json(

@@ -15,11 +15,11 @@ import {
 
 /** 스트리밍 리소스 생성 (빌드 연결) */
 export async function createStreamingResource(
-  surveyId: number,
+  surveyUuid: string,
   request: CreateStreamingResourceRequest
 ): Promise<StreamingResource> {
   const response = await fetch(
-    `${API_BASE_URL}/surveys/${surveyId}/streaming-resource`,
+    `${API_BASE_URL}/surveys/${surveyUuid}/streaming-resource`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
