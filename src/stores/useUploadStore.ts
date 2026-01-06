@@ -6,7 +6,6 @@ import { useQueryClient } from '@tanstack/react-query';
 import { create } from 'zustand';
 
 import {
-  createTestGame,
   postBuildComplete,
   postCreateBuild,
   putS3FolderUpload,
@@ -212,7 +211,7 @@ async function executeUpload(
     const totalSize = files.reduce((sum, file) => sum + file.size, 0);
     const fileCount = files.length;
 
-    const gameUuid = await createTestGame();
+    const gameUuid = params.gameUuid;
 
     // Step 1: 빌드 생성 및 STS Credentials 요청
     store.updateState(id, { step: 'requesting_sts_credentials' });
@@ -222,9 +221,9 @@ async function executeUpload(
     });
 
     buildId = buildResponse.buildId;
-    // IAM Policy: arn:aws:s3:::{bucketName}/{gameUuid}/{buildUuid}/*
-    // 서버의 s3Prefix 대신 gameUuid/buildId 형식으로 keyPrefix 구성
-    s3Prefix = `${gameUuid}/${buildId}`;
+    // s3Prefix는 trailing slash 제거 후 사용
+    s3Prefix =
+      buildResponse.s3Prefix.replace(/\/+$/, '') || `${gameUuid}/${buildId}`;
 
     // Step 2: S3 폴더 업로드
     currentStep = 'uploading_to_s3';

@@ -21,9 +21,10 @@ import { BuildStatusBadge } from './BuildStatusBadge';
 interface BuildsTableProps {
   builds: Build[];
   onViewDetails?: (build: Build) => void;
+  onRowClick?: (build: Build) => void;
 }
 
-export function BuildsTable({ builds, onViewDetails }: BuildsTableProps) {
+export function BuildsTable({ builds, onViewDetails, onRowClick }: BuildsTableProps) {
   const { toast } = useToast();
 
   const handleCopyS3Key = async (s3Key: string) => {
@@ -48,7 +49,15 @@ export function BuildsTable({ builds, onViewDetails }: BuildsTableProps) {
       </TableHeader>
       <TableBody>
         {builds.map((build) => (
-          <TableRow key={build.uuid}>
+          <TableRow
+            key={build.uuid}
+            className={onRowClick ? 'cursor-pointer hover:bg-muted/20' : ''}
+            onClick={() => {
+              if (onRowClick) {
+                onRowClick(build);
+              }
+            }}
+          >
             <TableCell className="font-medium">
               <div>
                 <span>{build.filename}</span>
@@ -70,7 +79,10 @@ export function BuildsTable({ builds, onViewDetails }: BuildsTableProps) {
                   variant="ghost"
                   size="icon"
                   className="size-8"
-                  onClick={() => handleCopyS3Key(build.s3Key)}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    handleCopyS3Key(build.s3Key);
+                  }}
                   title="Copy S3 Key"
                 >
                   <Copy className="size-4" />
@@ -80,7 +92,10 @@ export function BuildsTable({ builds, onViewDetails }: BuildsTableProps) {
                     variant="ghost"
                     size="icon"
                     className="size-8"
-                    onClick={() => onViewDetails(build)}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onViewDetails(build);
+                    }}
                     title="View Details"
                   >
                     <Eye className="size-4" />

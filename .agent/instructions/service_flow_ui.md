@@ -4,6 +4,25 @@
 
 ---
 
+## 📖 목차
+
+- [개요](#-개요)
+- [결정 사항](#-결정-사항)
+- [현재 vs 제안 비교](#-현재-vs-제안-비교)
+- [아키텍처 변경](#️-아키텍처-변경)
+- [UX/UI 흐름 분석](#-uxui-흐름-분석)
+- [API 통합 계획](#-api-통합-계획)
+- [필요한 새 컴포넌트](#-필요한-새-컴포넌트)
+- [Proposed Changes](#-proposed-changes)
+  - [Phase A: 레이아웃 변경](#phase-a-레이아웃-변경)
+  - [Phase B: Topbar 변경](#phase-b-topbar-변경)
+  - [Phase C: 디바이스 가드](#phase-c-디바이스-가드)
+  - [Phase D: Survey Control Tower](#phase-d-survey-control-tower)
+- [Acceptance Criteria](#-acceptance-criteria)
+- [Verification Plan](#verification-plan)
+
+---
+
 ## 📋 개요
 
 새 서비스 흐름도를 반영하여 네비게이션, 라우팅, 레이아웃 컴포넌트를

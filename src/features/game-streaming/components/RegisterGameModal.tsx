@@ -53,19 +53,14 @@ export function RegisterGameModal({
 
   const [state, formAction, isPending] = useActionState(
     async (_prevState: FormState, formData: FormData): Promise<FormState> => {
-      const gameIdStr = formData.get('gameId') as string;
+      const gameUuid = (formData.get('gameUuid') as string)?.trim();
 
-      if (!gameIdStr) {
+      if (!gameUuid) {
         return { success: false, error: '게임을 선택해주세요.' };
       }
 
-      const gameId = parseInt(gameIdStr, 10);
-      if (isNaN(gameId)) {
-        return { success: false, error: '유효하지 않은 게임입니다.' };
-      }
-
       try {
-        await registerMutation.mutateAsync({ gameId });
+        await registerMutation.mutateAsync({ gameUuid });
         return { success: true, error: null };
       } catch {
         return { success: false, error: '스트리밍 등록에 실패했습니다.' };
@@ -111,7 +106,7 @@ export function RegisterGameModal({
                 </div>
               ) : availableGames && availableGames.length > 0 ? (
                 <Select
-                  name="gameId"
+                  name="gameUuid"
                   disabled={isPending}
                 >
                   <SelectTrigger id="game-select">
@@ -120,8 +115,8 @@ export function RegisterGameModal({
                   <SelectContent>
                     {availableGames.map((game) => (
                       <SelectItem
-                        key={game.gameId}
-                        value={String(game.gameId)}
+                        key={game.gameUuid}
+                        value={game.gameUuid}
                       >
                         <div className="flex flex-col">
                           <span>{game.gameName}</span>
