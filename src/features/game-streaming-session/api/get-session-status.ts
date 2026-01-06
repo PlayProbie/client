@@ -31,5 +31,5 @@ export async function getSessionStatus(
   }
 
   const data: ApiSessionStatusResponse = await response.json();
-  return toSessionStatus(data.result);
+  return toSessionStatus(data.data);
 }
