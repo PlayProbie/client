@@ -1,4 +1,5 @@
 import { API_BASE_URL } from '@/constants/api';
+import { fetchWithAuth } from '@/services/api-client';
 
 import type {
   ApiCreateFixedQuestionsRequest,
@@ -11,13 +12,16 @@ import type {
 export async function postFixedQuestions(
   data: ApiCreateFixedQuestionsRequest
 ): Promise<CreateFixedQuestionsResponse> {
-  const response = await fetch(`${API_BASE_URL}/surveys/fixed-questions`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data),
-  });
+  const response = await fetchWithAuth(
+    `${API_BASE_URL}/surveys/fixed-questions`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    }
+  );
 
   if (!response.ok) {
     throw new Error('Failed to create fixed questions');

@@ -1,4 +1,5 @@
 import { API_BASE_URL } from '@/constants/api';
+import { fetchWithAuth } from '@/services/api-client';
 
 import type {
   CreateChatSessionParams,
@@ -6,14 +7,14 @@ import type {
 } from '../types';
 
 /**
- * POST /interview/{survey_id} - 새 대화 세션 생성
+ * POST /interview/{survey_uuid} - 새 대화 세션 생성
  */
 export async function createChatSession(
   params: CreateChatSessionParams
 ): Promise<CreateChatSessionResponse> {
   const url = `${API_BASE_URL}/interview/${params.surveyUuid}`;
 
-  const response = await fetch(url, {
+  const response = await fetchWithAuth(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

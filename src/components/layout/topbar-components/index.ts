@@ -1,3 +1,4 @@
 export { default as BreadcrumbNav } from './BreadcrumbNav';
+export { default as GameSelector } from './GameSelector';
 export { default as NotificationButton } from './NotificationButton';
-export { default as WorkspaceSelector } from './WorkspaceSelector';
+export { useDynamicBreadcrumbs } from './useDynamicBreadcrumbs';

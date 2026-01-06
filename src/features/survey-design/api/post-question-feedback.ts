@@ -1,4 +1,5 @@
 import { API_BASE_URL } from '@/constants/api';
+import { fetchWithAuth } from '@/services/api-client';
 
 import type {
   ApiQuestionFeedbackRequest,
@@ -11,13 +12,16 @@ import type {
 export async function postQuestionFeedback(
   data: ApiQuestionFeedbackRequest
 ): Promise<QuestionFeedbackResponse> {
-  const response = await fetch(`${API_BASE_URL}/surveys/question-feedback`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data),
-  });
+  const response = await fetchWithAuth(
+    `${API_BASE_URL}/surveys/question-feedback`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    }
+  );
 
   if (!response.ok) {
     throw new Error('Failed to get question feedback');

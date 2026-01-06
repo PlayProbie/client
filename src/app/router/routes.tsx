@@ -1,15 +1,42 @@
-import { createBrowserRouter, Navigate } from 'react-router-dom';
+import { createBrowserRouter, Navigate, redirect } from 'react-router-dom';
 
+import { getStreamingGames } from '@/features/game-streaming/api';
+import { SurveyShell } from '@/features/survey';
 import LoginPage from '@/pages/auth/LoginPage';
 import RegisterPage from '@/pages/auth/RegisterPage';
 import NotFoundPage from '@/pages/NotFoundPage';
+import TesterPlaceholderPage from '@/pages/play/TesterPlaceholderPage';
+import BuildsPage from '@/pages/studio/BuildsPage';
+import GameOverviewPage from '@/pages/studio/GameOverviewPage';
+import GamesListPage from '@/pages/studio/GamesListPage';
+import StreamSettingsPage from '@/pages/studio/StreamSettingsPage';
+import SurveyListPage from '@/pages/studio/SurveyListPage';
 import SurveyAnalyticsPage from '@/pages/survey/SurveyAnalyticsPage';
 import SurveyDesignPage from '@/pages/survey/SurveyDesignPage';
+import SurveyDistributePage from '@/pages/survey/SurveyDistributePage';
+import SurveyOverviewPage from '@/pages/survey/SurveyOverviewPage';
 import SurveySessionPage from '@/pages/survey/SurveySessionPage';
 import SurveySessionStartPage from '@/pages/survey/SurveySessionStartPage';
-import WorkspaceDashboard from '@/pages/WorkspaceDashboard';
 
 import { AuthLayout, GuestLayout, RootLayout } from './layouts';
+
+const redirectToDefaultGame = async () => {
+  try {
+    const games = await getStreamingGames();
+    if (games.length) {
+      return redirect(`/games/${games[0].gameUuid}/overview`);
+    }
+  } catch {
+    // ignore
+  }
+
+  return redirect('/games');
+};
+
+// ============================================
+// Survey Control Tower 페이지
+// 기본 구조만 구성하고 탭별 상세 화면은 단계별로 확장
+// ============================================
 
 export const router = createBrowserRouter([
   {
@@ -19,43 +46,102 @@ export const router = createBrowserRouter([
       {
         element: <AuthLayout />,
         children: [
-          { path: '/', element: <WorkspaceDashboard /> },
-          // 설문 관리 (Redirect)
           {
-            path: '/survey',
+            index: true,
+            loader: redirectToDefaultGame,
+          },
+
+          // 게임 목록 (새 경로)
+          { path: '/games', element: <GamesListPage /> },
+
+          {
+            path: '/games/:gameUuid/overview',
+            element: <GameOverviewPage />,
+          },
+          {
+            path: '/games/:gameUuid',
             element: (
               <Navigate
-                to="/survey/design/step-0"
+                to="overview"
                 replace
               />
             ),
           },
-          // 설문 설계
+          { path: '/games/:gameUuid/surveys', element: <SurveyListPage /> },
           {
-            path: '/survey/design',
-            element: (
-              <Navigate
-                to="/survey/design/step-0"
-                replace
-              />
-            ),
+            path: '/games/:gameUuid/surveys/design',
+            loader: ({ params }) =>
+              params.gameUuid
+                ? redirect(`/games/${params.gameUuid}/surveys/design/step-0`)
+                : redirect('/games'),
           },
-          { path: '/survey/design/:step', element: <SurveyDesignPage /> },
-          // 설문 분석 결과
           {
-            path: '/survey/analytics/:gameId',
-            element: <SurveyAnalyticsPage />,
+            path: '/games/:gameUuid/surveys/design/:step',
+            element: <SurveyDesignPage />,
+          },
+          { path: '/games/:gameUuid/builds', element: <BuildsPage /> },
+          {
+            path: '/games/:gameUuid/stream-settings',
+            element: <StreamSettingsPage />,
+          },
+
+          // ============================================
+          // [NEW] Survey Control Tower (게임 종속 설문 상세)
+          // 4개 탭: overview, design, distribute, analyze
+          // ============================================
+          {
+            path: '/games/:gameUuid/surveys/:surveyUuid',
+            element: <SurveyShell />,
+            children: [
+              {
+                index: true,
+                element: (
+                  <Navigate
+                    to="overview"
+                    replace
+                  />
+                ),
+              },
+              { path: 'overview', element: <SurveyOverviewPage /> },
+              {
+                path: 'design',
+                element: (
+                  <Navigate
+                    to="step-0"
+                    replace
+                  />
+                ),
+              },
+              {
+                path: 'design/:step',
+                element: <SurveyDesignPage />,
+              },
+              { path: 'distribute', element: <SurveyDistributePage /> },
+              { path: 'analyze', element: <SurveyAnalyticsPage /> },
+            ],
           },
         ],
       },
-      // 설문 세션 (Public)
+
+      // ============================================
+      // [PUBLIC] 테스터 Experience - 온라인 스트리밍
+      // ============================================
+      { path: '/play/:surveyUuid', element: <TesterPlaceholderPage /> },
+
+      // ============================================
+      // [PUBLIC] 설문 세션 (기존 유지)
+      // ============================================
       {
         path: '/surveys/session',
         children: [
-          { path: ':surveyId', element: <SurveySessionStartPage /> },
-          { path: 'sessions/:sessionId', element: <SurveySessionPage /> },
+          { path: ':surveyUuid', element: <SurveySessionStartPage /> },
+          { path: 'sessions/:sessionUuid', element: <SurveySessionPage /> },
         ],
       },
+
+      // [STASH] Screen G: Tester Placeholder
+      // { path: '/play/:gameUuid', element: <TesterPlaceholderPage /> },
+
       // 비인증 사용자 전용 라우트
       {
         element: <GuestLayout />,
@@ -64,6 +150,7 @@ export const router = createBrowserRouter([
           { path: '/auth/register', element: <RegisterPage /> },
         ],
       },
+
       // 404 페이지
       { path: '*', element: <NotFoundPage /> },
     ],

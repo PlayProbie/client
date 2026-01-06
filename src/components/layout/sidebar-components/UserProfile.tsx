@@ -1,4 +1,4 @@
-import { Building2, Shield } from 'lucide-react';
+import { Building2, Settings, Shield } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores';
@@ -7,9 +7,10 @@ import { MOCK_USER } from '../types';
 
 interface UserProfileProps {
   isCollapsed: boolean;
+  onSettingsClick?: () => void;
 }
 
-function UserProfile({ isCollapsed }: UserProfileProps) {
+function UserProfile({ isCollapsed, onSettingsClick }: UserProfileProps) {
   const { user } = useAuthStore();
 
   // 스토어에 유저 정보가 없으면 Mock 데이터 사용 (개발 중 편의)
@@ -22,12 +23,25 @@ function UserProfile({ isCollapsed }: UserProfileProps) {
       }
     : MOCK_USER;
 
+  const handleSettingsClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onSettingsClick?.();
+  };
+
   return (
     <div
       className={cn(
         'border-sidebar-border bg-sidebar-accent/30 hover:bg-sidebar-accent/50 flex cursor-pointer flex-col gap-3 rounded-xl border p-3 transition-colors',
         isCollapsed && 'items-center p-2'
       )}
+      onClick={onSettingsClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          onSettingsClick?.();
+        }
+      }}
     >
       <div
         className={cn(
@@ -51,6 +65,16 @@ function UserProfile({ isCollapsed }: UserProfileProps) {
               {displayUser.email}
             </p>
           </div>
+        )}
+        {!isCollapsed && (
+          <button
+            type="button"
+            onClick={handleSettingsClick}
+            className="text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent rounded-md p-1.5 transition-colors"
+            title="설정"
+          >
+            <Settings className="size-4" />
+          </button>
         )}
       </div>
 

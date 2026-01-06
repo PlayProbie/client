@@ -1,6 +1,6 @@
 /**
  * SurveySessionStartPage - 새 설문 세션 생성 및 리다이렉트
- * URL: /surveys/session/:surveyId
+ * URL: /surveys/session/:surveyUuid
  */
 
 import { useEffect, useRef, useState } from 'react';
@@ -11,7 +11,7 @@ import { Spinner } from '@/components/ui/loading';
 import { createChatSession } from '@/features/survey-session';
 
 function SurveySessionStartPage() {
-  const { surveyId } = useParams<{ surveyId: string }>();
+  const { surveyUuid } = useParams<{ surveyUuid: string }>();
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
   const isSessionStarted = useRef(false);
@@ -22,14 +22,14 @@ function SurveySessionStartPage() {
     isSessionStarted.current = true;
 
     const startSession = async () => {
-      if (!surveyId) {
-        setError('잘못된 설문 ID입니다.');
+      if (!surveyUuid) {
+        setError('잘못된 설문 UUID입니다.');
         return;
       }
 
       try {
         const response = await createChatSession({
-          surveyUuid: surveyId, // URL에서 받은 survey_uuid
+          surveyUuid: surveyUuid, // URL에서 받은 survey_uuid
         });
 
         const { session, sse_url: sseUrl } = response.result;
@@ -39,7 +39,7 @@ function SurveySessionStartPage() {
         navigate(`/surveys/session/sessions/${session.session_uuid}`, {
           replace: true,
           state: {
-            surveyId: session.survey_id,
+            surveyUuid: session.survey_uuid,
             sessionUuid: session.session_uuid,
             sseUrl: sseUrl,
           },
@@ -50,7 +50,7 @@ function SurveySessionStartPage() {
     };
 
     startSession();
-  }, [surveyId, navigate]);
+  }, [surveyUuid, navigate]);
 
   if (error) {
     return (

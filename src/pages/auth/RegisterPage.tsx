@@ -138,7 +138,6 @@ export default function RegisterPage() {
       // 성공 시 로그인 페이지로 이동
       navigate('/login', { state: { registered: true } });
     } catch (error) {
-      console.error('Registration failed:', error);
       setApiError(
         error instanceof Error
           ? error.message

@@ -41,7 +41,7 @@ export interface ApiCreateSurveyRequest {
 
 /** [API] 설문 엔티티 */
 export interface ApiSurvey {
-  survey_id: number;
+  survey_uuid: string;
   survey_name: string;
   survey_url: string;
   started_at: string;
@@ -100,7 +100,7 @@ export interface ApiFixedQuestionItem {
 
 /** [API] POST /surveys/fixed_questions Request */
 export interface ApiCreateFixedQuestionsRequest {
-  survey_id: number;
+  survey_uuid: string;
   questions: ApiFixedQuestionItem[];
 }
 
@@ -129,7 +129,7 @@ export interface CreateSurveyRequest {
 
 /** [Client] 설문 엔티티 */
 export interface Survey {
-  surveyId: number;
+  surveyUuid: string;
   surveyName: string;
   surveyUrl: string;
   startedAt: string;
@@ -153,7 +153,7 @@ export interface FixedQuestionItem {
 
 /** [Client] 고정 질문 생성 요청 */
 export interface CreateFixedQuestionsRequest {
-  surveyId: number;
+  surveyUuid: string;
   questions: FixedQuestionItem[];
 }
 

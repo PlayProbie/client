@@ -31,11 +31,20 @@ function DialogOverlay({
   );
 }
 
+type DialogContentProps = ComponentProps<typeof DialogPrimitive.Content> & {
+  showCloseButton?: boolean;
+  closeDisabled?: boolean;
+  closeTitle?: string;
+};
+
 function DialogContent({
   className,
   children,
+  showCloseButton = true,
+  closeDisabled = false,
+  closeTitle = 'Close',
   ...props
-}: ComponentProps<typeof DialogPrimitive.Content>) {
+}: DialogContentProps) {
   return (
     <DialogPortal>
       <DialogOverlay />
@@ -47,10 +56,16 @@ function DialogContent({
         {...props}
       >
         {children}
-        <DialogPrimitive.Close className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-4 right-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-none disabled:pointer-events-none">
-          <X className="size-4" />
-          <span className="sr-only">Close</span>
-        </DialogPrimitive.Close>
+        {showCloseButton && (
+          <DialogPrimitive.Close
+            disabled={closeDisabled}
+            title={closeTitle}
+            className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-4 right-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <X className="size-4" />
+            <span className="sr-only">Close</span>
+          </DialogPrimitive.Close>
+        )}
       </DialogPrimitive.Content>
     </DialogPortal>
   );

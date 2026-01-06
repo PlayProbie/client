@@ -1,4 +1,5 @@
 import { API_BASE_URL } from '@/constants/api';
+import { fetchWithAuth } from '@/services/api-client';
 
 import type { ApiCreateSurveyRequest, CreateSurveyResponse } from '../types';
 
@@ -8,7 +9,7 @@ import type { ApiCreateSurveyRequest, CreateSurveyResponse } from '../types';
 export async function postSurvey(
   data: ApiCreateSurveyRequest
 ): Promise<CreateSurveyResponse> {
-  const response = await fetch(`${API_BASE_URL}/surveys`, {
+  const response = await fetchWithAuth(`${API_BASE_URL}/surveys`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
