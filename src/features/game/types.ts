@@ -29,20 +29,54 @@ export type GameGenre = ConfigValue<typeof GameGenreConfig>;
 // API Request/Response Types (snake_case)
 // ----------------------------------------
 
-/** [API] POST /games Request */
-export interface ApiCreateGameRequest {
+/** [API] Game 엔티티 */
+export interface ApiGame {
+  game_uuid: string;
+  workspace_uuid: string;
   game_name: string;
+  game_genre: string[];
   game_context: string;
-  game_genre: GameGenre[];
+  created_at: string;
+  updated_at: string;
 }
 
-/** [API] 게임 엔티티 */
-export interface ApiGame {
-  game_id: number;
+/** [API] POST /workspaces/{workspaceUuid}/games Request */
+export interface ApiCreateGameRequest {
   game_name: string;
+  game_genre: string[];
   game_context: string;
-  game_genre: GameGenre[];
-  created_at: string;
+}
+
+/** [API] PUT /games/{gameUuid} Request */
+export interface ApiUpdateGameRequest {
+  game_name: string;
+  game_genre: string[];
+  game_context: string;
+}
+
+/** [API] Game Response wrapper */
+export interface ApiGameResponse {
+  result: ApiGame;
+}
+
+/** [API] Games List Response wrapper */
+export interface ApiGamesListResponse {
+  result: ApiGame[];
+}
+
+// ----------------------------------------
+// Client State Types (camelCase)
+// ----------------------------------------
+
+/** [Client] 게임 엔티티 */
+export interface Game {
+  gameUuid: string;
+  workspaceUuid: string;
+  gameName: string;
+  gameGenre: string[];
+  gameContext: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 /** [API] POST /games Response */
@@ -50,24 +84,55 @@ export interface CreateGameResponse {
   result: ApiGame;
 }
 
-// ----------------------------------------
-// Client State Types (camelCase)
-// ----------------------------------------
-
 /** [Client] 게임 생성 요청 */
 export interface CreateGameRequest {
   gameName: string;
+  gameGenre: string[];
   gameContext: string;
-  gameGenre: GameGenre[];
 }
 
-/** [Client] 게임 엔티티 */
-export interface Game {
-  gameId: number;
+/** [Client] 게임 수정 요청 */
+export interface UpdateGameRequest {
   gameName: string;
+  gameGenre: string[];
   gameContext: string;
-  gameGenre: GameGenre[];
-  createdAt: string;
 }
 
-// NOTE: API <-> Client 변환기는 실제 사용 시점에 맞춰 추가합니다.
+// ----------------------------------------
+// Transformers
+// ----------------------------------------
+
+/** ApiGame → Game 변환 */
+export function toGame(api: ApiGame): Game {
+  return {
+    gameUuid: api.game_uuid,
+    workspaceUuid: api.workspace_uuid,
+    gameName: api.game_name,
+    gameGenre: api.game_genre,
+    gameContext: api.game_context,
+    createdAt: api.created_at,
+    updatedAt: api.updated_at,
+  };
+}
+
+/** CreateGameRequest → ApiCreateGameRequest 변환 */
+export function toApiCreateGameRequest(
+  client: CreateGameRequest
+): ApiCreateGameRequest {
+  return {
+    game_name: client.gameName,
+    game_genre: client.gameGenre,
+    game_context: client.gameContext,
+  };
+}
+
+/** UpdateGameRequest → ApiUpdateGameRequest 변환 */
+export function toApiUpdateGameRequest(
+  client: UpdateGameRequest
+): ApiUpdateGameRequest {
+  return {
+    game_name: client.gameName,
+    game_genre: client.gameGenre,
+    game_context: client.gameContext,
+  };
+}

@@ -14,7 +14,7 @@ type SubmitStep = 'game' | 'survey' | 'questions';
 
 /** 트랜잭션 상태 (롤백용) */
 type TransactionState = {
-  gameId?: number;
+  gameUuid?: string;
   surveyId?: number;
 };
 
@@ -69,15 +69,15 @@ export function useFormSubmit(options?: UseFormSubmitOptions) {
       const transactionState: TransactionState = {};
 
       // 1. 게임 생성
-      let gameId: number;
+      let gameUuid: string;
       try {
         const gameResponse = await postGame({
           game_name: gameName || '',
           game_context: gameContext || '',
           game_genre: gameGenre || [],
         });
-        gameId = gameResponse.result.game_id;
-        transactionState.gameId = gameId;
+        gameUuid = gameResponse.result.game_uuid;
+        transactionState.gameUuid = gameUuid;
       } catch (error) {
         throw new SurveySubmitError(
           '게임 생성에 실패했습니다.',
@@ -100,7 +100,7 @@ export function useFormSubmit(options?: UseFormSubmitOptions) {
         };
 
         const surveyResponse = await postSurvey({
-          game_id: gameId,
+          game_uuid: gameUuid,
           survey_name: surveyName || '',
           started_at: formatToISO(startedAt || ''),
           ended_at: formatToISO(endedAt || ''),
