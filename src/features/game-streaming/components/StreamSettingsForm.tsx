@@ -1,36 +1,25 @@
 /**
  * StreamSettingsForm - 스트리밍 설정 폼 컴포넌트
  */
-import { useState } from 'react';
+import { useForm } from 'react-hook-form';
 
 import { Button, InlineAlert, Skeleton } from '@/components/ui';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/Select';
 
-import { useStreamSettingsMutation, useStreamSettingsQuery } from '../hooks';
-import type { GpuProfile, ResolutionFps, StreamSettings } from '../types';
+import {
+  useStreamSettingsMutation,
+  useStreamSettingsQuery,
+  useUnsavedChanges,
+} from '../hooks';
+import type { StreamSettings } from '../types';
+import { GpuProfileSelect } from './GpuProfileSelect';
+import { ResolutionSelect } from './ResolutionSelect';
 
 interface StreamSettingsFormProps {
   gameUuid: string;
 }
-
-const GPU_PROFILE_OPTIONS: { value: GpuProfile; label: string }[] = [
-  { value: 'entry', label: 'Entry' },
-  { value: 'performance', label: 'Performance' },
-  { value: 'high', label: 'High' },
-];
-
-const RESOLUTION_FPS_OPTIONS: { value: ResolutionFps; label: string }[] = [
-  { value: '720p30', label: '720p @ 30fps' },
-  { value: '1080p60', label: '1080p @ 60fps (권장)' },
-];
 
 /** Outer component - handles data fetching and loading/error states */
 export function StreamSettingsForm({ gameUuid }: StreamSettingsFormProps) {
@@ -94,83 +83,38 @@ function StreamSettingsFormContent({
   initialData,
   mutation,
 }: StreamSettingsFormContentProps) {
-  // Initialize state directly from props (no useEffect needed)
-  const [formData, setFormData] = useState<StreamSettings>(() => initialData);
-  const [isDirty, setIsDirty] = useState(false);
+  const { control, register, handleSubmit, formState, reset } =
+    useForm<StreamSettings>({
+      defaultValues: initialData,
+      mode: 'onChange',
+    });
+  const { showDialog, confirmLeave, cancelLeave } = useUnsavedChanges({
+    hasChanges: formState.isDirty || mutation.isPending,
+    message: '변경사항이 저장되지 않았습니다. 페이지를 떠나시겠습니까?',
+  });
 
-  const handleGpuProfileChange = (value: GpuProfile) => {
-    setFormData({ ...formData, gpuProfile: value });
-    setIsDirty(true);
-  };
-
-  const handleResolutionFpsChange = (value: ResolutionFps) => {
-    setFormData({ ...formData, resolutionFps: value });
-    setIsDirty(true);
-  };
-
-  const handleMaxSessionsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = Math.max(0, parseInt(e.target.value) || 0);
-    setFormData({ ...formData, maxSessions: value });
-    setIsDirty(true);
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    mutation.mutate(formData, {
-      onSuccess: () => setIsDirty(false),
+  const onSubmit = (data: StreamSettings) => {
+    mutation.mutate(data, {
+      onSuccess: () => reset(data),
     });
   };
 
   return (
     <form
-      onSubmit={handleSubmit}
+      onSubmit={handleSubmit(onSubmit)}
       className="space-y-6"
     >
-      {/* GPU Profile */}
-      <div className="space-y-2">
-        <Label htmlFor="gpu-profile">GPU Profile</Label>
-        <Select
-          value={formData.gpuProfile}
-          onValueChange={handleGpuProfileChange}
+      {mutation.isError && (
+        <InlineAlert
+          variant="error"
+          title="저장 실패"
         >
-          <SelectTrigger id="gpu-profile">
-            <SelectValue placeholder="GPU Profile 선택" />
-          </SelectTrigger>
-          <SelectContent>
-            {GPU_PROFILE_OPTIONS.map((option) => (
-              <SelectItem
-                key={option.value}
-                value={option.value}
-              >
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+          저장에 실패했습니다. 다시 시도해주세요.
+        </InlineAlert>
+      )}
 
-      {/* Resolution / FPS */}
-      <div className="space-y-2">
-        <Label>Resolution / FPS</Label>
-        <div className="space-y-2">
-          {RESOLUTION_FPS_OPTIONS.map((option) => (
-            <label
-              key={option.value}
-              className="flex cursor-pointer items-center gap-3"
-            >
-              <input
-                type="radio"
-                name="resolutionFps"
-                value={option.value}
-                checked={formData.resolutionFps === option.value}
-                onChange={() => handleResolutionFpsChange(option.value)}
-                className="size-4"
-              />
-              <span className="text-sm">{option.label}</span>
-            </label>
-          ))}
-        </div>
-      </div>
+      <GpuProfileSelect control={control} />
+      <ResolutionSelect register={register} />
 
       {/* Max Sessions (Capacity Target) */}
       <div className="space-y-2">
@@ -179,8 +123,9 @@ function StreamSettingsFormContent({
           id="max-sessions"
           type="number"
           min={0}
-          value={formData.maxSessions}
-          onChange={handleMaxSessionsChange}
+          {...register('maxSessions', {
+            setValueAs: (value) => Math.max(0, Number(value) || 0),
+          })}
           placeholder="0 (OFF)"
         />
         <p className="text-muted-foreground text-xs">
@@ -192,7 +137,7 @@ function StreamSettingsFormContent({
       <div className="space-y-2">
         <Label>OS</Label>
         <div className="bg-muted text-muted-foreground rounded-md border px-3 py-2 text-sm">
-          {formData.os}
+          {initialData.os}
         </div>
       </div>
 
@@ -200,19 +145,41 @@ function StreamSettingsFormContent({
       <div className="space-y-2">
         <Label>Region</Label>
         <div className="bg-muted text-muted-foreground rounded-md border px-3 py-2 text-sm">
-          {formData.region}
+          {initialData.region}
         </div>
       </div>
+
+      <input
+        type="hidden"
+        {...register('os')}
+      />
+      <input
+        type="hidden"
+        {...register('region')}
+      />
 
       {/* Submit Button */}
       <div className="flex justify-end gap-2 pt-4">
         <Button
           type="submit"
-          disabled={!isDirty || mutation.isPending}
+          disabled={!formState.isDirty || mutation.isPending}
         >
           {mutation.isPending ? '저장 중...' : '저장'}
         </Button>
       </div>
+
+      <ConfirmDialog
+        open={showDialog}
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen) cancelLeave();
+        }}
+        title="변경사항이 저장되지 않았습니다"
+        description="이동하면 현재 입력이 사라집니다."
+        cancelLabel="취소"
+        confirmLabel="이동"
+        onCancel={cancelLeave}
+        onConfirm={confirmLeave}
+      />
     </form>
   );
 }
