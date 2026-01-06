@@ -1,7 +1,7 @@
 import { Check, ChevronDown, GitBranch, Lock, PenLine, Sparkles } from 'lucide-react';
 import { useState } from 'react';
 import { type Path, useFormContext, useWatch } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 import { Button } from '@/components/ui';
 import { Badge } from '@/components/ui/Badge';
@@ -28,11 +28,15 @@ const STAGE_RECOMMENDED_ORDER: Record<TestStage, ThemeCategory[]> = {
  */
 function StepMethodSelection() {
     const navigate = useNavigate();
+    const location = useLocation();
     const { updateFormData } = useSurveyFormStore();
     const { control } = useFormContext<SurveyFormData>();
 
     const [selectedMethod, setSelectedMethod] = useState<GenerateMethod>(null);
     const [expandedCategory, setExpandedCategory] = useState<ThemeCategory | null>(null);
+
+    // 현재 경로에서 step 부분을 제거한 base path 계산
+    const pathWithoutStep = location.pathname.replace(/\/step-\d+$/, '');
 
     // 폼 상태 감시
     const testStage = useWatch({ control, name: 'testStage' });
@@ -82,13 +86,13 @@ function StepMethodSelection() {
     const handleAIGenerate = () => {
         if (themePriorities.length === 0) return;
         updateFormData({ questions: [], selectedQuestionIndices: [] });
-        navigate('/survey/design/step-2?actor=ai');
+        navigate(`${pathWithoutStep}/step-2?actor=ai`);
     };
 
     // 수동 생성 다음 버튼
     const handleManualNext = () => {
         updateFormData({ questions: [], selectedQuestionIndices: [] });
-        navigate('/survey/design/step-2?actor=user');
+        navigate(`${pathWithoutStep}/step-2?actor=user`);
     };
 
     // AI 생성 버튼 활성화 조건

@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { FileText,Plus } from 'lucide-react';
+import { FileText, Plus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 import { Button } from '@/components/ui';
@@ -62,7 +62,7 @@ function SurveyListPage() {
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {surveys.map((survey) => (
-                        <Card key={survey.survey_id} className="hover:border-primary transition-colors">
+                        <Card key={survey.survey_uuid} className="hover:border-primary transition-colors">
                             <CardHeader className="pb-2">
                                 <div className="flex items-center gap-2">
                                     <FileText className="h-5 w-5 text-primary" />

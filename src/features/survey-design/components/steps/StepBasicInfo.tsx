@@ -17,7 +17,7 @@ import { Input } from '@/components/ui/Input';
 import { Spinner } from '@/components/ui/loading';
 import { Textarea } from '@/components/ui/Textarea';
 import { getGame } from '@/features/game/api/get-game';
-import { type GameGenre,GameGenreConfig } from '@/features/game/types';
+import { type GameGenre, GameGenreConfig } from '@/features/game/types';
 import { cn } from '@/lib/utils';
 
 import { useSurveyFormStore } from '../../store/useSurveyFormStore';
@@ -66,7 +66,7 @@ function StepBasicInfo({ control }: StepBasicInfoProps) {
         enabled: !!gameUuid,
     });
 
-    const game = gameData?.result;
+    const game = gameData;
 
     // store 접근
     const { updateFormData } = useSurveyFormStore();
@@ -75,9 +75,9 @@ function StepBasicInfo({ control }: StepBasicInfoProps) {
     useEffect(() => {
         if (game) {
             updateFormData({
-                gameName: game.game_name,
-                gameGenre: game.game_genre as GameGenre[],
-                gameContext: game.game_context,
+                gameName: game.gameName,
+                gameGenre: game.gameGenre as GameGenre[],
+                gameContext: game.gameContext,
             });
         }
     }, [game, updateFormData]);
@@ -122,15 +122,15 @@ function StepBasicInfo({ control }: StepBasicInfoProps) {
                         <div className="space-y-2">
                             <div>
                                 <span className="text-sm text-muted-foreground">게임 이름: </span>
-                                <span className="font-medium">{game.game_name}</span>
+                                <span className="font-medium">{game.gameName}</span>
                             </div>
                             <div className="flex flex-wrap gap-1">
-                                {getGenreLabels(game.game_genre).map((label) => (
+                                {getGenreLabels(game.gameGenre).map((label) => (
                                     <Badge key={label} variant="secondary">{label}</Badge>
                                 ))}
                             </div>
-                            {game.game_context && (
-                                <p className="text-sm text-muted-foreground">{game.game_context}</p>
+                            {game.gameContext && (
+                                <p className="text-sm text-muted-foreground">{game.gameContext}</p>
                             )}
                         </div>
                     ) : (

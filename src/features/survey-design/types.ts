@@ -108,7 +108,6 @@ export interface ApiSurvey {
   test_purpose: TestPurpose;
   created_at: string;
   // 신규 필드 (optional for backward compatibility)
-  survey_uuid?: string;
   test_stage?: TestStage;
   theme_priorities?: ThemeCategory[];
   theme_details?: Record<ThemeCategory, ThemeDetail[]>;
