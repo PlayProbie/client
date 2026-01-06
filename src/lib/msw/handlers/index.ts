@@ -6,8 +6,8 @@ import { aiQuestionsHandlers } from './ai-questions';
 import { fixedQuestionsHandlers } from './fixed-questions';
 import { gameStreamingHandlers } from './game-streaming';
 import { gameStreamingAdminHandlers } from './game-streaming-admin';
+import { gameStreamingSessionHandlers } from './game-streaming-session';
 import { gameStreamingSurveyHandlers } from './game-streaming-survey';
-import { gameStreamingTesterHandlers } from './game-streaming-tester';
 import { gamesHandlers } from './games';
 import { questionFeedbackHandlers } from './question-feedback';
 import { surveyAnalyticsHandlers } from './survey-analytics';
@@ -20,7 +20,7 @@ export const handlers = [
   ...gameStreamingHandlers,
   ...gameStreamingAdminHandlers,
   ...gameStreamingSurveyHandlers,
-  ...gameStreamingTesterHandlers,
+  ...gameStreamingSessionHandlers,
   ...surveyDesignHandlers,
   ...fixedQuestionsHandlers,
   ...aiQuestionsHandlers,

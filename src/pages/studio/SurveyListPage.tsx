@@ -110,7 +110,9 @@ export default function SurveyListPage() {
             variant="outline"
             asChild
           >
-            <Link to={`/games/${gameUuid}/surveys/design/step-0`}>Create Survey</Link>
+            <Link to={`/games/${gameUuid}/surveys/design/step-0`}>
+              Create Survey
+            </Link>
           </Button>
         </div>
       ) : (
@@ -124,32 +126,32 @@ export default function SurveyListPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-            {surveys.map((survey) => {
-              const statusInfo = STATUS_MAP[survey.status];
-              return (
-                <TableRow
-                  key={survey.surveyUuid}
-                  className="cursor-pointer hover:bg-muted/40"
-                  onClick={() => handleRowClick(survey.surveyUuid)}
-                >
-                  <TableCell className="font-medium">
-                    {survey.surveyName}
-                  </TableCell>
-                  <TableCell>
-                    <StatusBadge
-                      variant={statusInfo.variant}
-                      label={statusInfo.label}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    {new Date(survey.createdAt).toLocaleDateString()}
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      </div>
+              {surveys.map((survey) => {
+                const statusInfo = STATUS_MAP[survey.status];
+                return (
+                  <TableRow
+                    key={survey.surveyUuid}
+                    className="hover:bg-muted/40 cursor-pointer"
+                    onClick={() => handleRowClick(survey.surveyUuid)}
+                  >
+                    <TableCell className="font-medium">
+                      {survey.surveyName}
+                    </TableCell>
+                    <TableCell>
+                      <StatusBadge
+                        variant={statusInfo.variant}
+                        label={statusInfo.label}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      {new Date(survey.createdAt).toLocaleDateString()}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
       )}
     </div>
   );

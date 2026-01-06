@@ -22,7 +22,10 @@ import {
 } from '@/stores/useUploadStore';
 
 export default function BuildsPage() {
-  const { gameUuid } = useParams<{ gameUuid: string }>();
+  const { gameUuid: routeGameUuid } = useParams<{ gameUuid: string }>();
+  // route placeholder(':gameUuid')가 아닌 유효한 UUID만 사용
+  const gameUuid =
+    routeGameUuid && !routeGameUuid.startsWith(':') ? routeGameUuid : undefined;
   const navigate = useNavigate();
   const {
     data: builds,
@@ -72,8 +75,8 @@ export default function BuildsPage() {
       {/* Hint Box */}
       <div className="border-info/50 bg-info/5 rounded-lg border p-4">
         <p className="text-info text-sm">
-          <strong>Tip:</strong> ExecutablePath는 업로드 폴더 내 실행 파일의
-          상대 경로입니다. 예) /Game/Binaries/Win64/MyGame.exe
+          <strong>Tip:</strong> ExecutablePath는 업로드 폴더 내 실행 파일의 상대
+          경로입니다. 예) /Game/Binaries/Win64/MyGame.exe
         </p>
       </div>
 

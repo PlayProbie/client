@@ -22,7 +22,6 @@ export async function postWorkspace(
     headers: {
       'Content-Type': 'application/json',
     },
-    credentials: 'include',
     body: JSON.stringify(body),
   });
 

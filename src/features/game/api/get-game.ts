@@ -14,7 +14,6 @@ export async function getGame(gameUuid: string): Promise<Game> {
     headers: {
       'Content-Type': 'application/json',
     },
-    credentials: 'include',
   });
 
   if (!response.ok) {

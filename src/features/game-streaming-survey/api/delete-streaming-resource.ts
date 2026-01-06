@@ -2,7 +2,6 @@
  * 스트리밍 리소스 삭제 API
  * DELETE /surveys/{surveyUuid}/streaming-resource
  */
-import { fetchWithAuth } from '@/services/api-client';
 
 import { API_BASE_URL } from '../constants';
 
@@ -10,7 +9,7 @@ import { API_BASE_URL } from '../constants';
 export async function deleteStreamingResource(
   surveyUuid: string
 ): Promise<void> {
-  const response = await fetchWithAuth(
+  const response = await fetch(
     `${API_BASE_URL}/surveys/${surveyUuid}/streaming-resource`,
     { method: 'DELETE' }
   );

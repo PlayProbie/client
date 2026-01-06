@@ -1,17 +1,24 @@
+/**
+ * SurveyDistributePage - 설문 배포 페이지
+ * 3단계 배포 플로우: 빌드 선택 → 리소스 관리 → 설문 오픈
+ */
+import { useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
 import { InlineAlert } from '@/components/ui/InlineAlert';
 import { PageSpinner } from '@/components/ui/loading';
 import { Step } from '@/components/ui/Step';
+import type { Build } from '@/features/game-streaming';
 import { useStreamingResource } from '@/features/game-streaming-survey';
 import {
-  AdminTestPanel,
-  BuildConnectionCard,
+  BuildSelectionStep,
+  ResourceManagementStep,
+  SurveyOpenStep,
   type SurveyShellContext,
 } from '@/features/survey';
 
-const DISTRIBUTE_STEPS = ['빌드 연결', '관리자 테스트', '설문 오픈'];
+const DISTRIBUTE_STEPS = ['빌드 선택', '리소스 관리', '설문 오픈'];
 
 export default function SurveyDistributePage() {
   const { survey, isLoading, isError, refetch, surveyUuid, gameUuid } =
@@ -21,9 +28,23 @@ export default function SurveyDistributePage() {
   const {
     data: streamingResource,
     isLoading: isResourceLoading,
-    isError: isResourceError,
     refetch: refetchResource,
   } = useStreamingResource(resolvedSurveyUuid, !!resolvedSurveyUuid);
+
+  const [selectedBuild, setSelectedBuild] = useState<Build | null>(null);
+
+  // Determine current step based on state
+  const getCurrentStep = () => {
+    if (streamingResource) {
+      return 2; // Step 3: 설문 오픈
+    }
+    if (selectedBuild) {
+      return 1; // Step 2: 리소스 관리
+    }
+    return 0; // Step 1: 빌드 선택
+  };
+
+  const currentStep = getCurrentStep();
 
   if (isLoading) {
     return <PageSpinner message="설문 정보를 불러오는 중..." />;
@@ -51,7 +72,10 @@ export default function SurveyDistributePage() {
 
   if (!survey) {
     return (
-      <InlineAlert variant="error" title="설문을 찾을 수 없습니다.">
+      <InlineAlert
+        variant="error"
+        title="설문을 찾을 수 없습니다."
+      >
         다시 확인해 주세요.
       </InlineAlert>
     );
@@ -59,59 +83,83 @@ export default function SurveyDistributePage() {
 
   if (!gameUuid) {
     return (
-      <InlineAlert variant="error" title="게임 정보를 확인할 수 없습니다.">
+      <InlineAlert
+        variant="error"
+        title="게임 정보를 확인할 수 없습니다."
+      >
         게임을 다시 선택해주세요.
       </InlineAlert>
     );
   }
 
-  const currentStep = streamingResource
-    ? survey.status === 'ACTIVE' || survey.status === 'CLOSED'
-      ? 2
-      : 1
-    : 0;
+  const handleBuildSelect = (build: Build) => {
+    setSelectedBuild(build);
+  };
+
+  const handleBackToStep1 = () => {
+    setSelectedBuild(null);
+  };
+
+  const handleResourceCreated = () => {
+    refetchResource();
+  };
+
+  const renderStepContent = () => {
+    // Step 3: 설문 오픈 (리소스가 이미 생성된 경우)
+    if (streamingResource) {
+      return <SurveyOpenStep surveyUuid={resolvedSurveyUuid} />;
+    }
+
+    // Step 2: 리소스 관리 (빌드 선택 완료)
+    if (selectedBuild) {
+      return (
+        <ResourceManagementStep
+          surveyUuid={resolvedSurveyUuid}
+          selectedBuild={selectedBuild}
+          onBack={handleBackToStep1}
+          onSuccess={handleResourceCreated}
+        />
+      );
+    }
+
+    // Step 1: 빌드 선택
+    return (
+      <BuildSelectionStep
+        gameUuid={gameUuid}
+        onSelectBuild={handleBuildSelect}
+      />
+    );
+  };
 
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-lg font-semibold">Distribute</h2>
         <p className="text-muted-foreground text-sm">
-          빌드 연결과 관리자 테스트를 진행합니다.
+          빌드 연결과 리소스 관리를 진행합니다.
         </p>
       </div>
 
       <section className="bg-card space-y-4 rounded-lg border p-6">
         <div>
-          <p className="text-muted-foreground text-xs font-semibold uppercase tracking-wide">
+          <p className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
             Deployment Steps
           </p>
           <h3 className="text-base font-semibold">배포 흐름</h3>
         </div>
-        <Step steps={DISTRIBUTE_STEPS} currentStep={currentStep} />
-        {!streamingResource && !isResourceLoading && (
-          <InlineAlert variant="info" title="1. 빌드를 먼저 연결하세요">
-            빌드 연결이 완료되어야 관리자 테스트를 진행할 수 있습니다.
-          </InlineAlert>
-        )}
+        <Step
+          steps={DISTRIBUTE_STEPS}
+          currentStep={currentStep}
+        />
       </section>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <BuildConnectionCard
-          gameUuid={gameUuid}
-          surveyUuid={resolvedSurveyUuid}
-          streamingResource={streamingResource}
-          isResourceLoading={isResourceLoading}
-          isResourceError={isResourceError}
-          onRefetchResource={refetchResource}
-        />
-        <AdminTestPanel
-          surveyUuid={resolvedSurveyUuid}
-          streamingResource={streamingResource}
-          isResourceLoading={isResourceLoading}
-          isResourceError={isResourceError}
-          onRefetchResource={refetchResource}
-        />
-      </div>
+      <section className="bg-card rounded-lg border p-6">
+        {isResourceLoading ? (
+          <PageSpinner message="리소스 정보를 확인하는 중..." />
+        ) : (
+          renderStepContent()
+        )}
+      </section>
     </div>
   );
 }

@@ -5,10 +5,10 @@ import { Button } from '@/components/ui/button';
 import { InlineAlert } from '@/components/ui/InlineAlert';
 import { PageSpinner } from '@/components/ui/loading';
 import {
-  useStartSurveyStream,
-  useSurveySessionAvailability,
-  useTerminateSurveySession,
-} from '@/features/game-streaming-tester';
+  useSessionInfo,
+  useSignal,
+  useTerminateSession,
+} from '@/features/game-streaming-session';
 import { useToast } from '@/hooks/useToast';
 
 export default function TesterPlaceholderPage() {
@@ -28,9 +28,9 @@ export default function TesterPlaceholderPage() {
     isLoading,
     isError,
     refetch,
-  } = useSurveySessionAvailability(surveyUuid || '', !!surveyUuid);
-  const startMutation = useStartSurveyStream(surveyUuid || '');
-  const terminateMutation = useTerminateSurveySession(surveyUuid || '');
+  } = useSessionInfo(surveyUuid || '', !!surveyUuid);
+  const startMutation = useSignal(surveyUuid || '');
+  const terminateMutation = useTerminateSession(surveyUuid || '');
 
   const handleStart = () => {
     if (!surveyUuid) return;
