@@ -3,7 +3,7 @@
  * Route: /games/:gameUuid/surveys
  */
 import { Plus } from 'lucide-react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 
 import { Button, InlineAlert, Skeleton } from '@/components/ui';
 import { StatusBadge, type StatusVariant } from '@/components/ui/StatusBadge';
@@ -131,10 +131,11 @@ export default function SurveyListPage() {
                         size="sm"
                         asChild
                       >
-                        {/* TODO: Link to Control Tower */}
-                        <span className="cursor-not-allowed opacity-50">
+                        <Link
+                          to={`/games/${gameUuid}/surveys/${survey.surveyUuid}/overview`}
+                        >
                           Manage
-                        </span>
+                        </Link>
                       </Button>
                     </TableCell>
                   </TableRow>

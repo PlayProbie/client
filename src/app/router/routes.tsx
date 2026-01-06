@@ -1,6 +1,7 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 
 import { GameShell } from '@/features/game-streaming';
+import { SurveyShell } from '@/features/survey';
 import LoginPage from '@/pages/auth/LoginPage';
 import RegisterPage from '@/pages/auth/RegisterPage';
 import NotFoundPage from '@/pages/NotFoundPage';
@@ -13,6 +14,8 @@ import StreamSettingsPage from '@/pages/studio/StreamSettingsPage';
 import SurveyListPage from '@/pages/studio/SurveyListPage';
 import SurveyAnalyticsPage from '@/pages/survey/SurveyAnalyticsPage';
 import SurveyDesignPage from '@/pages/survey/SurveyDesignPage';
+import SurveyOverviewPage from '@/pages/survey/SurveyOverviewPage';
+import SurveyPlaceholderPage from '@/pages/survey/SurveyPlaceholderPage';
 import SurveySessionPage from '@/pages/survey/SurveySessionPage';
 import SurveySessionStartPage from '@/pages/survey/SurveySessionStartPage';
 import WorkspaceDashboard from '@/pages/WorkspaceDashboard';
@@ -20,12 +23,9 @@ import WorkspaceDashboard from '@/pages/WorkspaceDashboard';
 import { AuthLayout, GuestLayout, RootLayout } from './layouts';
 
 // ============================================
-// Survey Control Tower 페이지 (Lazy Load 준비)
-// 현재는 기존 페이지 재사용, 추후 개별 페이지로 분리
+// Survey Control Tower 페이지
+// 기본 구조만 구성하고 탭별 상세 화면은 단계별로 확장
 // ============================================
-// import SurveyOverviewPage from '@/pages/survey/SurveyOverviewPage';
-// import SurveyDistributePage from '@/pages/survey/SurveyDistributePage';
-// import SurveyAnalyzePage from '@/pages/survey/SurveyAnalyzePage';
 
 export const router = createBrowserRouter([
   {
@@ -72,19 +72,42 @@ export const router = createBrowserRouter([
           // ============================================
           // [NEW] Survey Control Tower (게임 종속 설문 상세)
           // 4개 탭: overview, design, distribute, analyze
-          // TODO: SurveyShell 생성 필요
           // ============================================
-          // {
-          //   path: '/games/:gameUuid/surveys/:surveyId',
-          //   element: <SurveyShell />,
-          //   children: [
-          //     { index: true, element: <Navigate to="overview" replace /> },
-          //     { path: 'overview', element: <SurveyOverviewPage /> },
-          //     { path: 'design', element: <SurveyDesignPage /> },
-          //     { path: 'distribute', element: <SurveyDistributePage /> },
-          //     { path: 'analyze', element: <SurveyAnalyzePage /> },
-          //   ],
-          // },
+          {
+            path: '/games/:gameUuid/surveys/:surveyId',
+            element: <SurveyShell />,
+            children: [
+              { index: true, element: <Navigate to="overview" replace /> },
+              { path: 'overview', element: <SurveyOverviewPage /> },
+              {
+                path: 'design',
+                element: (
+                  <SurveyPlaceholderPage
+                    title="문항 설계"
+                    description="설문 문항 편집 기능은 준비 중입니다."
+                  />
+                ),
+              },
+              {
+                path: 'distribute',
+                element: (
+                  <SurveyPlaceholderPage
+                    title="배포/연동"
+                    description="빌드 연결 및 테스트 기능은 다음 단계에서 구현됩니다."
+                  />
+                ),
+              },
+              {
+                path: 'analyze',
+                element: (
+                  <SurveyPlaceholderPage
+                    title="결과/인사이트"
+                    description="설문 결과 분석은 준비 중입니다."
+                  />
+                ),
+              },
+            ],
+          },
 
           // ============================================
           // [LEGACY] Creator Studio - 기존 경로 유지 (점진적 마이그레이션)
