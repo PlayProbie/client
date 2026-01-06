@@ -5,7 +5,7 @@
 export { API_BASE_URL } from '@/constants/api';
 
 /** Heartbeat 폴링 간격 (ms) */
-export const HEARTBEAT_INTERVAL = 60000; // 1분
+export const HEARTBEAT_INTERVAL = 30000; // 30초
 
 /** 세션 종료 사유 */
 export type TerminateReason = 'user_exit' | 'timeout' | 'error';

@@ -20,7 +20,8 @@
 
 ```json
 {
-  "result": {
+  "success": true,
+  "data": {
     "survey_uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
     "game_name": "string",
     "is_available": true,
@@ -52,7 +53,8 @@
 
 ```json
 {
-  "result": {
+  "success": true,
+  "data": {
     "is_active": true,
     "survey_session_uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
   }
@@ -85,7 +87,8 @@ WebRTC 시그널을 처리합니다.
 
 ```json
 {
-  "result": {
+  "success": true,
+  "data": {
     "signal_response": "string",
     "survey_session_uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
     "expires_in_seconds": 0
@@ -120,7 +123,8 @@ WebRTC 시그널을 처리합니다.
 
 ```json
 {
-  "result": {
+  "success": true,
+  "data": {
     "success": true
   }
 }

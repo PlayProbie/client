@@ -20,14 +20,15 @@ export interface StreamSettingsInfo {
 
 /** [API] 세션 정보 응답 */
 export interface ApiSessionInfoResponse {
-  result: {
+  success: boolean;
+  data: {
     survey_uuid: string;
     game_name: string;
     is_available: boolean;
     stream_settings: {
       resolution: string;
       fps: number;
-    };
+    } | null;
   };
 }
 
@@ -36,7 +37,7 @@ export interface SessionInfo {
   surveyUuid: string;
   gameName: string;
   isAvailable: boolean;
-  streamSettings: StreamSettingsInfo;
+  streamSettings: StreamSettingsInfo | null;
 }
 
 // ----------------------------------------
@@ -50,7 +51,8 @@ export interface ApiSignalRequest {
 
 /** [API] 시그널 응답 */
 export interface ApiSignalResponse {
-  result: {
+  success: boolean;
+  data: {
     signal_response: string;
     survey_session_uuid: string;
     expires_in_seconds: number;
@@ -75,9 +77,10 @@ export interface SignalResponse {
 
 /** [API] 세션 상태 응답 */
 export interface ApiSessionStatusResponse {
-  result: {
+  success: boolean;
+  data: {
+    survey_session_uuid?: string;
     is_active: boolean;
-    survey_session_uuid: string;
   };
 }
 
@@ -102,7 +105,8 @@ export interface ApiTerminateRequest {
 
 /** [API] 세션 종료 응답 */
 export interface ApiTerminateResponse {
-  result: {
+  success: boolean;
+  data: {
     success: boolean;
   };
 }
@@ -124,22 +128,24 @@ export interface TerminateResponse {
 
 /** ApiSessionInfoResponse → SessionInfo 변환 */
 export function toSessionInfo(
-  api: ApiSessionInfoResponse['result']
+  api: ApiSessionInfoResponse['data']
 ): SessionInfo {
   return {
     surveyUuid: api.survey_uuid,
     gameName: api.game_name,
     isAvailable: api.is_available,
-    streamSettings: {
-      resolution: api.stream_settings.resolution,
-      fps: api.stream_settings.fps,
-    },
+    streamSettings: api.stream_settings
+      ? {
+          resolution: api.stream_settings.resolution,
+          fps: api.stream_settings.fps,
+        }
+      : null,
   };
 }
 
 /** ApiSignalResponse → SignalResponse 변환 */
 export function toSignalResponse(
-  api: ApiSignalResponse['result']
+  api: ApiSignalResponse['data']
 ): SignalResponse {
   return {
     signalResponse: api.signal_response,
@@ -157,11 +163,11 @@ export function toApiSignalRequest(client: SignalRequest): ApiSignalRequest {
 
 /** ApiSessionStatusResponse → SessionStatus 변환 */
 export function toSessionStatus(
-  api: ApiSessionStatusResponse['result']
+  api: ApiSessionStatusResponse['data']
 ): SessionStatus {
   return {
     isActive: api.is_active,
-    surveySessionUuid: api.survey_session_uuid,
+    surveySessionUuid: api.survey_session_uuid ?? '',
   };
 }
 
@@ -177,7 +183,7 @@ export function toApiTerminateRequest(
 
 /** ApiTerminateResponse → TerminateResponse 변환 */
 export function toTerminateResponse(
-  api: ApiTerminateResponse['result']
+  api: ApiTerminateResponse['data']
 ): TerminateResponse {
   return {
     success: api.success,

@@ -33,5 +33,5 @@ export async function postTerminate(
   }
 
   const data: ApiTerminateResponse = await response.json();
-  return toTerminateResponse(data.result);
+  return toTerminateResponse(data.data);
 }

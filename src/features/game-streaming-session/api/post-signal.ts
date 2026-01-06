@@ -16,16 +16,13 @@ export async function postSignal(
   surveyUuid: string,
   request: SignalRequest
 ): Promise<SignalResponse> {
-  const response = await fetch(
-    `${API_BASE_URL}/surveys/${surveyUuid}/signal`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(toApiSignalRequest(request)),
-    }
-  );
+  const response = await fetch(`${API_BASE_URL}/surveys/${surveyUuid}/signal`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(toApiSignalRequest(request)),
+  });
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => null);
@@ -33,5 +30,5 @@ export async function postSignal(
   }
 
   const data: ApiSignalResponse = await response.json();
-  return toSignalResponse(data.result);
+  return toSignalResponse(data.data);
 }
