@@ -101,7 +101,6 @@ export default function LoginPage() {
 
       navigate(from, { replace: true });
     } catch (error) {
-      console.error('Login failed:', error);
       setApiError(
         error instanceof Error ? error.message : '로그인 중 오류가 발생했습니다'
       );
