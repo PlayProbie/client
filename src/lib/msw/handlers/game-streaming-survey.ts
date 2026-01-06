@@ -63,12 +63,12 @@ export const gameStreamingSurveyHandlers = [
     await delay(300);
 
     const url = new URL(request.url);
-    const gameIdParam = url.searchParams.get('game_id');
+    const gameUuidParam = url.searchParams.get('game_uuid');
 
     const surveys = [...MOCK_SURVEYS];
 
-    // game_id 필터링 (실제 구현에서는 DB 조인)
-    if (gameIdParam) {
+    // game_uuid 필터링 (실제 구현에서는 DB 조인)
+    if (gameUuidParam) {
       // Mock에서는 필터링 로직 생략 (모든 설문 반환)
     }
 

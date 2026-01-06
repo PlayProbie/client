@@ -16,6 +16,7 @@ const TABS = [
   { label: 'Overview', path: 'overview' },
   { label: 'Builds', path: 'builds' },
   { label: 'Stream Settings', path: 'stream-settings' },
+  { label: 'Surveys', path: 'surveys' },
 ] as const;
 
 export function GameShell() {
