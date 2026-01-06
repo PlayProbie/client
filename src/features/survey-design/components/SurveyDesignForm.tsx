@@ -17,11 +17,11 @@ import { useFormSubmit } from '../hooks/useFormSubmit';
 import { useSurveyFormStore } from '../store/useSurveyFormStore';
 import { SURVEY_FORM_STEPS, type SurveyFormData } from '../types';
 import {
+  StepBasicInfo,
   StepConfirm,
-  StepGameInfo,
+  StepMethodSelection,
   StepQuestionAIGenerate,
   StepQuestionUserGenerate,
-  StepSurveyInfo,
 } from './steps';
 
 type SurveyDesignFormProps = {
@@ -132,9 +132,9 @@ function SurveyDesignForm({ className, onComplete }: SurveyDesignFormProps) {
 
     switch (currentStep) {
       case 0:
-        return <StepGameInfo control={control} />;
+        return <StepBasicInfo control={control} />;
       case 1:
-        return <StepSurveyInfo control={control} />;
+        return <StepMethodSelection />;
       case 2:
         return isUserGenerate ? (
           <StepQuestionUserGenerate />
@@ -174,22 +174,7 @@ function SurveyDesignForm({ className, onComplete }: SurveyDesignFormProps) {
             </Button>
             <div className="flex gap-2">
               {currentStep === 1 ? (
-                <>
-                  <Button
-                    type="button"
-                    disabled={isPending}
-                    onClick={() => createHandleNext('user')()}
-                  >
-                    직접 질문 생성
-                  </Button>
-                  <Button
-                    type="button"
-                    disabled={isPending}
-                    onClick={() => createHandleNext('ai')()}
-                  >
-                    AI 질문 생성
-                  </Button>
-                </>
+                null /* StepMethodSelection에서 자체 네비게이션 */
               ) : (
                 <Button
                   type="button"

@@ -8,21 +8,22 @@ import type {
 /**
  * POST /interview/{survey_uuid} - 새 대화 세션 생성
  */
-export async function createChatSession(
-  params: CreateChatSessionParams
-): Promise<CreateChatSessionResponse> {
-  const url = `${API_BASE_URL}/interview/${params.surveyUuid}`;
-
-  const response = await fetch(url, {
+export async function createChatSession({
+  surveyUuid,
+  testerProfile,
+}: CreateChatSessionParams): Promise<CreateChatSessionResponse> {
+  const response = await fetch(`${API_BASE_URL}/interview/${surveyUuid}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
+    body: JSON.stringify(testerProfile || {}), // 프로필 정보가 있으면 전송, 없으면 빈 객체 (또는 null)
   });
 
   if (!response.ok) {
     throw new Error('Failed to create chat session');
   }
 
-  return response.json();
+  const data = await response.json();
+  return data;
 }

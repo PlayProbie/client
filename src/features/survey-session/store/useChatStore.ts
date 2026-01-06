@@ -12,6 +12,11 @@ import type {
 
 /** 채팅 상태 인터페이스 */
 interface ChatState {
+  appendStreamingToken: (
+    token: string,
+    turnNum: number,
+    qType?: InterviewLogQType
+  ) => void;
   // Session info
   sessionUuid: string | null;
   surveyUuid: string | null;
@@ -47,7 +52,7 @@ interface ChatState {
     fixedQId: number | null
   ) => void;
   addUserMessage: (content: string, turnNum: number) => void;
-  appendStreamingToken: (token: string, turnNum: number) => void;
+
   finalizeStreamingMessage: () => void;
   setLoading: (loading: boolean) => void;
   setConnecting: (connecting: boolean) => void;
@@ -118,7 +123,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       isLoading: true,
     })),
 
-  appendStreamingToken: (token, turnNum) =>
+  appendStreamingToken: (token, turnNum, qType: InterviewLogQType = 'TAIL') =>
     set((state) => {
       const newContent = state.streamingContent + token;
 
@@ -132,6 +137,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
         updatedMessages[existingStreamingIndex] = {
           ...updatedMessages[existingStreamingIndex],
           content: newContent,
+          // qType 업데이트 (혹시라도 변경될 경우)
+          qType,
         };
         return {
           messages: updatedMessages,
@@ -147,7 +154,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
               type: 'ai',
               content: newContent,
               turnNum,
-              qType: 'TAIL',
+              qType,
               fixedQId: null,
               timestamp: new Date(),
             },

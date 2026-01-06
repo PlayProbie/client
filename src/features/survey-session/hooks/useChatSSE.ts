@@ -3,23 +3,30 @@
  * Server-Sent Events를 통한 AI 질문 수신
  */
 
+// ----------------------------------------
+// SSE Hook
+// ----------------------------------------
+
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { API_BASE_URL } from '@/constants/api';
 
 import type {
+  ApiSSEContinueEventData,
   ApiSSEQuestionEventData,
-  ApiSSETokenEventData,
   UseChatSSEOptions,
   UseChatSSEReturn,
 } from '../types';
-import { toSSEQuestionEventData, toSSETokenEventData } from '../types';
+import {
+  toSSEContinueEventData,
+  toSSEQuestionEventData,
+} from '../types';
 
 export function useChatSSE({
   sessionUuid,
   onConnect,
   onQuestion,
-  onToken,
+  onContinue,
   onStart,
   onDone,
   onInterviewComplete,
@@ -33,7 +40,7 @@ export function useChatSSE({
   // Refs for stable callback references
   const onConnectRef = useRef(onConnect);
   const onQuestionRef = useRef(onQuestion);
-  const onTokenRef = useRef(onToken);
+  const onContinueRef = useRef(onContinue);
   const onStartRef = useRef(onStart);
   const onDoneRef = useRef(onDone);
   const onInterviewCompleteRef = useRef(onInterviewComplete);
@@ -45,7 +52,7 @@ export function useChatSSE({
   useEffect(() => {
     onConnectRef.current = onConnect;
     onQuestionRef.current = onQuestion;
-    onTokenRef.current = onToken;
+    onContinueRef.current = onContinue;
     onStartRef.current = onStart;
     onDoneRef.current = onDone;
     onInterviewCompleteRef.current = onInterviewComplete;
@@ -55,7 +62,7 @@ export function useChatSSE({
   }, [
     onConnect,
     onQuestion,
-    onToken,
+    onContinue,
     onStart,
     onDone,
     onInterviewComplete,
@@ -105,12 +112,12 @@ export function useChatSSE({
       }
     });
 
-    // token 이벤트 핸들러 (꼬리 질문 스트리밍)
-    eventSource.addEventListener('token', (event) => {
+    // continue 이벤트 핸들러 (스트리밍)
+    eventSource.addEventListener('continue', (event) => {
       try {
-        const apiData: ApiSSETokenEventData = JSON.parse(event.data);
-        const data = toSSETokenEventData(apiData);
-        onTokenRef.current?.(data);
+        const apiData: ApiSSEContinueEventData = JSON.parse(event.data);
+        const data = toSSEContinueEventData(apiData);
+        onContinueRef.current?.(data);
       } catch {
         // JSON 파싱 실패 무시
       }

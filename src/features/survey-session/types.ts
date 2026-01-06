@@ -12,10 +12,22 @@
 // ----------------------------------------
 
 /** 설문 세션 상태 */
+// ----------------------------------------
+// Common Types
+// ----------------------------------------
+
+/** 설문 세션 상태 */
 export type SurveySessionStatus = 'IN_PROGRESS' | 'COMPLETED' | 'DROPPED';
 
 /** 인터뷰 로그 질문 타입 */
-export type InterviewLogQType = 'FIXED' | 'TAIL';
+export type InterviewLogQType = 'FIXED' | 'TAIL' | 'OPENING' | 'CLOSING';
+
+/** 테스터 프로필 데이터 */
+export interface TesterProfile {
+  ageGroup: string;
+  gender: string;
+  preferGenre: string;
+}
 
 // ----------------------------------------
 // API Response Types (snake_case)
@@ -32,7 +44,7 @@ export interface ApiChatSession {
 export interface ApiSavedChatLog {
   turn_num: number;
   q_type: InterviewLogQType;
-  fixed_q_id: number;
+  fixed_q_id: number | null;
   question_text: string;
   answer_text: string;
   answered_at: string;
@@ -58,17 +70,17 @@ export type ApiSSEConnectEventData = string; // "connected"
 
 /** [API] SSE question 이벤트 데이터 */
 export interface ApiSSEQuestionEventData {
-  fixed_q_id: number;
+  fixed_q_id: number | null;
   q_type: InterviewLogQType;
   question_text: string;
   turn_num: number;
 }
 
-/** [API] SSE token 이벤트 데이터 (꼬리 질문 스트리밍) */
-export interface ApiSSETokenEventData {
-  fixed_q_id: null;
-  q_type: 'TAIL';
-  question_text: string; // 토큰 내용 (부분 텍스트)
+/** [API] SSE continue 이벤트 데이터 (스트리밍) */
+export interface ApiSSEContinueEventData {
+  fixed_q_id: number | null;
+  q_type: InterviewLogQType;
+  question_text: string; // 부분 텍스트
   turn_num: number;
 }
 
@@ -85,6 +97,7 @@ export interface ApiSSEInterviewCompleteEventData {
 /** [API] SSE done 이벤트 데이터 (AI 응답 완료) */
 export interface ApiSSEDoneEventData {
   turn_num: number;
+  // 향후 확장을 위해 should_end 등 추가 가능 (현재는 클라이언트에서 크게 안씀)
 }
 
 /** [API] SSE Error 이벤트 데이터 */
@@ -97,7 +110,7 @@ export interface ApiSSEErrorEventData {
 export type ApiSSEEvent =
   | { event: 'connect'; data: ApiSSEConnectEventData }
   | { event: 'question'; data: ApiSSEQuestionEventData }
-  | { event: 'token'; data: ApiSSETokenEventData }
+  | { event: 'continue'; data: ApiSSEContinueEventData }
   | { event: 'start'; data: ApiSSEStartEventData }
   | { event: 'done'; data: ApiSSEDoneEventData }
   | { event: 'interview_complete'; data: ApiSSEInterviewCompleteEventData }
@@ -105,7 +118,7 @@ export type ApiSSEEvent =
 
 /** [API] 응답자 대답 전송 요청 바디 */
 export interface ApiSendMessageRequest {
-  fixed_q_id: number;
+  fixed_q_id: number | null;
   turn_num: number;
   answer_text: string;
   question_text: string;
@@ -115,7 +128,7 @@ export interface ApiSendMessageRequest {
 export interface ApiSendMessageResult {
   turn_num: number;
   q_type: InterviewLogQType;
-  fixed_q_id: number;
+  fixed_q_id: number | null;
   question_text: string;
   answer_text: string;
 }
@@ -140,7 +153,7 @@ export interface ChatSession {
 export interface SavedChatLog {
   turnNum: number;
   qType: InterviewLogQType;
-  fixedQId: number;
+  fixedQId: number | null;
   questionText: string;
   answerText: string;
   answeredAt: string;
@@ -148,16 +161,16 @@ export interface SavedChatLog {
 
 /** [Client] SSE Question 이벤트 데이터 */
 export interface SSEQuestionEventData {
-  fixedQId: number;
+  fixedQId: number | null;
   qType: InterviewLogQType;
   questionText: string;
   turnNum: number;
 }
 
-/** [Client] SSE Token 이벤트 데이터 */
-export interface SSETokenEventData {
-  fixedQId: null;
-  qType: 'TAIL';
+/** [Client] SSE Continue 이벤트 데이터 */
+export interface SSEContinueEventData {
+  fixedQId: number | null;
+  qType: InterviewLogQType;
   questionText: string;
   turnNum: number;
 }
@@ -180,6 +193,7 @@ export interface ChatMessageData {
 /** 새 대화 세션 생성 요청 파라미터 */
 export interface CreateChatSessionParams {
   surveyUuid: string;
+  testerProfile?: TesterProfile;
 }
 
 /** 응답자 대답 전송 요청 파라미터 */
@@ -189,7 +203,7 @@ export interface SendMessageParams {
 
 /** 응답자 대답 전송 요청 바디 (Client) */
 export interface SendMessageRequest {
-  fixedQId: number;
+  fixedQId: number | null;
   turnNum: number;
   answerText: string;
   questionText: string;
@@ -204,7 +218,7 @@ export interface UseChatSSEOptions {
   sessionUuid: string;
   onConnect?: () => void;
   onQuestion?: (data: SSEQuestionEventData) => void;
-  onToken?: (data: SSETokenEventData) => void;
+  onContinue?: (data: SSEContinueEventData) => void;
   onStart?: () => void;
   onDone?: (turnNum: number) => void;
   onInterviewComplete?: () => void;
@@ -255,10 +269,10 @@ export function toSSEQuestionEventData(
   };
 }
 
-/** API SSE Token 이벤트 -> 클라이언트 변환 */
-export function toSSETokenEventData(
-  api: ApiSSETokenEventData
-): SSETokenEventData {
+/** API SSE Continue 이벤트 -> 클라이언트 변환 */
+export function toSSEContinueEventData(
+  api: ApiSSEContinueEventData
+): SSEContinueEventData {
   return {
     fixedQId: api.fixed_q_id,
     qType: api.q_type,

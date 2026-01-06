@@ -24,7 +24,6 @@ function useQuestionGenerate() {
   const manager = useQuestionManager();
 
   // 추가 상태
-  const [hasGenerated, setHasGenerated] = useState(false);
   const [pendingFeedbackQuestions, setPendingFeedbackQuestions] = useState<
     Set<string>
   >(new Set());
@@ -55,10 +54,11 @@ function useQuestionGenerate() {
 
   // AI 질문 생성 API 호출
   const generateQuestions = useCallback(async () => {
-    const { gameName, gameGenre, surveyName, testPurpose } = formData;
+    const { gameName, gameGenre, surveyName, testPurpose, themePriorities } = formData;
 
-    // 필수 데이터 확인
-    if (!gameName || !gameGenre?.length || !surveyName || !testPurpose) {
+    // 필수 데이터 확인 (testPurpose 또는 themePriorities 중 하나는 있어야 함)
+    const purpose = testPurpose || (themePriorities && themePriorities.length > 0 ? themePriorities[0] : null);
+    if (!gameName || !gameGenre?.length || !surveyName || !purpose) {
       return;
     }
 
@@ -76,17 +76,17 @@ function useQuestionGenerate() {
 
     // feedbackMap 초기화 (새 질문이므로)
     manager.setFeedbackMap({});
-    setHasGenerated(true);
   }, [formData, generateMutateAsync, updateFormData, manager]);
 
   // 페이지 렌더링 시 질문이 없으면 자동으로 API 호출
   useEffect(() => {
-    if (
-      manager.questions.length > 0 ||
-      isGenerating ||
-      hasGenerated ||
-      initialGenerateRef.current
-    ) {
+    // 이미 생성 중이거나 초기 생성 진행 중이면 스킵
+    if (isGenerating || initialGenerateRef.current) {
+      return;
+    }
+
+    // 질문이 있으면 스킵
+    if (manager.questions.length > 0) {
       return;
     }
 
@@ -95,7 +95,7 @@ function useQuestionGenerate() {
     generateQuestions().finally(() => {
       initialGenerateRef.current = false;
     });
-  }, [manager.questions.length, isGenerating, hasGenerated, generateQuestions]);
+  }, [manager.questions.length, isGenerating, generateQuestions]);
 
   // 전체 질문에 대한 피드백 요청 (초기 로드 시)
   // useRef를 사용하여 최신 값을 참조하되, 불필요한 re-render를 방지
@@ -155,15 +155,14 @@ function useQuestionGenerate() {
 
   // 질문 재생성
   const handleRegenerate = useCallback(async () => {
-    setHasGenerated(false);
     await generateQuestions();
   }, [generateQuestions]);
 
-  // AI 질문 1개 추가 생성
   const handleAddQuestion = useCallback(async () => {
-    const { gameName, gameGenre, surveyName, testPurpose } = formData;
+    const { gameName, gameGenre, surveyName, testPurpose, themePriorities } = formData;
+    const purpose = testPurpose || (themePriorities && themePriorities.length > 0 ? themePriorities[0] : null);
 
-    if (!gameName || !gameGenre?.length || !surveyName || !testPurpose) {
+    if (!gameName || !gameGenre?.length || !surveyName || !purpose) {
       return;
     }
 

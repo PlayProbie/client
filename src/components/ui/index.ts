@@ -29,5 +29,24 @@ export { ConfirmDialog } from './ConfirmDialog';
 // Alert Components
 export { InlineAlert } from './InlineAlert';
 
+// Badge Components
+export { Badge } from './Badge';
+
+// Card Components
+export { Card, CardContent, CardHeader, CardTitle } from './Card';
+
 // Input Components
 export { Input, type InputProps } from './Input';
+export { Label } from './Label';
+export {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectScrollDownButton,
+  SelectScrollUpButton,
+  SelectSeparator,
+  SelectTrigger,
+  SelectValue,
+} from './Select';

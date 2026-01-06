@@ -28,10 +28,11 @@ function useQuestionSelection() {
     return formData.questions || [];
   }, [formData.questions]);
 
-  // Store에서 선택된 질문 인덱스 가져오기 (없으면 전체 선택)
+  // Store에서 선택된 질문 인덱스 가져오기 (없거나 빈 배열이면 전체 선택)
   const selectedQuestions = useMemo(() => {
-    if (formData.selectedQuestionIndices !== undefined) {
-      return new Set(formData.selectedQuestionIndices);
+    const indices = formData.selectedQuestionIndices;
+    if (indices !== undefined && indices.length > 0) {
+      return new Set(indices);
     }
     // 초기화 시 전체 선택
     return new Set(questions.map((_, i) => i));
