@@ -60,11 +60,11 @@ function useQuestionAnalysis({
         if (isCancelled) return;
         try {
           const parsed: QuestionAnalysisResult = JSON.parse(
-            wrapper.resultJson
+            wrapper.result_json
           );
           setData((prev) => ({
             ...prev,
-            [wrapper.fixedQuestionId]: parsed,
+            [wrapper.fixed_question_id]: parsed,
           }));
         } catch (err) {
           console.error('Failed to parse question analysis result:', err);

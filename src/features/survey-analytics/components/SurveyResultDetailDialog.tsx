@@ -46,11 +46,7 @@ function SurveyResultDetailDialog({
   } = useQuery({
     queryKey: ['survey-result-details', surveyUuid, sessionUuid],
     queryFn: () => getSurveyResultDetails({ surveyUuid, sessionUuid }),
-<<<<<<< HEAD
-    select: (response) => response.result as unknown as SurveyResultDetails,
-=======
     select: (response) => response.result as ApiSurveyResultDetails,
->>>>>>> 10b027e (fix: SSE 중복 요청 및 데이터 렌더링 버그 수정)
     enabled: open && !!surveyUuid && !!sessionUuid,
   });
 

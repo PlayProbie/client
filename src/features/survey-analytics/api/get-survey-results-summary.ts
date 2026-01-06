@@ -25,6 +25,7 @@ export async function getSurveyResultsSummary(
     headers: {
       'Content-Type': 'application/json',
     },
+    credentials: 'include',
   });
 
   if (!response.ok) {

@@ -3,7 +3,7 @@ import { BarChart3, MessageSquare, Smile, Users } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { PageSpinner } from '@/components/ui/loading';
 
-import type { ApiSurveyResultsSummary, QuestionAnalysisResult } from '../types';
+import type { QuestionAnalysisResult, SurveyResultsSummary } from '../types';
 import {
   calculateAverageGEQ,
   calculateAverageSentiment,
@@ -24,7 +24,7 @@ type QuestionAnalysisData = {
 };
 
 type SurveyOverviewProps = {
-  readonly summary: ApiSurveyResultsSummary;
+  readonly summary: SurveyResultsSummary;
   readonly questionAnalysis: QuestionAnalysisData;
 };
 

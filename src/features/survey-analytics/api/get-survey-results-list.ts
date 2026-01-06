@@ -28,6 +28,7 @@ export async function getSurveyResultsList(
     headers: {
       'Content-Type': 'application/json',
     },
+    credentials: 'include',
   });
 
   if (!response.ok) {

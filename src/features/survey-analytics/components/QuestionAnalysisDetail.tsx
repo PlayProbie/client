@@ -38,10 +38,10 @@ function QuestionAnalysisDetail({ data }: QuestionAnalysisDetailProps) {
   const selectedCluster = data.clusters[safeClusterIndex];
 
   // 현재 선택된 클러스터의 대표 답변 텍스트 매핑
-  const representativeAnswerIds = selectedCluster?.representative_answer_ids ?? [];
-  const answerList: AnswerListItem[] = representativeAnswerIds.map((id, index) => ({
-    id: id || `answer-${index}`,
-    text: id, // representative_answer_ids를 텍스트로 사용 (실제 답변 텍스트가 별도로 있다면 수정 필요)
+  const representativeAnswers = selectedCluster?.representative_answers ?? [];
+  const answerList: AnswerListItem[] = representativeAnswers.map((text, index) => ({
+    id: `answer-${index}`,
+    text: text, // 서버에서 변환된 실제 답변 텍스트 (Q&A 형식)
     sentiment:
       selectedCluster.satisfaction >= 60
         ? 'positive'

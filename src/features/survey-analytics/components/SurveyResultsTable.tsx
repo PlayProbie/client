@@ -17,18 +17,14 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/Table';
-import {
-  getSessionStatusClassName,
-  getSessionStatusLabel,
-  type SurveySessionStatus,
-} from '@/features/survey-session';
+import { getSessionStatusClassName, getSessionStatusLabel, type SurveySessionStatus } from '@/features/survey-session';
 
-import type { ApiSurveyResultListItem } from '../types';
+import type { SurveyResultListItem } from '../types';
 import { SurveyResultDetailDialog } from './SurveyResultDetailDialog';
 import { TablePagination } from './TablePagination';
 
 type SurveyResultsTableProps = {
-  data: ApiSurveyResultListItem[];
+  data: SurveyResultListItem[];
 };
 
 // 컬럼별 너비 설정
@@ -48,16 +44,16 @@ const COLUMN_WIDTHS = {
  */
 function SurveyResultsTable({ data }: SurveyResultsTableProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<ApiSurveyResultListItem | null>(
+  const [selectedItem, setSelectedItem] = useState<SurveyResultListItem | null>(
     null
   );
 
-  const handleOpenDetail = useCallback((item: ApiSurveyResultListItem) => {
+  const handleOpenDetail = useCallback((item: SurveyResultListItem) => {
     setSelectedItem(item);
     setDialogOpen(true);
   }, []);
 
-  const columns: ColumnDef<ApiSurveyResultListItem>[] = useMemo(
+  const columns: ColumnDef<SurveyResultListItem>[] = useMemo(
     () => [
       {
         accessorKey: 'surveyName',
@@ -220,8 +216,8 @@ function SurveyResultsTable({ data }: SurveyResultsTableProps) {
         <SurveyResultDetailDialog
           open={dialogOpen}
           onOpenChange={setDialogOpen}
-          surveyUuid={selectedItem.surveyUuid}
-          sessionUuid={selectedItem.sessionUuid}
+          surveyUuid={selectedItem.survey_uuid}
+          sessionUuid={selectedItem.session_uuid}
         />
       )}
     </div>

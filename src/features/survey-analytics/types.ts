@@ -2,7 +2,7 @@
  * Survey Analytics Feature 타입 정의
  *
  * 명명 규칙:
- * - API 응답/요청 타입: camelCase (서버 응답 그대로 - Spring 기본)
+ * - API 응답 타입: snake_case (서버 @JsonNaming 설정)
  * - 클라이언트 상태 타입: camelCase (컴포넌트에서 사용)
  */
 
@@ -17,7 +17,7 @@ export type SurveySessionStatus = 'COMPLETED' | 'IN_PROGRESS' | 'DROPPED';
 export type InterviewLogQType = 'FIXED' | 'TAIL';
 
 // ----------------------------------------
-// API Response Types (camelCase - 서버 응답 그대로)
+// API Response Types (snake_case - 서버 응답 그대로)
 // ----------------------------------------
 
 /** [API] 설문 세션 정보 */
@@ -25,47 +25,47 @@ export interface ApiSurveySession {
   session_uuid: string;
   survey_name: string;
   survey_uuid: string;
-  surveyId: number;
+  survey_id: number;
   tester_id: string;
   status: SurveySessionStatus;
-  endedAt: string;
+  ended_at: string;
 }
 
 /** [API] 질문-답변 발췌 */
 export interface ApiQuestionAnswerExcerpt {
-  qType: InterviewLogQType;
-  questionText: string;
-  answerText: string;
+  q_type: InterviewLogQType;
+  question_text: string;
+  answer_text: string;
 }
 
 /** [API] 고정 질문별 응답 묶음 */
 export interface ApiFixedQuestionResponse {
-  fixedQuestion: string;
+  fixed_question: string;
   excerpt: ApiQuestionAnswerExcerpt[];
 }
 
 /** [API] 전체 응답 요약 데이터 */
 export interface ApiSurveyResultsSummary {
-  surveyCount: number;
-  responseCount: number;
+  survey_count: number;
+  response_count: number;
 }
 
 /** [API] 전체 응답 리스트 아이템 */
 export interface ApiSurveyResultListItem extends ApiSurveySession {
-  firstQuestion: string;
+  first_question: string;
 }
 
 /** [API] 전체 응답 리스트 데이터 */
 export interface ApiSurveyResultsList {
   content: ApiSurveyResultListItem[];
-  nextCursor: number | null;
-  hasNext: boolean;
+  next_cursor: number | null;
+  has_next: boolean;
 }
 
 /** [API] 응답 세부내용 데이터 */
 export interface ApiSurveyResultDetails {
-  session: Omit<ApiSurveySession, 'firstQuestion'>;
-  byFixedQuestion: ApiFixedQuestionResponse[];
+  session: Omit<ApiSurveySession, 'first_question'>;
+  by_fixed_question: ApiFixedQuestionResponse[];
 }
 
 // ----------------------------------------
@@ -125,10 +125,10 @@ export interface ClusterInfo {
   emotion_type: EmotionType;
   geq_scores: GEQScores;
   emotion_detail: string;
-  answer_ids: string[];
+  answer_ids?: string[]; // AI 원본 (서버에서 변환 전)
   satisfaction: number;
   keywords: string[];
-  representative_answer_ids: string[];
+  representative_answers: string[]; // 서버에서 변환된 실제 답변 텍스트
 }
 
 /** 감정 분포 */
@@ -149,7 +149,8 @@ export interface SentimentStats {
 export interface OutlierInfo {
   count: number;
   summary: string;
-  answer_ids: string[];
+  answer_ids?: string[]; // AI 원본 (서버에서 변환 전)
+  sample_answers?: string[]; // 서버에서 변환된 실제 답변 텍스트 (최대 5개)
 }
 
 /** 질문별 AI 분석 결과 */
@@ -162,10 +163,10 @@ export interface QuestionAnalysisResult {
   meta_summary: string | null;
 }
 
-/** SSE로 받는 질문 분석 래퍼 */
+/** SSE로 받는 질문 분석 래퍼 (API 응답 - snake_case) */
 export interface QuestionResponseAnalysisWrapper {
-  fixedQuestionId: number;
-  resultJson: string; // JSON.parse하면 QuestionAnalysisResult
+  fixed_question_id: number;
+  result_json: string; // JSON.parse하면 QuestionAnalysisResult
 }
 
 /** [Client] 설문 세션 정보 */

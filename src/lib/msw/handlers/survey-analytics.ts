@@ -30,11 +30,11 @@ const generateMockSessionItems = (count: number): ApiSurveyResultListItem[] => {
     session_uuid: `session-uuid-${1000 + i}`,
     survey_name: `Escape From Duckov 플레이테스트 #${i + 1}`,
     survey_uuid: `survey-uuid-${100 + Math.floor(i / 10)}`,
-    surveyId: 100 + Math.floor(i / 10),
+    survey_id: 100 + Math.floor(i / 10),
     tester_id: `tester-uuid-${i}`,
     status: statuses[i % statuses.length],
-    firstQuestion: questions[i % questions.length],
-    endedAt: toKSTISOString(new Date(Date.now() - i * 3600000)),
+    first_question: questions[i % questions.length],
+    ended_at: toKSTISOString(new Date(Date.now() - i * 3600000)),
   }));
 };
 
@@ -59,8 +59,8 @@ export const surveyAnalyticsHandlers = [
 
       const response: GetSurveyResultsSummaryResponse = {
         result: {
-          surveyCount: 12,
-          responseCount: 100,
+          survey_count: 12,
+          response_count: 100,
         },
       };
 
@@ -110,77 +110,77 @@ export const surveyAnalyticsHandlers = [
             session_uuid: sessionUuid,
             survey_name: 'Escape From Duckov 플레이테스트',
             survey_uuid: surveyUuid,
-            surveyId: 100,
+            survey_id: 100,
             tester_id: 'tester-uuid-123',
             status: 'COMPLETED',
-            endedAt: '2025-12-27T16:40:00+09:00',
+            ended_at: '2025-12-27T16:40:00+09:00',
           },
-          byFixedQuestion: [
+          by_fixed_question: [
             {
-              fixedQuestion: '레이드 중 긴장감을 느끼셨나요?',
+              fixed_question: '레이드 중 긴장감을 느끼셨나요?',
               excerpt: [
                 {
-                  qType: 'FIXED',
-                  questionText: '레이드 중 긴장감을 느끼셨나요?',
-                  answerText:
+                  q_type: 'FIXED',
+                  question_text: '레이드 중 긴장감을 느끼셨나요?',
+                  answer_text:
                     '네, 정말 심장이 쿵쾅쿵쾅 뛰었어요! 특히 전리품을 많이 들었을 때요.',
                 },
                 {
-                  qType: 'TAIL',
-                  questionText: '어떤 상황에서 가장 긴장되셨나요?',
-                  answerText:
+                  q_type: 'TAIL',
+                  question_text: '어떤 상황에서 가장 긴장되셨나요?',
+                  answer_text:
                     '탈출 포인트 근처에서 적 발소리가 들렸을 때 손에 땀이 났어요.',
                 },
               ],
             },
             {
-              fixedQuestion: '은신처 건설을 통한 성장이 체감되셨나요?',
+              fixed_question: '은신처 건설을 통한 성장이 체감되셨나요?',
               excerpt: [
                 {
-                  qType: 'FIXED',
-                  questionText: '은신처 건설을 통한 성장이 체감되셨나요?',
-                  answerText:
+                  q_type: 'FIXED',
+                  question_text: '은신처 건설을 통한 성장이 체감되셨나요?',
+                  answer_text:
                     '은신처 레벨을 올리니까 좋은 장비를 만들 수 있어서 확실히 성장한 느낌이에요.',
                 },
                 {
-                  qType: 'TAIL',
-                  questionText: '어떤 업그레이드가 가장 도움이 되었나요?',
-                  answerText:
+                  q_type: 'TAIL',
+                  question_text: '어떤 업그레이드가 가장 도움이 되었나요?',
+                  answer_text:
                     '무기 개조대 업그레이드가 가장 유용했어요. 총기 성능이 확 달라졌어요.',
                 },
               ],
             },
             {
-              fixedQuestion: '게임을 다시 플레이하고 싶은 마음이 드시나요?',
+              fixed_question: '게임을 다시 플레이하고 싶은 마음이 드시나요?',
               excerpt: [
                 {
-                  qType: 'FIXED',
-                  questionText: '게임을 다시 플레이하고 싶은 마음이 드시나요?',
-                  answerText:
+                  q_type: 'FIXED',
+                  question_text: '게임을 다시 플레이하고 싶은 마음이 드시나요?',
+                  answer_text:
                     '당연하죠! 다음에는 다른 맵도 도전해보고 싶어요.',
                 },
                 {
-                  qType: 'TAIL',
-                  questionText:
+                  q_type: 'TAIL',
+                  question_text:
                     '다음 레이드에서 시도해보고 싶은 전략이 있나요?',
-                  answerText:
+                  answer_text:
                     '이번에는 은신 위주로 플레이해서 다음에는 적극적으로 교전해볼 거예요.',
                 },
               ],
             },
             {
-              fixedQuestion: '초반 난이도가 적절하다고 느끼셨나요?',
+              fixed_question: '초반 난이도가 적절하다고 느끼셨나요?',
               excerpt: [
                 {
-                  qType: 'FIXED',
-                  questionText: '초반 난이도가 적절하다고 느끼셨나요?',
-                  answerText:
+                  q_type: 'FIXED',
+                  question_text: '초반 난이도가 적절하다고 느끼셨나요?',
+                  answer_text:
                     '처음 몇 판은 좀 어려웠지만 적응하니까 괜찮았어요.',
                 },
                 {
-                  qType: 'TAIL',
-                  questionText: '어떤 부분이 특히 어려우셨나요?',
-                  answerText:
+                  q_type: 'TAIL',
+                  question_text: '어떤 부분이 특히 어려우셨나요?',
+                  answer_text:
                     '맵 구조를 모르니까 탈출 포인트 찾기가 힘들었어요. 익숙해지니까 훨씬 나아졌어요.',
                 },
               ],
@@ -200,8 +200,8 @@ export const surveyAnalyticsHandlers = [
 
         // 질문 1 분석 결과
         const question1 = {
-          fixedQuestionId: 10,
-          resultJson: JSON.stringify({
+          fixed_question_id: 10,
+          result_json: JSON.stringify({
             question_id: 10,
             total_answers: 45,
             clusters: [
@@ -224,7 +224,7 @@ export const surveyAnalyticsHandlers = [
                 answer_ids: ['ans1', 'ans2', 'ans3'],
                 satisfaction: 78,
                 keywords: ['심장박동', '탈출', '전리품', '적발견', '긴박함'],
-                representative_answer_ids: ['ans1', 'ans2'],
+                representative_answers: ['Q: 레이드 중 긴장감을 느끼셨나요?\nA: 네, 정말 심장이 쿵쾅쿵쾅 뛰었어요!', 'Q: 어떤 상황에서 가장 긴장되셨나요?\nA: 탈출 포인트 근처에서 적 발소리가 들렸을 때요.'],
               },
               {
                 summary: '긴장감이 적절했지만 더 높이면 좋겠다는 의견',
@@ -244,7 +244,7 @@ export const surveyAnalyticsHandlers = [
                 answer_ids: ['ans4', 'ans5'],
                 satisfaction: 55,
                 keywords: ['적절', '난이도', '더높게', '스릴'],
-                representative_answer_ids: ['ans4'],
+                representative_answers: ['Q: 긴장감에 대해 어떻게 느끼셨나요?\nA: 적절했지만 조금 더 높았으면 좋겠어요.'],
               },
               {
                 summary: '긴장감이 부족하거나 스트레스만 받았다는 부정적 반응',
@@ -264,7 +264,7 @@ export const surveyAnalyticsHandlers = [
                 answer_ids: ['ans6'],
                 satisfaction: 28,
                 keywords: ['어려움', '스트레스', '짜증', '밸런스'],
-                representative_answer_ids: ['ans6'],
+                representative_answers: ['Q: 게임이 어떠셨나요?\nA: 너무 어려워서 스트레스만 받았어요.'],
               },
             ],
             sentiment: {
@@ -281,6 +281,7 @@ export const surveyAnalyticsHandlers = [
               summary:
                 '레이드 시스템 자체에 대한 개선 의견 (긴장감과 무관한 의견)',
               answer_ids: ['out1', 'out2', 'out3'],
+              sample_answers: ['레이드 보상이 더 다양했으면 좋겠어요.', '팀 플레이 기능이 추가되면 좋겠습니다.'],
             },
             meta_summary:
               '대부분의 플레이어가 레이드에서 높은 긴장감과 몰입감을 경험했으며, 특히 탈출 시점에서 가장 큰 긴장감을 느꼈다.',
@@ -289,8 +290,8 @@ export const surveyAnalyticsHandlers = [
 
         // 질문 2 분석 결과
         const question2 = {
-          fixedQuestionId: 11,
-          resultJson: JSON.stringify({
+          fixed_question_id: 11,
+          result_json: JSON.stringify({
             question_id: 11,
             total_answers: 42,
             clusters: [
@@ -313,7 +314,7 @@ export const surveyAnalyticsHandlers = [
                 answer_ids: ['ans7', 'ans8', 'ans9'],
                 satisfaction: 82,
                 keywords: ['업그레이드', '성장', '무기개조', '장비', '강화'],
-                representative_answer_ids: ['ans7', 'ans8'],
+                representative_answers: ['Q: 은신처 성장이 체감되셨나요?\nA: 네, 업그레이드할 때마다 확실히 강해지는 느낌이에요!', 'Q: 어떤 업그레이드가 좋았나요?\nA: 무기 개조대가 정말 좋았어요.'],
               },
               {
                 summary: '성장은 느껴지지만 속도가 너무 느리다는 의견',
@@ -333,7 +334,7 @@ export const surveyAnalyticsHandlers = [
                 answer_ids: ['ans10', 'ans11'],
                 satisfaction: 48,
                 keywords: ['느림', '그라인딩', '시간', '속도'],
-                representative_answer_ids: ['ans10'],
+                representative_answers: ['Q: 성장 속도는 어떠셨나요?\nA: 좀 느린 것 같아요. 그라인딩이 많이 필요해요.'],
               },
               {
                 summary: '성장 체감이 부족하다는 부정적 반응',
@@ -353,7 +354,7 @@ export const surveyAnalyticsHandlers = [
                 answer_ids: ['ans12'],
                 satisfaction: 25,
                 keywords: ['미미함', '효과없음', '별로', '실망'],
-                representative_answer_ids: ['ans12'],
+                representative_answers: ['Q: 성장이 체감되셨나요?\nA: 별로 체감이 안 돼요. 업그레이드해도 비슷한 느낌이에요.'],
               },
             ],
             sentiment: {
@@ -369,6 +370,7 @@ export const surveyAnalyticsHandlers = [
               count: 2,
               summary: '은신처 UI/UX 개선 의견',
               answer_ids: ['out4', 'out5'],
+              sample_answers: ['은신처 UI가 좀 불편해요.', '인벤토리 정리가 힘들어요.'],
             },
             meta_summary:
               '대부분의 플레이어가 은신처 업그레이드를 통한 성장을 긍정적으로 평가했으며, 특히 무기 개조 시스템이 높은 만족도를 보였다.',
@@ -377,8 +379,8 @@ export const surveyAnalyticsHandlers = [
 
         // 질문 3 분석 결과
         const question3 = {
-          fixedQuestionId: 12,
-          resultJson: JSON.stringify({
+          fixed_question_id: 12,
+          result_json: JSON.stringify({
             question_id: 12,
             total_answers: 48,
             clusters: [
@@ -401,7 +403,7 @@ export const surveyAnalyticsHandlers = [
                 answer_ids: ['ans13', 'ans14', 'ans15'],
                 satisfaction: 88,
                 keywords: ['재밌음', '중독성', '다시하고싶음', '한판더', '기대'],
-                representative_answer_ids: ['ans13', 'ans14'],
+                representative_answers: ['Q: 다시 플레이하고 싶으신가요?\nA: 당연하죠! 너무 재밌어서 계속하고 싶어요!', 'Q: 게임의 어떤 점이 좋으셨나요?\nA: 중독성이 강해요. 한판만 더... 하게 돼요.'],
               },
               {
                 summary: '재플레이 의향은 있지만 개선점이 필요하다는 의견',
@@ -421,7 +423,7 @@ export const surveyAnalyticsHandlers = [
                 answer_ids: ['ans16'],
                 satisfaction: 52,
                 keywords: ['개선필요', '밸런스', '콘텐츠', '추가'],
-                representative_answer_ids: ['ans16'],
+                representative_answers: ['Q: 개선되면 좋겠는 점이 있나요?\nA: 밸런스 조정이 좀 필요한 것 같아요.'],
               },
             ],
             sentiment: {
@@ -437,6 +439,7 @@ export const surveyAnalyticsHandlers = [
               count: 2,
               summary: '게임 장르 자체가 맞지 않는다는 의견',
               answer_ids: ['out6', 'out7'],
+              sample_answers: ['이런 장르는 제 취향이 아니에요.'],
             },
             meta_summary:
               '압도적으로 높은 재플레이 의향을 보이며, 게임의 재미와 중독성이 핵심 강점으로 나타났다.',
