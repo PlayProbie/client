@@ -21,29 +21,37 @@ export type BuildStatus =
 /** [API] Build 엔티티 */
 export interface ApiBuild {
   uuid: string;
-  filename: string;
+  version: string;
   status: BuildStatus;
-  size: number;
-  s3_key: string;
+  total_files: number;
+  total_size: number;
   executable_path: string;
-  version?: string;
-  note?: string;
+  os_type: string;
   created_at: string;
-  updated_at: string;
+  // 추가 필드 (명세 외)
+  filename?: string;
+  size?: number;
+  s3_key?: string;
+  note?: string;
+  updated_at?: string;
 }
 
 /** [Client] Build 엔티티 */
 export interface Build {
   uuid: string;
-  filename: string;
+  version: string;
   status: BuildStatus;
-  size: number;
-  s3Key: string;
+  totalFiles: number;
+  totalSize: number;
   executablePath: string;
-  version?: string;
-  note?: string;
+  osType: string;
   createdAt: string;
-  updatedAt: string;
+  // 추가 필드 (명세 외)
+  filename?: string;
+  size?: number;
+  s3Key?: string;
+  note?: string;
+  updatedAt?: string;
 }
 
 /** [API] Create Build 요청 (Spring GameBuildApi.createBuild) */
@@ -53,13 +61,13 @@ export interface ApiCreateBuildRequest {
 
 /** [API] Create Build 응답 (Spring GameBuildApi.createBuild) */
 export interface ApiCreateBuildResult {
-  buildId: string;
+  build_id: string;
   version: string;
-  s3Prefix: string;
+  s3_prefix: string;
   credentials: {
-    accessKeyId: string;
-    secretAccessKey: string;
-    sessionToken: string;
+    access_key_id: string;
+    secret_access_key: string;
+    session_token: string;
     expiration: number; // epoch timestamp
   };
 }
@@ -78,7 +86,7 @@ export interface AwsCredentials {
 
 /** [Client] Create Build 응답 */
 export interface CreateBuildResponse {
-  buildId: string;
+  buildUuid: string;
   version: string;
   s3Prefix: string;
   credentials: AwsCredentials;
@@ -154,7 +162,7 @@ export interface UploadStateRequestingSts {
 /** 업로드 상태 (uploading_to_s3) */
 export interface UploadStateUploading {
   step: 'uploading_to_s3';
-  buildId: string;
+  buildUuid: string;
   keyPrefix: string;
   progress: FolderUploadProgress;
 }
@@ -162,7 +170,7 @@ export interface UploadStateUploading {
 /** 업로드 상태 (completing_upload) */
 export interface UploadStateCompleting {
   step: 'completing_upload';
-  buildId: string;
+  buildUuid: string;
   keyPrefix: string;
   fileCount: number;
   totalSize: number;
@@ -171,14 +179,14 @@ export interface UploadStateCompleting {
 /** 업로드 상태 (success) */
 export interface UploadStateSuccess {
   step: 'success';
-  buildId: string;
+  buildUuid: string;
 }
 
 /** 업로드 상태 (error) */
 export interface UploadStateError {
   step: 'error';
   error: UploadError;
-  buildId?: string;
+  buildUuid?: string;
   keyPrefix?: string;
 }
 
@@ -269,14 +277,18 @@ export interface StreamingGame {
 export function toBuild(api: ApiBuild): Build {
   return {
     uuid: api.uuid,
-    filename: api.filename,
+    version: api.version,
     status: api.status,
+    totalFiles: api.total_files,
+    totalSize: api.total_size,
+    executablePath: api.executable_path,
+    osType: api.os_type,
+    createdAt: api.created_at,
+    // 추가 필드 (명세 외)
+    filename: api.filename,
     size: api.size,
     s3Key: api.s3_key,
-    executablePath: api.executable_path,
-    version: api.version,
     note: api.note,
-    createdAt: api.created_at,
     updatedAt: api.updated_at,
   };
 }
@@ -286,13 +298,13 @@ export function toCreateBuildResponse(
   api: ApiCreateBuildResult
 ): CreateBuildResponse {
   return {
-    buildId: api.buildId,
+    buildUuid: api.build_id,
     version: api.version,
-    s3Prefix: api.s3Prefix,
+    s3Prefix: api.s3_prefix,
     credentials: {
-      accessKeyId: api.credentials.accessKeyId,
-      secretAccessKey: api.credentials.secretAccessKey,
-      sessionToken: api.credentials.sessionToken,
+      accessKeyId: api.credentials.access_key_id,
+      secretAccessKey: api.credentials.secret_access_key,
+      sessionToken: api.credentials.session_token,
       expiration: new Date(api.credentials.expiration).toISOString(),
     },
   };

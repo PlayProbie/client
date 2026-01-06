@@ -20,6 +20,7 @@ export interface ApiAdminTestResponse {
   result: {
     status: AdminTestStatus;
     current_capacity: number;
+    message: string;
   };
 }
 
@@ -27,6 +28,7 @@ export interface ApiAdminTestResponse {
 export interface AdminTestResult {
   status: AdminTestStatus;
   currentCapacity: number;
+  message: string;
 }
 
 // ----------------------------------------
@@ -60,6 +62,7 @@ export function toAdminTestResult(
   return {
     status: api.status,
     currentCapacity: api.current_capacity,
+    message: api.message,
   };
 }
 

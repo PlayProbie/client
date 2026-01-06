@@ -1,7 +1,7 @@
 /**
  * BuildsTable - 빌드 목록 테이블
  */
-import { Copy, Eye } from 'lucide-react';
+import { Copy, Eye, Trash2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -22,9 +22,15 @@ interface BuildsTableProps {
   builds: Build[];
   onViewDetails?: (build: Build) => void;
   onRowClick?: (build: Build) => void;
+  onDelete?: (build: Build) => void;
 }
 
-export function BuildsTable({ builds, onViewDetails, onRowClick }: BuildsTableProps) {
+export function BuildsTable({
+  builds,
+  onViewDetails,
+  onRowClick,
+  onDelete,
+}: BuildsTableProps) {
   const { toast } = useToast();
 
   const handleCopyS3Key = async (s3Key: string) => {
@@ -51,7 +57,7 @@ export function BuildsTable({ builds, onViewDetails, onRowClick }: BuildsTablePr
         {builds.map((build) => (
           <TableRow
             key={build.uuid}
-            className={onRowClick ? 'cursor-pointer hover:bg-muted/20' : ''}
+            className={onRowClick ? 'hover:bg-muted/20 cursor-pointer' : ''}
             onClick={() => {
               if (onRowClick) {
                 onRowClick(build);
@@ -71,7 +77,9 @@ export function BuildsTable({ builds, onViewDetails, onRowClick }: BuildsTablePr
             <TableCell>
               <BuildStatusBadge status={build.status} />
             </TableCell>
-            <TableCell>{formatBytes(build.size)}</TableCell>
+            <TableCell>
+              {formatBytes(build.totalSize ?? build.size ?? 0)}
+            </TableCell>
             <TableCell>{formatDateTime(build.createdAt)}</TableCell>
             <TableCell className="text-right">
               <div className="flex items-center justify-end gap-1">
@@ -81,7 +89,7 @@ export function BuildsTable({ builds, onViewDetails, onRowClick }: BuildsTablePr
                   className="size-8"
                   onClick={(event) => {
                     event.stopPropagation();
-                    handleCopyS3Key(build.s3Key);
+                    handleCopyS3Key(build.s3Key ?? '');
                   }}
                   title="Copy S3 Key"
                 >
@@ -99,6 +107,20 @@ export function BuildsTable({ builds, onViewDetails, onRowClick }: BuildsTablePr
                     title="View Details"
                   >
                     <Eye className="size-4" />
+                  </Button>
+                )}
+                {onDelete && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="size-8 text-destructive hover:text-destructive"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onDelete(build);
+                    }}
+                    title="Delete Build"
+                  >
+                    <Trash2 className="size-4" />
                   </Button>
                 )}
               </div>

@@ -79,62 +79,77 @@ const MOCK_GAME_BUILDS: Record<string, ApiBuild[]> = {
   'game-001-uuid-abcd': [
     {
       uuid: 'build-001',
-      filename: 'dark-souls-v1.0.0.zip',
+      version: '1.0.0',
       status: 'READY',
+      total_files: 150,
+      total_size: 2_500_000_000,
+      executable_path: '/Game/Binaries/Win64/DarkSouls.exe',
+      os_type: 'WINDOWS',
+      created_at: '2025-12-20T10:00:00Z',
+      filename: 'dark-souls-v1.0.0.zip',
       size: 2_500_000_000,
       s3_key: 'builds/game-001/dark-souls-v1.0.0.zip',
-      executable_path: '/Game/Binaries/Win64/DarkSouls.exe',
-      version: '1.0.0',
       note: 'Initial release',
-      created_at: '2025-12-20T10:00:00Z',
       updated_at: '2025-12-20T10:30:00Z',
     },
     {
       uuid: 'build-002',
-      filename: 'dark-souls-v1.1.0.zip',
+      version: '1.1.0',
       status: 'UPLOADED',
+      total_files: 160,
+      total_size: 2_600_000_000,
+      executable_path: '/Game/Binaries/Win64/DarkSouls.exe',
+      os_type: 'WINDOWS',
+      created_at: '2025-12-21T14:00:00Z',
+      filename: 'dark-souls-v1.1.0.zip',
       size: 2_600_000_000,
       s3_key: 'builds/game-001/dark-souls-v1.1.0.zip',
-      executable_path: '/Game/Binaries/Win64/DarkSouls.exe',
-      version: '1.1.0',
-      created_at: '2025-12-21T14:00:00Z',
       updated_at: '2025-12-21T14:05:00Z',
     },
     {
       uuid: 'build-003',
-      filename: 'dark-souls-v1.2.0-beta.zip',
+      version: '1.2.0-beta',
       status: 'PENDING',
+      total_files: 175,
+      total_size: 2_750_000_000,
+      executable_path: '/Game/Binaries/Win64/DarkSouls.exe',
+      os_type: 'WINDOWS',
+      created_at: '2025-12-22T09:00:00Z',
+      filename: 'dark-souls-v1.2.0-beta.zip',
       size: 2_750_000_000,
       s3_key: 'builds/game-001/dark-souls-v1.2.0-beta.zip',
-      executable_path: '/Game/Binaries/Win64/DarkSouls.exe',
-      version: '1.2.0-beta',
       note: 'QA 검토중',
-      created_at: '2025-12-22T09:00:00Z',
       updated_at: '2025-12-22T09:05:00Z',
     },
   ],
   'game-002-uuid-efgh': [
     {
       uuid: 'build-004',
-      filename: 'racing-sim-v2.0.0.zip',
+      version: '2.0.0',
       status: 'READY',
+      total_files: 200,
+      total_size: 4_000_000_000,
+      executable_path: '/RacingSim/Binaries/Win64/RacingSim.exe',
+      os_type: 'WINDOWS',
+      created_at: '2025-12-18T15:00:00Z',
+      filename: 'racing-sim-v2.0.0.zip',
       size: 4_000_000_000,
       s3_key: 'builds/game-002/racing-sim-v2.0.0.zip',
-      executable_path: '/RacingSim/Binaries/Win64/RacingSim.exe',
-      version: '2.0.0',
-      created_at: '2025-12-18T15:00:00Z',
       updated_at: '2025-12-18T15:45:00Z',
     },
     {
       uuid: 'build-005',
-      filename: 'racing-sim-v2.1.0.zip',
+      version: '2.1.0',
       status: 'READY',
+      total_files: 210,
+      total_size: 4_200_000_000,
+      executable_path: '/RacingSim/Binaries/Win64/RacingSim.exe',
+      os_type: 'WINDOWS',
+      created_at: '2025-12-20T12:30:00Z',
+      filename: 'racing-sim-v2.1.0.zip',
       size: 4_200_000_000,
       s3_key: 'builds/game-002/racing-sim-v2.1.0.zip',
-      executable_path: '/RacingSim/Binaries/Win64/RacingSim.exe',
-      version: '2.1.0',
       note: '레이싱 트랙 조정 완료',
-      created_at: '2025-12-20T12:30:00Z',
       updated_at: '2025-12-20T12:45:00Z',
     },
   ],
@@ -187,9 +202,7 @@ export const gameStreamingHandlers = [
     const body = (await request.json()) as { game_uuid: string };
 
     // Source Game 찾기
-    const sourceGame = SOURCE_GAMES.find(
-      (g) => g.game_uuid === body.game_uuid
-    );
+    const sourceGame = SOURCE_GAMES.find((g) => g.game_uuid === body.game_uuid);
     if (!sourceGame) {
       return HttpResponse.json(
         { message: 'Source Game not found' },
@@ -297,18 +310,18 @@ export const gameStreamingHandlers = [
       const body = (await request.json()) as { version: string };
 
       buildCounter++;
-      const buildId = `build-${buildCounter}-${crypto.randomUUID().slice(0, 8)}`;
-      const s3Prefix = `${gameUuid}/${buildId}/`;
+      const buildUuid = `build-${buildCounter}-${crypto.randomUUID().slice(0, 8)}`;
+      const s3Prefix = `${gameUuid}/${buildUuid}/`;
 
       const response: ApiCreateBuildResponse = {
         result: {
-          buildId,
+          build_id: buildUuid,
           version: body.version,
-          s3Prefix,
+          s3_prefix: s3Prefix,
           credentials: {
-            accessKeyId: 'AKIAIOSFODNN7EXAMPLE',
-            secretAccessKey: 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
-            sessionToken: 'FwoGZXIvYXdzEBYaDMockSessionToken==',
+            access_key_id: 'AKIAIOSFODNN7EXAMPLE',
+            secret_access_key: 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
+            session_token: 'FwoGZXIvYXdzEBYaDMockSessionToken==',
             expiration: Date.now() + 3600000, // epoch timestamp
           },
         },
@@ -320,21 +333,25 @@ export const gameStreamingHandlers = [
 
   // Build Complete (Spring GameBuildApi.completeUpload)
   http.post(
-    `${API_BASE_URL}/games/:gameUuid/builds/:buildId/complete`,
+    `${API_BASE_URL}/games/:gameUuid/builds/:buildUuid/complete`,
     async ({ params, request }) => {
       await delay(300);
-      const { gameUuid, buildId } = params;
+      const { gameUuid, buildUuid } = params;
       const body = (await request.json()) as ApiBuildCompleteRequest;
 
       // MOCK_GAME_BUILDS에 빌드 추가
       const newBuild: ApiBuild = {
-        uuid: buildId as string,
-        filename: `build-${buildId}`,
+        uuid: buildUuid as string,
+        version: '1.0.0',
         status: 'UPLOADED',
-        size: body.expected_total_size,
-        s3_key: `${gameUuid}/${buildId}/`,
+        total_files: body.expected_file_count,
+        total_size: body.expected_total_size,
         executable_path: body.executable_path,
+        os_type: body.os_type,
         created_at: new Date().toISOString(),
+        filename: `build-${buildUuid}`,
+        size: body.expected_total_size,
+        s3_key: `${gameUuid}/${buildUuid}/`,
         updated_at: new Date().toISOString(),
       };
 
@@ -345,7 +362,7 @@ export const gameStreamingHandlers = [
 
       const response: ApiBuildCompleteResponse = {
         result: {
-          uuid: buildId as string,
+          uuid: buildUuid as string,
           status: 'UPLOADED',
           executable_path: body.executable_path,
           os_type: body.os_type,
@@ -358,14 +375,14 @@ export const gameStreamingHandlers = [
 
   // Build Delete (Spring GameBuildApi.deleteBuild)
   http.delete(
-    `${API_BASE_URL}/games/:gameUuid/builds/:buildId`,
+    `${API_BASE_URL}/games/:gameUuid/builds/:buildUuid`,
     async ({ params }) => {
       await delay(300);
-      const { gameUuid, buildId } = params;
+      const { gameUuid, buildUuid } = params;
 
       const builds = MOCK_GAME_BUILDS[gameUuid as string];
       if (builds) {
-        const index = builds.findIndex((b) => b.uuid === buildId);
+        const index = builds.findIndex((b) => b.uuid === buildUuid);
         if (index !== -1) {
           builds.splice(index, 1);
         }

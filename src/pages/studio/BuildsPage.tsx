@@ -8,8 +8,10 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 import { Button, InlineAlert, Skeleton } from '@/components/ui';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import type { Build } from '@/features/game-streaming';
 import { BuildsTable, BuildUploadModal } from '@/features/game-streaming';
 import {
+  useBuildDeleteMutation,
   useBuildsQuery,
   useGameDetailQuery,
   useUnsavedChanges,
@@ -29,12 +31,27 @@ export default function BuildsPage() {
     refetch,
   } = useBuildsQuery(gameUuid || '');
   const { data: game } = useGameDetailQuery(gameUuid || '');
+  const deleteBuildMutation = useBuildDeleteMutation(gameUuid || '');
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [buildToDelete, setBuildToDelete] = useState<Build | null>(null);
   const hasActiveUploads = useUploadStore(selectHasActiveUploads);
   const { showDialog, confirmLeave, cancelLeave } = useUnsavedChanges({
     hasChanges: hasActiveUploads,
     message: '변경사항이 저장되지 않았습니다. 페이지를 떠나시겠습니까?',
   });
+  const deleteTargetLabel = buildToDelete?.filename || buildToDelete?.uuid;
+
+  const handleDeleteConfirm = () => {
+    if (!gameUuid || !buildToDelete || deleteBuildMutation.isPending) {
+      return;
+    }
+
+    deleteBuildMutation.mutate(buildToDelete.uuid, {
+      onSuccess: () => {
+        setBuildToDelete(null);
+      },
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -98,6 +115,7 @@ export default function BuildsPage() {
         <div className="bg-card rounded-lg border">
           <BuildsTable
             builds={builds}
+            onDelete={setBuildToDelete}
             onRowClick={() => {
               if (gameUuid) {
                 navigate(`/games/${gameUuid}/stream-settings`);
@@ -116,6 +134,24 @@ export default function BuildsPage() {
           onOpenChange={setIsUploadModalOpen}
         />
       )}
+
+      <ConfirmDialog
+        open={!!buildToDelete}
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen) {
+            setBuildToDelete(null);
+          }
+        }}
+        title="빌드를 삭제할까요?"
+        description={`${
+          deleteTargetLabel ? `"${deleteTargetLabel}"` : '선택한 빌드'
+        }를 삭제하면 복구할 수 없습니다.`}
+        cancelLabel="취소"
+        confirmLabel="삭제"
+        confirmVariant="destructive"
+        onCancel={() => setBuildToDelete(null)}
+        onConfirm={handleDeleteConfirm}
+      />
 
       <ConfirmDialog
         open={showDialog}

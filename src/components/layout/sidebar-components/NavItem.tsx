@@ -19,13 +19,13 @@ const resolveDynamicPath = (path: string, gameUuid?: string) => {
   }
 
   if (!gameUuid) {
-    return '/games';
+    return path;
   }
 
   try {
     return generatePath(path, { gameUuid });
   } catch {
-    return '/games';
+    return path;
   }
 };
 
@@ -66,11 +66,7 @@ interface NavItemProps {
   activeGameUuid?: string;
 }
 
-function NavItem({
-  item,
-  isCollapsed,
-  activeGameUuid,
-}: NavItemProps) {
+function NavItem({ item, isCollapsed, activeGameUuid }: NavItemProps) {
   const location = useLocation();
   const resolvedItemPath = resolveDynamicPath(item.to, activeGameUuid);
   const resolvedChildren = item.children?.map((child) => ({

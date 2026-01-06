@@ -143,9 +143,7 @@ export function BuildConnectionCard({
   const [isDisconnectOpen, setIsDisconnectOpen] = useState(false);
 
   const readyBuilds = (builds ?? []).filter((build) => build.status === 'READY');
-  const connectedBuild = streamingResource?.buildUuid
-    ? builds?.find((build) => build.uuid === streamingResource.buildUuid) ?? null
-    : null;
+  const connectedBuild = null;
 
   const [state, formAction, isPending] = useActionState(
     createBuildConnectionAction({

@@ -1,6 +1,6 @@
 /**
  * Build Complete API
- * POST /games/{gameUuid}/builds/{buildId}/complete
+ * POST /games/{gameUuid}/builds/{buildUuid}/complete
  *
  * Spring GameBuildApi.completeUpload 연동
  */
@@ -15,11 +15,11 @@ import type {
 /** 빌드 업로드 완료 처리 */
 export async function postBuildComplete(
   gameUuid: string,
-  buildId: string,
+  buildUuid: string,
   request: ApiBuildCompleteRequest
 ): Promise<ApiBuildCompleteResponse> {
   const response = await fetchWithAuth(
-    `${API_BASE_URL}/games/${gameUuid}/builds/${buildId}/complete`,
+    `${API_BASE_URL}/games/${gameUuid}/builds/${buildUuid}/complete`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

@@ -14,7 +14,6 @@ export const MOCK_STREAMING_RESOURCES: Record<
     current_capacity: 0,
     max_capacity: 10,
     instance_type: 'g4dn.xlarge',
-    build_uuid: 'build-001',
     created_at: '2025-12-18T14:30:00Z',
   },
 };

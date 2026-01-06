@@ -160,7 +160,6 @@ export const gameStreamingSurveyHandlers = [
         current_capacity: 0,
         max_capacity: body.max_capacity,
         instance_type: body.instance_type,
-        build_uuid: body.build_uuid,
         created_at: new Date().toISOString(),
       };
 

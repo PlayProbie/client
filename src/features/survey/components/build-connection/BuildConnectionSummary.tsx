@@ -40,7 +40,7 @@ export function BuildConnectionSummary({
         <div>
           <dt className="text-muted-foreground">연결된 빌드</dt>
           <dd className="mt-1 font-medium">
-            {connectedBuild?.filename || streamingResource.buildUuid || '-'}
+            {connectedBuild?.filename || '-'}
           </dd>
           {connectedBuild && (
             <div className="mt-2">

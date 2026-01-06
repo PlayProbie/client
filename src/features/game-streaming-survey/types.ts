@@ -53,8 +53,7 @@ export interface ApiStreamingResource {
   current_capacity: number;
   max_capacity: number;
   instance_type: string;
-  build_uuid?: string;
-  created_at?: string;
+  created_at: string;
 }
 
 /** [Client] Streaming Resource 엔티티 */
@@ -64,8 +63,7 @@ export interface StreamingResource {
   currentCapacity: number;
   maxCapacity: number;
   instanceType: string;
-  buildUuid?: string;
-  createdAt?: string;
+  createdAt: string;
 }
 
 /** [API] Streaming Resource 생성 요청 */
@@ -120,7 +118,6 @@ export function toStreamingResource(
     currentCapacity: api.current_capacity,
     maxCapacity: api.max_capacity,
     instanceType: api.instance_type,
-    buildUuid: api.build_uuid,
     createdAt: api.created_at,
   };
 }

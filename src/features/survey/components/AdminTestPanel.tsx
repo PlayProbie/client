@@ -43,11 +43,13 @@ export function AdminTestPanel({
   const handleStartTest = () => {
     if (!surveyUuid) return;
     startTestMutation.mutate(undefined, {
-      onSuccess: () => {
+      onSuccess: (data) => {
+        const description =
+          data.message || '관리자 테스트가 시작되었습니다.';
         toast({
           variant: 'success',
           title: '테스트 시작',
-          description: '관리자 테스트가 시작되었습니다.',
+          description,
         });
       },
       onError: (error) => {
@@ -63,11 +65,13 @@ export function AdminTestPanel({
   const handleStopTest = () => {
     if (!surveyUuid) return;
     stopTestMutation.mutate(undefined, {
-      onSuccess: () => {
+      onSuccess: (data) => {
+        const description =
+          data.message || '관리자 테스트가 종료되었습니다.';
         toast({
           variant: 'success',
           title: '테스트 종료',
-          description: '관리자 테스트가 종료되었습니다.',
+          description,
         });
       },
       onError: (error) => {

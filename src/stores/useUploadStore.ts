@@ -149,10 +149,10 @@ export const useUploadStore = create<UploadStore>()((set, get) => ({
               state: {
                 step: 'error',
                 error,
-                buildId:
+                buildUuid:
                   item.state.step === 'uploading_to_s3' ||
                   item.state.step === 'completing_upload'
-                    ? (item.state as { buildId?: string }).buildId
+                    ? (item.state as { buildUuid?: string }).buildUuid
                     : undefined,
               } as UploadState,
             }
@@ -203,7 +203,7 @@ async function executeUpload(
   const store = useUploadStore.getState();
   const { files, version } = params;
 
-  let buildId: string | undefined;
+  let buildUuid: string | undefined;
   let s3Prefix: string | undefined;
   let currentStep = 'requesting_sts_credentials';
 
@@ -220,16 +220,16 @@ async function executeUpload(
       version: version || '1.0.0',
     });
 
-    buildId = buildResponse.buildId;
+    buildUuid = buildResponse.buildUuid;
     // s3Prefix는 trailing slash 제거 후 사용
     s3Prefix =
-      buildResponse.s3Prefix.replace(/\/+$/, '') || `${gameUuid}/${buildId}`;
+      buildResponse.s3Prefix.replace(/\/+$/, '') || `${gameUuid}/${buildUuid}`;
 
     // Step 2: S3 폴더 업로드
     currentStep = 'uploading_to_s3';
     store.updateState(id, {
       step: 'uploading_to_s3',
-      buildId,
+      buildUuid,
       keyPrefix: s3Prefix,
       progress: {
         totalFiles: fileCount,
@@ -261,13 +261,13 @@ async function executeUpload(
     currentStep = 'completing_upload';
     store.updateState(id, {
       step: 'completing_upload',
-      buildId,
+      buildUuid,
       keyPrefix: s3Prefix,
       fileCount,
       totalSize,
     });
 
-    await postBuildComplete(gameUuid, buildId, {
+    await postBuildComplete(gameUuid, buildUuid, {
       expected_file_count: fileCount,
       expected_total_size: totalSize,
       executable_path: params.executablePath,
@@ -275,7 +275,7 @@ async function executeUpload(
     });
 
     // Success
-    store.updateState(id, { step: 'success', buildId });
+    store.updateState(id, { step: 'success', buildUuid });
   } catch (err) {
     const error = err as Error & { code?: string };
 

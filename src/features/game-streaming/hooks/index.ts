@@ -1,5 +1,6 @@
 // Game Streaming Hooks - Public exports
 
+export { useBuildDeleteMutation } from './useBuildMutations';
 export { buildKeys, useBuildsQuery } from './useBuildsQuery';
 export {
   sourceGameKeys,
