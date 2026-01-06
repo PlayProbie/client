@@ -1,5 +1,4 @@
 import { API_BASE_URL } from '@/constants/api';
-import { fetchWithAuth } from '@/services/api-client';
 
 import type {
   ApiCreateFixedQuestionsRequest,
@@ -12,7 +11,7 @@ import type {
 export async function postFixedQuestions(
   data: ApiCreateFixedQuestionsRequest
 ): Promise<CreateFixedQuestionsResponse> {
-  const response = await fetchWithAuth(
+  const response = await fetch(
     `${API_BASE_URL}/surveys/fixed-questions`,
     {
       method: 'POST',

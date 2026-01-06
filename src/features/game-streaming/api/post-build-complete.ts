@@ -4,7 +4,6 @@
  *
  * Spring GameBuildApi.completeUpload 연동
  */
-import { fetchWithAuth } from '@/services/api-client';
 
 import { API_BASE_URL, BUILD_ERROR_MESSAGES } from '../constants';
 import type {
@@ -18,7 +17,7 @@ export async function postBuildComplete(
   buildUuid: string,
   request: ApiBuildCompleteRequest
 ): Promise<ApiBuildCompleteResponse> {
-  const response = await fetchWithAuth(
+  const response = await fetch(
     `${API_BASE_URL}/games/${gameUuid}/builds/${buildUuid}/complete`,
     {
       method: 'POST',

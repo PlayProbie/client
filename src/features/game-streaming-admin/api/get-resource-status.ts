@@ -2,7 +2,6 @@
  * 리소스 상태 조회 API
  * GET /surveys/{surveyUuid}/streaming-resource/status
  */
-import { fetchWithAuth } from '@/services/api-client';
 
 import { API_BASE_URL } from '../constants';
 import type { ApiResourceStatusResponse, ResourceStatus } from '../types';
@@ -12,7 +11,7 @@ import { toResourceStatus } from '../types';
 export async function getResourceStatus(
   surveyUuid: string
 ): Promise<ResourceStatus> {
-  const response = await fetchWithAuth(
+  const response = await fetch(
     `${API_BASE_URL}/surveys/${surveyUuid}/streaming-resource/status`,
     { method: 'GET' }
   );

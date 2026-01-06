@@ -4,7 +4,6 @@
  *
  * Spring GameBuildApi.createBuild 연동
  */
-import { fetchWithAuth } from '@/services/api-client';
 
 import { API_BASE_URL } from '../constants';
 import type {
@@ -19,7 +18,7 @@ export async function postCreateBuild(
   gameUuid: string,
   request: ApiCreateBuildRequest
 ): Promise<CreateBuildResponse> {
-  const response = await fetchWithAuth(
+  const response = await fetch(
     `${API_BASE_URL}/games/${gameUuid}/builds`,
     {
       method: 'POST',

@@ -4,7 +4,6 @@
  *
  * 테스트용 임시 조치: 빌드 업로드 전 게임 UUID를 얻기 위해 사용
  */
-import { fetchWithAuth } from '@/services/api-client';
 
 import { API_BASE_URL } from '../constants';
 
@@ -28,7 +27,7 @@ export interface CreateGameResponse {
 export async function postCreateGame(
   request: CreateGameRequest
 ): Promise<CreateGameResponse> {
-  const response = await fetchWithAuth(`${API_BASE_URL}/games`, {
+  const response = await fetch(`${API_BASE_URL}/games`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(request),
