@@ -2,6 +2,8 @@
  * Game Streaming Feature 유틸리티
  */
 
+import { fetchWithAuth } from '@/services/api-client';
+
 /**
  * localStorage에서 JSON 데이터 읽기
  * @param key - localStorage key
@@ -116,7 +118,7 @@ export async function apiFetch<TResponse, TBody = unknown>(
     body: options.body ? JSON.stringify(options.body) : undefined,
   };
 
-  const response = await fetch(url, fetchOptions);
+  const response = await fetchWithAuth(url, fetchOptions);
 
   if (!response.ok) {
     throw new Error(errorMessage);

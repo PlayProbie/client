@@ -1,4 +1,5 @@
 import { API_BASE_URL } from '@/constants/api';
+import { fetchWithAuth } from '@/services/api-client';
 
 import type {
   ApiGenerateAiQuestionsRequest,
@@ -11,7 +12,7 @@ import type {
 export async function postAiQuestions(
   data: ApiGenerateAiQuestionsRequest
 ): Promise<GenerateAiQuestionsResponse> {
-  const response = await fetch(`${API_BASE_URL}/surveys/ai-questions`, {
+  const response = await fetchWithAuth(`${API_BASE_URL}/surveys/ai-questions`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

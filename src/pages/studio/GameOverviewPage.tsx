@@ -36,16 +36,15 @@ export default function GameOverviewPage() {
     }
 
     const latestSurvey = surveys.reduce((latest, survey) =>
-      new Date(survey.createdAt) > new Date(latest.createdAt)
-        ? survey
-        : latest
+      new Date(survey.createdAt) > new Date(latest.createdAt) ? survey : latest
     );
 
     return {
       totalSurveys: surveys.length,
       activeSurveys: surveys.filter((survey) => survey.status === 'ACTIVE')
         .length,
-      draftSurveys: surveys.filter((survey) => survey.status === 'DRAFT').length,
+      draftSurveys: surveys.filter((survey) => survey.status === 'DRAFT')
+        .length,
       latestLabel: `${latestSurvey.surveyName} · ${new Date(
         latestSurvey.createdAt
       ).toLocaleDateString()}`,
@@ -117,7 +116,7 @@ export default function GameOverviewPage() {
               size="sm"
               asChild
             >
-              <Link to={`/games/${gameUuid}/surveys`}>설문 목록</Link>
+              <Link to={`/games/${gameUuid}/surveys`}>설문 관리</Link>
             </Button>
           </div>
           <div className="mt-4 grid gap-3 sm:grid-cols-3">
@@ -144,7 +143,7 @@ export default function GameOverviewPage() {
                 </div>
                 <div>
                   <p className="text-muted-foreground text-xs">Latest</p>
-                  <p className="text-sm font-medium text-muted-foreground">
+                  <p className="text-muted-foreground text-sm font-medium">
                     {surveyStats.latestLabel}
                   </p>
                 </div>
@@ -162,11 +161,11 @@ export default function GameOverviewPage() {
       <div className="bg-card rounded-lg border">
         <Link
           to={`/games/${gameUuid}/builds`}
-          className="flex flex-col gap-1 border-border border-b px-6 py-4 transition hover:bg-muted/50"
+          className="border-border hover:bg-muted/50 flex flex-col gap-1 border-b px-6 py-4 transition"
         >
           <div className="flex items-center justify-between">
             <h3 className="font-semibold">Recent Builds</h3>
-            <span className="text-sm text-muted-foreground">전체 보기 →</span>
+            <span className="text-muted-foreground text-sm">전체 보기 →</span>
           </div>
         </Link>
         <div className="p-6">

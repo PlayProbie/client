@@ -2,6 +2,8 @@
  * 설문 세션 상태 조회 API
  * GET /surveys/{surveyUuid}/session/status
  */
+import { fetchWithAuth } from '@/services/api-client';
+
 import { API_BASE_URL } from '../constants';
 import type {
   ApiSurveySessionStatusResponse,
@@ -12,7 +14,7 @@ import { toSurveySessionStatus } from '../types';
 export async function getSurveySessionStatus(
   surveyUuid: string
 ): Promise<SurveySessionStatus> {
-  const response = await fetch(
+  const response = await fetchWithAuth(
     `${API_BASE_URL}/surveys/${surveyUuid}/session/status`,
     { method: 'GET' }
   );

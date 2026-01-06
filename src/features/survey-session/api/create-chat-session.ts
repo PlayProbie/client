@@ -1,4 +1,5 @@
 import { API_BASE_URL } from '@/constants/api';
+import { fetchWithAuth } from '@/services/api-client';
 
 import type {
   CreateChatSessionParams,
@@ -13,7 +14,7 @@ export async function createChatSession(
 ): Promise<CreateChatSessionResponse> {
   const url = `${API_BASE_URL}/interview/${params.surveyUuid}`;
 
-  const response = await fetch(url, {
+  const response = await fetchWithAuth(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

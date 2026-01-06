@@ -64,18 +64,18 @@ export function useDynamicBreadcrumbs(): {
 
       const pathParts = pathname.split('/');
       const currentTab = pathParts[pathParts.length - 1];
+      const isDesignStep = pathname.includes('/design/');
 
       const tabLabels: Record<string, string> = {
         overview: '개요',
-        design: '문항 설계',
         distribute: '배포/연동',
         analyze: '결과/인사이트',
       };
-      const tabLabel = tabLabels[currentTab] || '';
+      const tabLabel = isDesignStep ? '설문 설계' : tabLabels[currentTab] || '';
 
       const breadcrumbList: Breadcrumb[] = [
         gameCrumb,
-        { label: '설문 목록', to: `/games/${params.gameUuid}/surveys` },
+        { label: '설문 관리', to: `/games/${params.gameUuid}/surveys` },
         {
           label: surveyLabel,
           to: `/games/${params.gameUuid}/surveys/${params.surveyUuid}/overview`,
@@ -93,14 +93,21 @@ export function useDynamicBreadcrumbs(): {
     }
 
     if (isSurveyRoute) {
+      const isDesignRoute = pathname.includes('/surveys/design/');
+      const breadcrumbList: Breadcrumb[] = [
+        gameCrumb,
+        {
+          label: '설문 관리',
+          to: `/games/${params.gameUuid}/surveys`,
+        },
+      ];
+
+      if (isDesignRoute) {
+        breadcrumbList.push({ label: '설문 설계', to: '' });
+      }
+
       return {
-        breadcrumbs: [
-          gameCrumb,
-          {
-            label: '설문 목록',
-            to: `/games/${params.gameUuid}/surveys`,
-          },
-        ],
+        breadcrumbs: breadcrumbList,
         isLoading: isGameLoading,
       };
     }

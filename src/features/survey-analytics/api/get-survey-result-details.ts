@@ -1,4 +1,5 @@
 import { API_BASE_URL } from '@/constants/api';
+import { fetchWithAuth } from '@/services/api-client';
 
 import type {
   GetSurveyResultDetailsParams,
@@ -13,7 +14,7 @@ export async function getSurveyResultDetails(
 ): Promise<GetSurveyResultDetailsResponse> {
   const url = `${API_BASE_URL}/surveys/results/${params.surveyUuid}/details/${params.sessionUuid}`;
 
-  const response = await fetch(url, {
+  const response = await fetchWithAuth(url, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',

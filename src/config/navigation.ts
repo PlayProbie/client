@@ -79,13 +79,13 @@ export const SURVEY_STATUS_CONFIG: Record<
 
 export const NAV_ITEMS: NavItem[] = [
   {
-    to: '/games/:gameUuid',
+    to: '/games/:gameUuid/overview',
     label: '게임 대시보드',
     icon: LayoutDashboard,
   },
   {
     to: '/games/:gameUuid/surveys',
-    label: '설문 목록',
+    label: '설문 관리',
     icon: ClipboardList,
   },
   {

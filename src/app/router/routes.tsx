@@ -19,13 +19,12 @@ import SurveySessionPage from '@/pages/survey/SurveySessionPage';
 import SurveySessionStartPage from '@/pages/survey/SurveySessionStartPage';
 
 import { AuthLayout, GuestLayout, RootLayout } from './layouts';
-import LegacyStudioRedirect from './LegacyStudioRedirect';
 
 const redirectToDefaultGame = async () => {
   try {
     const games = await getStreamingGames();
     if (games.length) {
-      return redirect(`/games/${games[0].gameUuid}`);
+      return redirect(`/games/${games[0].gameUuid}/overview`);
     }
   } catch {
     // ignore
@@ -47,9 +46,6 @@ export const router = createBrowserRouter([
       {
         element: <AuthLayout />,
         children: [
-          // ============================================
-          // [NEW] 워크스페이스 → 게임 선택 흐름
-          // ============================================
           {
             index: true,
             loader: redirectToDefaultGame,
@@ -60,33 +56,17 @@ export const router = createBrowserRouter([
 
           {
             path: '/games/:gameUuid/overview',
-            loader: ({ params }) =>
-              params.gameUuid
-                ? redirect(`/games/${params.gameUuid}`)
-                : redirect('/games'),
+            element: <GameOverviewPage />,
           },
-          { path: '/games/:gameUuid', element: <GameOverviewPage /> },
-
-          // 게임 대시보드 Shell + 탭 (새 경로)
-          // {
-          //   path: '/games/:gameUuid',
-          //   element: <GameShell />,
-          //   children: [
-          //     {
-          //       index: true,
-          //       element: (
-          //         <Navigate
-          //           to="overview"
-          //           replace
-          //         />
-          //       ),
-          //     },
-          //     { path: 'overview', element: <GameOverviewPage /> },
-          //     { path: 'builds', element: <BuildsPage /> },
-          //     { path: 'stream-settings', element: <StreamSettingsPage /> },
-          //   ],
-          // },
-
+          {
+            path: '/games/:gameUuid',
+            element: (
+              <Navigate
+                to="overview"
+                replace
+              />
+            ),
+          },
           { path: '/games/:gameUuid/surveys', element: <SurveyListPage /> },
           {
             path: '/games/:gameUuid/surveys/design',
@@ -96,7 +76,7 @@ export const router = createBrowserRouter([
                 : redirect('/games'),
           },
           {
-            path: '/games/:gameUuid/surveys/design/step-:step',
+            path: '/games/:gameUuid/surveys/design/:step',
             element: <SurveyDesignPage />,
           },
           { path: '/games/:gameUuid/builds', element: <BuildsPage /> },
@@ -125,56 +105,20 @@ export const router = createBrowserRouter([
               { path: 'overview', element: <SurveyOverviewPage /> },
               {
                 path: 'design',
-                loader: () => redirect('step-0'),
+                element: (
+                  <Navigate
+                    to="step-0"
+                    replace
+                  />
+                ),
               },
               {
-                path: 'design/step-:step',
+                path: 'design/:step',
                 element: <SurveyDesignPage />,
               },
               { path: 'distribute', element: <SurveyDistributePage /> },
               { path: 'analyze', element: <SurveyAnalyticsPage /> },
             ],
-          },
-
-          // ============================================
-          // [LEGACY] Creator Studio - 새 경로로 리다이렉트
-          // ============================================
-          {
-            path: '/studio',
-            element: (
-              <Navigate
-                to="/games"
-                replace
-              />
-            ),
-          },
-          { path: '/studio/games/*', element: <LegacyStudioRedirect /> },
-
-          // ============================================
-          // [LEGACY] 설문 관리 - 기존 독립 경로 유지
-          // ============================================
-          {
-            path: '/survey',
-            element: (
-              <Navigate
-                to="/survey/design/step-0"
-                replace
-              />
-            ),
-          },
-          {
-            path: '/survey/design',
-            element: (
-              <Navigate
-                to="/survey/design/step-0"
-                replace
-              />
-            ),
-          },
-          { path: '/survey/design/:step', element: <SurveyDesignPage /> },
-          {
-            path: '/survey/analytics/:gameUuid',
-            element: <SurveyAnalyticsPage />,
           },
         ],
       },

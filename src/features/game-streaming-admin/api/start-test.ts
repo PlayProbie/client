@@ -2,13 +2,15 @@
  * 관리자 테스트 시작 API
  * POST /surveys/{surveyUuid}/streaming-resource/start-test
  */
+import { fetchWithAuth } from '@/services/api-client';
+
 import { API_BASE_URL } from '../constants';
 import type { AdminTestResult, ApiAdminTestResponse } from '../types';
 import { toAdminTestResult } from '../types';
 
 /** 관리자 테스트 시작 */
 export async function startTest(surveyUuid: string): Promise<AdminTestResult> {
-  const response = await fetch(
+  const response = await fetchWithAuth(
     `${API_BASE_URL}/surveys/${surveyUuid}/streaming-resource/start-test`,
     { method: 'POST' }
   );

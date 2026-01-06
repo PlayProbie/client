@@ -2,6 +2,8 @@
  * 설문 세션 가용성 조회 API
  * GET /surveys/{surveyUuid}/session
  */
+import { fetchWithAuth } from '@/services/api-client';
+
 import { API_BASE_URL } from '../constants';
 import type {
   ApiSurveySessionAvailabilityResponse,
@@ -12,7 +14,7 @@ import { toSurveySessionAvailability } from '../types';
 export async function getSurveySessionAvailability(
   surveyUuid: string
 ): Promise<SurveySessionAvailability> {
-  const response = await fetch(
+  const response = await fetchWithAuth(
     `${API_BASE_URL}/surveys/${surveyUuid}/session`,
     { method: 'GET' }
   );

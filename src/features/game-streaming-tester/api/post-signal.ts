@@ -2,6 +2,8 @@
  * 스트리밍 시그널 요청 API
  * POST /surveys/{surveyUuid}/signal
  */
+import { fetchWithAuth } from '@/services/api-client';
+
 import { API_BASE_URL } from '../constants';
 import type {
   ApiSignalResponseWrapper,
@@ -14,11 +16,14 @@ export async function postSurveySignal(
   surveyUuid: string,
   request: SignalRequest
 ): Promise<SignalResponse> {
-  const response = await fetch(`${API_BASE_URL}/surveys/${surveyUuid}/signal`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ signal_request: request.signalRequest }),
-  });
+  const response = await fetchWithAuth(
+    `${API_BASE_URL}/surveys/${surveyUuid}/signal`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ signal_request: request.signalRequest }),
+    }
+  );
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => null);

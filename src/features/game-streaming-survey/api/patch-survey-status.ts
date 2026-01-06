@@ -2,6 +2,8 @@
  * 설문 상태 업데이트 API
  * PATCH /surveys/{surveyUuid}/status
  */
+import { fetchWithAuth } from '@/services/api-client';
+
 import { API_BASE_URL } from '../constants';
 import type {
   ApiUpdateSurveyStatusResponse,
@@ -19,7 +21,7 @@ interface UpdateSurveyStatusParams {
 export async function updateSurveyStatus(
   params: UpdateSurveyStatusParams
 ): Promise<UpdateSurveyStatusResponse> {
-  const response = await fetch(
+  const response = await fetchWithAuth(
     `${API_BASE_URL}/surveys/${params.surveyUuid}/status`,
     {
       method: 'PATCH',

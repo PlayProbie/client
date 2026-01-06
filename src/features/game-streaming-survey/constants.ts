@@ -2,7 +2,7 @@
  * Game Streaming Survey Feature 상수
  */
 
-export const API_BASE_URL = '/api';
+export { API_BASE_URL } from '@/constants/api';
 
 /** 에러 메시지 */
 export const ERROR_MESSAGES: Record<string, string> = {

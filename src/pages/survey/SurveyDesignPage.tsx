@@ -36,18 +36,22 @@ function SurveyDesignPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-6">
+      <div className="border-border bg-card flex flex-col gap-3 rounded-lg border p-6">
         <div>
           <h1 className="text-2xl font-bold">{title}</h1>
           <p className="text-muted-foreground">{description}</p>
         </div>
         <div className="flex items-center gap-3">
-          {isEditing && (
-            <Button variant="destructive">설문 삭제</Button>
-          )}
+          {isEditing && <Button variant="destructive">설문 삭제</Button>}
           {!isEditing && params.gameUuid && (
-            <Button variant="ghost" size="sm" asChild>
-              <Link to={`/games/${params.gameUuid}/surveys`}>설문 목록으로 돌아가기</Link>
+            <Button
+              variant="ghost"
+              size="sm"
+              asChild
+            >
+              <Link to={`/games/${params.gameUuid}/surveys`}>
+                설문 관리로 돌아가기
+              </Link>
             </Button>
           )}
         </div>
