@@ -7,7 +7,6 @@ import { useMutation } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { sendMessage } from '../api';
-import { CHAT_MESSAGES } from '../constants';
 import { useChatStore } from '../store/useChatStore';
 import type {
   ApiSendMessageRequest,
@@ -53,18 +52,30 @@ export function useChatSession({
       setConnecting(true);
     },
     onQuestion: (data) => {
-      // 첫 번째 질문 전에 인사말 표시
-      if (!greetingShownRef.current && data.turnNum === 1) {
-        addAIMessage(CHAT_MESSAGES.GREETING, 0, 'FIXED', 0);
-        greetingShownRef.current = true;
+      // Phase 2: Opening
+      if (data.qType === 'OPENING') {
+        // 이미 표시된 오프닝이면 스킵할 수도 있지만, 서버가 보내주는 대로 믿음
+        addAIMessage(data.questionText, data.turnNum, data.qType, data.fixedQId);
+      }
+      // Phase 5: Closing
+      else if (data.qType === 'CLOSING') {
+        addAIMessage(data.questionText, data.turnNum, data.qType, data.fixedQId);
+        // 클로징은 보통 바로 done으로 이어지거나 인터뷰 완료 처리됨
+      }
+      // Phase 3-4: Main & Tail
+      else {
+        addAIMessage(data.questionText, data.turnNum, data.qType, data.fixedQId);
       }
 
-      addAIMessage(data.questionText, data.turnNum, data.qType, data.fixedQId);
       setIsReady(true);
       setLoading(false);
     },
-    onToken: (data) => {
-      appendStreamingToken(data.questionText, data.turnNum);
+    onContinue: (data) => {
+      // 스트리밍 토큰 수신 (모든 단계 공통)
+      appendStreamingToken(data.questionText, data.turnNum, data.qType);
+      if (!isStreaming) {
+        setStreaming(true);
+      }
     },
     onStart: () => {
       setStreaming(true);
@@ -76,9 +87,8 @@ export function useChatSession({
     },
     onInterviewComplete: () => {
       finalizeStreamingMessage();
-      // 끝인사 메시지 추가
-      addAIMessage(CHAT_MESSAGES.FAREWELL, -1, 'FIXED', -1);
       setComplete(true);
+      setStreaming(false);
     },
     onError: (err) => {
       setError(err);
@@ -123,7 +133,7 @@ export function useChatSession({
         // 스토어 리셋 (이전 세션의 메시지 정리)
         reset();
 
-        // SSE 연결하여 첫 번째 질문 수신
+        // SSE 연결하여 첫 번째 질문(또는 오프닝) 수신
         connect();
       } catch {
         setError('세션 초기화에 실패했습니다.');
@@ -152,13 +162,11 @@ export function useChatSession({
         (m) => m.type === 'ai' && m.turnNum === currentTurnNum
       );
       const questionText = currentQuestion?.content ?? '';
-      // fixedQId는 null이 될 수 있으므로 안전하게 처리
+      // fixedQId는 null이 될 수 있음 (오프닝, 클로징 등)
       const fixedQId = currentQuestion?.fixedQId ?? currentFixedQId;
 
-      if (fixedQId === null || fixedQId === undefined) {
-        setError('질문 정보가 누락되었습니다. 페이지를 새로고침해 주세요.');
-        return;
-      }
+      // OPENING 단계 등에서는 fixedQId가 없을 수 있으므로 체크 완화
+      // 다만 일반적인 질문에서는 있어야 함. 우선순위: 서버에서 온 fixedQId
 
       // 낙관적 업데이트: UI에 먼저 표시
       addUserMessage(answerText, currentTurnNum);

@@ -32,6 +32,11 @@ const INITIAL_STATE = {
   formData: {
     startedAt: getToday(),
     endedAt: getToday(),
+    // 신규 필드 초기값
+    testStage: undefined,
+    themePriorities: [],
+    themeDetails: {},
+    versionNote: '',
   },
   surveyUrl: null,
 };
