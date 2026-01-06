@@ -1,6 +1,9 @@
 export { SurveyCreated } from '../SurveyCreated';
+export { StepBasicInfo } from './StepBasicInfo';
 export { StepConfirm } from './StepConfirm';
 export { StepGameInfo } from './StepGameInfo';
+export { StepMethodSelection } from './StepMethodSelection';
 export { StepQuestionAIGenerate } from './StepQuestionAIGenerate';
 export { StepQuestionUserGenerate } from './StepQuestionUserGenerate';
 export { StepSurveyInfo } from './StepSurveyInfo';
+export { StepThemeQuestion } from './StepThemeQuestion';
