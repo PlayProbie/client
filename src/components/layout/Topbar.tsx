@@ -1,8 +1,8 @@
 import {
   BreadcrumbNav,
+  GameSelector,
   NotificationButton,
   useDynamicBreadcrumbs,
-  WorkspaceSelector,
 } from './topbar-components';
 
 function Topbar() {
@@ -19,7 +19,7 @@ function Topbar() {
       />
 
       <div className="flex items-center gap-6">
-        <WorkspaceSelector />
+        <GameSelector />
         <NotificationButton />
       </div>
     </header>
