@@ -23,9 +23,8 @@ export type InterviewLogQType = 'FIXED' | 'TAIL';
 
 /** [API] 채팅 세션 정보 */
 export interface ApiChatSession {
-  session_id: number;
   session_uuid: string;
-  survey_id: number;
+  survey_uuid: string;
   status: SurveySessionStatus;
 }
 
@@ -45,7 +44,7 @@ export interface ApiCreateChatSessionResult {
   sse_url: string;
 }
 
-/** [API] POST /interview/{survey_id} Response */
+/** [API] POST /interview/{survey_uuid} Response */
 export interface CreateChatSessionResponse {
   result: ApiCreateChatSessionResult;
 }
@@ -121,7 +120,7 @@ export interface ApiSendMessageResult {
   answer_text: string;
 }
 
-/** [API] POST /interview/{session_id}/messages Response */
+/** [API] POST /interview/{session_uuid}/messages Response */
 export interface SendMessageResponse {
   result: ApiSendMessageResult;
 }
@@ -132,9 +131,8 @@ export interface SendMessageResponse {
 
 /** [Client] 채팅 세션 정보 */
 export interface ChatSession {
-  sessionId: number;
   sessionUuid: string;
-  surveyId: number;
+  surveyUuid: string;
   status: SurveySessionStatus;
 }
 
@@ -225,7 +223,7 @@ export interface UseChatSSEReturn {
 /** useChatSession 훅 옵션 */
 export interface UseChatSessionOptions {
   sessionUuid: string;
-  surveyId?: number;
+  surveyUuid?: string;
 }
 
 /** useChatSession 훅 반환 타입 */

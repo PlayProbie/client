@@ -1,18 +1,12 @@
 import {
   BarChart3,
-  Building2,
   ClipboardList,
-  FlaskConical,
   FolderUp,
-  Gamepad2,
-  Gift,
   LayoutDashboard,
   Lightbulb,
   type LucideIcon,
-  MonitorPlay,
   Pencil,
   Rocket,
-  Settings,
 } from 'lucide-react';
 
 export interface NavItemChild {
@@ -26,33 +20,6 @@ export interface NavItem {
   icon: LucideIcon;
   children?: NavItemChild[];
 }
-
-/**
- * 게임 대시보드 내 LNB 메뉴 (동적으로 gameUuid 치환 필요)
- * 사용법: GAME_NAV_ITEMS.map(item => ({ ...item, to: item.to.replace(':gameUuid', gameUuid) }))
- */
-export const GAME_NAV_ITEMS: NavItem[] = [
-  {
-    to: '/games/:gameUuid',
-    label: '대시보드',
-    icon: LayoutDashboard,
-  },
-  {
-    to: '/games/:gameUuid/builds',
-    label: '빌드 저장소',
-    icon: FolderUp,
-  },
-  {
-    to: '/games/:gameUuid/surveys',
-    label: '설문 목록',
-    icon: ClipboardList,
-  },
-  {
-    to: '/games/:gameUuid/stream-settings',
-    label: '스트림 설정',
-    icon: Settings,
-  },
-];
 
 /**
  * Survey Control Tower 탭 정의
@@ -112,44 +79,19 @@ export const SURVEY_STATUS_CONFIG: Record<
 
 export const NAV_ITEMS: NavItem[] = [
   {
-    to: '/',
-    label: '워크스페이스',
-    icon: Building2,
+    to: '/games/:gameUuid',
+    label: '게임 대시보드',
+    icon: LayoutDashboard,
   },
   {
-    to: '/studio',
-    label: 'Creator Studio',
-    icon: MonitorPlay,
-    children: [{ to: '/studio/games', label: '스트리밍 게임 목록' }],
+    to: '/games/:gameUuid/surveys',
+    label: '설문 목록',
+    icon: ClipboardList,
   },
   {
-    to: '/games',
-    label: '내 게임',
-    icon: Gamepad2,
-    children: [
-      { to: '/games/list', label: '게임 목록' },
-      { to: '/games/new', label: '새 게임 등록' },
-      { to: '/settings/team', label: '팀 관리' },
-    ],
-  },
-  {
-    to: '/survey',
-    label: '설문 관리',
-    icon: FlaskConical,
-    children: [
-      { to: '/survey', label: '설문 관리' },
-      { to: '/survey/design/step-0', label: '설문 설계' },
-      { to: '/survey/analytics/1', label: '설문 응답 결과' }, // NOTE: MVP 단계에서는 gameId를 하드코딩해서 사용
-    ],
-  },
-  {
-    to: '/rewards',
-    label: '리워드 관리',
-    icon: Gift,
-    children: [
-      { to: '/rewards/list', label: '리워드 목록' },
-      { to: '/rewards/distribution', label: '지급 현황' },
-    ],
+    to: '/games/:gameUuid/builds',
+    label: '빌드 저장소',
+    icon: FolderUp,
   },
 ];
 
@@ -160,9 +102,9 @@ export function getAllNavItems(): NavItem[] {
   return [...NAV_ITEMS];
 }
 
-// Helper to match dynamic routes (e.g., /survey/analytics/:gameId)
+// Helper to match dynamic routes (e.g., /survey/analytics/:gameUuid)
 function matchPath(pattern: string, pathname: string): boolean {
-  // Convert pattern to regex (e.g., /survey/analytics/:gameId -> /survey/analytics/[^/]+)
+  // Convert pattern to regex (e.g., /survey/analytics/:gameUuid -> /survey/analytics/[^/]+)
   const regexPattern = pattern.replace(/:[^/]+/g, '[^/]+');
   const regex = new RegExp(`^${regexPattern}$`);
   return regex.test(pathname);
@@ -212,6 +154,6 @@ export function findNavItemByPath(pathname: string): {
 
   // Default to dashboard
   return {
-    breadcrumbs: [{ label: '대시보드', to: '/dashboard' }],
+    breadcrumbs: [{ label: '대시보드', to: '/games/:gameUuid' }],
   };
 }

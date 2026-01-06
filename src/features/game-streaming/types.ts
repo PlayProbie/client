@@ -52,7 +52,7 @@ export interface ApiCreateBuildRequest {
 }
 
 /** [API] Create Build 응답 (Spring GameBuildApi.createBuild) */
-export interface ApiCreateBuildResponse {
+export interface ApiCreateBuildResult {
   buildId: string;
   version: string;
   s3Prefix: string;
@@ -62,6 +62,10 @@ export interface ApiCreateBuildResponse {
     sessionToken: string;
     expiration: number; // epoch timestamp
   };
+}
+
+export interface ApiCreateBuildResponse {
+  result: ApiCreateBuildResult;
 }
 
 /** [Client] AWS Credentials */
@@ -221,7 +225,7 @@ export interface StreamSettings {
 
 /** [API] Source Game 엔티티 (Survey 시스템) */
 export interface ApiSourceGame {
-  game_id: number;
+  game_uuid: string;
   game_name: string;
   game_genre: string[];
   created_at: string;
@@ -230,7 +234,7 @@ export interface ApiSourceGame {
 
 /** [Client] Source Game 엔티티 */
 export interface SourceGame {
-  gameId: number;
+  gameUuid: string;
   gameName: string;
   gameGenre: string[];
   createdAt: string;
@@ -244,7 +248,6 @@ export interface SourceGame {
 /** [API] Streaming Game 엔티티 (목록용) */
 export interface ApiStreamingGame {
   game_uuid: string;
-  game_id: number;
   game_name: string;
   builds_count: number;
   updated_at: string;
@@ -253,7 +256,6 @@ export interface ApiStreamingGame {
 /** [Client] Streaming Game 엔티티 (목록용) */
 export interface StreamingGame {
   gameUuid: string;
-  gameId: number;
   gameName: string;
   buildsCount: number;
   updatedAt: string;
@@ -281,7 +283,7 @@ export function toBuild(api: ApiBuild): Build {
 
 /** ApiCreateBuildResponse → CreateBuildResponse 변환 */
 export function toCreateBuildResponse(
-  api: ApiCreateBuildResponse
+  api: ApiCreateBuildResult
 ): CreateBuildResponse {
   return {
     buildId: api.buildId,
@@ -299,7 +301,7 @@ export function toCreateBuildResponse(
 /** ApiSourceGame → SourceGame 변환 */
 export function toSourceGame(api: ApiSourceGame): SourceGame {
   return {
-    gameId: api.game_id,
+    gameUuid: api.game_uuid,
     gameName: api.game_name,
     gameGenre: api.game_genre,
     createdAt: api.created_at,
@@ -311,7 +313,6 @@ export function toSourceGame(api: ApiSourceGame): SourceGame {
 export function toStreamingGame(api: ApiStreamingGame): StreamingGame {
   return {
     gameUuid: api.game_uuid,
-    gameId: api.game_id,
     gameName: api.game_name,
     buildsCount: api.builds_count,
     updatedAt: api.updated_at,
