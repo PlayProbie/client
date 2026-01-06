@@ -135,3 +135,54 @@ export function toApiCreateStreamingResourceRequest(
     max_capacity: client.maxCapacity,
   };
 }
+
+// ----------------------------------------
+// Survey Status Update Types (Phase 4-5)
+// ----------------------------------------
+
+/** 설문 상태 변경 요청값 */
+export type SurveyStatusValue = 'ACTIVE' | 'CLOSED';
+
+/** [API] 스트리밍 리소스 상태 (상태 변경 응답용) */
+export interface ApiStreamingResourceStatusInfo {
+  status: StreamingResourceStatus;
+  current_capacity: number;
+  message?: string;
+}
+
+/** [API] 설문 상태 변경 응답 */
+export interface ApiUpdateSurveyStatusResponse {
+  result: {
+    survey_uuid: string;
+    status: SurveyStatusValue;
+    streaming_resource?: ApiStreamingResourceStatusInfo;
+  };
+}
+
+/** [Client] 설문 상태 변경 응답 */
+export interface UpdateSurveyStatusResponse {
+  surveyUuid: string;
+  status: SurveyStatusValue;
+  streamingResource?: {
+    status: StreamingResourceStatus;
+    currentCapacity: number;
+    message?: string;
+  };
+}
+
+/** ApiUpdateSurveyStatusResponse → UpdateSurveyStatusResponse 변환 */
+export function toUpdateSurveyStatusResponse(
+  api: ApiUpdateSurveyStatusResponse['result']
+): UpdateSurveyStatusResponse {
+  return {
+    surveyUuid: api.survey_uuid,
+    status: api.status,
+    streamingResource: api.streaming_resource
+      ? {
+          status: api.streaming_resource.status,
+          currentCapacity: api.streaming_resource.current_capacity,
+          message: api.streaming_resource.message,
+        }
+      : undefined,
+  };
+}

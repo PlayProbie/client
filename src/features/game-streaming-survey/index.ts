@@ -9,6 +9,8 @@ export type {
   StreamingResourceStatus,
   Survey,
   SurveyStatus,
+  SurveyStatusValue,
+  UpdateSurveyStatusResponse,
 } from './types';
 
 // API
@@ -17,6 +19,7 @@ export {
   deleteStreamingResource,
   getStreamingResource,
   getSurveys,
+  updateSurveyStatus,
 } from './api';
 
 // Hooks
@@ -27,4 +30,5 @@ export {
   useDeleteStreamingResource,
   useStreamingResource,
   useSurveys,
+  useUpdateSurveyStatus,
 } from './hooks';

@@ -176,4 +176,54 @@ export const gameStreamingSurveyHandlers = [
       return new HttpResponse(null, { status: 204 });
     }
   ),
+
+  // ----------------------------------------
+  // Phase 4-5: 설문 상태 업데이트 API
+  // ----------------------------------------
+
+  // 설문 상태 업데이트 (ACTIVE/CLOSED)
+  http.patch(
+    `${API_BASE_URL}/surveys/:surveyId/status`,
+    async ({ params, request }) => {
+      await delay(500);
+      const surveyId = params.surveyId as string;
+      const body = (await request.json()) as { status: 'ACTIVE' | 'CLOSED' };
+
+      const survey = MOCK_SURVEYS.find((s) => s.survey_uuid === surveyId);
+      if (!survey) {
+        return HttpResponse.json(
+          { message: '설문을 찾을 수 없습니다.', code: 'S001' },
+          { status: 404 }
+        );
+      }
+
+      survey.status = body.status;
+      const resource = MOCK_STREAMING_RESOURCES[surveyId];
+
+      if (body.status === 'ACTIVE') {
+        // 확장 중 시뮬레이션
+        return HttpResponse.json({
+          result: {
+            survey_uuid: survey.survey_uuid,
+            status: survey.status,
+            streaming_resource: resource
+              ? {
+                  status: 'SCALING',
+                  current_capacity: resource.current_capacity,
+                  message: '서버 확장 중입니다.',
+                }
+              : undefined,
+          },
+        });
+      }
+
+      // CLOSED
+      return HttpResponse.json({
+        result: {
+          survey_uuid: survey.survey_uuid,
+          status: survey.status,
+        },
+      });
+    }
+  ),
 ];

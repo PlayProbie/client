@@ -8,3 +8,4 @@ export {
   useStreamingResource,
 } from './useStreamingResource';
 export { surveyKeys, useSurveys } from './useSurveys';
+export { useUpdateSurveyStatus } from './useSurveyStatus';
