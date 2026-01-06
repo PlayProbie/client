@@ -6,7 +6,7 @@ import type {
 } from '../types';
 
 /**
- * GET /surveys/results/{game_id} - 전체 응답 요약
+ * GET /surveys/results/{game_uuid} - 전체 응답 요약
  */
 export async function getSurveyResultsSummary(
   params: GetSurveyResultsSummaryParams
@@ -16,7 +16,7 @@ export async function getSurveyResultsSummary(
     searchParams.set('status', params.status);
   }
 
-  const url = `${API_BASE_URL}/surveys/results/${params.gameId}${
+  const url = `${API_BASE_URL}/surveys/results/${params.gameUuid}${
     searchParams.toString() ? `?${searchParams.toString()}` : ''
   }`;
 

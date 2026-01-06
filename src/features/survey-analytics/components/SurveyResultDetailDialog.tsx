@@ -24,8 +24,8 @@ import type { QuestionAnswerExcerpt, SurveyResultDetails } from '../types';
 type SurveyResultDetailDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  surveyId: number;
-  sessionId: string;
+  surveyUuid: string;
+  sessionUuid: string;
 };
 
 /**
@@ -36,18 +36,18 @@ type SurveyResultDetailDialogProps = {
 function SurveyResultDetailDialog({
   open,
   onOpenChange,
-  surveyId,
-  sessionId,
+  surveyUuid,
+  sessionUuid,
 }: SurveyResultDetailDialogProps) {
   const {
     data: details,
     isLoading,
     isError,
   } = useQuery({
-    queryKey: ['survey-result-details', surveyId, sessionId],
-    queryFn: () => getSurveyResultDetails({ surveyId, sessionId }),
+    queryKey: ['survey-result-details', surveyUuid, sessionUuid],
+    queryFn: () => getSurveyResultDetails({ surveyUuid, sessionUuid }),
     select: (response) => response.result as unknown as SurveyResultDetails,
-    enabled: open && !!surveyId && !!sessionId,
+    enabled: open && !!surveyUuid && !!sessionUuid,
   });
 
   return (

@@ -6,7 +6,7 @@ import type {
 } from '../types';
 
 /**
- * POST /interview/{survey_id} - 새 대화 세션 생성
+ * POST /interview/{survey_uuid} - 새 대화 세션 생성
  */
 export async function createChatSession(
   params: CreateChatSessionParams

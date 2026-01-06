@@ -15,7 +15,7 @@ type SubmitStep = 'game' | 'survey' | 'questions';
 /** 트랜잭션 상태 (롤백용) */
 type TransactionState = {
   gameUuid?: string;
-  surveyId?: number;
+  surveyUuid?: string;
 };
 
 /**
@@ -87,7 +87,7 @@ export function useFormSubmit(options?: UseFormSubmitOptions) {
       }
 
       // 2. 설문 생성
-      let surveyId: number;
+      let surveyUuid: string;
       let surveyUrl: string;
       try {
         // 날짜를 ISO 8601 형식으로 변환 (YYYY-MM-DD -> YYYY-MM-DDTHH:mm:ss+09:00)
@@ -106,12 +106,12 @@ export function useFormSubmit(options?: UseFormSubmitOptions) {
           ended_at: formatToISO(endedAt || ''),
           test_purpose: testPurpose!,
         });
-        surveyId = surveyResponse.result.survey_id;
+        surveyUuid = surveyResponse.result.survey_uuid;
         surveyUrl = surveyResponse.result.survey_url;
-        transactionState.surveyId = surveyId;
+        transactionState.surveyUuid = surveyUuid;
       } catch (error) {
         // TODO: 서버에 rollback API가 있다면 여기서 게임 삭제 호출
-        // await deleteGame(gameId);
+        // await deleteGame(gameUuid);
         throw new SurveySubmitError(
           '설문 생성에 실패했습니다.',
           'survey',
@@ -131,13 +131,13 @@ export function useFormSubmit(options?: UseFormSubmitOptions) {
       if (selectedQuestions.length > 0) {
         try {
           await postFixedQuestions({
-            survey_id: surveyId,
+            survey_uuid: surveyUuid,
             questions: selectedQuestions,
           });
         } catch (error) {
           // TODO: 서버에 rollback API가 있다면 여기서 설문/게임 삭제 호출
-          // await deleteSurvey(surveyId);
-          // await deleteGame(gameId);
+          // await deleteSurvey(surveyUuid);
+          // await deleteGame(gameUuid);
           throw new SurveySubmitError(
             '질문 저장에 실패했습니다.',
             'questions',

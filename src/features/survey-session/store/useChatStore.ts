@@ -14,7 +14,7 @@ import type {
 interface ChatState {
   // Session info
   sessionUuid: string | null;
-  surveyId: number | null;
+  surveyUuid: string | null;
   status: SurveySessionStatus | null;
   sseUrl: string | null;
 
@@ -36,7 +36,7 @@ interface ChatState {
   // Actions
   setSession: (
     sessionUuid: string,
-    surveyId: number,
+    surveyUuid: string,
     status: SurveySessionStatus,
     sseUrl: string
   ) => void;
@@ -59,7 +59,7 @@ interface ChatState {
 
 const initialState = {
   sessionUuid: null,
-  surveyId: null,
+  surveyUuid: null,
   status: null,
   sseUrl: null,
   messages: [],
@@ -76,10 +76,10 @@ const initialState = {
 export const useChatStore = create<ChatState>((set, get) => ({
   ...initialState,
 
-  setSession: (sessionUuid, surveyId, status, sseUrl) =>
+  setSession: (sessionUuid, surveyUuid, status, sseUrl) =>
     set({
       sessionUuid,
-      surveyId,
+      surveyUuid,
       status,
       sseUrl,
     }),
