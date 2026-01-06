@@ -12,16 +12,16 @@ import { cn } from '@/lib/utils';
 export interface SurveyShellContext {
   survey?: Survey;
   gameUuid?: string;
-  surveyId?: string;
+  surveyUuid?: string;
   isLoading: boolean;
   isError: boolean;
   refetch: () => void;
 }
 
 export function SurveyShell() {
-  const { gameUuid, surveyId } = useParams<{
+  const { gameUuid, surveyUuid } = useParams<{
     gameUuid: string;
-    surveyId: string;
+    surveyUuid: string;
   }>();
   const {
     data: surveys,
@@ -32,13 +32,13 @@ export function SurveyShell() {
     gameUuid,
     enabled: !!gameUuid,
   });
-  const survey = surveys?.find((item) => item.surveyUuid === surveyId);
+  const survey = surveys?.find((item) => item.surveyUuid === surveyUuid);
   const statusConfig = survey ? SURVEY_STATUS_CONFIG[survey.status] : null;
   const [copied, setCopied] = useState(false);
 
   const handleCopySurveyId = async () => {
-    if (!surveyId) return;
-    await navigator.clipboard.writeText(surveyId);
+    if (!surveyUuid) return;
+    await navigator.clipboard.writeText(surveyUuid);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -46,7 +46,7 @@ export function SurveyShell() {
   const contextValue: SurveyShellContext = {
     survey,
     gameUuid,
-    surveyId,
+    surveyUuid,
     isLoading,
     isError,
     refetch,
@@ -57,9 +57,6 @@ export function SurveyShell() {
       <div className="bg-background border-b px-6 py-4">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <p className="text-muted-foreground text-xs font-semibold uppercase tracking-wide">
-              Survey Control Tower
-            </p>
             <h1 className="text-2xl font-bold">
               {isLoading ? (
                 <Skeleton className="h-8 w-60" />
@@ -70,14 +67,14 @@ export function SurveyShell() {
             <div className="text-muted-foreground mt-2 flex items-center gap-2 text-sm">
               <span>UUID:</span>
               <code className="bg-muted rounded px-2 py-0.5 font-mono text-xs">
-                {surveyId || '-'}
+                {surveyUuid || '-'}
               </code>
               <Button
                 variant="ghost"
                 size="icon"
                 className="size-6"
                 onClick={handleCopySurveyId}
-                disabled={!surveyId}
+                disabled={!surveyUuid}
                 title="Copy Survey UUID"
               >
                 {copied ? (
@@ -138,10 +135,12 @@ export function SurveyShell() {
               );
             }
 
+            const navTo =
+              tab.path === 'design' ? `${tab.path}/step-0` : tab.path;
             return (
               <NavLink
                 key={tab.path}
-                to={tab.path}
+                to={navTo}
                 className={({ isActive }) =>
                   cn(
                     tabClasses,

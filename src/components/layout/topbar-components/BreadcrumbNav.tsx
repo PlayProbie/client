@@ -31,7 +31,7 @@ function BreadcrumbNav({ breadcrumbs, isLoading = false }: BreadcrumbNavProps) {
                   showSkeleton ? (
                     <Skeleton className="h-6 w-32" />
                   ) : (
-                    <BreadcrumbPage className="text-lg font-bold">
+                    <BreadcrumbPage className="max-w-[200px] truncate text-lg font-bold">
                       {crumb.label}
                     </BreadcrumbPage>
                   )
@@ -39,7 +39,7 @@ function BreadcrumbNav({ breadcrumbs, isLoading = false }: BreadcrumbNavProps) {
                   <BreadcrumbLink asChild>
                     <Link
                       to={crumb.to}
-                      className="text-muted-foreground hover:text-foreground text-lg font-medium transition-colors"
+                      className="text-muted-foreground hover:text-foreground block max-w-[200px] truncate text-lg font-medium transition-colors"
                     >
                       {crumb.label}
                     </Link>

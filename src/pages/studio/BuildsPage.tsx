@@ -1,17 +1,27 @@
 /**
  * BuildsPage - 빌드 목록 페이지
- * Route: /studio/games/:gameUuid/builds
+ * Route: /games/:gameUuid/builds
  */
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
 import { Button, InlineAlert, Skeleton } from '@/components/ui';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { BuildsTable, BuildUploadModal } from '@/features/game-streaming';
-import { useBuildsQuery, useGameDetailQuery } from '@/features/game-streaming';
+import {
+  useBuildsQuery,
+  useGameDetailQuery,
+  useUnsavedChanges,
+} from '@/features/game-streaming';
+import {
+  selectHasActiveUploads,
+  useUploadStore,
+} from '@/stores/useUploadStore';
 
 export default function BuildsPage() {
   const { gameUuid } = useParams<{ gameUuid: string }>();
+  const navigate = useNavigate();
   const {
     data: builds,
     isLoading,
@@ -20,6 +30,11 @@ export default function BuildsPage() {
   } = useBuildsQuery(gameUuid || '');
   const { data: game } = useGameDetailQuery(gameUuid || '');
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const hasActiveUploads = useUploadStore(selectHasActiveUploads);
+  const { showDialog, confirmLeave, cancelLeave } = useUnsavedChanges({
+    hasChanges: hasActiveUploads,
+    message: '변경사항이 저장되지 않았습니다. 페이지를 떠나시겠습니까?',
+  });
 
   return (
     <div className="space-y-6">
@@ -28,7 +43,7 @@ export default function BuildsPage() {
         <div>
           <h2 className="text-lg font-semibold">Builds</h2>
           <p className="text-muted-foreground text-sm">
-            게임 실행 파일 패키지(.zip)를 업로드하고 상태를 확인합니다.
+            게임 빌드 폴더를 업로드하고 상태를 확인합니다.
           </p>
         </div>
         <Button onClick={() => setIsUploadModalOpen(true)}>
@@ -40,8 +55,8 @@ export default function BuildsPage() {
       {/* Hint Box */}
       <div className="border-info/50 bg-info/5 rounded-lg border p-4">
         <p className="text-info text-sm">
-          <strong>Tip:</strong> ExecutablePath는 zip 내부 실행 파일의 상대
-          경로입니다. 예) /Game/Binaries/Win64/MyGame.exe
+          <strong>Tip:</strong> ExecutablePath는 업로드 폴더 내 실행 파일의
+          상대 경로입니다. 예) /Game/Binaries/Win64/MyGame.exe
         </p>
       </div>
 
@@ -81,7 +96,14 @@ export default function BuildsPage() {
         </div>
       ) : (
         <div className="bg-card rounded-lg border">
-          <BuildsTable builds={builds} />
+          <BuildsTable
+            builds={builds}
+            onRowClick={() => {
+              if (gameUuid) {
+                navigate(`/games/${gameUuid}/stream-settings`);
+              }
+            }}
+          />
         </div>
       )}
 
@@ -94,6 +116,19 @@ export default function BuildsPage() {
           onOpenChange={setIsUploadModalOpen}
         />
       )}
+
+      <ConfirmDialog
+        open={showDialog}
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen) cancelLeave();
+        }}
+        title="변경사항이 저장되지 않았습니다"
+        description="이동하면 현재 입력이 사라집니다."
+        cancelLabel="취소"
+        confirmLabel="이동"
+        onCancel={cancelLeave}
+        onConfirm={confirmLeave}
+      />
     </div>
   );
 }

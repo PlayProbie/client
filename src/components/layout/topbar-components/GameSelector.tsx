@@ -1,5 +1,6 @@
 import { Gamepad2 } from 'lucide-react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useEffect } from 'react';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import {
   Select,
@@ -12,18 +13,29 @@ import { useGamesQuery } from '@/features/game-streaming';
 /**
  * GameSelector - Topbar 게임 선택 드롭다운
  * - URL 파라미터에서 현재 게임 표시
- * - 게임 선택 시 /games/:gameUuid/overview로 이동
+ * - 게임 선택 시 /games/:gameUuid로 이동
  */
 function GameSelector() {
   const navigate = useNavigate();
   const { gameUuid } = useParams<{ gameUuid: string }>();
   const { data: games, isLoading } = useGamesQuery();
+  const location = useLocation();
 
   const currentGame = games?.find((game) => game.gameUuid === gameUuid);
 
   const handleGameSelect = (uuid: string) => {
-    navigate(`/games/${uuid}/overview`);
+    navigate(`/games/${uuid}`);
   };
+
+  useEffect(() => {
+    if (
+      !gameUuid &&
+      location.pathname.startsWith('/games') &&
+      location.pathname !== '/games'
+    ) {
+      navigate('/games', { replace: true });
+    }
+  }, [gameUuid, location.pathname, navigate]);
 
   return (
     <div className="border-border mr-2 flex items-center gap-4 border-r pr-6">
@@ -32,7 +44,7 @@ function GameSelector() {
         onValueChange={handleGameSelect}
       >
         <SelectTrigger className="hover:bg-accent hover:text-accent-foreground data-[state=open]:bg-accent/50 focus:ring-ring h-10 w-auto min-w-[140px] gap-2 border-0 bg-transparent px-3 py-2 shadow-none focus:ring-2 focus:ring-offset-2 focus:outline-none">
-          <div className="flex items-center gap-2">
+          <div className="flex min-w-0 items-center gap-2">
             <div className="bg-success/20 flex size-6 items-center justify-center rounded">
               <Gamepad2 className="text-success size-3.5 stroke-2" />
             </div>

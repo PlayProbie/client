@@ -9,13 +9,13 @@ import {
 
 /**
  * 설문 분석 결과 페이지
- * URL: /survey/analytics/:gameId
+ * URL: /survey/analytics/:gameUuid
  */
 function SurveyAnalyticsPage() {
-  const { gameId } = useParams<{ gameId: string }>();
+  const { gameUuid } = useParams<{ gameUuid: string }>();
 
   const { summary, list, isLoading, isError } = useSurveyResults({
-    gameId: gameId || '',
+    gameUuid: gameUuid || '',
   });
 
   return (

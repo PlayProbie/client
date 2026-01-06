@@ -1,8 +1,10 @@
-import { FileArchive, Settings } from 'lucide-react';
+import { ClipboardList, FileArchive } from 'lucide-react';
+import { useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
-import { Skeleton } from '@/components/ui/loading';
+import { Button, Skeleton } from '@/components/ui';
 import { useBuildsQuery, useGameDetailQuery } from '@/features/game-streaming';
+import { useSurveys } from '@/features/game-streaming-survey';
 
 export default function GameOverviewPage() {
   const { gameUuid } = useParams<{ gameUuid: string }>();
@@ -10,10 +12,45 @@ export default function GameOverviewPage() {
   const { data: builds, isLoading: isBuildsLoading } = useBuildsQuery(
     gameUuid || ''
   );
+  const {
+    data: surveys,
+    isLoading: isSurveysLoading,
+    isError: isSurveysError,
+  } = useSurveys({
+    gameUuid,
+    enabled: !!gameUuid,
+  });
 
   const isLoading = isGameLoading || isBuildsLoading;
   const readyBuilds = builds?.filter((b) => b.status === 'READY').length || 0;
   const totalBuilds = builds?.length || 0;
+
+  const surveyStats = useMemo(() => {
+    if (!surveys || surveys.length === 0) {
+      return {
+        totalSurveys: 0,
+        activeSurveys: 0,
+        draftSurveys: 0,
+        latestLabel: '등록된 설문이 없습니다.',
+      };
+    }
+
+    const latestSurvey = surveys.reduce((latest, survey) =>
+      new Date(survey.createdAt) > new Date(latest.createdAt)
+        ? survey
+        : latest
+    );
+
+    return {
+      totalSurveys: surveys.length,
+      activeSurveys: surveys.filter((survey) => survey.status === 'ACTIVE')
+        .length,
+      draftSurveys: surveys.filter((survey) => survey.status === 'DRAFT').length,
+      latestLabel: `${latestSurvey.surveyName} · ${new Date(
+        latestSurvey.createdAt
+      ).toLocaleDateString()}`,
+    };
+  }, [surveys]);
 
   return (
     <div className="space-y-6">
@@ -24,61 +61,114 @@ export default function GameOverviewPage() {
         </p>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid gap-4 sm:grid-cols-2">
-        {/* Builds Card */}
-        <Link
-          to={`/studio/games/${gameUuid}/builds`}
-          className="bg-card hover:bg-muted/50 rounded-lg border p-6 transition-colors"
-        >
-          <div className="flex items-center gap-4">
-            <div className="bg-primary/10 rounded-lg p-3">
-              <FileArchive className="text-primary size-6" />
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="bg-card rounded-xl border p-6 shadow-sm">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="bg-primary/10 rounded-lg p-3">
+                <FileArchive className="text-primary size-6" />
+              </div>
+              <div>
+                <p className="text-muted-foreground text-sm">Builds</p>
+                {isLoading ? (
+                  <Skeleton className="mt-1 h-7 w-24" />
+                ) : (
+                  <p className="text-2xl font-bold">
+                    {readyBuilds}{' '}
+                    <span className="text-muted-foreground text-sm font-normal">
+                      / {totalBuilds}
+                    </span>
+                  </p>
+                )}
+              </div>
             </div>
-            <div>
-              <p className="text-muted-foreground text-sm">Builds</p>
-              {isLoading ? (
-                <Skeleton className="mt-1 h-7 w-16" />
-              ) : (
-                <p className="text-2xl font-bold">
-                  {readyBuilds}{' '}
-                  <span className="text-muted-foreground text-sm font-normal">
-                    / {totalBuilds}
-                  </span>
-                </p>
-              )}
-            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              asChild
+            >
+              <Link to={`/games/${gameUuid}/builds`}>빌드 저장소 보기</Link>
+            </Button>
           </div>
-          <p className="text-muted-foreground mt-3 text-xs">
-            {readyBuilds} builds ready for streaming
+          <p className="text-muted-foreground mt-4 text-sm">
+            준비된 빌드 {readyBuilds}개 · 전체 {totalBuilds}개
           </p>
-        </Link>
+        </div>
 
-        {/* Stream Settings Card */}
-        <Link
-          to={`/studio/games/${gameUuid}/stream-settings`}
-          className="bg-card hover:bg-muted/50 rounded-lg border p-6 transition-colors"
-        >
-          <div className="flex items-center gap-4">
-            <div className="bg-info/10 rounded-lg p-3">
-              <Settings className="text-info size-6" />
+        <div className="bg-card rounded-xl border p-6 shadow-sm">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="bg-secondary/10 rounded-lg p-3">
+                <ClipboardList className="text-secondary size-6" />
+              </div>
+              <div>
+                <p className="text-muted-foreground text-sm">Surveys</p>
+                {isSurveysLoading ? (
+                  <Skeleton className="mt-1 h-7 w-24" />
+                ) : (
+                  <p className="text-2xl font-bold">
+                    {surveyStats.totalSurveys}
+                  </p>
+                )}
+              </div>
             </div>
-            <div>
-              <p className="text-muted-foreground text-sm">Stream Settings</p>
-              <p className="mt-1 text-lg font-semibold">Configure</p>
-            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              asChild
+            >
+              <Link to={`/games/${gameUuid}/surveys`}>설문 목록</Link>
+            </Button>
           </div>
-          <p className="text-muted-foreground mt-3 text-xs">
-            GPU, resolution, capacity, and performance options
-          </p>
-        </Link>
+          <div className="mt-4 grid gap-3 sm:grid-cols-3">
+            {isSurveysLoading ? (
+              Array.from({ length: 3 }).map((_, idx) => (
+                <Skeleton
+                  key={`survey-skel-${idx}`}
+                  className="h-10"
+                />
+              ))
+            ) : (
+              <>
+                <div>
+                  <p className="text-muted-foreground text-xs">Active</p>
+                  <p className="text-lg font-semibold">
+                    {surveyStats.activeSurveys}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground text-xs">Draft</p>
+                  <p className="text-lg font-semibold">
+                    {surveyStats.draftSurveys}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground text-xs">Latest</p>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    {surveyStats.latestLabel}
+                  </p>
+                </div>
+              </>
+            )}
+          </div>
+          {isSurveysError && (
+            <p className="text-destructive mt-4 text-sm">
+              설문 정보를 불러오는 동안 오류가 발생했습니다.
+            </p>
+          )}
+        </div>
       </div>
 
-      {/* Recent Builds */}
       <div className="bg-card rounded-lg border">
-        <div className="border-b px-6 py-4">
-          <h3 className="font-semibold">Recent Builds</h3>
-        </div>
+        <Link
+          to={`/games/${gameUuid}/builds`}
+          className="flex flex-col gap-1 border-border border-b px-6 py-4 transition hover:bg-muted/50"
+        >
+          <div className="flex items-center justify-between">
+            <h3 className="font-semibold">Recent Builds</h3>
+            <span className="text-sm text-muted-foreground">전체 보기 →</span>
+          </div>
+        </Link>
         <div className="p-6">
           {isBuildsLoading ? (
             <div className="space-y-3">
@@ -92,7 +182,7 @@ export default function GameOverviewPage() {
                 아직 업로드된 빌드가 없습니다.
               </p>
               <Link
-                to={`/studio/games/${gameUuid}/builds`}
+                to={`/games/${gameUuid}/builds`}
                 className="text-primary mt-2 inline-block text-sm hover:underline"
               >
                 첫 빌드 업로드하기 →
@@ -128,7 +218,7 @@ export default function GameOverviewPage() {
               ))}
               {builds.length > 3 && (
                 <Link
-                  to={`/studio/games/${gameUuid}/builds`}
+                  to={`/games/${gameUuid}/builds`}
                   className="text-primary block pt-2 text-center text-sm hover:underline"
                 >
                   View all {builds.length} builds →

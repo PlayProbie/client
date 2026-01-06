@@ -3,7 +3,7 @@
  * Route: /games/:gameUuid/surveys
  */
 import { Plus } from 'lucide-react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import { Button, InlineAlert, Skeleton } from '@/components/ui';
 import { StatusBadge, type StatusVariant } from '@/components/ui/StatusBadge';
@@ -39,6 +39,12 @@ export default function SurveyListPage() {
     enabled: !!gameUuid,
   });
 
+  const navigate = useNavigate();
+  const handleRowClick = (surveyUuid: string) => {
+    if (!gameUuid) return;
+    navigate(`/games/${gameUuid}/surveys/${surveyUuid}/overview`);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -49,9 +55,14 @@ export default function SurveyListPage() {
             게임별 설문을 관리하고 배포합니다.
           </p>
         </div>
-        <Button disabled>
-          <Plus className="mr-2 size-4" />
-          Create Survey
+        <Button
+          variant="outline"
+          asChild
+        >
+          <Link to={`/games/${gameUuid}/surveys/design/step-0`}>
+            <Plus className="mr-2 size-4" />
+            Create Survey
+          </Link>
         </Button>
       </div>
 
@@ -95,7 +106,12 @@ export default function SurveyListPage() {
             아직 생성된 설문이 없습니다. 새로운 설문을 생성하여 테스트를
             시작해보세요.
           </p>
-          <Button disabled>Create Survey</Button>
+          <Button
+            variant="outline"
+            asChild
+          >
+            <Link to={`/games/${gameUuid}/surveys/design/step-0`}>Create Survey</Link>
+          </Button>
         </div>
       ) : (
         <div className="bg-card rounded-md border">
@@ -105,45 +121,35 @@ export default function SurveyListPage() {
                 <TableHead>이름</TableHead>
                 <TableHead>상태</TableHead>
                 <TableHead>생성일</TableHead>
-                <TableHead className="text-right">관리</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {surveys.map((survey) => {
-                const statusInfo = STATUS_MAP[survey.status];
-                return (
-                  <TableRow key={survey.surveyUuid}>
-                    <TableCell className="font-medium">
-                      {survey.surveyName}
-                    </TableCell>
-                    <TableCell>
-                      <StatusBadge
-                        variant={statusInfo.variant}
-                        label={statusInfo.label}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      {new Date(survey.createdAt).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        asChild
-                      >
-                        <Link
-                          to={`/games/${gameUuid}/surveys/${survey.surveyUuid}/overview`}
-                        >
-                          Manage
-                        </Link>
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
+            {surveys.map((survey) => {
+              const statusInfo = STATUS_MAP[survey.status];
+              return (
+                <TableRow
+                  key={survey.surveyUuid}
+                  className="cursor-pointer hover:bg-muted/40"
+                  onClick={() => handleRowClick(survey.surveyUuid)}
+                >
+                  <TableCell className="font-medium">
+                    {survey.surveyName}
+                  </TableCell>
+                  <TableCell>
+                    <StatusBadge
+                      variant={statusInfo.variant}
+                      label={statusInfo.label}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    {new Date(survey.createdAt).toLocaleDateString()}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
       )}
     </div>
   );

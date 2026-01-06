@@ -14,16 +14,16 @@ import {
 const DISTRIBUTE_STEPS = ['빌드 연결', '관리자 테스트', '설문 오픈'];
 
 export default function SurveyDistributePage() {
-  const { survey, isLoading, isError, refetch, surveyId, gameUuid } =
+  const { survey, isLoading, isError, refetch, surveyUuid, gameUuid } =
     useOutletContext<SurveyShellContext>();
 
-  const surveyUuid = survey?.surveyUuid ?? surveyId ?? '';
+  const resolvedSurveyUuid = survey?.surveyUuid ?? surveyUuid ?? '';
   const {
     data: streamingResource,
     isLoading: isResourceLoading,
     isError: isResourceError,
     refetch: refetchResource,
-  } = useStreamingResource(surveyUuid, !!surveyUuid);
+  } = useStreamingResource(resolvedSurveyUuid, !!resolvedSurveyUuid);
 
   if (isLoading) {
     return <PageSpinner message="설문 정보를 불러오는 중..." />;
@@ -98,14 +98,14 @@ export default function SurveyDistributePage() {
       <div className="grid gap-6 lg:grid-cols-2">
         <BuildConnectionCard
           gameUuid={gameUuid}
-          surveyUuid={surveyUuid}
+          surveyUuid={resolvedSurveyUuid}
           streamingResource={streamingResource}
           isResourceLoading={isResourceLoading}
           isResourceError={isResourceError}
           onRefetchResource={refetchResource}
         />
         <AdminTestPanel
-          surveyUuid={surveyUuid}
+          surveyUuid={resolvedSurveyUuid}
           streamingResource={streamingResource}
           isResourceLoading={isResourceLoading}
           isResourceError={isResourceError}

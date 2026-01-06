@@ -1,6 +1,6 @@
 /**
  * StreamSettingsPage - 스트리밍 설정 페이지
- * Route: /studio/games/:gameUuid/stream-settings
+ * Route: /games/:gameUuid/stream-settings
  */
 import { useParams } from 'react-router-dom';
 

@@ -12,18 +12,18 @@ import { useToast } from '@/hooks/useToast';
 import { cn } from '@/lib/utils';
 
 export default function SurveyOverviewPage() {
-  const { survey, isLoading, isError, refetch, surveyId } =
+  const { survey, isLoading, isError, refetch, surveyUuid } =
     useOutletContext<SurveyShellContext>();
   const { toast } = useToast();
   const [nextStatus, setNextStatus] = useState<SurveyStatusValue | null>(
     null
   );
 
-  const surveyUuid = survey?.surveyUuid ?? surveyId ?? '';
+  const resolvedSurveyUuid = survey?.surveyUuid ?? surveyUuid ?? '';
   const {
     mutate: updateStatus,
     isPending,
-  } = useUpdateSurveyStatus(surveyUuid);
+  } = useUpdateSurveyStatus(resolvedSurveyUuid);
 
   const handleModalOpenChange = (open: boolean) => {
     if (!open && !isPending) {
@@ -32,7 +32,7 @@ export default function SurveyOverviewPage() {
   };
 
   const handleConfirmStatusChange = () => {
-    if (!nextStatus || !surveyUuid) return;
+    if (!nextStatus || !resolvedSurveyUuid) return;
 
     updateStatus(
       { status: nextStatus },
@@ -134,7 +134,7 @@ export default function SurveyOverviewPage() {
                 <Button
                   variant="default"
                   onClick={() => setNextStatus('ACTIVE')}
-                  disabled={!surveyUuid || isPending}
+                  disabled={!resolvedSurveyUuid || isPending}
                 >
                   설문 시작
                 </Button>
@@ -143,7 +143,7 @@ export default function SurveyOverviewPage() {
                 <Button
                   variant="destructive"
                   onClick={() => setNextStatus('CLOSED')}
-                  disabled={!surveyUuid || isPending}
+                  disabled={!resolvedSurveyUuid || isPending}
                 >
                   설문 종료
                 </Button>

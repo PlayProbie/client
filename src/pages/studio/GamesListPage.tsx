@@ -1,9 +1,8 @@
 /**
- * GamesListPage - 스트리밍 게임 목록 페이지
- * Route: /studio/games
+ * GamesListPage - 게임 목록 페이지
+ * Route: /games
  */
-import { Plus, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { Copy } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
@@ -16,31 +15,31 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/Table';
-import {
-  RegisterGameModal,
-  UnregisterGameDialog,
-} from '@/features/game-streaming';
 import { useGamesQuery } from '@/features/game-streaming';
 import type { StreamingGame } from '@/features/game-streaming/types';
 import { formatDate } from '@/features/game-streaming/utils';
+import { useToast } from '@/hooks/useToast';
 
 export default function GamesListPage() {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const { data: games, isLoading, isError, refetch } = useGamesQuery();
 
-  // Modal states
-  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
-  const [isUnregisterDialogOpen, setIsUnregisterDialogOpen] = useState(false);
-  const [selectedGame, setSelectedGame] = useState<StreamingGame | null>(null);
-
   const handleRowClick = (gameUuid: string) => {
-    navigate(`/studio/games/${gameUuid}/overview`);
+    navigate(`/games/${gameUuid}`);
   };
 
-  const handleUnregisterClick = (e: React.MouseEvent, game: StreamingGame) => {
+  const handleCopyUuid = async (
+    e: React.MouseEvent,
+    game: StreamingGame
+  ) => {
     e.stopPropagation();
-    setSelectedGame(game);
-    setIsUnregisterDialogOpen(true);
+    await navigator.clipboard.writeText(game.gameUuid);
+    toast({
+      variant: 'success',
+      title: '복사 완료',
+      description: '게임 UUID가 클립보드에 복사되었습니다.',
+    });
   };
 
   // Loading state
@@ -49,15 +48,11 @@ export default function GamesListPage() {
       <div className="container mx-auto py-8">
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold">스트리밍 게임 목록</h1>
+            <h1 className="text-2xl font-bold">게임 목록</h1>
             <p className="text-muted-foreground text-sm">
-              GameLift Streams에 등록된 게임을 관리합니다.
+              게임을 선택해 빌드와 스트리밍 설정을 관리합니다.
             </p>
           </div>
-          <Button disabled>
-            <Plus className="mr-2 size-4" />
-            스트리밍 등록
-          </Button>
         </div>
         <div className="bg-card rounded-lg border">
           <Table>
@@ -67,7 +62,6 @@ export default function GamesListPage() {
                 <TableHead>Game UUID</TableHead>
                 <TableHead>Builds</TableHead>
                 <TableHead>Updated</TableHead>
-                <TableHead className="w-[80px]">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -85,9 +79,6 @@ export default function GamesListPage() {
                   <TableCell>
                     <Skeleton className="h-5 w-24" />
                   </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-8 w-10" />
-                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -103,9 +94,9 @@ export default function GamesListPage() {
       <div className="container mx-auto py-8">
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold">스트리밍 게임 목록</h1>
+            <h1 className="text-2xl font-bold">게임 목록</h1>
             <p className="text-muted-foreground text-sm">
-              GameLift Streams에 등록된 게임을 관리합니다.
+              게임을 선택해 빌드와 스트리밍 설정을 관리합니다.
             </p>
           </div>
         </div>
@@ -130,31 +121,17 @@ export default function GamesListPage() {
       <div className="container mx-auto py-8">
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold">스트리밍 게임 목록</h1>
+            <h1 className="text-2xl font-bold">게임 목록</h1>
             <p className="text-muted-foreground text-sm">
-              GameLift Streams에 등록된 게임을 관리합니다.
+              게임을 선택해 빌드와 스트리밍 설정을 관리합니다.
             </p>
           </div>
-          <Button onClick={() => setIsRegisterModalOpen(true)}>
-            <Plus className="mr-2 size-4" />
-            스트리밍 등록
-          </Button>
         </div>
         <div className="bg-card flex flex-col items-center justify-center rounded-lg border py-16">
           <p className="text-muted-foreground mb-4">
-            스트리밍에 등록된 게임이 없습니다
+            등록된 게임이 없습니다
           </p>
-          <Button onClick={() => setIsRegisterModalOpen(true)}>
-            <Plus className="mr-2 size-4" />
-            스트리밍 등록
-          </Button>
         </div>
-
-        {/* Register Modal */}
-        <RegisterGameModal
-          open={isRegisterModalOpen}
-          onOpenChange={setIsRegisterModalOpen}
-        />
       </div>
     );
   }
@@ -164,15 +141,11 @@ export default function GamesListPage() {
     <div className="container mx-auto py-8">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">스트리밍 게임 목록</h1>
+          <h1 className="text-2xl font-bold">게임 목록</h1>
           <p className="text-muted-foreground text-sm">
-            GameLift Streams에 등록된 게임을 관리합니다.
+            게임을 선택해 빌드와 스트리밍 설정을 관리합니다.
           </p>
         </div>
-        <Button onClick={() => setIsRegisterModalOpen(true)}>
-          <Plus className="mr-2 size-4" />
-          스트리밍 등록
-        </Button>
       </div>
 
       <div className="bg-card rounded-lg border">
@@ -183,7 +156,6 @@ export default function GamesListPage() {
               <TableHead>Game UUID</TableHead>
               <TableHead>Builds</TableHead>
               <TableHead>Updated</TableHead>
-              <TableHead className="w-[80px]">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -195,44 +167,30 @@ export default function GamesListPage() {
               >
                 <TableCell className="font-medium">{game.gameName}</TableCell>
                 <TableCell>
-                  <code className="bg-muted rounded px-2 py-0.5 font-mono text-xs">
-                    {game.gameUuid}
-                  </code>
+                  <div className="flex items-center gap-2">
+                    <code className="bg-muted rounded px-2 py-0.5 font-mono text-xs">
+                      {game.gameUuid}
+                    </code>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="size-7"
+                      onClick={(e) => handleCopyUuid(e, game)}
+                      title="UUID 복사"
+                    >
+                      <Copy className="size-3.5" />
+                    </Button>
+                  </div>
                 </TableCell>
                 <TableCell>
                   {game.buildsCount > 0 ? game.buildsCount : '-'}
                 </TableCell>
                 <TableCell>{formatDate(game.updatedAt)}</TableCell>
-                <TableCell>
-                  <div className="flex gap-1">
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      onClick={(e) => handleUnregisterClick(e, game)}
-                      title="등록 해제"
-                    >
-                      <Trash2 className="text-destructive size-4" />
-                    </Button>
-                  </div>
-                </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </div>
-
-      {/* Register Modal */}
-      <RegisterGameModal
-        open={isRegisterModalOpen}
-        onOpenChange={setIsRegisterModalOpen}
-      />
-
-      {/* Unregister Dialog */}
-      <UnregisterGameDialog
-        open={isUnregisterDialogOpen}
-        onOpenChange={setIsUnregisterDialogOpen}
-        game={selectedGame}
-      />
     </div>
   );
 }
