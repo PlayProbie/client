@@ -21,35 +21,35 @@ const API_BASE_URL = '/api';
 // ----------------------------------------
 const SOURCE_GAMES: ApiSourceGame[] = [
   {
-    game_id: 1,
+    game_uuid: 'source-game-001-uuid',
     game_name: 'Dark Souls Clone',
     game_genre: ['rpg', 'casual'],
     created_at: '2025-12-15T10:00:00Z',
     is_streaming: true,
   },
   {
-    game_id: 2,
+    game_uuid: 'source-game-002-uuid',
     game_name: 'Racing Simulator Pro',
     game_genre: ['simulation', 'sports'],
     created_at: '2025-12-16T11:00:00Z',
     is_streaming: true,
   },
   {
-    game_id: 3,
+    game_uuid: 'source-game-003-uuid',
     game_name: 'Puzzle Adventure',
     game_genre: ['casual'],
     created_at: '2025-12-17T09:00:00Z',
     is_streaming: false,
   },
   {
-    game_id: 4,
+    game_uuid: 'source-game-004-uuid',
     game_name: 'Space Shooter X',
     game_genre: ['shooter'],
     created_at: '2025-12-18T14:00:00Z',
     is_streaming: false,
   },
   {
-    game_id: 5,
+    game_uuid: 'source-game-005-uuid',
     game_name: 'Fantasy Kingdom',
     game_genre: ['rpg', 'strategy'],
     created_at: '2025-12-19T16:00:00Z',
@@ -63,21 +63,19 @@ const SOURCE_GAMES: ApiSourceGame[] = [
 const STREAMING_GAMES: ApiStreamingGame[] = [
   {
     game_uuid: 'game-001-uuid-abcd',
-    game_id: 1,
     game_name: 'Dark Souls Clone',
     builds_count: 3,
     updated_at: '2025-12-20T10:30:00Z',
   },
   {
     game_uuid: 'game-002-uuid-efgh',
-    game_id: 2,
     game_name: 'Racing Simulator Pro',
     builds_count: 1,
     updated_at: '2025-12-18T15:45:00Z',
   },
 ];
 
-const MOCK_BUILDS: Record<string, ApiBuild[]> = {
+const MOCK_GAME_BUILDS: Record<string, ApiBuild[]> = {
   'game-001-uuid-abcd': [
     {
       uuid: 'build-001',
@@ -102,6 +100,18 @@ const MOCK_BUILDS: Record<string, ApiBuild[]> = {
       created_at: '2025-12-21T14:00:00Z',
       updated_at: '2025-12-21T14:05:00Z',
     },
+    {
+      uuid: 'build-003',
+      filename: 'dark-souls-v1.2.0-beta.zip',
+      status: 'PENDING',
+      size: 2_750_000_000,
+      s3_key: 'builds/game-001/dark-souls-v1.2.0-beta.zip',
+      executable_path: '/Game/Binaries/Win64/DarkSouls.exe',
+      version: '1.2.0-beta',
+      note: 'QA 검토중',
+      created_at: '2025-12-22T09:00:00Z',
+      updated_at: '2025-12-22T09:05:00Z',
+    },
   ],
   'game-002-uuid-efgh': [
     {
@@ -115,11 +125,22 @@ const MOCK_BUILDS: Record<string, ApiBuild[]> = {
       created_at: '2025-12-18T15:00:00Z',
       updated_at: '2025-12-18T15:45:00Z',
     },
+    {
+      uuid: 'build-005',
+      filename: 'racing-sim-v2.1.0.zip',
+      status: 'READY',
+      size: 4_200_000_000,
+      s3_key: 'builds/game-002/racing-sim-v2.1.0.zip',
+      executable_path: '/RacingSim/Binaries/Win64/RacingSim.exe',
+      version: '2.1.0',
+      note: '레이싱 트랙 조정 완료',
+      created_at: '2025-12-20T12:30:00Z',
+      updated_at: '2025-12-20T12:45:00Z',
+    },
   ],
 };
 
 let buildCounter = 100;
-let gameCounter = 100;
 
 // ----------------------------------------
 // Mock Data: Stream Settings
@@ -163,10 +184,12 @@ export const gameStreamingHandlers = [
   // 스트리밍 게임 등록
   http.post(`${API_BASE_URL}/streaming-games`, async ({ request }) => {
     await delay(300);
-    const body = (await request.json()) as { game_id: number };
+    const body = (await request.json()) as { game_uuid: string };
 
     // Source Game 찾기
-    const sourceGame = SOURCE_GAMES.find((g) => g.game_id === body.game_id);
+    const sourceGame = SOURCE_GAMES.find(
+      (g) => g.game_uuid === body.game_uuid
+    );
     if (!sourceGame) {
       return HttpResponse.json(
         { message: 'Source Game not found' },
@@ -182,10 +205,8 @@ export const gameStreamingHandlers = [
       );
     }
 
-    gameCounter++;
     const newStreamingGame: ApiStreamingGame = {
-      game_uuid: `game-${gameCounter}-uuid-${Date.now()}`,
-      game_id: body.game_id,
+      game_uuid: sourceGame.game_uuid,
       game_name: sourceGame.game_name,
       builds_count: 0,
       updated_at: new Date().toISOString(),
@@ -217,32 +238,33 @@ export const gameStreamingHandlers = [
       const game = STREAMING_GAMES[gameIndex];
 
       // Source Game의 is_streaming 업데이트
-      const sourceGame = SOURCE_GAMES.find((g) => g.game_id === game.game_id);
+      const sourceGame = SOURCE_GAMES.find(
+        (g) => g.game_uuid === game.game_uuid
+      );
       if (sourceGame) {
         sourceGame.is_streaming = false;
       }
 
       STREAMING_GAMES.splice(gameIndex, 1);
-      delete MOCK_BUILDS[gameUuid as string];
+      delete MOCK_GAME_BUILDS[gameUuid as string];
 
       return HttpResponse.json({ success: true });
     }
   ),
 
   // ----------------------------------------
-  // Legacy Games API (backward compatibility)
+  // Games API (Creator Studio)
   // ----------------------------------------
   http.get(`${API_BASE_URL}/games`, async () => {
     await delay(300);
-    // Legacy: game_id 없이 응답
-    return HttpResponse.json(
-      STREAMING_GAMES.map((g) => ({
+    return HttpResponse.json({
+      result: STREAMING_GAMES.map((g) => ({
         game_uuid: g.game_uuid,
         game_name: g.game_name,
         builds_count: g.builds_count,
         updated_at: g.updated_at,
-      }))
-    );
+      })),
+    });
   }),
 
   // ----------------------------------------
@@ -253,7 +275,7 @@ export const gameStreamingHandlers = [
     async ({ params }) => {
       await delay(300);
       const { gameUuid } = params;
-      const builds = MOCK_BUILDS[gameUuid as string] || [];
+      const builds = MOCK_GAME_BUILDS[gameUuid as string] || [];
       return HttpResponse.json({ result: builds });
     }
   ),
@@ -262,7 +284,7 @@ export const gameStreamingHandlers = [
   http.get(`${API_BASE_URL}/games/:gameUuid/builds`, async ({ params }) => {
     await delay(300);
     const { gameUuid } = params;
-    const builds = MOCK_BUILDS[gameUuid as string] || [];
+    const builds = MOCK_GAME_BUILDS[gameUuid as string] || [];
     return HttpResponse.json({ result: builds });
   }),
 
@@ -279,14 +301,16 @@ export const gameStreamingHandlers = [
       const s3Prefix = `${gameUuid}/${buildId}/`;
 
       const response: ApiCreateBuildResponse = {
-        buildId,
-        version: body.version,
-        s3Prefix,
-        credentials: {
-          accessKeyId: 'AKIAIOSFODNN7EXAMPLE',
-          secretAccessKey: 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
-          sessionToken: 'FwoGZXIvYXdzEBYaDMockSessionToken==',
-          expiration: Date.now() + 3600000, // epoch timestamp
+        result: {
+          buildId,
+          version: body.version,
+          s3Prefix,
+          credentials: {
+            accessKeyId: 'AKIAIOSFODNN7EXAMPLE',
+            secretAccessKey: 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
+            sessionToken: 'FwoGZXIvYXdzEBYaDMockSessionToken==',
+            expiration: Date.now() + 3600000, // epoch timestamp
+          },
         },
       };
 
@@ -302,7 +326,7 @@ export const gameStreamingHandlers = [
       const { gameUuid, buildId } = params;
       const body = (await request.json()) as ApiBuildCompleteRequest;
 
-      // MOCK_BUILDS에 빌드 추가
+      // MOCK_GAME_BUILDS에 빌드 추가
       const newBuild: ApiBuild = {
         uuid: buildId as string,
         filename: `build-${buildId}`,
@@ -314,10 +338,10 @@ export const gameStreamingHandlers = [
         updated_at: new Date().toISOString(),
       };
 
-      if (!MOCK_BUILDS[gameUuid as string]) {
-        MOCK_BUILDS[gameUuid as string] = [];
+      if (!MOCK_GAME_BUILDS[gameUuid as string]) {
+        MOCK_GAME_BUILDS[gameUuid as string] = [];
       }
-      MOCK_BUILDS[gameUuid as string].push(newBuild);
+      MOCK_GAME_BUILDS[gameUuid as string].push(newBuild);
 
       const response: ApiBuildCompleteResponse = {
         result: {
@@ -339,7 +363,7 @@ export const gameStreamingHandlers = [
       await delay(300);
       const { gameUuid, buildId } = params;
 
-      const builds = MOCK_BUILDS[gameUuid as string];
+      const builds = MOCK_GAME_BUILDS[gameUuid as string];
       if (builds) {
         const index = builds.findIndex((b) => b.uuid === buildId);
         if (index !== -1) {

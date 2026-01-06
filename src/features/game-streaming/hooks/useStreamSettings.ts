@@ -38,15 +38,8 @@ export function useStreamSettingsMutation(gameUuid: string) {
     onSuccess: (data) => {
       queryClient.setQueryData(streamSettingsKeys.detail(gameUuid), data);
       toast({
-        title: '저장 완료',
-        description: '스트리밍 설정이 저장되었습니다.',
-      });
-    },
-    onError: () => {
-      toast({
-        title: '저장 실패',
-        description: '저장에 실패했습니다. 다시 시도해주세요.',
-        variant: 'destructive',
+        variant: 'success',
+        title: '스트리밍 설정이 저장되었습니다.',
       });
     },
   });

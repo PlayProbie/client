@@ -29,5 +29,5 @@ export async function postCreateBuild(
   }
 
   const data: ApiCreateBuildResponse = await response.json();
-  return toCreateBuildResponse(data);
+  return toCreateBuildResponse(data.result);
 }

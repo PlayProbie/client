@@ -8,18 +8,18 @@ import { toStreamingGame } from '../types';
 import { apiFetch } from '../utils';
 
 export interface RegisterStreamingGameInput {
-  gameId: number;
+  gameUuid: string;
 }
 
 interface ApiRegisterStreamingGameRequest {
-  game_id: number;
+  game_uuid: string;
 }
 
 export async function registerStreamingGame(
   input: RegisterStreamingGameInput
 ): Promise<StreamingGame> {
   const body: ApiRegisterStreamingGameRequest = {
-    game_id: input.gameId,
+    game_uuid: input.gameUuid,
   };
 
   const data = await apiFetch<

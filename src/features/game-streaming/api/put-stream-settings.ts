@@ -1,22 +1,17 @@
 /**
- * Stream Settings 저장 API
- * PUT /streaming-games/{gameUuid}/stream-settings
+ * Stream Settings 저장 (localStorage)
+ * API가 없으므로 로컬 스토어에 저장합니다.
  */
-import { API_BASE_URL } from '../constants';
-import type { ApiStreamSettings, StreamSettings } from '../types';
-import { toApiStreamSettings, toStreamSettings } from '../types';
-import { apiFetch } from '../utils';
+import { STORAGE_KEYS } from '../constants';
+import type { StreamSettings } from '../types';
+import { setStoredData } from '../utils';
 
 /** 스트림 설정 저장 */
 export async function putStreamSettings(
   gameUuid: string,
   settings: StreamSettings
 ): Promise<StreamSettings> {
-  const apiSettings = toApiStreamSettings(settings);
-  const data = await apiFetch<ApiStreamSettings, ApiStreamSettings>(
-    `${API_BASE_URL}/streaming-games/${gameUuid}/stream-settings`,
-    { method: 'PUT', body: apiSettings },
-    '스트림 설정 저장에 실패했습니다.'
-  );
-  return toStreamSettings(data);
+  const key = `${STORAGE_KEYS.STREAM_SETTINGS}${gameUuid}`;
+  setStoredData(key, settings);
+  return settings;
 }

@@ -2,9 +2,8 @@
  * Game Streaming Feature 상수
  */
 
-/** API Base URL - 환경변수에서 직접 사용 */
-export const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || 'https://dev-api.playprobie.shop';
+/** API Base URL - Vite proxy를 통해 실서버로 전달됨 (/api -> VITE_API_BASE_URL) */
+export const API_BASE_URL = '/api';
 
 /** Query/Mutation 기본 설정 */
 export const QUERY_CONFIG = {
