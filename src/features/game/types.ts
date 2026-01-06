@@ -14,14 +14,14 @@ import type { ConfigValue } from '@/types';
 
 /** 게임 장르 정의 (value + label) */
 export const GameGenreConfig = {
-  SHOOTER: { value: 'SHOOTER', label: '슈팅' },
-  STRATEGY: { value: 'STRATEGY', label: '전략' },
-  RPG: { value: 'RPG', label: 'RPG' },
-  ACTION: { value: 'ACTION', label: '액션' },
-  ADVENTURE: { value: 'ADVENTURE', label: '어드벤처' },
-  SPORTS: { value: 'SPORTS', label: '스포츠' },
-  SIMULATION: { value: 'SIMULATION', label: '시뮬레이션' },
-  CASUAL: { value: 'CASUAL', label: '캐주얼' },
+  shooter: { value: 'shooter', label: '슈팅' },
+  strategy: { value: 'strategy', label: '전략' },
+  rpg: { value: 'rpg', label: 'RPG' },
+  action: { value: 'action', label: '액션' },
+  // adventure: { value: 'adventure', label: '어드벤처' },
+  // sports: { value: 'sports', label: '스포츠' },
+  // simulation: { value: 'simulation', label: '시뮬레이션' },
+  // casual: { value: 'casual', label: '캐주얼' },
 } as const;
 
 /** 게임 장르 타입 */

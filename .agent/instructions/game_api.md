@@ -31,7 +31,7 @@
       "game_uuid": "7a3b3c4d-e5f6-7890-abcd-ef1234567890",
       "workspace_uuid": "550e8400-e29b-41d4-a716-446655440000",
       "game_name": "My RPG Game",
-      "game_genre": ["RPG", "ACTION"],
+      "game_genre": ["rpg", "action"],
       "game_context": "중세 판타지 배경의 오픈월드 RPG 게임입니다.",
       "created_at": "2026-01-06T12:01:44.771Z",
       "updated_at": "2026-01-06T12:01:44.771Z"
@@ -75,7 +75,7 @@
 ```json
 {
   "game_name": "My RPG Game",
-  "game_genre": ["RPG", "ACTION"],
+  "game_genre": ["rpg", "action"],
   "game_context": "중세 판타지 배경의 오픈월드 RPG 게임입니다."
 }
 ```
@@ -90,7 +90,7 @@
     "game_uuid": "7a3b3c4d-e5f6-7890-abcd-ef1234567890",
     "workspace_uuid": "550e8400-e29b-41d4-a716-446655440000",
     "game_name": "My RPG Game",
-    "game_genre": ["RPG", "ACTION"],
+    "game_genre": ["rpg", "action"],
     "game_context": "중세 판타지 배경의 오픈월드 RPG 게임입니다.",
     "created_at": "2026-01-06T12:01:44.773Z",
     "updated_at": "2026-01-06T12:01:44.773Z"
@@ -126,7 +126,7 @@
     "game_uuid": "7a3b3c4d-e5f6-7890-abcd-ef1234567890",
     "workspace_uuid": "550e8400-e29b-41d4-a716-446655440000",
     "game_name": "My RPG Game",
-    "game_genre": ["RPG", "ACTION"],
+    "game_genre": ["rpg", "action"],
     "game_context": "중세 판타지 배경의 오픈월드 RPG 게임입니다.",
     "created_at": "2026-01-06T12:01:44.769Z",
     "updated_at": "2026-01-06T12:01:44.769Z"
@@ -157,7 +157,7 @@
 ```json
 {
   "game_name": "Updated RPG Game",
-  "game_genre": ["RPG", "ADVENTURE"],
+  "game_genre": ["rpg", "adventure"],
   "game_context": "수정된 게임 설명입니다."
 }
 ```
@@ -172,7 +172,7 @@
     "game_uuid": "7a3b3c4d-e5f6-7890-abcd-ef1234567890",
     "workspace_uuid": "550e8400-e29b-41d4-a716-446655440000",
     "game_name": "My RPG Game",
-    "game_genre": ["RPG", "ACTION"],
+    "game_genre": ["rpg", "action"],
     "game_context": "중세 판타지 배경의 오픈월드 RPG 게임입니다.",
     "created_at": "2026-01-06T12:01:44.775Z",
     "updated_at": "2026-01-06T12:01:44.775Z"
