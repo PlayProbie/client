@@ -42,9 +42,9 @@
 ### 형식
 
 ```
-<type>: <subject>
+<type>: <한글 제목 (동사로 시작, 50자 이내, 마침표 없음)>
 
-<body>
+<body (bullet points)>
 ```
 
 ### Type 종류
