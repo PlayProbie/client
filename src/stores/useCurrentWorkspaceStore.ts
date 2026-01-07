@@ -26,7 +26,9 @@ const DEMO_WORKSPACE: Workspace = {
   name: 'Demo Workspace',
   profileImageUrl: '',
   description: 'Mock 데이터용 데모 워크스페이스',
+  gameCount: 0,
   createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
 };
 
 export const useCurrentWorkspaceStore = create<CurrentWorkspaceStore>()(

@@ -174,6 +174,7 @@ export interface SurveySession {
   sessionUuid: string;
   surveyName: string;
   surveyUuid: string;
+  surveyId: number;
   testerId: string;
   status: SurveySessionStatus;
   endedAt: string;

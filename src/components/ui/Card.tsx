@@ -37,6 +37,17 @@ const CardTitle = forwardRef<HTMLHeadingElement, ComponentProps<'h3'>>(
 );
 CardTitle.displayName = 'CardTitle';
 
+const CardDescription = forwardRef<HTMLParagraphElement, ComponentProps<'p'>>(
+    ({ className, ...props }, ref) => (
+        <p
+            ref={ref}
+            className={cn('text-sm text-muted-foreground', className)}
+            {...props}
+        />
+    )
+);
+CardDescription.displayName = 'CardDescription';
+
 const CardContent = forwardRef<HTMLDivElement, ComponentProps<'div'>>(
     ({ className, ...props }, ref) => (
         <div ref={ref} className={cn('p-6 pt-0', className)} {...props} />
@@ -44,4 +55,4 @@ const CardContent = forwardRef<HTMLDivElement, ComponentProps<'div'>>(
 );
 CardContent.displayName = 'CardContent';
 
-export { Card, CardContent, CardHeader, CardTitle };
+export { Card, CardContent, CardDescription, CardHeader, CardTitle };
