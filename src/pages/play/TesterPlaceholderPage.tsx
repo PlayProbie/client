@@ -3,7 +3,7 @@
  *
  * 테스터가 게임을 스트리밍으로 플레이하는 페이지입니다.
  */
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,7 @@ import {
   useGameStream,
   useSessionInfo,
   useSessionStatus,
+  useSignal,
   useTerminateSession,
 } from '@/features/game-streaming-session';
 import { useToast } from '@/hooks/useToast';
@@ -26,6 +27,7 @@ export default function TesterPlaceholderPage() {
     () => typeof RTCPeerConnection !== 'undefined',
     []
   );
+  const AUTO_CONNECT_RETRY_INTERVAL_MS = 5000;
 
   // 세션 정보 조회
   const {
@@ -43,6 +45,7 @@ export default function TesterPlaceholderPage() {
     sessionUuid,
     connect,
     disconnect,
+    sendInput,
   } = useGameStream({
     surveyUuid: surveyUuid || '',
     onConnected: () => {
@@ -69,6 +72,7 @@ export default function TesterPlaceholderPage() {
 
   // 세션 종료 mutation
   const terminateMutation = useTerminateSession(surveyUuid || '');
+  const signalMutation = useSignal(surveyUuid || '');
 
   // Heartbeat 폴링 (세션 활성화 상태 확인)
   useSessionStatus(surveyUuid || '', sessionUuid || undefined, {
@@ -83,7 +87,42 @@ export default function TesterPlaceholderPage() {
     },
   });
 
-  // 연결 시작 핸들러
+  // 자동 연결 (세션 가용 시 즉시 연결)
+  const autoConnectAttemptedAtRef = useRef(0);
+  const autoConnectSurveyRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!surveyUuid) return;
+    if (autoConnectSurveyRef.current !== surveyUuid) {
+      autoConnectSurveyRef.current = surveyUuid;
+      autoConnectAttemptedAtRef.current = 0;
+    }
+  }, [surveyUuid]);
+
+  useEffect(() => {
+    if (!surveyUuid || !sessionInfo?.isAvailable) return;
+    if (isConnected || isConnecting) return;
+
+    const now = Date.now();
+    if (
+      now - autoConnectAttemptedAtRef.current <
+      AUTO_CONNECT_RETRY_INTERVAL_MS
+    ) {
+      return;
+    }
+
+    autoConnectAttemptedAtRef.current = now;
+    void connect();
+  }, [
+    surveyUuid,
+    sessionInfo?.isAvailable,
+    isConnected,
+    isConnecting,
+    connect,
+    AUTO_CONNECT_RETRY_INTERVAL_MS,
+  ]);
+
+  // 연결 시작 핸들러 (수동 재시도용)
   const handleConnect = async () => {
     if (!surveyUuid || isConnecting || isConnected) return;
     await connect();
@@ -92,6 +131,16 @@ export default function TesterPlaceholderPage() {
   // 연결 종료 핸들러
   const handleDisconnect = () => {
     if (!surveyUuid || !sessionUuid) return;
+
+    const disconnectSignal = btoa(
+      JSON.stringify({
+        type: 'client_disconnect',
+        surveySessionUuid: sessionUuid,
+        reason: 'user_exit',
+        timestamp: Date.now(),
+      })
+    );
+    signalMutation.mutate({ signalRequest: disconnectSignal });
 
     terminateMutation.mutate(
       { surveySessionUuid: sessionUuid, reason: 'user_exit' },
@@ -190,6 +239,7 @@ export default function TesterPlaceholderPage() {
         isConnected={isConnected}
         isConnecting={isConnecting}
         onDisconnect={handleDisconnect}
+        sendInput={sendInput}
         className="w-full"
       />
 
@@ -197,12 +247,17 @@ export default function TesterPlaceholderPage() {
       {!isConnected && !isConnecting && (
         <>
           {isAvailable ? (
-            <InlineAlert
-              variant="success"
-              title="스트리밍 연결 준비 완료"
-            >
-              아래 버튼을 눌러 게임 스트리밍을 시작하세요.
-            </InlineAlert>
+            <div className="flex flex-col items-center gap-4 py-8">
+              <p className="text-muted-foreground">
+                세션에 연결하는 중입니다... 잠시만 기다려주세요.
+              </p>
+              <Button
+                onClick={handleConnect}
+                variant="outline"
+              >
+                연결이 안 되나요? 수동으로 연결하기
+              </Button>
+            </div>
           ) : (
             <InlineAlert
               variant="warning"
@@ -211,16 +266,6 @@ export default function TesterPlaceholderPage() {
               잠시 후 다시 시도해주세요.
             </InlineAlert>
           )}
-
-          <div className="flex flex-wrap items-center gap-3">
-            <Button
-              size="lg"
-              onClick={handleConnect}
-              disabled={!isAvailable || isConnecting}
-            >
-              Start Streaming
-            </Button>
-          </div>
         </>
       )}
 
