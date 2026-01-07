@@ -29,14 +29,10 @@ export interface UseGamesQueryOptions {
 
 /** 게임 목록 조회 Hook */
 export function useGamesQuery(options?: UseGamesQueryOptions) {
-  const { currentWorkspace } = useCurrentWorkspaceStore();
-  const workspaceUuid =
-    options?.workspaceUuid ?? currentWorkspace?.workspaceUuid;
-
   return useQuery<Game[]>({
-    queryKey: gameKeys.list(workspaceUuid ?? ''),
-    queryFn: () => getGames(workspaceUuid!),
+    queryKey: gameKeys.lists(),
+    queryFn: () => getGames(),
     staleTime: STALE_TIME_DEFAULT,
-    enabled: (options?.enabled ?? true) && !!workspaceUuid,
+    enabled: options?.enabled ?? true,
   });
 }

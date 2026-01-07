@@ -19,7 +19,7 @@ import {
 } from '@/features/survey-session';
 
 import { getSurveyResultDetails } from '../api/get-survey-result-details';
-import type { QuestionAnswerExcerpt, SurveyResultDetails } from '../types';
+import type { ApiQuestionAnswerExcerpt, ApiSurveyResultDetails } from '../types';
 
 type SurveyResultDetailDialogProps = {
   open: boolean;
@@ -46,7 +46,7 @@ function SurveyResultDetailDialog({
   } = useQuery({
     queryKey: ['survey-result-details', surveyUuid, sessionUuid],
     queryFn: () => getSurveyResultDetails({ surveyUuid, sessionUuid }),
-    select: (response) => response.result as unknown as SurveyResultDetails,
+    select: (response) => response.result as ApiSurveyResultDetails,
     enabled: open && !!surveyUuid && !!sessionUuid,
   });
 
@@ -115,10 +115,10 @@ function SurveyResultDetailDialog({
               collapsible
               className="w-full"
             >
-              {details.byFixedQuestion.map((fq) => (
+              {details.byFixedQuestion.map((fq, index) => (
                 <AccordionItem
-                  key={fq.fixedQId}
-                  value={`q-${fq.fixedQId}`}
+                  key={`${index}-${fq.fixedQuestion}`}
+                  value={`q-${index}`}
                 >
                   <AccordionTrigger className="text-left font-bold">
                     {fq.fixedQuestion}
@@ -144,7 +144,7 @@ function SurveyResultDetailDialog({
 }
 
 type QuestionAnswerBlockProps = {
-  qa: QuestionAnswerExcerpt;
+  qa: ApiQuestionAnswerExcerpt;
 };
 
 function QuestionAnswerBlock({ qa }: QuestionAnswerBlockProps) {

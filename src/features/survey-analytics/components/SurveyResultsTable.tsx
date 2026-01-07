@@ -17,11 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/Table';
-import {
-  getSessionStatusClassName,
-  getSessionStatusLabel,
-  type SurveySessionStatus,
-} from '@/features/survey-session';
+import { getSessionStatusClassName, getSessionStatusLabel, type SurveySessionStatus } from '@/features/survey-session';
 
 import type { SurveyResultListItem } from '../types';
 import { SurveyResultDetailDialog } from './SurveyResultDetailDialog';
@@ -220,8 +216,8 @@ function SurveyResultsTable({ data }: SurveyResultsTableProps) {
         <SurveyResultDetailDialog
           open={dialogOpen}
           onOpenChange={setDialogOpen}
-          surveyUuid={selectedItem.surveyUuid}
-          sessionUuid={selectedItem.sessionUuid}
+          surveyUuid={selectedItem.survey_uuid}
+          sessionUuid={selectedItem.session_uuid}
         />
       )}
     </div>

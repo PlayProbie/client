@@ -16,14 +16,30 @@ function useSurveyResults({ gameUuid }: UseSurveyResultsOptions) {
   const summaryQuery = useQuery({
     queryKey: ['survey-results-summary', gameUuid],
     queryFn: () => getSurveyResultsSummary({ gameUuid }),
-    select: (response) => response.result as unknown as SurveyResultsSummary,
+    select: (response): SurveyResultsSummary => ({
+      surveyCount: response.result.survey_count,
+      responseCount: response.result.response_count,
+    }),
     enabled: !!gameUuid,
   });
 
   const listQuery = useQuery({
     queryKey: ['survey-results-list', gameUuid],
     queryFn: () => getSurveyResultsList({ gameUuid }),
-    select: (response) => response.result as unknown as SurveyResultsList,
+    select: (response): SurveyResultsList => ({
+      content: response.result.content.map((item) => ({
+        sessionUuid: item.session_uuid,
+        surveyName: item.survey_name,
+        surveyUuid: item.survey_uuid,
+        surveyId: item.survey_id,
+        testerId: item.tester_id,
+        status: item.status,
+        endedAt: item.ended_at,
+        firstQuestion: item.first_question,
+      })),
+      nextCursor: response.result.next_cursor,
+      hasNext: response.result.has_next,
+    }),
     enabled: !!gameUuid,
   });
 

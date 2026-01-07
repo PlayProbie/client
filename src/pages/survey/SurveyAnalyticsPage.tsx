@@ -1,10 +1,15 @@
+import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { Spinner } from '@/components/ui/loading';
 import {
-  SurveyResultsSummaryCard,
+  QuestionAnalysisTabs,
+  QuestionAnalysisView,
+  SurveyOverview,
   SurveyResultsTable,
+  type Tab,
   useSurveyResults,
+  useQuestionAnalysis,
 } from '@/features/survey-analytics';
 
 /**
@@ -13,13 +18,23 @@ import {
  */
 function SurveyAnalyticsPage() {
   const { gameUuid } = useParams<{ gameUuid: string }>();
+  const [activeTab, setActiveTab] = useState<Tab>('overview');
 
   const { summary, list, isLoading, isError } = useSurveyResults({
     gameUuid: gameUuid || '',
   });
 
+  // MVP: surveyId 임시 고정 (나중에 list[0]?.surveyId 또는 URL param으로 변경)
+  const surveyId = list[0]?.surveyId || 0;
+
+  // 페이지 레벨에서 SSE 분석 요청 (한 번만 실행)
+  const questionAnalysis = useQuestionAnalysis({
+    surveyId: surveyId || null,
+    enabled: Boolean(surveyId),
+  });
+
   return (
-    <main className="container mx-auto max-w-5xl px-4 py-8">
+    <main className="container mx-auto max-w-7xl px-4 py-8">
       {isLoading && (
         <div className="flex flex-col items-center justify-center gap-2 py-12">
           <Spinner size="lg" />
@@ -28,15 +43,46 @@ function SurveyAnalyticsPage() {
       )}
 
       {isError && (
-        <div className="text-destructive py-12 text-center">
+        <div className="py-12 text-center text-destructive">
           데이터를 불러오는 중 오류가 발생했습니다.
         </div>
       )}
 
       {!isLoading && !isError && summary && (
         <>
-          <SurveyResultsSummaryCard data={summary} />
-          <SurveyResultsTable data={list} />
+          {/* 탭 네비게이션 */}
+          <div className="mb-6">
+            <QuestionAnalysisTabs
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+            />
+          </div>
+
+          {/* 설문 개요 탭 */}
+          {activeTab === 'overview' && Boolean(surveyId) && (
+            <SurveyOverview
+              summary={summary}
+              questionAnalysis={questionAnalysis}
+            />
+          )}
+
+          {/* 질문별 분석 탭 */}
+          {activeTab === 'questions' && Boolean(surveyId) && (
+            <QuestionAnalysisView
+              questionAnalysis={questionAnalysis}
+            />
+          )}
+
+          {activeTab === 'questions' && surveyId === 0 && (
+            <div className="py-12 text-center text-muted-foreground">
+              분석할 설문 데이터가 없습니다.
+            </div>
+          )}
+
+          {/* 세부 데이터 탭 */}
+          {activeTab === 'details' && (
+            <SurveyResultsTable data={list} />
+          )}
         </>
       )}
     </main>
@@ -44,3 +90,4 @@ function SurveyAnalyticsPage() {
 }
 
 export default SurveyAnalyticsPage;
+

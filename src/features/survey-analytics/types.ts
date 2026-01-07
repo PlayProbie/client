@@ -2,7 +2,7 @@
  * Survey Analytics Feature 타입 정의
  *
  * 명명 규칙:
- * - API 응답/요청 타입: snake_case (서버 응답 그대로)
+ * - API 응답 타입: snake_case (서버 @JsonNaming 설정)
  * - 클라이언트 상태 타입: camelCase (컴포넌트에서 사용)
  */
 
@@ -25,6 +25,7 @@ export interface ApiSurveySession {
   session_uuid: string;
   survey_name: string;
   survey_uuid: string;
+  survey_id: number;
   tester_id: string;
   status: SurveySessionStatus;
   ended_at: string;
@@ -39,7 +40,6 @@ export interface ApiQuestionAnswerExcerpt {
 
 /** [API] 고정 질문별 응답 묶음 */
 export interface ApiFixedQuestionResponse {
-  fixed_q_id: number;
   fixed_question: string;
   excerpt: ApiQuestionAnswerExcerpt[];
 }
@@ -90,6 +90,84 @@ export interface GetSurveyResultDetailsResponse {
 // ----------------------------------------
 // Client State Types (camelCase - 컴포넌트에서 사용)
 // ----------------------------------------
+
+// ----------------------------------------
+// Question Analysis Types (AI 분석 결과)
+// ----------------------------------------
+
+/** 감정 타입 (GEQ 기반) */
+export type EmotionType =
+  | '성취감'
+  | '몰입감'
+  | '집중도'
+  | '긴장감'
+  | '도전감'
+  | '즐거움'
+  | '불쾌감'
+  | '중립';
+
+/** GEQ 7차원 감정 점수 */
+export interface GEQScores {
+  competence: number; // 성취감
+  immersion: number; // 몰입감
+  flow: number; // 집중도
+  tension: number; // 긴장감
+  challenge: number; // 도전감
+  positive_affect: number; // 즐거움
+  negative_affect: number; // 불쾌감
+}
+
+/** 클러스터 정보 */
+export interface ClusterInfo {
+  summary: string;
+  percentage: number;
+  count: number;
+  emotion_type: EmotionType;
+  geq_scores: GEQScores;
+  emotion_detail: string;
+  answer_ids?: string[]; // AI 원본 (서버에서 변환 전)
+  satisfaction: number;
+  keywords: string[];
+  representative_answers: string[]; // 서버에서 변환된 실제 답변 텍스트
+}
+
+/** 감정 분포 */
+export interface SentimentDistribution {
+  positive: number;
+  neutral: number;
+  negative: number;
+}
+
+/** 전체 감정 통계 */
+export interface SentimentStats {
+  score: number;
+  label: string;
+  distribution: SentimentDistribution;
+}
+
+/** 이상치 정보 */
+export interface OutlierInfo {
+  count: number;
+  summary: string;
+  answer_ids?: string[]; // AI 원본 (서버에서 변환 전)
+  sample_answers?: string[]; // 서버에서 변환된 실제 답변 텍스트 (최대 5개)
+}
+
+/** 질문별 AI 분석 결과 */
+export interface QuestionAnalysisResult {
+  question_id: number;
+  total_answers: number;
+  clusters: ClusterInfo[];
+  sentiment: SentimentStats;
+  outliers: OutlierInfo | null;
+  meta_summary: string | null;
+}
+
+/** SSE로 받는 질문 분석 래퍼 (API 응답 - snake_case) */
+export interface QuestionResponseAnalysisWrapper {
+  fixed_question_id: number;
+  result_json: string; // JSON.parse하면 QuestionAnalysisResult
+}
 
 /** [Client] 설문 세션 정보 */
 export interface SurveySession {

@@ -25,7 +25,7 @@ function BreadcrumbNav({ breadcrumbs, isLoading = false }: BreadcrumbNavProps) {
           const showSkeleton = isLast && isLoading && !crumb.label;
 
           return (
-            <Fragment key={crumb.to || `crumb-${index}`}>
+            <Fragment key={`${crumb.to}-${index}`}>
               <BreadcrumbItem>
                 {isLast ? (
                   showSkeleton ? (

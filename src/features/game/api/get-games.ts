@@ -1,6 +1,6 @@
 /**
  * Game API - 게임 목록 조회
- * GET /workspaces/{workspaceUuid}/games
+ * GET /workspaces/:workspaceUuid/games
  */
 import { API_BASE_URL } from '@/constants/api';
 
@@ -16,6 +16,7 @@ export async function getGames(workspaceUuid: string): Promise<Game[]> {
       headers: {
         'Content-Type': 'application/json',
       },
+      credentials: 'include',
     }
   );
 
