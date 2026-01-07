@@ -93,8 +93,8 @@ function createBuildConnectionAction({
       return { error: '선택한 빌드를 찾을 수 없습니다.' };
     }
 
-    if (selectedBuild.status !== 'READY') {
-      return { error: 'READY 상태의 빌드만 연결할 수 있습니다.' };
+    if (selectedBuild.status !== 'UPLOADED') {
+      return { error: 'UPLOADED 상태의 빌드만 연결할 수 있습니다.' };
     }
 
     try {
@@ -142,7 +142,9 @@ export function BuildConnectionCard({
   const deleteMutation = useDeleteStreamingResource(surveyUuid);
   const [isDisconnectOpen, setIsDisconnectOpen] = useState(false);
 
-  const readyBuilds = (builds ?? []).filter((build) => build.status === 'READY');
+  const uploadedBuilds = (builds ?? []).filter(
+    (build) => build.status === 'UPLOADED'
+  );
   const connectedBuild = null;
 
   const [state, formAction, isPending] = useActionState(
@@ -214,13 +216,13 @@ export function BuildConnectionCard({
     }
 
     return (
-      <BuildConnectionNoResourceState
-        gameUuid={gameUuid}
-        readyBuilds={readyBuilds}
-        isBuildsLoading={isBuildsLoading}
-        isBuildsError={isBuildsError}
-        onRetryBuilds={refetchBuilds}
-        formAction={formAction}
+        <BuildConnectionNoResourceState
+          gameUuid={gameUuid}
+          uploadedBuilds={uploadedBuilds}
+          isBuildsLoading={isBuildsLoading}
+          isBuildsError={isBuildsError}
+          onRetryBuilds={refetchBuilds}
+          formAction={formAction}
         isPending={isPending}
         errorMessage={state.error}
       />
