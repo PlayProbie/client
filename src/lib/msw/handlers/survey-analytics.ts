@@ -86,8 +86,8 @@ export const surveyAnalyticsHandlers = [
       const response: GetSurveyResultsListResponse = {
         result: {
           content,
-          nextCursor: hasNext ? startIndex + limit : null,
-          hasNext: hasNext,
+          next_cursor: hasNext ? startIndex + limit : null,
+          has_next: hasNext,
         },
       };
 
