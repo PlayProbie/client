@@ -8,6 +8,7 @@ const STREAMING_STATUS_CONFIG: Record<
   StreamingResourceStatus,
   { label: string; variant: StatusVariant }
 > = {
+  CREATING: { label: '생성 중', variant: 'info' },
   PENDING: { label: '대기 중', variant: 'warning' },
   PROVISIONING: { label: '프로비저닝', variant: 'info' },
   READY: { label: '준비 완료', variant: 'success' },

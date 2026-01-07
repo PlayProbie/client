@@ -56,10 +56,7 @@ export function useFormSubmit(options?: UseFormSubmitOptions) {
   const { setSurveyUrl } = useSurveyFormStore();
   const queryClient = useQueryClient();
 
-  const { gameUuid: routeGameUuid } = useParams<{ gameUuid?: string }>();
-  // route placeholder(':gameUuid')가 아닌 유효한 UUID만 사용
-  const gameUuid =
-    routeGameUuid && !routeGameUuid.startsWith(':') ? routeGameUuid : undefined;
+  const { gameUuid } = useParams<{ gameUuid?: string }>();
 
   return useMutation({
     mutationFn: async (formData: Partial<SurveyFormData>) => {

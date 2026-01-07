@@ -7,10 +7,7 @@ import { useParams } from 'react-router-dom';
 import { StreamSettingsForm } from '@/features/game-streaming';
 
 export default function StreamSettingsPage() {
-  const { gameUuid: routeGameUuid } = useParams<{ gameUuid: string }>();
-  // route placeholder(':gameUuid')가 아닌 유효한 UUID만 사용
-  const gameUuid =
-    routeGameUuid && !routeGameUuid.startsWith(':') ? routeGameUuid : undefined;
+  const { gameUuid } = useParams<{ gameUuid: string }>();
 
   return (
     <div className="space-y-6">

@@ -37,6 +37,7 @@ export interface Survey {
 
 /** 스트리밍 리소스 상태 */
 export type StreamingResourceStatus =
+  | 'CREATING'
   | 'PENDING'
   | 'PROVISIONING'
   | 'READY'

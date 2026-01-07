@@ -7,10 +7,7 @@ import { useBuildsQuery, useGameDetailQuery } from '@/features/game-streaming';
 import { useSurveys } from '@/features/game-streaming-survey';
 
 export default function GameOverviewPage() {
-  const { gameUuid: routeGameUuid } = useParams<{ gameUuid: string }>();
-  // route placeholder(':gameUuid')가 아닌 유효한 UUID만 사용
-  const gameUuid =
-    routeGameUuid && !routeGameUuid.startsWith(':') ? routeGameUuid : undefined;
+  const { gameUuid } = useParams<{ gameUuid: string }>();
   const { isLoading: isGameLoading } = useGameDetailQuery(gameUuid || '');
   const { data: builds, isLoading: isBuildsLoading } = useBuildsQuery(
     gameUuid || ''

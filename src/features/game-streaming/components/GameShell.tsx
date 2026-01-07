@@ -20,10 +20,7 @@ const TABS = [
 ] as const;
 
 export function GameShell() {
-  const { gameUuid: routeGameUuid } = useParams<{ gameUuid: string }>();
-  // route placeholder(':gameUuid')가 아닌 유효한 UUID만 사용
-  const gameUuid =
-    routeGameUuid && !routeGameUuid.startsWith(':') ? routeGameUuid : undefined;
+  const { gameUuid } = useParams<{ gameUuid: string }>();
   const { data: game, isLoading } = useGameDetailQuery(gameUuid || '');
   const [copied, setCopied] = useState(false);
 

@@ -19,10 +19,7 @@ import { useCurrentGameStore } from '@/stores/useCurrentGameStore';
  */
 function GameSelector() {
   const navigate = useNavigate();
-  const { gameUuid: routeGameUuid } = useParams<{ gameUuid: string }>();
-  // route placeholder(':gameUuid')가 아닌 유효한 UUID만 사용
-  const gameUuid =
-    routeGameUuid && !routeGameUuid.startsWith(':') ? routeGameUuid : undefined;
+  const { gameUuid } = useParams<{ gameUuid: string }>();
   const { data: games, isLoading } = useGamesQuery();
   const location = useLocation();
 
