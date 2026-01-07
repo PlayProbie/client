@@ -13,3 +13,20 @@ export const NAV_ITEM_PARTIAL_ACTIVE_STYLES =
 
 export const NAV_ITEM_INACTIVE_STYLES =
   'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground';
+
+// =============================================================================
+// Style Helpers
+// =============================================================================
+
+export type ActiveState = 'exact' | 'partial' | 'none';
+
+export function getActiveStyle(state: ActiveState): string {
+  switch (state) {
+    case 'exact':
+      return NAV_ITEM_ACTIVE_STYLES;
+    case 'partial':
+      return NAV_ITEM_PARTIAL_ACTIVE_STYLES;
+    default:
+      return NAV_ITEM_INACTIVE_STYLES;
+  }
+}

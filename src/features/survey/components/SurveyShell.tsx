@@ -1,10 +1,10 @@
-import { Check, Copy, Lock } from 'lucide-react';
+import { Check, Copy } from 'lucide-react';
 import { useState } from 'react';
-import { NavLink, Outlet, useParams } from 'react-router-dom';
+import { Outlet, useParams } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/loading';
-import { SURVEY_STATUS_CONFIG, SURVEY_TABS } from '@/config/navigation';
+import { SURVEY_STATUS_CONFIG } from '@/config/navigation';
 import { useSurveys } from '@/features/game-streaming-survey';
 import type { Survey } from '@/features/game-streaming-survey/types';
 import { cn } from '@/lib/utils';
@@ -108,60 +108,6 @@ export function SurveyShell() {
             ) : null}
           </div>
         </div>
-
-        <nav className="mt-4 flex flex-wrap gap-1">
-          {SURVEY_TABS.map((tab) => {
-            const isLocked =
-              tab.editableOnlyInDraft &&
-              survey?.status &&
-              survey.status !== 'DRAFT';
-            const tabContent = (
-              <>
-                <tab.icon className="size-4" />
-                <span>{tab.label}</span>
-                {isLocked && <Lock className="size-3 opacity-70" />}
-              </>
-            );
-
-            const tabClasses =
-              'flex items-center gap-2 rounded-t-md px-4 py-2 text-sm font-medium transition-colors';
-
-            if (isLocked) {
-              return (
-                <span
-                  key={tab.path}
-                  className={cn(
-                    tabClasses,
-                    'bg-muted/50 text-muted-foreground cursor-not-allowed'
-                  )}
-                  aria-disabled="true"
-                  title="진행 중/종료된 설문은 문항을 수정할 수 없습니다."
-                >
-                  {tabContent}
-                </span>
-              );
-            }
-
-            const navTo =
-              tab.path === 'design' ? `${tab.path}/step-0` : tab.path;
-            return (
-              <NavLink
-                key={tab.path}
-                to={navTo}
-                className={({ isActive }) =>
-                  cn(
-                    tabClasses,
-                    isActive
-                      ? 'bg-primary text-primary-foreground'
-                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                  )
-                }
-              >
-                {tabContent}
-              </NavLink>
-            );
-          })}
-        </nav>
       </div>
 
       <div className="flex-1 overflow-auto p-6">
