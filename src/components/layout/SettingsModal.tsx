@@ -1,8 +1,18 @@
 import { DialogTitle } from '@radix-ui/react-dialog';
-import { Building2, CreditCard, Settings, User, Users } from 'lucide-react';
+import {
+  Building2,
+  CreditCard,
+  LogOut,
+  Settings,
+  User,
+  Users,
+} from 'lucide-react';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { Dialog, DialogContent, DialogHeader } from '@/components/ui/Dialog';
+import { postLogout } from '@/features/auth';
+import { useAuthStore } from '@/stores';
 
 import AccountSettingsTab from './settings-modal/AccountSettingsTab';
 import { TeamSettingsTab } from './settings-modal-member/TeamSettingsTab';
@@ -19,7 +29,24 @@ export default function SettingsModal({
   open,
   onOpenChange,
 }: SettingsModalProps) {
-  const [activeTab, setActiveTab] = useState<TabValue>('account');
+  const navigate = useNavigate();
+  const { logout } = useAuthStore();
+  const [activeTab, setActiveTab] = useState<TabValue>('workspace');
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      await postLogout();
+      logout();
+      navigate('/login', { replace: true });
+    } catch {
+      logout();
+      navigate('/login', { replace: true });
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
 
   return (
     <Dialog
@@ -29,22 +56,11 @@ export default function SettingsModal({
       <DialogContent className="h-[600px] max-w-[900px] p-0">
         <div className="flex h-full">
           {/* Sidebar */}
-          <div className="bg-muted/30 w-[240px] border-r py-6">
+          <div className="bg-muted/30 flex w-[240px] flex-col border-r py-6">
             <DialogHeader className="px-6 pb-6">
               <DialogTitle className="text-lg font-semibold">설정</DialogTitle>
             </DialogHeader>
-            <nav className="flex flex-col gap-1 px-4">
-              <button
-                className={`flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-                  activeTab === 'account'
-                    ? 'bg-primary/10 text-primary'
-                    : 'text-muted-foreground hover:bg-muted'
-                }`}
-                onClick={() => setActiveTab('account')}
-              >
-                <User className="size-4" />
-                계정 설정
-              </button>
+            <nav className="flex flex-1 flex-col gap-1 px-4">
               <button
                 className={`flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
                   activeTab === 'workspace'
@@ -77,7 +93,29 @@ export default function SettingsModal({
                 <CreditCard className="size-4" />
                 청구 및 결제
               </button>
+              <button
+                className={`flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                  activeTab === 'account'
+                    ? 'bg-primary/10 text-primary'
+                    : 'text-muted-foreground hover:bg-muted'
+                }`}
+                onClick={() => setActiveTab('account')}
+              >
+                <User className="size-4" />
+                계정 설정
+              </button>
             </nav>
+
+            <div className="border-t px-6 pt-6">
+              <button
+                className="text-muted-foreground hover:bg-muted hover:text-foreground flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors"
+                onClick={handleLogout}
+                disabled={isLoggingOut}
+              >
+                <LogOut className="size-4" />
+                {isLoggingOut ? '로그아웃 중...' : '로그아웃'}
+              </button>
+            </div>
           </div>
 
           {/* Content */}
