@@ -15,6 +15,31 @@ export interface StreamClientConfig {
   iceServers?: RTCIceServer[];
 }
 
+type KeyboardInputAction = 'down' | 'up';
+type MouseInputAction = 'move' | 'down' | 'up';
+
+export type StreamInputEvent =
+  | {
+      kind: 'keyboard';
+      action: KeyboardInputAction;
+      keyCode: number;
+      altKey: boolean;
+      ctrlKey: boolean;
+      shiftKey: boolean;
+      metaKey: boolean;
+      repeat: boolean;
+    }
+  | {
+      kind: 'mouse';
+      action: MouseInputAction;
+      x: number;
+      y: number;
+      button: number;
+      buttons: number;
+      movementX: number;
+      movementY: number;
+    };
+
 /** WebRTC 스트림 클라이언트 인터페이스 */
 export interface StreamClient {
   /** WebRTC Offer를 생성하고 Base64 인코딩된 SignalRequest 반환 */
@@ -27,6 +52,8 @@ export interface StreamClient {
   disconnect(): void;
   /** 연결 상태 */
   isConnected(): boolean;
+  /** 입력 이벤트 전송 (SDK 입력 패킷) */
+  sendInput(event: StreamInputEvent): void;
 }
 
 /** 기본 ICE 서버 설정 (Google STUN) */
@@ -34,6 +61,75 @@ const DEFAULT_ICE_SERVERS: RTCIceServer[] = [
   { urls: 'stun:stun.l.google.com:19302' },
   { urls: 'stun:stun1.l.google.com:19302' },
 ];
+
+const INPUT_MESSAGE_TYPE = {
+  keyboard: 1,
+  mouse: 2,
+} as const;
+
+const KEYBOARD_ACTION = {
+  down: 1,
+  up: 2,
+} as const;
+
+const MOUSE_ACTION = {
+  move: 1,
+  down: 2,
+  up: 3,
+} as const;
+
+const clampUint8 = (value: number) =>
+  Math.min(255, Math.max(0, Math.round(value)));
+const clampUint16 = (value: number) =>
+  Math.min(65535, Math.max(0, Math.round(value)));
+const clampInt16 = (value: number) =>
+  Math.min(32767, Math.max(-32768, Math.round(value)));
+
+const encodeKeyboardInput = (
+  event: Extract<StreamInputEvent, { kind: 'keyboard' }>
+): Uint8Array => {
+  const buffer = new ArrayBuffer(8);
+  const view = new DataView(buffer);
+  const modifiers =
+    (event.altKey ? 1 : 0) |
+    (event.ctrlKey ? 2 : 0) |
+    (event.shiftKey ? 4 : 0) |
+    (event.metaKey ? 8 : 0);
+
+  view.setUint8(0, INPUT_MESSAGE_TYPE.keyboard);
+  view.setUint8(1, KEYBOARD_ACTION[event.action]);
+  view.setUint8(2, modifiers);
+  view.setUint8(3, event.repeat ? 1 : 0);
+  view.setUint16(4, clampUint16(event.keyCode), true);
+  view.setUint16(6, 0, true);
+
+  return new Uint8Array(buffer);
+};
+
+const encodeMouseInput = (
+  event: Extract<StreamInputEvent, { kind: 'mouse' }>
+): Uint8Array => {
+  const buffer = new ArrayBuffer(12);
+  const view = new DataView(buffer);
+
+  view.setUint8(0, INPUT_MESSAGE_TYPE.mouse);
+  view.setUint8(1, MOUSE_ACTION[event.action]);
+  view.setUint8(2, clampUint8(event.button));
+  view.setUint8(3, clampUint8(event.buttons));
+  view.setUint16(4, clampUint16(event.x), true);
+  view.setUint16(6, clampUint16(event.y), true);
+  view.setInt16(8, clampInt16(event.movementX), true);
+  view.setInt16(10, clampInt16(event.movementY), true);
+
+  return new Uint8Array(buffer);
+};
+
+const encodeInputEvent = (event: StreamInputEvent): Uint8Array => {
+  if (event.kind === 'keyboard') {
+    return encodeKeyboardInput(event);
+  }
+  return encodeMouseInput(event);
+};
 
 /**
  * WebRTC 스트림 클라이언트 생성
@@ -59,6 +155,7 @@ export function createStreamClient(
 
   let peerConnection: RTCPeerConnection | null = null;
   let mediaStream: MediaStream | null = null;
+  let inputChannel: RTCDataChannel | null = null;
   let connected = false;
 
   const createPeerConnection = (): RTCPeerConnection => {
@@ -83,6 +180,7 @@ export function createStreamClient(
       connected = pc.connectionState === 'connected';
       if (pc.connectionState === 'failed' || pc.connectionState === 'closed') {
         mediaStream = null;
+        inputChannel = null;
       }
     };
 
@@ -101,6 +199,15 @@ export function createStreamClient(
       // Transceiver 추가 (video/audio 수신용)
       peerConnection.addTransceiver('video', { direction: 'recvonly' });
       peerConnection.addTransceiver('audio', { direction: 'recvonly' });
+
+      // Data Channel 생성 (입력 전송용)
+      inputChannel = peerConnection.createDataChannel('input', {
+        ordered: true,
+      });
+      inputChannel.onopen = () => {
+        // eslint-disable-next-line no-console
+        console.log('Input Data Channel opened');
+      };
 
       // SDP Offer 생성
       const offer = await peerConnection.createOffer();
@@ -139,6 +246,10 @@ export function createStreamClient(
     },
 
     disconnect(): void {
+      if (inputChannel) {
+        inputChannel.close();
+        inputChannel = null;
+      }
       if (peerConnection) {
         peerConnection.close();
         peerConnection = null;
@@ -152,6 +263,19 @@ export function createStreamClient(
 
     isConnected(): boolean {
       return connected;
+    },
+
+    /** 입력 이벤트 전송 (SDK 입력 패킷) */
+    sendInput(event: StreamInputEvent): void {
+      if (inputChannel && inputChannel.readyState === 'open') {
+        try {
+          const payload = encodeInputEvent(event);
+          inputChannel.send(payload.buffer as ArrayBuffer);
+        } catch (e) {
+          // eslint-disable-next-line no-console
+          console.warn('Failed to send input:', e);
+        }
+      }
     },
   };
 }
@@ -181,7 +305,6 @@ async function waitForIceGathering(
       }
     };
 
-    // ICE candidate 에러 처리 (에러가 발생해도 연결 시도는 계속)
     pc.onicecandidateerror = () => {
       // 무시 - 일부 candidate 수집 실패는 정상
     };
