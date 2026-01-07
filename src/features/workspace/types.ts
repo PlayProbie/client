@@ -27,6 +27,13 @@ export interface ApiCreateWorkspaceRequest {
   description?: string;
 }
 
+/** [API] PUT /workspaces/{uuid} Request */
+export interface ApiUpdateWorkspaceRequest {
+  name: string;
+  description?: string;
+  profile_image_url?: string;
+}
+
 /** [API] Workspace Response wrapper */
 export interface ApiWorkspaceResponse {
   result: ApiWorkspace;
@@ -35,6 +42,31 @@ export interface ApiWorkspaceResponse {
 /** [API] Workspaces List Response wrapper */
 export interface ApiWorkspacesListResponse {
   result: ApiWorkspace[];
+}
+
+/** [API] Member 엔티티 */
+export interface ApiMember {
+  memberId: number;
+  userUuid: string;
+  email: string;
+  name: string;
+  role: 'OWNER' | 'MEMBER';
+  joined_at: string;
+}
+
+/** [API] POST /members Request (Invite) */
+export interface ApiInviteMemberRequest {
+  email: string;
+}
+
+/** [API] Member Response wrapper */
+export interface ApiMemberResponse {
+  result: ApiMember;
+}
+
+/** [API] Members List Response wrapper */
+export interface ApiMembersListResponse {
+  result: ApiMember[];
 }
 
 // ----------------------------------------
@@ -56,6 +88,28 @@ export interface Workspace {
 export interface CreateWorkspaceRequest {
   name: string;
   description?: string;
+}
+
+/** [Client] 워크스페이스 수정 요청 */
+export interface UpdateWorkspaceRequest {
+  name: string;
+  description?: string;
+  profileImageUrl?: string;
+}
+
+/** [Client] 멤버 엔티티 */
+export interface Member {
+  memberId: number;
+  userUuid: string;
+  email: string;
+  name: string;
+  role: 'OWNER' | 'MEMBER';
+  joinedAt: string;
+}
+
+/** [Client] 멤버 초대 요청 */
+export interface InviteMemberRequest {
+  email: string;
 }
 
 // ----------------------------------------
@@ -82,5 +136,37 @@ export function toApiCreateWorkspaceRequest(
   return {
     name: client.name,
     description: client.description,
+  };
+}
+
+/** UpdateWorkspaceRequest → ApiUpdateWorkspaceRequest 변환 */
+export function toApiUpdateWorkspaceRequest(
+  client: UpdateWorkspaceRequest
+): ApiUpdateWorkspaceRequest {
+  return {
+    name: client.name,
+    description: client.description,
+    profile_image_url: client.profileImageUrl,
+  };
+}
+
+/** ApiMember → Member 변환 */
+export function toMember(api: ApiMember): Member {
+  return {
+    memberId: api.memberId,
+    userUuid: api.userUuid,
+    email: api.email,
+    name: api.name,
+    role: api.role,
+    joinedAt: api.joined_at,
+  };
+}
+
+/** InviteMemberRequest → ApiInviteMemberRequest 변환 */
+export function toApiInviteMemberRequest(
+  client: InviteMemberRequest
+): ApiInviteMemberRequest {
+  return {
+    email: client.email,
   };
 }
