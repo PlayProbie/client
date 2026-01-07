@@ -6,7 +6,11 @@
 import { useCallback, useRef, useState } from 'react';
 
 import { postSignal } from '../api';
-import { createStreamClient, type StreamClient } from '../lib';
+import {
+  createStreamClient,
+  type StreamClient,
+  type StreamInputEvent,
+} from '../lib';
 
 /** useGameStream 옵션 */
 export interface UseGameStreamOptions {
@@ -34,6 +38,8 @@ export interface UseGameStreamReturn {
   connect: () => Promise<void>;
   /** 스트리밍 연결 해제 */
   disconnect: () => void;
+  /** 입력 이벤트 전송 */
+  sendInput: (event: StreamInputEvent) => void;
 }
 
 /**
@@ -113,6 +119,12 @@ export function useGameStream(
     onDisconnected?.();
   }, [onDisconnected]);
 
+  const sendInput = useCallback((event: StreamInputEvent) => {
+    if (clientRef.current && clientRef.current.isConnected()) {
+      clientRef.current.sendInput(event);
+    }
+  }, []);
+
   return {
     videoRef,
     isConnecting,
@@ -120,5 +132,6 @@ export function useGameStream(
     sessionUuid,
     connect,
     disconnect,
+    sendInput,
   };
 }
