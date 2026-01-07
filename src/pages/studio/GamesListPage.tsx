@@ -37,6 +37,7 @@ import {
   useUpdateGameMutation,
 } from '@/features/game';
 import { useToast } from '@/hooks/useToast';
+import { useCurrentWorkspaceStore } from '@/stores/useCurrentWorkspaceStore';
 
 /** 날짜 포맷팅 */
 function formatDate(dateString: string): string {
@@ -51,7 +52,10 @@ function formatDate(dateString: string): string {
 export default function GamesListPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { data: games, isLoading, isError, refetch } = useGamesQuery();
+  const { currentWorkspace } = useCurrentWorkspaceStore();
+  const { data: games, isLoading, isError, refetch } = useGamesQuery({
+    workspaceUuid: currentWorkspace?.workspaceUuid || '',
+  });
 
   // Mutations
   const createMutation = useCreateGameMutation();

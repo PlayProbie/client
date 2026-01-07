@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/Select';
 import { useGameDetailQuery, useGamesQuery } from '@/features/game';
 import { useCurrentGameStore } from '@/stores/useCurrentGameStore';
+import { useCurrentWorkspaceStore } from '@/stores/useCurrentWorkspaceStore';
 
 /**
  * GameSelector - Topbar 게임 선택 드롭다운
@@ -23,7 +24,10 @@ function GameSelector() {
   // route placeholder(':gameUuid')가 아닌 유효한 UUID만 사용
   const gameUuid =
     routeGameUuid && !routeGameUuid.startsWith(':') ? routeGameUuid : undefined;
-  const { data: games, isLoading } = useGamesQuery();
+  const { currentWorkspace } = useCurrentWorkspaceStore();
+  const { data: games, isLoading } = useGamesQuery({
+    workspaceUuid: currentWorkspace?.workspaceUuid || '',
+  });
   const location = useLocation();
 
   // 게임 상세 조회 (gameUuid가 있을 때만)
