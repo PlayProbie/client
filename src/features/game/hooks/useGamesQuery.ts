@@ -4,8 +4,6 @@
  */
 import { useQuery } from '@tanstack/react-query';
 
-import { useCurrentWorkspaceStore } from '@/stores/useCurrentWorkspaceStore';
-
 import { getGames } from '../api';
 import type { Game } from '../types';
 
@@ -23,15 +21,15 @@ export const gameKeys = {
 const STALE_TIME_DEFAULT = 1000 * 60 * 5; // 5분
 
 export interface UseGamesQueryOptions {
-  workspaceUuid?: string;
+  workspaceUuid: string;
   enabled?: boolean;
 }
 
 /** 게임 목록 조회 Hook */
-export function useGamesQuery(options?: UseGamesQueryOptions) {
+export function useGamesQuery(options: UseGamesQueryOptions) {
   return useQuery<Game[]>({
-    queryKey: gameKeys.lists(),
-    queryFn: () => getGames(),
+    queryKey: gameKeys.list(options.workspaceUuid),
+    queryFn: () => getGames(options.workspaceUuid),
     staleTime: STALE_TIME_DEFAULT,
     enabled: options?.enabled ?? true,
   });

@@ -82,7 +82,7 @@ function SurveyResultDetailDialog({
               <dl className="grid grid-cols-2 gap-2 text-sm">
                 <div>
                   <dt className="text-muted-foreground">설문명</dt>
-                  <dd className="font-medium">{details.session.surveyName}</dd>
+                  <dd className="font-medium">{details.session.survey_name}</dd>
                 </div>
                 <div>
                   <dt className="text-muted-foreground">상태</dt>
@@ -94,13 +94,13 @@ function SurveyResultDetailDialog({
                 </div>
                 <div>
                   <dt className="text-muted-foreground">테스터 ID</dt>
-                  <dd className="font-medium">{details.session.testerId}</dd>
+                  <dd className="font-medium">{details.session.tester_id}</dd>
                 </div>
                 <div>
                   <dt className="text-muted-foreground">종료일시</dt>
                   <dd className="font-medium">
-                    {details.session.endedAt
-                      ? new Date(details.session.endedAt).toLocaleString(
+                    {details.session.ended_at
+                      ? new Date(details.session.ended_at).toLocaleString(
                           'ko-KR'
                         )
                       : '-'}
@@ -115,13 +115,13 @@ function SurveyResultDetailDialog({
               collapsible
               className="w-full"
             >
-              {details.byFixedQuestion.map((fq, index) => (
+              {details.by_fixed_question.map((fq, index) => (
                 <AccordionItem
-                  key={`${index}-${fq.fixedQuestion}`}
+                  key={`${index}-${fq.fixed_question}`}
                   value={`q-${index}`}
                 >
                   <AccordionTrigger className="text-left font-bold">
-                    {fq.fixedQuestion}
+                    {fq.fixed_question}
                   </AccordionTrigger>
                   <AccordionContent>
                     <div className="space-y-3">
@@ -148,7 +148,7 @@ type QuestionAnswerBlockProps = {
 };
 
 function QuestionAnswerBlock({ qa }: QuestionAnswerBlockProps) {
-  const isFixed = qa.qType === 'FIXED';
+  const isFixed = qa.q_type === 'FIXED';
 
   return (
     <div className="border-border rounded-md border p-3">
@@ -163,8 +163,8 @@ function QuestionAnswerBlock({ qa }: QuestionAnswerBlockProps) {
           {isFixed ? '고정 질문' : '꼬리 질문'}
         </span>
       </div>
-      <p className="text-muted-foreground mb-1 text-sm">{qa.questionText}</p>
-      <p className="text-sm font-medium">{qa.answerText}</p>
+      <p className="text-muted-foreground mb-1 text-sm">{qa.question_text}</p>
+      <p className="text-sm font-medium">{qa.answer_text}</p>
     </div>
   );
 }
