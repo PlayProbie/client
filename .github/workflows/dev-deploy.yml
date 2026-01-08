@@ -17,6 +17,7 @@ jobs:
     secrets:
       VITE_API_BASE_URL: ${{ secrets.DEV_VITE_API_BASE_URL }}
       VITE_CLIENT_BASE_URL: ${{ secrets.DEV_VITE_CLIENT_BASE_URL }}
+      VITE_S3_BUCKET: ${{ secrets.DEV_VITE_S3_BUCKET }}
       S3_BUCKET_NAME: ${{ secrets.DEV_S3_BUCKET_NAME }}
       CLOUDFRONT_DISTRIBUTION_ID: ${{ secrets.DEV_CLOUDFRONT_DISTRIBUTION_ID }}
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
