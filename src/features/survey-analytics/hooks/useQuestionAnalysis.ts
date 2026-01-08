@@ -7,7 +7,7 @@ import type {
 } from '../types';
 
 type UseQuestionAnalysisOptions = {
-  surveyId: number | null;
+  surveyUuid: string | null;
   enabled?: boolean;
 };
 
@@ -19,7 +19,7 @@ type QuestionAnalysisState = {
  * 설문 질문별 AI 분석 결과 페칭 훅 (SSE)
  */
 function useQuestionAnalysis({
-  surveyId,
+  surveyUuid,
   enabled = true,
 }: UseQuestionAnalysisOptions) {
   const [data, setData] = useState<QuestionAnalysisState>({});
@@ -29,20 +29,20 @@ function useQuestionAnalysis({
   const [isComplete, setIsComplete] = useState(false);
 
   // ref를 사용해 중복 요청 방지 (React StrictMode 대응)
-  const requestedSurveyIdRef = useRef<number | null>(null);
+  const requestedSurveyUuidRef = useRef<string | null>(null);
   const isRequestingRef = useRef(false);
 
   useEffect(() => {
-    if (!surveyId || !enabled) {
+    if (!surveyUuid || !enabled) {
       return;
     }
 
-    // 이미 요청 중이거나 같은 surveyId로 완료된 요청이 있으면 스킵
-    if (isRequestingRef.current || surveyId === requestedSurveyIdRef.current) {
+    // 이미 요청 중이거나 같은 surveyUuid로 완료된 요청이 있으면 스킵
+    if (isRequestingRef.current || surveyUuid === requestedSurveyUuidRef.current) {
       return;
     }
 
-    requestedSurveyIdRef.current = surveyId;
+    requestedSurveyUuidRef.current = surveyUuid;
     isRequestingRef.current = true;
 
     setIsLoading(true);
@@ -55,7 +55,7 @@ function useQuestionAnalysis({
     let isCancelled = false;
 
     getQuestionAnalysis(
-      surveyId,
+      surveyUuid,
       (wrapper: QuestionResponseAnalysisWrapper) => {
         if (isCancelled) return;
         try {
@@ -76,15 +76,15 @@ function useQuestionAnalysis({
         setError(err);
         setIsLoading(false);
         isRequestingRef.current = false;
-        // 에러 시에는 재시도할 수 있도록 requestedSurveyIdRef 초기화
-        requestedSurveyIdRef.current = null;
+        // 에러 시에는 재시도할 수 있도록 requestedSurveyUuidRef 초기화
+        requestedSurveyUuidRef.current = null;
       },
       () => {
         if (isCancelled) return;
         setIsLoading(false);
         setIsComplete(true);
         isRequestingRef.current = false;
-        // 성공 완료 시에는 requestedSurveyIdRef 유지 (중복 요청 방지)
+        // 성공 완료 시에는 requestedSurveyUuidRef 유지 (중복 요청 방지)
       }
     ).then((cleanup) => {
       cleanupFn = cleanup;
@@ -94,9 +94,9 @@ function useQuestionAnalysis({
       isCancelled = true;
       cleanupFn?.();
       isRequestingRef.current = false;
-      // 언마운트 시에는 requestedSurveyIdRef는 유지 (리마운트 시 중복 요청 방지)
+      // 언마운트 시에는 requestedSurveyUuidRef는 유지 (리마운트 시 중복 요청 방지)
     };
-  }, [surveyId, enabled]);
+  }, [surveyUuid, enabled]);
 
   return {
     data,
