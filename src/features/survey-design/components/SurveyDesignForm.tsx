@@ -13,7 +13,7 @@ import { Step } from '@/components/ui/Step';
 import { useToast } from '@/hooks/useToast';
 import { cn } from '@/lib/utils';
 
-import { useFormSubmit } from '../hooks/useFormSubmit';
+import { type SubmitResult, useFormSubmit } from '../hooks/useFormSubmit';
 import { useSurveyFormStore } from '../store/useSurveyFormStore';
 import { SURVEY_FORM_STEPS, type SurveyFormData } from '../types';
 import {
@@ -26,7 +26,7 @@ import {
 
 type SurveyDesignFormProps = {
   className?: string;
-  onComplete?: (surveyUrl: string) => void;
+  onComplete?: (result: SubmitResult) => void;
 };
 
 function SurveyDesignForm({ className, onComplete }: SurveyDesignFormProps) {
@@ -50,10 +50,10 @@ function SurveyDesignForm({ className, onComplete }: SurveyDesignFormProps) {
 
   // 설문 생성 API 호출 훅
   const { mutate: submitSurvey, isPending } = useFormSubmit({
-    onSuccess: (surveyUrl) => {
+    onSuccess: (result) => {
       // 임시 저장 초기화 후 완료 콜백 호출
       // reset(); // onSuccess에서 reset하면 바로 step-0으로 튕김
-      onComplete?.(surveyUrl);
+      onComplete?.(result);
     },
     onError: () => {
       toast({
@@ -183,9 +183,8 @@ function SurveyDesignForm({ className, onComplete }: SurveyDesignFormProps) {
               이전
             </Button>
             <div className="flex gap-2">
-              {currentStep === 1 ? (
-                null /* StepMethodSelection에서 자체 네비게이션 */
-              ) : (
+              {currentStep ===
+              1 ? null /* StepMethodSelection에서 자체 네비게이션 */ : (
                 <Button
                   type="button"
                   disabled={isPending}

@@ -1,6 +1,5 @@
 import {
   Toast,
-  ToastClose,
   ToastDescription,
   ToastProvider,
   ToastTitle,
@@ -9,13 +8,15 @@ import {
 import { useToast } from '@/hooks/useToast';
 
 export function Toaster() {
-  const { toasts } = useToast();
+  const { toasts, dismiss } = useToast();
 
   return (
     <ToastProvider>
       {toasts.map(({ id, title, description, action, ...props }) => (
         <Toast
           key={id}
+          className="cursor-pointer"
+          onClick={() => dismiss(id)}
           {...props}
         >
           <div className="grid gap-1">
@@ -23,7 +24,6 @@ export function Toaster() {
             {description && <ToastDescription>{description}</ToastDescription>}
           </div>
           {action}
-          <ToastClose />
         </Toast>
       ))}
       <ToastViewport />
