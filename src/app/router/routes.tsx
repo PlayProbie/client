@@ -4,11 +4,11 @@ import { getStreamingGames } from '@/features/game-streaming/api';
 import { SurveyShell } from '@/features/survey';
 import LoginPage from '@/pages/auth/LoginPage';
 import RegisterPage from '@/pages/auth/RegisterPage';
+import GameOverviewPage from '@/pages/game/GameOverviewPage';
+import GamesListPage from '@/pages/game/GamesListPage';
 import NotFoundPage from '@/pages/NotFoundPage';
 import TesterPlaceholderPage from '@/pages/play/TesterPlaceholderPage';
 import BuildsPage from '@/pages/studio/BuildsPage';
-import GameOverviewPage from '@/pages/studio/GameOverviewPage';
-import GamesListPage from '@/pages/studio/GamesListPage';
 import StreamSettingsPage from '@/pages/studio/StreamSettingsPage';
 import SurveyListPage from '@/pages/studio/SurveyListPage';
 import SurveyAnalyticsPage from '@/pages/survey/SurveyAnalyticsPage';
@@ -33,31 +33,25 @@ const redirectToDefaultGame = async () => {
   return redirect('/games');
 };
 
-// ============================================
-// Survey Control Tower 페이지
-// 기본 구조만 구성하고 탭별 상세 화면은 단계별로 확장
-// ============================================
-
 export const router = createBrowserRouter([
   {
     element: <RootLayout />,
     children: [
-      // 인증이 필요한 라우트
+      // ============================================
+      // 인증 필요 경로
+      // ============================================
       {
         element: <AuthLayout />,
         children: [
+          // '/' -> '/games' or '/games/:gameUuid'
           {
             index: true,
             loader: redirectToDefaultGame,
           },
 
-          // 게임 목록 (새 경로)
+          // 게임 목록
           { path: '/games', element: <GamesListPage /> },
 
-          {
-            path: '/games/:gameUuid/overview',
-            element: <GameOverviewPage />,
-          },
           {
             path: '/games/:gameUuid',
             element: (
@@ -67,7 +61,24 @@ export const router = createBrowserRouter([
               />
             ),
           },
+          {
+            path: '/games/:gameUuid/overview',
+            element: <GameOverviewPage />,
+          },
+
+          // 빌드 저장소
+          { path: '/games/:gameUuid/builds', element: <BuildsPage /> },
+
+          // 스트리밍 설정
+          {
+            path: '/games/:gameUuid/stream-settings',
+            element: <StreamSettingsPage />,
+          },
+
+          // 설문 목록
           { path: '/games/:gameUuid/surveys', element: <SurveyListPage /> },
+
+          // 설문 설계
           {
             path: '/games/:gameUuid/surveys/design',
             loader: ({ params }) =>
@@ -79,16 +90,8 @@ export const router = createBrowserRouter([
             path: '/games/:gameUuid/surveys/design/:step',
             element: <SurveyDesignPage />,
           },
-          { path: '/games/:gameUuid/builds', element: <BuildsPage /> },
-          {
-            path: '/games/:gameUuid/stream-settings',
-            element: <StreamSettingsPage />,
-          },
 
-          // ============================================
-          // [NEW] Survey Control Tower (게임 종속 설문 상세)
-          // 4개 탭: overview, design, distribute, analyze
-          // ============================================
+          // 설문 상세
           {
             path: '/games/:gameUuid/surveys/:surveyUuid',
             element: <SurveyShell />,
@@ -124,13 +127,13 @@ export const router = createBrowserRouter([
       },
 
       // ============================================
-      // [PUBLIC] 테스터 Experience - 온라인 스트리밍
+      // PUBLIC 경로
       // ============================================
+
+      // 테스터 Experience - 온라인 스트리밍
       { path: '/play/:surveyUuid', element: <TesterPlaceholderPage /> },
 
-      // ============================================
-      // [PUBLIC] 설문 세션 (기존 유지)
-      // ============================================
+      // 설문 세션 - interview / chat
       {
         path: '/surveys/session',
         children: [
@@ -139,10 +142,7 @@ export const router = createBrowserRouter([
         ],
       },
 
-      // [STASH] Screen G: Tester Placeholder
-      // { path: '/play/:gameUuid', element: <TesterPlaceholderPage /> },
-
-      // 비인증 사용자 전용 라우트
+      // 로그인
       {
         element: <GuestLayout />,
         children: [

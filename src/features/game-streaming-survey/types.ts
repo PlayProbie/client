@@ -31,6 +31,14 @@ export interface Survey {
   createdAt: string;
 }
 
+/** 설문 통계 */
+export interface SurveyStats {
+  totalSurveys: number;
+  activeSurveys: number;
+  draftSurveys: number;
+  latestLabel: string;
+}
+
 // ----------------------------------------
 // Streaming Resource Types
 // ----------------------------------------

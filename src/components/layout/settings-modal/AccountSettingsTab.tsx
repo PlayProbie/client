@@ -1,11 +1,7 @@
-import { LogOut, User } from 'lucide-react';
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { User } from 'lucide-react';
 
 import { MOCK_USER } from '@/components/layout/types';
 import { Button } from '@/components/ui';
-import { postLogout } from '@/features/auth';
-import { useAuthStore } from '@/stores';
 
 /**
  * AccountSettingsTab - 계정 설정 탭
@@ -14,28 +10,6 @@ import { useAuthStore } from '@/stores';
  * - 로그아웃 기능
  */
 function AccountSettingsTab() {
-  const navigate = useNavigate();
-  const { logout } = useAuthStore();
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
-
-  const handleLogout = async () => {
-    setIsLoggingOut(true);
-    try {
-      // 서버에 로그아웃 요청 + localStorage 정리
-      await postLogout();
-      // Zustand 상태 초기화
-      logout();
-      // 로그인 페이지로 이동
-      navigate('/login', { replace: true });
-    } catch {
-      // 에러가 발생해도 클라이언트 측 정리는 postLogout에서 수행됨
-      logout();
-      navigate('/login', { replace: true });
-    } finally {
-      setIsLoggingOut(false);
-    }
-  };
-
   return (
     <div className="flex flex-col gap-6">
       {/* 프로필 정보 */}
@@ -91,17 +65,6 @@ function AccountSettingsTab() {
 
       {/* 구분선 */}
       <div className="bg-border h-px" />
-
-      {/* 로그아웃 */}
-      <Button
-        variant="destructive"
-        className="w-full gap-2"
-        onClick={handleLogout}
-        disabled={isLoggingOut}
-      >
-        <LogOut className="size-4" />
-        {isLoggingOut ? '로그아웃 중...' : '로그아웃'}
-      </Button>
     </div>
   );
 }

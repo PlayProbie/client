@@ -1,12 +1,8 @@
 import {
-  BarChart3,
   ClipboardList,
   FolderUp,
   LayoutDashboard,
-  Lightbulb,
   type LucideIcon,
-  Pencil,
-  Rocket,
 } from 'lucide-react';
 
 export interface NavItemChild {
@@ -20,30 +16,6 @@ export interface NavItem {
   icon: LucideIcon;
   children?: NavItemChild[];
 }
-
-/**
- * Survey Control Tower 탭 정의
- * - 상태(DRAFT/ACTIVE/CLOSED)에 따라 일부 탭의 수정 가능 여부가 달라짐
- */
-export interface SurveyTab {
-  path: string;
-  label: string;
-  icon: LucideIcon;
-  /** DRAFT에서만 수정 가능한 탭인지 */
-  editableOnlyInDraft?: boolean;
-}
-
-export const SURVEY_TABS: SurveyTab[] = [
-  { path: 'overview', label: '개요', icon: BarChart3 },
-  {
-    path: 'design',
-    label: '문항 설계',
-    icon: Pencil,
-    editableOnlyInDraft: true,
-  },
-  { path: 'distribute', label: '배포/연동', icon: Rocket },
-  { path: 'analyze', label: '결과/인사이트', icon: Lightbulb },
-];
 
 /**
  * 설문 상태 정의 (상태 머신)
@@ -87,6 +59,19 @@ export const NAV_ITEMS: NavItem[] = [
     to: '/games/:gameUuid/surveys',
     label: '설문 관리',
     icon: ClipboardList,
+    children: [
+      { to: '/games/:gameUuid/surveys', label: '설문 목록' },
+      { to: '/games/:gameUuid/surveys/:surveyUuid/overview', label: '개요' },
+      { to: '/games/:gameUuid/surveys/:surveyUuid/design', label: '문항 설계' },
+      {
+        to: '/games/:gameUuid/surveys/:surveyUuid/distribute',
+        label: '배포/연동',
+      },
+      {
+        to: '/games/:gameUuid/surveys/:surveyUuid/analyze',
+        label: '결과/인사이트',
+      },
+    ],
   },
   {
     to: '/games/:gameUuid/builds',
@@ -94,13 +79,6 @@ export const NAV_ITEMS: NavItem[] = [
     icon: FolderUp,
   },
 ];
-
-// SECONDARY_NAV_ITEMS 제거됨 - 설정 메뉴는 유저 카드 모달로 이동
-
-// Get all nav items flattened for route matching
-export function getAllNavItems(): NavItem[] {
-  return [...NAV_ITEMS];
-}
 
 // Helper to match dynamic routes (e.g., /survey/analytics/:gameUuid)
 function matchPath(pattern: string, pathname: string): boolean {
@@ -116,9 +94,7 @@ export function findNavItemByPath(pathname: string): {
   child?: NavItemChild;
   breadcrumbs: { label: string; to: string }[];
 } {
-  const allItems = getAllNavItems();
-
-  for (const item of allItems) {
+  for (const item of NAV_ITEMS) {
     // Check if it's a child route
     if (item.children) {
       for (const child of item.children) {

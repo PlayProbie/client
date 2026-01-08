@@ -16,7 +16,6 @@ export async function getGames(workspaceUuid: string): Promise<Game[]> {
       headers: {
         'Content-Type': 'application/json',
       },
-      credentials: 'include',
     }
   );
 
