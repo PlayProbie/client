@@ -2,7 +2,7 @@
  * Builds 목록 API
  * GET /games/{gameUuid}/builds
  */
-import { API_BASE_URL } from '../constants';
+import { API_BASE_URL } from '@/constants/api';
 import type { ApiBuild, Build } from '../types';
 import { toBuild } from '../types';
 import { apiFetch } from '../utils';

@@ -2,7 +2,8 @@
  * Games API
  * GET /games - 게임 목록 조회
  */
-import { API_BASE_URL } from '../constants';
+import { API_BASE_URL } from '@/constants/api';
+
 import type { ApiStreamingGame, StreamingGame } from '../types';
 import { toStreamingGame } from '../types';
 import { apiFetch } from '../utils';

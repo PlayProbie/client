@@ -54,7 +54,11 @@ export const ThemeDetailConfig = {
   // GAMEPLAY
   CORE_LOOP: { value: 'core_loop', label: '코어루프', category: 'gameplay' },
   FUN: { value: 'fun', label: '재미', category: 'gameplay' },
-  REPLAY_INTENT: { value: 'replay_intent', label: '재플레이 의향', category: 'gameplay' },
+  REPLAY_INTENT: {
+    value: 'replay_intent',
+    label: '재플레이 의향',
+    category: 'gameplay',
+  },
   // UI_UX
   ONBOARDING: { value: 'onboarding', label: '온보딩', category: 'ui_ux' },
   CONTROLS: { value: 'controls', label: '조작감', category: 'ui_ux' },
@@ -70,10 +74,18 @@ export const ThemeDetailConfig = {
   // BUG
   CRASH: { value: 'crash', label: '크래시', category: 'bug' },
   PERFORMANCE: { value: 'performance', label: '성능', category: 'bug' },
-  VISUAL_GLITCH: { value: 'visual_glitch', label: '시각적 버그', category: 'bug' },
+  VISUAL_GLITCH: {
+    value: 'visual_glitch',
+    label: '시각적 버그',
+    category: 'bug',
+  },
   // OVERALL
   NPS: { value: 'nps', label: 'NPS', category: 'overall' },
-  PURCHASE_INTENT: { value: 'purchase_intent', label: '구매 의향', category: 'overall' },
+  PURCHASE_INTENT: {
+    value: 'purchase_intent',
+    label: '구매 의향',
+    category: 'overall',
+  },
   RECOMMEND: { value: 'recommend', label: '추천 의향', category: 'overall' },
 } as const;
 
@@ -143,7 +155,10 @@ export interface ApiQuestionFeedbackRequest {
   game_context: string;
   game_genre: GameGenre[];
   survey_name: string;
-  test_purpose: TestPurpose;
+  /** 테마 대분류 우선순위 (1~3개, 순서대로) */
+  theme_priorities: ThemeCategory[];
+  /** 테마 소분류 (대분류별 선택된 세부 테마, 선택사항) */
+  theme_details?: Partial<Record<ThemeCategory, ThemeDetail[]>>;
   questions: string[];
 }
 

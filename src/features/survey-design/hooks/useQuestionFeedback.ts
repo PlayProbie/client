@@ -32,15 +32,22 @@ function useQuestionFeedback() {
   // 피드백 요청 mutation
   const { mutateAsync, isPending } = useMutation({
     mutationFn: async (question: string): Promise<QuestionFeedbackItem> => {
-      const { gameName, gameGenre, gameContext, surveyName, testPurpose } =
-        formData;
+      const {
+        gameName,
+        gameGenre,
+        gameContext,
+        surveyName,
+        themePriorities,
+        themeDetails,
+      } = formData;
 
       const response = await postQuestionFeedback({
         game_name: gameName || '',
         game_context: gameContext || '',
         game_genre: gameGenre || [],
         survey_name: surveyName || '',
-        test_purpose: testPurpose!,
+        theme_priorities: themePriorities || [],
+        theme_details: themeDetails,
         questions: [question],
       });
 

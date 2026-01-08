@@ -5,7 +5,9 @@
  * Spring GameBuildApi.completeUpload 연동
  */
 
-import { API_BASE_URL, BUILD_ERROR_MESSAGES } from '../constants';
+import { API_BASE_URL } from '@/constants/api';
+
+import { BUILD_ERROR_MESSAGES } from '../constants';
 import type {
   ApiBuildCompleteRequest,
   ApiBuildCompleteResponse,

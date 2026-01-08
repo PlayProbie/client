@@ -5,7 +5,7 @@
  * 테스트용 임시 조치: 빌드 업로드 전 게임 UUID를 얻기 위해 사용
  */
 
-import { API_BASE_URL } from '../constants';
+import { API_BASE_URL } from '@/constants/api';
 
 export interface CreateGameRequest {
   game_name: string;

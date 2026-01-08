@@ -2,7 +2,8 @@
  * POST /streaming-games - 스트리밍 게임 등록
  * 기존 Source Game을 스트리밍 시스템에 등록
  */
-import { API_BASE_URL } from '../constants';
+import { API_BASE_URL } from '@/constants/api';
+
 import type { ApiStreamingGame, StreamingGame } from '../types';
 import { toStreamingGame } from '../types';
 import { apiFetch } from '../utils';
