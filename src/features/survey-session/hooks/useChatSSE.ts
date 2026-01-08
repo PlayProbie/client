@@ -27,6 +27,7 @@ export function useChatSSE({
   onConnect,
   onQuestion,
   onContinue,
+  onGreetingContinue,
   onStart,
   onDone,
   onInterviewComplete,
@@ -41,6 +42,7 @@ export function useChatSSE({
   const onConnectRef = useRef(onConnect);
   const onQuestionRef = useRef(onQuestion);
   const onContinueRef = useRef(onContinue);
+  const onGreetingContinueRef = useRef(onGreetingContinue);
   const onStartRef = useRef(onStart);
   const onDoneRef = useRef(onDone);
   const onInterviewCompleteRef = useRef(onInterviewComplete);
@@ -53,6 +55,7 @@ export function useChatSSE({
     onConnectRef.current = onConnect;
     onQuestionRef.current = onQuestion;
     onContinueRef.current = onContinue;
+    onGreetingContinueRef.current = onGreetingContinue;
     onStartRef.current = onStart;
     onDoneRef.current = onDone;
     onInterviewCompleteRef.current = onInterviewComplete;
@@ -63,6 +66,7 @@ export function useChatSSE({
     onConnect,
     onQuestion,
     onContinue,
+    onGreetingContinue,
     onStart,
     onDone,
     onInterviewComplete,
@@ -118,6 +122,17 @@ export function useChatSSE({
         const apiData: ApiSSEContinueEventData = JSON.parse(event.data);
         const data = toSSEContinueEventData(apiData);
         onContinueRef.current?.(data);
+      } catch {
+        // JSON 파싱 실패 무시
+      }
+    });
+
+    // greeting_continue 이벤트 핸들러 (인사말 스트리밍)
+    eventSource.addEventListener('greeting_continue', (event) => {
+      try {
+        const apiData: ApiSSEContinueEventData = JSON.parse(event.data);
+        const data = toSSEContinueEventData(apiData);
+        onGreetingContinueRef.current?.(data);
       } catch {
         // JSON 파싱 실패 무시
       }

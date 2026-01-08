@@ -52,6 +52,16 @@ export function useChatSession({
       setConnecting(true);
     },
     onQuestion: (data) => {
+      // 새 질문 도착 시 이전 스트리밍 메시지 확정 (인사말 등)
+      finalizeStreamingMessage();
+
+      // GREETING은 이미 greeting_continue로 스트리밍되었으므로 스킵
+      if (data.qType === 'GREETING') {
+        setIsReady(true);
+        setLoading(false);
+        return;
+      }
+
       // Phase 2: Opening
       if (data.qType === 'OPENING') {
         // 이미 표시된 오프닝이면 스킵할 수도 있지만, 서버가 보내주는 대로 믿음
@@ -72,6 +82,13 @@ export function useChatSession({
     },
     onContinue: (data) => {
       // 스트리밍 토큰 수신 (모든 단계 공통)
+      appendStreamingToken(data.questionText, data.turnNum, data.qType);
+      if (!isStreaming) {
+        setStreaming(true);
+      }
+    },
+    onGreetingContinue: (data) => {
+      // 인사말 스트리밍 토큰 수신
       appendStreamingToken(data.questionText, data.turnNum, data.qType);
       if (!isStreaming) {
         setStreaming(true);

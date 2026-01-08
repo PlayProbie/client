@@ -20,7 +20,7 @@
 export type SurveySessionStatus = 'IN_PROGRESS' | 'COMPLETED' | 'DROPPED';
 
 /** 인터뷰 로그 질문 타입 */
-export type InterviewLogQType = 'FIXED' | 'TAIL' | 'OPENING' | 'CLOSING';
+export type InterviewLogQType = 'FIXED' | 'TAIL' | 'OPENING' | 'CLOSING' | 'GREETING';
 
 /** 테스터 프로필 데이터 */
 export interface TesterProfile {
@@ -219,6 +219,7 @@ export interface UseChatSSEOptions {
   onConnect?: () => void;
   onQuestion?: (data: SSEQuestionEventData) => void;
   onContinue?: (data: SSEContinueEventData) => void;
+  onGreetingContinue?: (data: SSEContinueEventData) => void;
   onStart?: () => void;
   onDone?: (turnNum: number) => void;
   onInterviewComplete?: () => void;
