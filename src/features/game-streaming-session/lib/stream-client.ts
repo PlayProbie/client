@@ -7,12 +7,23 @@
  * NOTE: 실제 GameLift SDK가 설치되면 이 파일을 SDK 호출로 교체하세요.
  */
 
+import { cleanupMockStream, createMockMediaStream } from './mock-stream';
+
+/**
+ * Mock 스트림 사용 여부
+ * 개발 환경에서 VITE_MOCK_STREAM=true 설정 시 활성화
+ */
+const USE_MOCK_STREAM =
+  import.meta.env.DEV && import.meta.env.VITE_MOCK_STREAM === 'true';
+
 /** WebRTC 클라이언트 설정 */
 export interface StreamClientConfig {
   /** Video element에 스트림을 자동 연결할지 여부 */
   autoAttachVideo?: boolean;
   /** ICE 서버 설정 (STUN/TURN) */
   iceServers?: RTCIceServer[];
+  /** Mock 스트림 사용 여부 (개발 테스트용, 기본값: 환경변수) */
+  useMockStream?: boolean;
 }
 
 type KeyboardInputAction = 'down' | 'up';
@@ -151,7 +162,11 @@ export function createStreamClient(
   videoElement?: HTMLVideoElement | null,
   config: StreamClientConfig = {}
 ): StreamClient {
-  const { autoAttachVideo = true, iceServers = DEFAULT_ICE_SERVERS } = config;
+  const {
+    autoAttachVideo = true,
+    iceServers = DEFAULT_ICE_SERVERS,
+    useMockStream = USE_MOCK_STREAM,
+  } = config;
 
   let peerConnection: RTCPeerConnection | null = null;
   let mediaStream: MediaStream | null = null;
@@ -233,6 +248,25 @@ export function createStreamClient(
         );
       }
 
+      // Mock 스트림 모드: 실제 WebRTC 연결 없이 Canvas 기반 Mock 스트림 사용
+      if (useMockStream) {
+        // eslint-disable-next-line no-console
+        console.log('[StreamClient] Using Mock MediaStream for development');
+
+        mediaStream = createMockMediaStream({
+          width: 1280,
+          height: 720,
+          frameRate: 30,
+        });
+
+        if (autoAttachVideo && videoElement) {
+          videoElement.srcObject = mediaStream;
+        }
+
+        connected = true;
+        return;
+      }
+
       // Base64 디코딩 후 SDP Answer 파싱
       const answerJson = atob(signalResponse);
       const answer = JSON.parse(answerJson) as RTCSessionDescriptionInit;
@@ -246,6 +280,11 @@ export function createStreamClient(
     },
 
     disconnect(): void {
+      // Mock 스트림 정리
+      if (mediaStream) {
+        cleanupMockStream(mediaStream);
+      }
+
       if (inputChannel) {
         inputChannel.close();
         inputChannel = null;
