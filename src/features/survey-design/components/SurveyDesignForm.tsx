@@ -52,7 +52,7 @@ function SurveyDesignForm({ className, onComplete }: SurveyDesignFormProps) {
   const { mutate: submitSurvey, isPending } = useFormSubmit({
     onSuccess: (surveyUrl) => {
       // 임시 저장 초기화 후 완료 콜백 호출
-      reset();
+      // reset(); // onSuccess에서 reset하면 바로 step-0으로 튕김
       onComplete?.(surveyUrl);
     },
     onError: () => {
@@ -83,6 +83,13 @@ function SurveyDesignForm({ className, onComplete }: SurveyDesignFormProps) {
   useEffect(() => {
     updateFormData(watchedData as Partial<SurveyFormData>);
   }, [watchedData, updateFormData]);
+
+  // 컴포넌트 언마운트 시 (설문 생성 완료 등) 스토어 리셋
+  useEffect(() => {
+    return () => {
+      reset();
+    };
+  }, [reset]);
 
   const createHandleNext = (actor?: 'user' | 'ai') =>
     handleSubmit((data) => {
@@ -159,7 +166,10 @@ function SurveyDesignForm({ className, onComplete }: SurveyDesignFormProps) {
 
       {/* Form Content */}
       <Form {...form}>
-        <form className="flex flex-col gap-6">
+        <form
+          className="flex flex-col gap-6"
+          onSubmit={(e) => e.preventDefault()}
+        >
           <div className="min-h-[300px]">{renderStepContent()}</div>
 
           {/* Navigation Buttons */}

@@ -62,12 +62,10 @@ export function useFormSubmit(options?: UseFormSubmitOptions) {
     mutationFn: async (formData: Partial<SurveyFormData>) => {
       const {
         surveyName,
-        testPurpose,
         startedAt,
         endedAt,
         questions,
         selectedQuestionIndices,
-        // 신규 필드
         testStage,
         themePriorities,
         themeDetails,
@@ -96,22 +94,20 @@ export function useFormSubmit(options?: UseFormSubmitOptions) {
               ([key]) => themePriorities?.includes(key as ThemeCategory)
             )
           )
-          : undefined;
+          : {};
 
         const surveyResponse = await postSurvey({
           game_uuid: gameUuid!,
           survey_name: surveyName || '',
           started_at: formatToISO(startedAt || ''),
           ended_at: formatToISO(endedAt || ''),
-          test_purpose: testPurpose!,
-          // 신규 필드
           test_stage: testStage,
-          theme_priorities: themePriorities,
+          theme_priorities: themePriorities || [],
           theme_details: cleanedThemeDetails,
           version_note: versionNote,
         });
         surveyUuid = surveyResponse.result.survey_uuid;
-        surveyUrl = surveyResponse.result.survey_url;
+        surveyUrl = `${import.meta.env.VITE_CLIENT_BASE_URL}/surveys/session/${surveyUuid}`;
         transactionState.surveyUuid = surveyUuid;
       } catch (error) {
         // TODO: 서버에 rollback API가 있다면 여기서 게임 삭제 호출

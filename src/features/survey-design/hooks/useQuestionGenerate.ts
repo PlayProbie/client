@@ -5,7 +5,7 @@ import { useToast } from '@/hooks/useToast';
 
 import { postAiQuestions } from '../api';
 import { useSurveyFormStore } from '../store/useSurveyFormStore';
-import type { ApiGenerateAiQuestionsRequest } from '../types';
+import type { ApiGenerateAiQuestionsRequest, ThemeCategory } from '../types';
 import { useQuestionManager } from './useQuestionManager';
 
 /** 기본 AI 질문 생성 개수 */
@@ -38,15 +38,25 @@ function useQuestionGenerate() {
     mutationFn: async (
       params: Pick<ApiGenerateAiQuestionsRequest, 'count'>
     ) => {
-      const { gameName, gameGenre, gameContext, surveyName, testPurpose } =
+      const { gameName, gameGenre, gameContext, surveyName, themePriorities, themeDetails } =
         formData;
+
+      // themeDetails에서 themePriorities에 있는 카테고리만 포함
+      const cleanedThemeDetails = themeDetails && themePriorities
+        ? Object.fromEntries(
+            Object.entries(themeDetails).filter(
+              ([key]) => themePriorities.includes(key as ThemeCategory)
+            )
+          )
+        : undefined;
 
       return postAiQuestions({
         game_name: gameName || '',
         game_context: gameContext || '',
         game_genre: gameGenre || [],
         survey_name: surveyName || '',
-        test_purpose: testPurpose!,
+        theme_priorities: themePriorities || [],
+        theme_details: cleanedThemeDetails,
         count: params.count,
       });
     },
@@ -54,11 +64,10 @@ function useQuestionGenerate() {
 
   // AI 질문 생성 API 호출
   const generateQuestions = useCallback(async () => {
-    const { gameName, gameGenre, surveyName, testPurpose, themePriorities } = formData;
+    const { gameName, gameGenre, surveyName, themePriorities } = formData;
 
-    // 필수 데이터 확인 (testPurpose 또는 themePriorities 중 하나는 있어야 함)
-    const purpose = testPurpose || (themePriorities && themePriorities.length > 0 ? themePriorities[0] : null);
-    if (!gameName || !gameGenre?.length || !surveyName || !purpose) {
+    // 필수 데이터 확인 (themePriorities가 1개 이상 있어야 함)
+    if (!gameName || !gameGenre?.length || !surveyName || !themePriorities?.length) {
       return;
     }
 
@@ -159,10 +168,9 @@ function useQuestionGenerate() {
   }, [generateQuestions]);
 
   const handleAddQuestion = useCallback(async () => {
-    const { gameName, gameGenre, surveyName, testPurpose, themePriorities } = formData;
-    const purpose = testPurpose || (themePriorities && themePriorities.length > 0 ? themePriorities[0] : null);
+    const { gameName, gameGenre, surveyName, themePriorities } = formData;
 
-    if (!gameName || !gameGenre?.length || !surveyName || !purpose) {
+    if (!gameName || !gameGenre?.length || !surveyName || !themePriorities?.length) {
       return;
     }
 

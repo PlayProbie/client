@@ -19,10 +19,10 @@ export const aiQuestionsHandlers = [
       const body = await request.json();
       const count = body.count || 5;
 
-      // 게임 장르와 테스트 목적에 따른 mock 질문 생성
+      // 게임 이름과 테마 우선순위에 따른 mock 질문 생성
       const mockQuestions = generateMockQuestions(
         body.game_name,
-        body.test_purpose,
+        body.theme_priorities?.[0] || 'gameplay',
         count
       );
 
