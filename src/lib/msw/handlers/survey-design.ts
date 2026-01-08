@@ -27,7 +27,8 @@ export const surveyDesignHandlers = [
           survey_url: `${MSW_CLIENT_BASE_URL}/surveys/session/sessions/84266fdbd31d4c2c6d0665f7e8380fa3`,
           started_at: body.started_at,
           ended_at: body.ended_at,
-          test_purpose: body.test_purpose,
+          theme_priorities: body.theme_priorities,
+          theme_details: body.theme_details,
           created_at: toKSTISOString(new Date()),
         },
       };

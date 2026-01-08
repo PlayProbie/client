@@ -13,7 +13,7 @@ export async function postSurvey(
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ ...data, test_purpose: 'UX/UI 개편' }),
+    body: JSON.stringify(data),
   });
 
   if (!response.ok) {

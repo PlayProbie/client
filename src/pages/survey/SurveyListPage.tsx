@@ -6,8 +6,9 @@ import { Button } from '@/components/ui';
 import { Badge } from '@/components/ui/Badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { PageSpinner } from '@/components/ui/loading';
+import { THEME_CATEGORY_OPTIONS } from '@/constants';
 import { getSurveys } from '@/features/survey-design/api/get-surveys';
-import { TestPurposeConfig } from '@/features/survey-design/types';
+import type { ThemeCategory } from '@/features/survey-design/types';
 
 /**
  * 설문 목록 페이지
@@ -34,11 +35,9 @@ function SurveyListPage() {
 
     const surveys = data?.result || [];
 
-    // 테스트 목적 라벨 변환
-    const getPurposeLabel = (code: string) => {
-        const config = Object.values(TestPurposeConfig).find((c) => c.value === code);
-        return config?.label || code;
-    };
+    // 테마 대분류 라벨 변환
+    const getCategoryLabel = (category: ThemeCategory) =>
+        THEME_CATEGORY_OPTIONS.find((o) => o.value === category)?.label || category;
 
     return (
         <div className="space-y-6">
@@ -70,9 +69,13 @@ function SurveyListPage() {
                                 </div>
                             </CardHeader>
                             <CardContent>
-                                <Badge variant="secondary" className="mb-2">
-                                    {getPurposeLabel(survey.test_purpose)}
-                                </Badge>
+                                <div className="flex flex-wrap gap-1 mb-2">
+                                    {survey.theme_priorities?.map((category, index) => (
+                                        <Badge key={category} variant="secondary">
+                                            {index + 1}. {getCategoryLabel(category)}
+                                        </Badge>
+                                    ))}
+                                </div>
                                 <p className="text-sm text-muted-foreground">
                                     {survey.started_at?.split('T')[0]} ~ {survey.ended_at?.split('T')[0]}
                                 </p>

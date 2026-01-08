@@ -65,12 +65,10 @@ export function useFormSubmit(options?: UseFormSubmitOptions) {
     mutationFn: async (formData: Partial<SurveyFormData>) => {
       const {
         surveyName,
-        testPurpose,
         startedAt,
         endedAt,
         questions,
         selectedQuestionIndices,
-        // 신규 필드
         testStage,
         themePriorities,
         themeDetails,
@@ -99,17 +97,15 @@ export function useFormSubmit(options?: UseFormSubmitOptions) {
               ([key]) => themePriorities?.includes(key as ThemeCategory)
             )
           )
-          : undefined;
+          : {};
 
         const surveyResponse = await postSurvey({
           game_uuid: gameUuid!,
           survey_name: surveyName || '',
           started_at: formatToISO(startedAt || ''),
           ended_at: formatToISO(endedAt || ''),
-          test_purpose: testPurpose!,
-          // 신규 필드
           test_stage: testStage,
-          theme_priorities: themePriorities,
+          theme_priorities: themePriorities || [],
           theme_details: cleanedThemeDetails,
           version_note: versionNote,
         });

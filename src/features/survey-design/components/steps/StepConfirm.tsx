@@ -1,7 +1,8 @@
+import { getThemeDetailOptions, THEME_CATEGORY_OPTIONS } from '@/constants';
 import { GameGenreConfig } from '@/features/game';
 
 import { useSurveyFormStore } from '../../store/useSurveyFormStore';
-import { TestPurposeConfig } from '../../types';
+import { TestStageConfig, type ThemeCategory } from '../../types';
 
 /**
  * Step 3: 최종 확인
@@ -15,11 +16,15 @@ function StepConfirm() {
     gameGenre,
     gameContext,
     surveyName,
-    testPurpose,
     startedAt,
     endedAt,
     questions,
     selectedQuestionIndices,
+    // 신규 필드
+    testStage,
+    themePriorities,
+    themeDetails,
+    versionNote,
   } = formData;
 
   // 게임 장르 라벨 변환
@@ -33,10 +38,19 @@ function StepConfirm() {
     .filter(Boolean)
     .join(', ');
 
-  // 테스트 목적 라벨 변환
-  const purposeLabel =
-    Object.values(TestPurposeConfig).find((c) => c.value === testPurpose)
-      ?.label || '-';
+  // 테스트 단계 라벨 변환
+  const stageLabel =
+    Object.values(TestStageConfig).find((c) => c.value === testStage)?.label ||
+    '-';
+
+  // 테마 대분류 라벨 가져오기
+  const getCategoryLabel = (category: ThemeCategory) =>
+    THEME_CATEGORY_OPTIONS.find((o) => o.value === category)?.label || category;
+
+  // 테마 소분류 라벨 가져오기
+  const getDetailLabel = (category: ThemeCategory, detail: string) =>
+    getThemeDetailOptions(category).find((o) => o.value === detail)?.label ||
+    detail;
 
   // 선택된 질문 목록
   const selectedQuestions = (selectedQuestionIndices || [])
@@ -81,15 +95,58 @@ function StepConfirm() {
           <dt className="text-muted-foreground">설문 이름</dt>
           <dd className="font-medium">{surveyName || '-'}</dd>
 
-          <dt className="text-muted-foreground">테스트 목적</dt>
-          <dd className="font-medium">{purposeLabel}</dd>
+          <dt className="text-muted-foreground">테스트 단계</dt>
+          <dd className="font-medium">{stageLabel}</dd>
 
           <dt className="text-muted-foreground">기간</dt>
           <dd className="font-medium">
             {startedAt || '-'} ~ {endedAt || '-'}
           </dd>
+
+          {versionNote && (
+            <>
+              <dt className="text-muted-foreground">버전 메모</dt>
+              <dd className="font-medium">{versionNote}</dd>
+            </>
+          )}
         </dl>
       </section>
+
+      {/* 테스트 목적 (테마 우선순위) */}
+      {themePriorities && themePriorities.length > 0 && (
+        <section className="bg-surface border-border space-y-4 rounded-xl border p-5 shadow-sm">
+          <h4 className="pb-3 text-lg font-bold">테스트 목적</h4>
+          <div className="space-y-3">
+            {themePriorities.map((category, index) => {
+              const details =
+                (themeDetails as Record<ThemeCategory, string[]>)?.[category] ||
+                [];
+              return (
+                <div
+                  key={category}
+                  className="flex items-start gap-3"
+                >
+                  <span className="bg-primary text-primary-foreground flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold">
+                    {index + 1}
+                  </span>
+                  <div>
+                    <span className="font-medium">
+                      {getCategoryLabel(category)}
+                    </span>
+                    {details.length > 0 && (
+                      <p className="text-muted-foreground mt-1 text-sm">
+                        {details
+                          .map((d) => getDetailLabel(category, d))
+                          .join(', ')}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {/* 선택된 질문 */}
       {selectedQuestions.length > 0 && (
@@ -116,3 +173,4 @@ function StepConfirm() {
 }
 
 export { StepConfirm };
+

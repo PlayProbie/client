@@ -90,10 +90,10 @@ export interface ApiCreateSurveyRequest {
   survey_name: string;
   started_at: string;
   ended_at: string;
-  test_purpose: TestPurpose;
-  // 신규 필드 (optional for backward compatibility)
   test_stage?: TestStage;
-  theme_priorities?: ThemeCategory[];
+  /** 테마 대분류 우선순위 (최대 3개, 순서대로) */
+  theme_priorities: ThemeCategory[];
+  /** 테마 소분류 (대분류별 선택된 세부 테마) */
   theme_details?: Partial<Record<ThemeCategory, ThemeDetail[]>>;
   version_note?: string;
 }
@@ -105,12 +105,12 @@ export interface ApiSurvey {
   survey_url: string;
   started_at: string;
   ended_at: string;
-  test_purpose: TestPurpose;
   created_at: string;
-  // 신규 필드 (optional for backward compatibility)
   test_stage?: TestStage;
-  theme_priorities?: ThemeCategory[];
-  theme_details?: Record<ThemeCategory, ThemeDetail[]>;
+  /** 테마 대분류 우선순위 (1~3개, 순서대로) */
+  theme_priorities: ThemeCategory[];
+  /** 테마 소분류 (선택사항) */
+  theme_details?: Partial<Record<ThemeCategory, ThemeDetail[]>>;
   version_note?: string;
 }
 
@@ -125,7 +125,10 @@ export interface ApiGenerateAiQuestionsRequest {
   game_context: string;
   game_genre: GameGenre[];
   survey_name: string;
-  test_purpose: TestPurpose;
+  /** 테마 대분류 우선순위 (1~3개, 순서대로) */
+  theme_priorities: ThemeCategory[];
+  /** 테마 소분류 (대분류별 선택된 세부 테마, 선택사항) */
+  theme_details?: Partial<Record<ThemeCategory, ThemeDetail[]>>;
   count: number;
 }
 
