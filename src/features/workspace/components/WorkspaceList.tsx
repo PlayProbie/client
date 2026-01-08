@@ -82,7 +82,7 @@ export function WorkspaceList({
             }`}
           >
             <div
-              className="cursor-pointer"
+              className="flex-1 cursor-pointer"
               onClick={() => setCurrentWorkspace(workspace)}
               role="button"
               tabIndex={0}

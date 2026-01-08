@@ -1,14 +1,7 @@
 /**
  * ProvisioningItemRow - 개별 프로비저닝 항목 표시 컴포넌트
  */
-import {
-  AlertCircle,
-  CheckCircle2,
-  Loader2,
-  Server,
-  X,
-  Zap,
-} from 'lucide-react';
+import { AlertCircle, CheckCircle2, Loader2, Server, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -42,7 +35,6 @@ function getStatusIcon(status: ProvisioningStatus) {
     case 'PROVISIONING':
       return <Server className="text-warning size-4 animate-pulse" />;
     case 'READY':
-      return <Zap className="text-info size-4 animate-pulse" />;
     case 'ACTIVE':
       return <CheckCircle2 className="text-success size-4" />;
     case 'ERROR':
@@ -59,7 +51,7 @@ function getStatusText(status: ProvisioningStatus): string {
     case 'PROVISIONING':
       return '프로비저닝 중...';
     case 'READY':
-      return '준비 중...';
+      return '준비 완료';
     case 'ACTIVE':
       return '활성화 완료';
     case 'ERROR':
@@ -78,8 +70,9 @@ export function ProvisioningItemRow({
     formatElapsedTime(startedAt)
   );
 
-  const isActive = ['CREATING', 'PROVISIONING', 'READY'].includes(status);
-  const isComplete = status === 'ACTIVE' || status === 'ERROR';
+  const isActive = ['CREATING', 'PROVISIONING'].includes(status);
+  const isComplete =
+    status === 'ACTIVE' || status === 'READY' || status === 'ERROR';
 
   // 경과 시간 업데이트 (진행 중일 때만)
   useEffect(() => {

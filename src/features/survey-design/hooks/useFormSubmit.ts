@@ -5,10 +5,20 @@ import { surveyKeys } from '@/features/game-streaming-survey/hooks/useSurveys';
 
 import { postFixedQuestions, postSurvey } from '../api';
 import { useSurveyFormStore } from '../store/useSurveyFormStore';
-import type { ApiFixedQuestionItem, SurveyFormData, ThemeCategory } from '../types';
+import type {
+  ApiFixedQuestionItem,
+  SurveyFormData,
+  ThemeCategory,
+} from '../types';
+
+type SubmitResult = {
+  surveyUrl: string;
+  surveyUuid: string;
+  isFirstSurvey: boolean;
+};
 
 type UseFormSubmitOptions = {
-  onSuccess?: (surveyUrl: string) => void;
+  onSuccess?: (result: SubmitResult) => void;
   onError?: (error: Error, step: SubmitStep) => void;
 };
 
@@ -90,10 +100,10 @@ export function useFormSubmit(options?: UseFormSubmitOptions) {
         // themeDetails에서 themePriorities에 없는 키 제거
         const cleanedThemeDetails = themeDetails
           ? Object.fromEntries(
-            Object.entries(themeDetails).filter(
-              ([key]) => themePriorities?.includes(key as ThemeCategory)
+              Object.entries(themeDetails).filter(([key]) =>
+                themePriorities?.includes(key as ThemeCategory)
+              )
             )
-          )
           : {};
 
         const surveyResponse = await postSurvey({
@@ -147,12 +157,21 @@ export function useFormSubmit(options?: UseFormSubmitOptions) {
         }
       }
 
-      return surveyUrl;
+      return { surveyUrl, surveyUuid };
     },
-    onSuccess: (surveyUrl) => {
+    onSuccess: ({ surveyUrl, surveyUuid }) => {
       setSurveyUrl(surveyUrl);
+
+      // 기존 설문 목록 확인하여 첫 설문인지 판별
+      const previousSurveys = queryClient.getQueryData<unknown[]>(
+        surveyKeys.list(gameUuid)
+      );
+      const isFirstSurvey =
+        !previousSurveys ||
+        (Array.isArray(previousSurveys) && previousSurveys.length === 0);
+
       queryClient.invalidateQueries({ queryKey: surveyKeys.all });
-      options?.onSuccess?.(surveyUrl);
+      options?.onSuccess?.({ surveyUrl, surveyUuid, isFirstSurvey });
     },
     onError: (error: Error) => {
       if (error instanceof SurveySubmitError) {
@@ -165,4 +184,4 @@ export function useFormSubmit(options?: UseFormSubmitOptions) {
 }
 
 export { SurveySubmitError };
-export type { SubmitStep, TransactionState };
+export type { SubmitResult, SubmitStep, TransactionState };

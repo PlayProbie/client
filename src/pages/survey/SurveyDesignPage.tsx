@@ -1,9 +1,19 @@
 import { useState } from 'react';
-import { Link, useOutletContext, useParams } from 'react-router-dom';
+import {
+  Link,
+  useNavigate,
+  useOutletContext,
+  useParams,
+} from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
 import type { SurveyShellContext } from '@/features/survey/components/SurveyShell';
-import { SurveyCreated, SurveyDesignForm } from '@/features/survey-design';
+import {
+  type SubmitResult, // Assuming SurveyDesignForm exports this or similar via features/survey-design
+  SurveyCreated,
+  SurveyDesignForm,
+} from '@/features/survey-design';
+// SubmitResult가 features/survey-design/index.ts에서 export되어야 함. 확인 필요.
 
 function useSurveyShellContextSafe() {
   try {
@@ -15,13 +25,22 @@ function useSurveyShellContextSafe() {
 
 function SurveyDesignPage() {
   const params = useParams<{ gameUuid: string }>();
+  const navigate = useNavigate();
   const shellContext = useSurveyShellContextSafe();
 
   const [isCompleted, setIsCompleted] = useState(false);
   const [surveyUrl, setSurveyUrl] = useState<string | null>(null);
 
-  const handleComplete = (url: string) => {
-    setSurveyUrl(url);
+  const handleComplete = (result: SubmitResult) => {
+    // 첫 설문이면 상세 페이지로 바로 이동
+    if (result.isFirstSurvey && params.gameUuid) {
+      navigate(
+        `/games/${params.gameUuid}/surveys/${result.surveyUuid}/overview`
+      );
+      return;
+    }
+
+    setSurveyUrl(result.surveyUrl);
     setIsCompleted(true);
   };
 
@@ -33,8 +52,7 @@ function SurveyDesignPage() {
   const description = isEditing
     ? '설문의 문항을 수정하거나 삭제할 수 있습니다.'
     : '새로운 설문을 만들어 테스터에게 배포해 보세요.';
-  console.log(`isCompleted: ${isCompleted}`);
-  console.log(`surveyUrl: ${surveyUrl}`);
+
   return (
     <div className="space-y-6">
       <div className="border-border bg-card flex flex-col gap-3 rounded-lg border p-6">

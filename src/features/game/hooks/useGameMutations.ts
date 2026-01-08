@@ -7,6 +7,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { useToast } from '@/hooks/useToast';
+import { useCurrentGameStore } from '@/stores/useCurrentGameStore';
 import { useCurrentWorkspaceStore } from '@/stores/useCurrentWorkspaceStore';
 
 import type { PutGameInput } from '../api';
@@ -19,6 +20,7 @@ export function useCreateGameMutation() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { currentWorkspace } = useCurrentWorkspaceStore();
+  const { currentGame, setCurrentGame } = useCurrentGameStore();
 
   return useMutation({
     mutationFn: (data: CreateGameRequest) => {
@@ -30,8 +32,12 @@ export function useCreateGameMutation() {
         data,
       });
     },
-    onSuccess: () => {
+    onSuccess: (newGame) => {
       queryClient.invalidateQueries({ queryKey: gameKeys.all });
+      // 현재 선택된 게임이 없으면 새로 생성된 게임을 자동 선택
+      if (!currentGame) {
+        setCurrentGame(newGame);
+      }
       toast({
         variant: 'success',
         title: '게임 생성 완료',

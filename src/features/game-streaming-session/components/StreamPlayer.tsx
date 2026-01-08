@@ -1,7 +1,8 @@
 /**
  * 스트리밍 플레이어 컴포넌트
  *
- * WebRTC 스트림을 표시하는 비디오 플레이어입니다.
+ * AWS GameLift Streams Web SDK를 통해 WebRTC 스트림을 표시합니다.
+ * 입력(키보드/마우스/게임패드)은 SDK에서 자동으로 처리합니다.
  */
 import { Maximize, Minimize, Volume2, VolumeX } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -9,19 +10,17 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
-import type { StreamInputEvent } from '../lib';
-
 export interface StreamPlayerProps {
   /** Video element ref */
   videoRef: React.RefObject<HTMLVideoElement | null>;
+  /** Audio element ref */
+  audioRef: React.RefObject<HTMLAudioElement | null>;
   /** 연결됨 상태 */
   isConnected: boolean;
   /** 연결 중 상태 */
   isConnecting?: boolean;
   /** 연결 해제 콜백 */
   onDisconnect?: () => void;
-  /** 입력 이벤트 전송 콜백 */
-  sendInput?: (event: StreamInputEvent) => void;
   /** 추가 CSS 클래스 */
   className?: string;
 }
@@ -33,37 +32,71 @@ export interface StreamPlayerProps {
  * ```tsx
  * <StreamPlayer
  *   videoRef={videoRef}
+ *   audioRef={audioRef}
  *   isConnected={isConnected}
  *   onDisconnect={handleDisconnect}
- *   sendInput={sendInput}
  * />
  * ```
  */
 export function StreamPlayer({
   videoRef,
+  audioRef,
   isConnected,
   isConnecting = false,
   onDisconnect,
-  sendInput,
   className,
 }: StreamPlayerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const controlsRef = useRef<HTMLDivElement>(null);
-  const [isMuted, setIsMuted] = useState(false);
+  const [isMuted, setIsMuted] = useState(true); // 기본값 true로 변경 (자동재생 정책)
   const [isFullscreen, setIsFullscreen] = useState(false);
 
+  // 연결 시 컨테이너에 포커스
   useEffect(() => {
     if (isConnected) {
       containerRef.current?.focus();
     }
   }, [isConnected]);
 
+  // 풀스크린 상태 변경 감지
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, []);
+
   const toggleMute = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.muted = !audioRef.current.muted;
+      setIsMuted(audioRef.current.muted);
+    }
     if (videoRef.current) {
       videoRef.current.muted = !videoRef.current.muted;
-      setIsMuted(videoRef.current.muted);
     }
-  }, [videoRef]);
+  }, [audioRef, videoRef]);
+
+  // 컨테이너 클릭 시 음소거 해제 (자동재생 정책 우회)
+  const handleContainerClick = useCallback(() => {
+    if (isConnected) {
+      containerRef.current?.focus();
+
+      // 첫 클릭 시 음소거 해제
+      if (isMuted && audioRef.current && videoRef.current) {
+        audioRef.current.muted = false;
+        videoRef.current.muted = false;
+        setIsMuted(false);
+
+        // play() 재시도
+        audioRef.current.play().catch(() => {});
+        videoRef.current.play().catch(() => {});
+      }
+    }
+  }, [audioRef, videoRef, isConnected, isMuted]);
 
   const toggleFullscreen = useCallback(async () => {
     if (!containerRef.current) return;
@@ -71,92 +104,17 @@ export function StreamPlayer({
     try {
       if (document.fullscreenElement) {
         await document.exitFullscreen();
-        setIsFullscreen(false);
       } else {
         await containerRef.current.requestFullscreen();
-        setIsFullscreen(true);
       }
     } catch {
       // Fullscreen not supported - 무시
     }
   }, []);
 
-  const isEventFromControls = useCallback((event: React.SyntheticEvent) => {
-    const target = event.target as HTMLElement | null;
-    if (!target) return false;
-    if (!controlsRef.current?.contains(target)) return false;
-    return !!target.closest('button');
-  }, []);
-
-  const getNormalizedPointer = useCallback(
-    (event: React.MouseEvent<HTMLDivElement>) => {
-      const rect = containerRef.current?.getBoundingClientRect();
-      if (!rect || rect.width === 0 || rect.height === 0) {
-        return { x: 0, y: 0 };
-      }
-
-      const normalizedX = (event.clientX - rect.left) / rect.width;
-      const normalizedY = (event.clientY - rect.top) / rect.height;
-
-      return {
-        x: Math.round(Math.min(1, Math.max(0, normalizedX)) * 65535),
-        y: Math.round(Math.min(1, Math.max(0, normalizedY)) * 65535),
-      };
-    },
-    []
-  );
-
-  const handleKeyboardInput = useCallback(
-    (action: 'down' | 'up', event: React.KeyboardEvent<HTMLDivElement>) => {
-      if (!isConnected || !sendInput) return;
-      if (isEventFromControls(event)) return;
-
-      event.preventDefault();
-
-      sendInput({
-        kind: 'keyboard',
-        action,
-        keyCode: event.keyCode || 0,
-        altKey: event.altKey,
-        ctrlKey: event.ctrlKey,
-        shiftKey: event.shiftKey,
-        metaKey: event.metaKey,
-        repeat: event.repeat,
-      });
-    },
-    [isConnected, sendInput, isEventFromControls]
-  );
-
-  const handleMouseInput = useCallback(
-    (
-      action: 'move' | 'down' | 'up',
-      event: React.MouseEvent<HTMLDivElement>
-    ) => {
-      if (!isConnected || !sendInput) return;
-      if (isEventFromControls(event)) return;
-
-      const { x, y } = getNormalizedPointer(event);
-
-      if (action !== 'move') {
-        event.preventDefault();
-      }
-
-      sendInput({
-        kind: 'mouse',
-        action,
-        x,
-        y,
-        button: event.button,
-        buttons: event.buttons,
-        movementX: event.movementX,
-        movementY: event.movementY,
-      });
-    },
-    [getNormalizedPointer, isConnected, sendInput, isEventFromControls]
-  );
-
   return (
-    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
+    /* eslint-disable jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/no-noninteractive-tabindex */
+    // 게임 스트리밍 플레이어: 키보드/마우스 입력을 받는 인터랙티브 애플리케이션
     <div
       ref={containerRef}
       className={cn(
@@ -166,32 +124,31 @@ export function StreamPlayer({
       role="application"
       aria-label="게임 스트리밍 플레이어"
       onDoubleClick={toggleFullscreen}
-      onClick={() => {
-        if (isConnected) {
-          containerRef.current?.focus();
-        }
-      }}
-      // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
-      tabIndex={0} // 키보드 입력을 받기 위해 tabIndex 추가
-      onKeyDown={(e) => handleKeyboardInput('down', e)}
-      onKeyUp={(e) => handleKeyboardInput('up', e)}
-      onMouseDown={(e) => handleMouseInput('down', e)}
-      onMouseUp={(e) => handleMouseInput('up', e)}
-      onMouseMove={(e) => handleMouseInput('move', e)}
+      onClick={handleContainerClick}
+      tabIndex={0} // 키보드 입력을 위해 tabIndex 추가 (SDK가 입력 캡처)
       onContextMenu={(e) => {
         e.preventDefault(); // 우클릭 메뉴 방지
       }}
     >
+      {/* eslint-enable jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/no-noninteractive-tabindex */}
       {/* Video Element */}
       <video
         ref={videoRef}
         autoPlay
         playsInline
-        muted={isMuted}
+        muted // 자동재생 정책 준수
         className="h-full w-full object-contain"
       >
         <track kind="captions" />
       </video>
+
+      {/* Audio Element (별도 audio 태그로 분리) */}
+      {}
+      <audio
+        ref={audioRef}
+        autoPlay
+        muted // 자동재생 정책 준수
+      />
 
       {/* 연결 대기 오버레이 */}
       {!isConnected && !isConnecting && (
@@ -208,6 +165,17 @@ export function StreamPlayer({
           <div className="flex flex-col items-center gap-2">
             <div className="border-primary h-8 w-8 animate-spin rounded-full border-2 border-t-transparent" />
             <p className="text-muted-foreground text-sm">연결 중...</p>
+          </div>
+        </div>
+      )}
+
+      {/* 음소거 해제 안내 (연결 후 음소거 상태일 때) */}
+      {isConnected && isMuted && (
+        <div className="pointer-events-none absolute inset-0 flex items-end justify-center pb-20">
+          <div className="animate-pulse rounded-full bg-black/70 px-4 py-2">
+            <p className="text-sm text-white">
+              🔇 화면을 클릭하여 소리를 켜세요
+            </p>
           </div>
         </div>
       )}

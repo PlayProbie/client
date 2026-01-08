@@ -1,6 +1,5 @@
 import * as ToastPrimitives from '@radix-ui/react-toast';
 import { cva, type VariantProps } from 'class-variance-authority';
-import { X } from 'lucide-react';
 import * as React from 'react';
 
 import { cn } from '@/lib/utils';
@@ -69,24 +68,6 @@ function ToastAction({
   );
 }
 
-function ToastClose({
-  className,
-  ...props
-}: React.ComponentProps<typeof ToastPrimitives.Close>) {
-  return (
-    <ToastPrimitives.Close
-      className={cn(
-        'absolute top-2 right-2 rounded-md p-1 text-white/50 opacity-0 transition-opacity group-hover:opacity-100 hover:text-white focus:opacity-100 focus:ring-1 focus:outline-none',
-        className
-      )}
-      toast-close=""
-      {...props}
-    >
-      <X className="size-4" />
-    </ToastPrimitives.Close>
-  );
-}
-
 function ToastTitle({
   className,
   ...props
@@ -118,7 +99,6 @@ export {
   Toast,
   ToastAction,
   type ToastActionElement,
-  ToastClose,
   ToastDescription,
   type ToastProps,
   ToastProvider,

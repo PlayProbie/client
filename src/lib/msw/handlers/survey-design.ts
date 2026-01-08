@@ -5,7 +5,7 @@ import type {
   CreateSurveyResponse,
 } from '@/features/survey-design';
 
-import { MSW_API_BASE_URL, MSW_CLIENT_BASE_URL } from '../constants';
+import { MSW_API_BASE_URL, MSW_CLIENT_BASE_URL } from '../../constants';
 import { toKSTISOString } from '../utils';
 
 /**

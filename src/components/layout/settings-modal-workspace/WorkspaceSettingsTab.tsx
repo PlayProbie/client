@@ -1,5 +1,5 @@
 import { Plus } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -18,6 +18,13 @@ import { useCurrentWorkspaceStore } from '@/stores/useCurrentWorkspaceStore';
 export function WorkspaceSettingsTab() {
   const { data: workspaces, isLoading, isError } = useWorkspacesQuery();
   const { currentWorkspace, setCurrentWorkspace } = useCurrentWorkspaceStore();
+
+  // 워크스페이스 목록 로드 시 currentWorkspace가 없으면 첫 번째 워크스페이스를 기본값으로 설정
+  useEffect(() => {
+    if (workspaces && workspaces.length > 0 && !currentWorkspace) {
+      setCurrentWorkspace(workspaces[0]);
+    }
+  }, [workspaces, currentWorkspace, setCurrentWorkspace]);
 
   // Mutations
   const createMutation = useCreateWorkspaceMutation();
@@ -97,7 +104,7 @@ export function WorkspaceSettingsTab() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pt-6">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold">워크스페이스 관리</h2>

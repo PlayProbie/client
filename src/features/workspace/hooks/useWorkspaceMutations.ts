@@ -7,6 +7,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { useToast } from '@/hooks/useToast';
+import { useCurrentWorkspaceStore } from '@/stores/useCurrentWorkspaceStore';
 
 import {
   deleteWorkspace,
@@ -27,11 +28,16 @@ export const workspaceKeys = {
 export function useCreateWorkspaceMutation() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { currentWorkspace, setCurrentWorkspace } = useCurrentWorkspaceStore();
 
   return useMutation({
     mutationFn: (data: CreateWorkspaceRequest) => postWorkspace(data),
-    onSuccess: () => {
+    onSuccess: (newWorkspace) => {
       queryClient.invalidateQueries({ queryKey: workspaceKeys.lists() });
+      // 현재 선택된 워크스페이스가 없으면 새로 생성된 워크스페이스를 자동 선택
+      if (!currentWorkspace) {
+        setCurrentWorkspace(newWorkspace);
+      }
       toast({
         variant: 'success',
         title: '워크스페이스 생성 완료',
