@@ -53,6 +53,7 @@ jobs:
           echo "MODE=server.${{ inputs.environment }}" >> $GITHUB_ENV
           echo "VITE_API_BASE_URL=${{ secrets.VITE_API_BASE_URL }}" >> $GITHUB_ENV
           echo "VITE_CLIENT_BASE_URL=${{ secrets.VITE_CLIENT_BASE_URL }}" >> $GITHUB_ENV
+          echo "VITE_S3_BUCKET=${{ secrets.VITE_S3_BUCKET }}" >> $GITHUB_ENV
 
       # 5. React 애플리케이션 빌드
       - name: 🔨 Build React application
