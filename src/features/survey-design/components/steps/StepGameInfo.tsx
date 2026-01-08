@@ -49,8 +49,15 @@ function StepGameInfo({ control }: StepGameInfoProps) {
         control={control}
         name="gameGenre"
         rules={{
-          validate: (value) =>
-            (value && value.length > 0) || '게임 장르를 1개 이상 선택해주세요',
+          validate: (value) => {
+            if (!value || value.length === 0) {
+              return '게임 장르를 1개 이상 선택해주세요';
+            }
+            if (value.length > 3) {
+              return '게임 장르는 최대 3개까지 선택 가능합니다';
+            }
+            return true;
+          },
         }}
         render={({ field, fieldState }) => (
           <CheckboxGroup
@@ -60,6 +67,8 @@ function StepGameInfo({ control }: StepGameInfoProps) {
             value={field.value || []}
             onChange={field.onChange}
             error={fieldState.error?.message}
+            columns={4}
+            maxSelection={3}
           />
         )}
       />
