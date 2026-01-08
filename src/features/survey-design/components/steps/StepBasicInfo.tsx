@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Lightbulb, Rocket, Users } from 'lucide-react';
 import { useEffect } from 'react';
 import { type Control } from 'react-hook-form';
-import { useSearchParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 
 import { Badge } from '@/components/ui/Badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -56,8 +56,7 @@ const TEST_STAGE_CONFIG = {
 } as const;
 
 function StepBasicInfo({ control }: StepBasicInfoProps) {
-    const [searchParams] = useSearchParams();
-    const gameUuid = searchParams.get('gameId');
+    const { gameUuid } = useParams<{ gameUuid: string }>();
 
     // 게임 정보 로드
     const { data: gameData, isLoading: isLoadingGame } = useQuery({
