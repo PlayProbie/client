@@ -163,7 +163,9 @@ export function useChatSession({
       );
       const questionText = currentQuestion?.content ?? '';
       // fixedQId는 null이 될 수 있음 (오프닝, 클로징 등)
-      const fixedQId = currentQuestion?.fixedQId ?? currentFixedQId;
+      // [FIX] 오프닝 질문(첫 턴)의 경우 fixedQId가 null일 수 있는데, 서버 에러 방지를 위해 1로 강제 설정
+      const rawFixedQId = currentQuestion?.fixedQId ?? currentFixedQId;
+      const fixedQId = rawFixedQId || 1;
 
       // OPENING 단계 등에서는 fixedQId가 없을 수 있으므로 체크 완화
       // 다만 일반적인 질문에서는 있어야 함. 우선순위: 서버에서 온 fixedQId
