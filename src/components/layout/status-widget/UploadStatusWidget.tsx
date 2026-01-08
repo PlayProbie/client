@@ -2,7 +2,7 @@
  * UploadStatusWidget - 플로팅 업로드 상태 위젯
  * 우측 하단에 고정되어 업로드 진행 상태를 표시
  */
-import { ChevronDown, ChevronUp, Upload, X } from 'lucide-react';
+import { Upload, X } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,8 @@ import {
   useUploadStore,
 } from '@/stores/useUploadStore';
 
+import { StatusWidgetContainer } from './StatusWidgetContainer';
+import { StatusWidgetHeader } from './StatusWidgetHeader';
 import { UploadItemRow } from './UploadItemRow';
 
 export function UploadStatusWidget() {
@@ -92,50 +94,24 @@ export function UploadStatusWidget() {
   };
 
   return (
-    <div className="bg-background border-border fixed right-4 bottom-4 z-50 w-80 overflow-hidden rounded-lg border shadow-lg">
-      {/* Header */}
-      <div className="bg-muted/50 flex items-center justify-between border-b px-4 py-2">
-        <div className="flex items-center gap-2">
-          <Upload className="size-4" />
-          <span className="text-sm font-medium">
-            업로드 ({uploads.length})
-            {hasActiveUploads && activeCount > 0 && (
-              <span className="text-muted-foreground ml-1 text-xs">
-                {overallProgress}%
-              </span>
-            )}
-          </span>
-        </div>
-
-        <div className="flex items-center gap-1">
-          {/* 모두 지우기 (완료된 항목이 있을 때만) */}
-          {completedCount > 0 && (
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-6 px-2 text-xs"
-              onClick={clearCompleted}
-            >
-              완료 지우기
-            </Button>
-          )}
-
-          {/* 최소화/최대화 */}
-          <Button
-            size="icon"
-            variant="ghost"
-            className="size-6"
-            onClick={toggleMinimize}
-          >
-            {isMinimized ? (
-              <ChevronUp className="size-4" />
-            ) : (
-              <ChevronDown className="size-4" />
-            )}
-          </Button>
-
-          {/* 모두 취소 (진행중일 때만) */}
-          {hasActiveUploads && (
+    <StatusWidgetContainer bottomPosition="bottom-4">
+      <StatusWidgetHeader
+        icon={<Upload className="size-4" />}
+        title="업로드"
+        count={uploads.length}
+        progressInfo={
+          hasActiveUploads && activeCount > 0 ? (
+            <span className="text-muted-foreground ml-1 text-xs">
+              {overallProgress}%
+            </span>
+          ) : undefined
+        }
+        isMinimized={isMinimized}
+        onToggleMinimize={toggleMinimize}
+        showClearCompleted={completedCount > 0}
+        onClearCompleted={clearCompleted}
+        extraActions={
+          hasActiveUploads ? (
             <Button
               size="icon"
               variant="ghost"
@@ -145,9 +121,9 @@ export function UploadStatusWidget() {
             >
               <X className="size-4" />
             </Button>
-          )}
-        </div>
-      </div>
+          ) : undefined
+        }
+      />
 
       {/* Content (최소화 상태가 아닐 때만) */}
       {!isMinimized && (
@@ -165,6 +141,6 @@ export function UploadStatusWidget() {
           </div>
         </ScrollArea>
       )}
-    </div>
+    </StatusWidgetContainer>
   );
 }

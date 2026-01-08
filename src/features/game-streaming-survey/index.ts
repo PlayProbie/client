@@ -28,6 +28,7 @@ export {
   surveyKeys,
   useCreateStreamingResource,
   useDeleteStreamingResource,
+  useProvisioningPolling,
   useStreamingResource,
   useSurveys,
   useUpdateSurveyStatus,
