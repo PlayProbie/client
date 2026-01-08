@@ -33,7 +33,8 @@ function SurveyDesignPage() {
   const description = isEditing
     ? '설문의 문항을 수정하거나 삭제할 수 있습니다.'
     : '새로운 설문을 만들어 테스터에게 배포해 보세요.';
-
+  console.log(`isCompleted: ${isCompleted}`);
+  console.log(`surveyUrl: ${surveyUrl}`);
   return (
     <div className="space-y-6">
       <div className="border-border bg-card flex flex-col gap-3 rounded-lg border p-6">

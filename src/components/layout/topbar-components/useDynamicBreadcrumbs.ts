@@ -50,11 +50,25 @@ export function useDynamicBreadcrumbs(): {
   const { breadcrumbs: staticBreadcrumbs } = findNavItemByPath(
     location.pathname
   );
+
   const resolveNavPath = (path: string) => {
-    if (!params.gameUuid) return path;
-    return path.includes(':gameUuid')
-      ? generatePath(path, { gameUuid: params.gameUuid })
-      : path;
+    const pathParams: Record<string, string> = {};
+    if (path.includes(':gameUuid') && params.gameUuid) {
+      pathParams.gameUuid = params.gameUuid;
+    }
+    if (path.includes(':surveyUuid') && params.surveyUuid) {
+      pathParams.surveyUuid = params.surveyUuid;
+    }
+    // 필요한 파라미터가 모두 있을 때만 generatePath 사용
+    if (Object.keys(pathParams).length > 0) {
+      try {
+        return generatePath(path, pathParams);
+      } catch {
+        // 파라미터가 부족하면 원본 경로 반환
+        return path;
+      }
+    }
+    return path;
   };
   const resolvedStaticBreadcrumbs = staticBreadcrumbs.map((crumb) => ({
     ...crumb,

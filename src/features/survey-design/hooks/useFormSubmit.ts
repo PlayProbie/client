@@ -110,7 +110,7 @@ export function useFormSubmit(options?: UseFormSubmitOptions) {
           version_note: versionNote,
         });
         surveyUuid = surveyResponse.result.survey_uuid;
-        surveyUrl = surveyResponse.result.survey_url;
+        surveyUrl = `${import.meta.env.VITE_CLIENT_BASE_URL}/surveys/session/${surveyUuid}`;
         transactionState.surveyUuid = surveyUuid;
       } catch (error) {
         // TODO: 서버에 rollback API가 있다면 여기서 게임 삭제 호출
