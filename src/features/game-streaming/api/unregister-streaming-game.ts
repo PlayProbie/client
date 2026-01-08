@@ -1,7 +1,8 @@
 /**
  * DELETE /streaming-games/:gameUuid - 스트리밍 게임 등록 해제
  */
-import { API_BASE_URL } from '../constants';
+import { API_BASE_URL } from '@/constants/api';
+
 import { apiFetch } from '../utils';
 
 export interface UnregisterStreamingGameInput {

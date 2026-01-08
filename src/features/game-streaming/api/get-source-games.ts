@@ -2,7 +2,8 @@
  * GET /source-games - Source Game 목록 조회 (Survey 시스템)
  * 스트리밍 등록 가능한 게임 목록
  */
-import { API_BASE_URL } from '../constants';
+import { API_BASE_URL } from '@/constants/api';
+
 import type { ApiSourceGame, SourceGame } from '../types';
 import { toSourceGame } from '../types';
 import { apiFetch } from '../utils';

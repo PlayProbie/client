@@ -4,7 +4,8 @@
  *
  * Spring GameBuildApi.deleteBuild 연동
  */
-import { API_BASE_URL } from '../constants';
+import { API_BASE_URL } from '@/constants/api';
+
 import { apiFetch } from '../utils';
 
 export interface DeleteBuildInput {
