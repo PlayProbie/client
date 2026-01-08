@@ -57,7 +57,6 @@ function useQuestionAnalysis({
     getQuestionAnalysis(
       surveyUuid,
       (wrapper: QuestionResponseAnalysisWrapper) => {
-        if (isCancelled) return;
         try {
           const parsed: QuestionAnalysisResult = JSON.parse(
             wrapper.result_json
@@ -80,7 +79,6 @@ function useQuestionAnalysis({
         requestedSurveyUuidRef.current = null;
       },
       () => {
-        if (isCancelled) return;
         setIsLoading(false);
         setIsComplete(true);
         isRequestingRef.current = false;
@@ -97,7 +95,6 @@ function useQuestionAnalysis({
       // 언마운트 시에는 requestedSurveyUuidRef는 유지 (리마운트 시 중복 요청 방지)
     };
   }, [surveyUuid, enabled]);
-
   return {
     data,
     questionIds: Object.keys(data).map(Number),
