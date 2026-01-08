@@ -117,11 +117,11 @@ function SurveySessionStartPage() {
                 <SelectValue placeholder="연령대를 선택하세요" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="10">10대</SelectItem>
-                <SelectItem value="20">20대</SelectItem>
-                <SelectItem value="30">30대</SelectItem>
-                <SelectItem value="40">40대</SelectItem>
-                <SelectItem value="50">50대 이상</SelectItem>
+                <SelectItem value="10s">10대</SelectItem>
+                <SelectItem value="20s">20대</SelectItem>
+                <SelectItem value="30s">30대</SelectItem>
+                <SelectItem value="40s">40대</SelectItem>
+                <SelectItem value="50s">50대 이상</SelectItem>
               </SelectContent>
             </Select>
           </div>

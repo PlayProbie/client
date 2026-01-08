@@ -17,7 +17,11 @@ export async function createChatSession({
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(testerProfile || {}), // 프로필 정보가 있으면 전송, 없으면 빈 객체 (또는 null)
+    body: JSON.stringify({
+      age_group: testerProfile?.ageGroup,
+      gender: testerProfile?.gender,
+      prefer_genre: testerProfile?.preferGenre,
+    }), // 프로필 정보가 있으면 전송, 없으면 빈 객체 (또는 null)
   });
 
   if (!response.ok) {
