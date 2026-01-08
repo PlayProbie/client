@@ -7,7 +7,7 @@ import type { QuestionResponseAnalysisWrapper } from '../types';
  * 개발 환경(MSW)에서는 일반 JSON 응답으로 처리
  */
 export async function getQuestionAnalysis(
-  surveyId: number,
+  surveyUuid: string,
   onMessage: (data: QuestionResponseAnalysisWrapper) => void,
   onError?: (error: Error) => void,
   onComplete?: () => void
@@ -15,7 +15,7 @@ export async function getQuestionAnalysis(
   // MSW 환경에서는 일반 fetch 사용
   if (import.meta.env.DEV && import.meta.env.VITE_MSW_ENABLED === 'true') {
     try {
-      const response = await fetch(`${API_BASE_URL}/analytics/${surveyId}`);
+      const response = await fetch(`${API_BASE_URL}/analytics/${surveyUuid}`);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -43,8 +43,8 @@ export async function getQuestionAnalysis(
   // 프로덕션: 실제 SSE 사용
   // 개발 환경에서는 Vite proxy를 통해야 하므로 상대 경로 사용
   const sseUrl = import.meta.env.DEV
-    ? `/api/analytics/${surveyId}`
-    : `${API_BASE_URL}/analytics/${surveyId}`;
+    ? `/api/analytics/${surveyUuid}`
+    : `${API_BASE_URL}/analytics/${surveyUuid}`;
 
   const eventSource = new EventSource(sseUrl);
 

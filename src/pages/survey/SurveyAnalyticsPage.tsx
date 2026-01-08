@@ -17,20 +17,20 @@ import {
  * URL: /survey/analytics/:gameUuid
  */
 function SurveyAnalyticsPage() {
-  const { gameUuid } = useParams<{ gameUuid: string }>();
+  const { gameUuid, surveyUuid } = useParams<{
+    gameUuid: string;
+    surveyUuid: string;
+  }>();
   const [activeTab, setActiveTab] = useState<Tab>('overview');
 
   const { summary, list, isLoading, isError } = useSurveyResults({
     gameUuid: gameUuid || '',
   });
 
-  // MVP: surveyId 임시 고정 (나중에 list[0]?.surveyId 또는 URL param으로 변경)
-  const surveyId = list[0]?.surveyId || 0;
-
   // 페이지 레벨에서 SSE 분석 요청 (한 번만 실행)
   const questionAnalysis = useQuestionAnalysis({
-    surveyId: surveyId || null,
-    enabled: Boolean(surveyId),
+    surveyUuid: surveyUuid || null,
+    enabled: Boolean(surveyUuid),
   });
 
   return (
@@ -59,7 +59,7 @@ function SurveyAnalyticsPage() {
           </div>
 
           {/* 설문 개요 탭 */}
-          {activeTab === 'overview' && Boolean(surveyId) && (
+          {activeTab === 'overview' && Boolean(surveyUuid) && (
             <SurveyOverview
               summary={summary}
               questionAnalysis={questionAnalysis}
@@ -67,13 +67,13 @@ function SurveyAnalyticsPage() {
           )}
 
           {/* 질문별 분석 탭 */}
-          {activeTab === 'questions' && Boolean(surveyId) && (
+          {activeTab === 'questions' && Boolean(surveyUuid) && (
             <QuestionAnalysisView
               questionAnalysis={questionAnalysis}
             />
           )}
 
-          {activeTab === 'questions' && surveyId === 0 && (
+          {activeTab === 'questions' && !surveyUuid && (
             <div className="py-12 text-center text-muted-foreground">
               분석할 설문 데이터가 없습니다.
             </div>
