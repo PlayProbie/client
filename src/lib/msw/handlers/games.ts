@@ -12,7 +12,7 @@ import type {
   ApiUpdateGameRequest,
 } from '@/features/game/types';
 
-import { MSW_API_BASE_URL } from '../constants';
+import { MSW_API_BASE_URL } from '../../constants';
 import { toKSTISOString } from '../utils';
 
 // ----------------------------------------

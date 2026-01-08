@@ -6,7 +6,7 @@ import type {
   SendMessageResponse,
 } from '@/features/survey-session';
 
-import { MSW_API_BASE_URL } from '../constants';
+import { MSW_API_BASE_URL } from '../../constants';
 
 // SSE 질문 목록 (목업) - Escape From Duckov 시연용
 // FIXED 질문은 AI 질문 생성 목록(ai-questions.ts)과 일치해야 함
