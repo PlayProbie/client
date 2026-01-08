@@ -13,6 +13,8 @@ import { Textarea } from '@/components/ui/Textarea';
 
 import { type CreateGameRequest, GameGenreConfig } from '../types';
 
+const MAX_GENRE_SELECTION = 3;
+
 interface GameFormModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -66,21 +68,32 @@ export function GameFormModal({
           </div>
 
           <div className="grid gap-2">
-            <Label>장르 (복수 선택 가능)</Label>
+            <div className="flex items-center justify-between">
+              <Label>장르 (최대 3개 선택)</Label>
+              <span className="text-muted-foreground text-sm">
+                {formData.gameGenre.length}/{MAX_GENRE_SELECTION} 선택됨
+              </span>
+            </div>
             <div className="flex flex-wrap gap-2">
-              {Object.entries(GameGenreConfig).map(([key, { label }]) => (
-                <Button
-                  key={key}
-                  type="button"
-                  size="sm"
-                  variant={
-                    formData.gameGenre.includes(key) ? 'default' : 'outline'
-                  }
-                  onClick={() => onGenreToggle(key)}
-                >
-                  {label}
-                </Button>
-              ))}
+              {Object.entries(GameGenreConfig).map(([key, { value, label }]) => {
+                const isSelected = formData.gameGenre.includes(value);
+                const isMaxReached =
+                  formData.gameGenre.length >= MAX_GENRE_SELECTION;
+                const isDisabled = !isSelected && isMaxReached;
+
+                return (
+                  <Button
+                    key={key}
+                    type="button"
+                    size="sm"
+                    variant={isSelected ? 'default' : 'outline'}
+                    disabled={isDisabled}
+                    onClick={() => onGenreToggle(value)}
+                  >
+                    {label}
+                  </Button>
+                );
+              })}
             </div>
           </div>
 

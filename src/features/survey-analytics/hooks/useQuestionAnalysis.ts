@@ -22,15 +22,21 @@ function useQuestionAnalysis({
   surveyUuid,
   enabled = true,
 }: UseQuestionAnalysisOptions) {
-  const [data, setData] = useState<QuestionAnalysisState>({});
-  const [isLoading, setIsLoading] = useState(false);
-  const [isError, setIsError] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-  const [isComplete, setIsComplete] = useState(false);
+  // 단일 객체 상태로 통합
+  const [state, setState] = useState({
+    data: {} as QuestionAnalysisState,
+    error: null as Error | null,
+    status: 'idle' as 'idle' | 'loading' | 'complete' | 'error',
+  });
 
   // ref를 사용해 중복 요청 방지 (React StrictMode 대응)
   const requestedSurveyUuidRef = useRef<string | null>(null);
   const isRequestingRef = useRef(false);
+
+  // Derived state (계산된 값)
+  const isLoading = state.status === 'loading';
+  const isError = state.status === 'error';
+  const isComplete = state.status === 'complete';
 
   useEffect(() => {
     if (!surveyUuid || !enabled) {
@@ -45,11 +51,8 @@ function useQuestionAnalysis({
     requestedSurveyUuidRef.current = surveyUuid;
     isRequestingRef.current = true;
 
-    setIsLoading(true);
-    setIsError(false);
-    setError(null);
-    setIsComplete(false);
-    setData({});
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setState({ data: {}, error: null, status: 'loading' });
 
     let cleanupFn: (() => void) | null = null;
     let isCancelled = false;
@@ -61,9 +64,12 @@ function useQuestionAnalysis({
           const parsed: QuestionAnalysisResult = JSON.parse(
             wrapper.result_json
           );
-          setData((prev) => ({
+          setState((prev) => ({
             ...prev,
-            [wrapper.fixed_question_id]: parsed,
+            data: {
+              ...prev.data,
+              [wrapper.fixed_question_id]: parsed,
+            },
           }));
         } catch (err) {
           console.error('Failed to parse question analysis result:', err);
@@ -71,16 +77,13 @@ function useQuestionAnalysis({
       },
       (err: Error) => {
         if (isCancelled) return;
-        setIsError(true);
-        setError(err);
-        setIsLoading(false);
+        setState((prev) => ({ ...prev, error: err, status: 'error' }));
         isRequestingRef.current = false;
         // 에러 시에는 재시도할 수 있도록 requestedSurveyUuidRef 초기화
         requestedSurveyUuidRef.current = null;
       },
       () => {
-        setIsLoading(false);
-        setIsComplete(true);
+        setState((prev) => ({ ...prev, status: 'complete' }));
         isRequestingRef.current = false;
         // 성공 완료 시에는 requestedSurveyUuidRef 유지 (중복 요청 방지)
       }
@@ -95,12 +98,13 @@ function useQuestionAnalysis({
       // 언마운트 시에는 requestedSurveyUuidRef는 유지 (리마운트 시 중복 요청 방지)
     };
   }, [surveyUuid, enabled]);
+
   return {
-    data,
-    questionIds: Object.keys(data).map(Number),
+    data: state.data,
+    questionIds: Object.keys(state.data).map(Number),
     isLoading,
     isError,
-    error,
+    error: state.error,
     isComplete,
   };
 }

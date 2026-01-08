@@ -194,7 +194,7 @@ export const surveyAnalyticsHandlers = [
   ),
 
   // GET /api/analytics/{surveyId} - 질문별 AI 분석 결과 (SSE Mock - JSON 배열로 반환)
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   
   http.get(`${MSW_API_BASE_URL}/analytics/:surveyId`, async ({ params: _params }) => {
     await delay(800); // 로딩 시뮬레이션
 

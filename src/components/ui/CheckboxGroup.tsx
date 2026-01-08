@@ -23,6 +23,8 @@ type CheckboxGroupProps = {
   className?: string;
   /** 에러 메시지 */
   error?: string;
+  /** 최대 선택 가능 개수 */
+  maxSelection?: number;
 };
 
 const columnClasses = {
@@ -43,34 +45,61 @@ function CheckboxGroup({
   columns = 3,
   className,
   error,
+  maxSelection,
 }: CheckboxGroupProps) {
   const handleChange = (optionValue: string, checked: boolean) => {
     if (checked) {
+      // 최대 선택 제한 체크
+      if (maxSelection && value.length >= maxSelection) {
+        return; // 선택 불가
+      }
       onChange([...value, optionValue]);
     } else {
       onChange(value.filter((v) => v !== optionValue));
     }
   };
 
+  const isOptionDisabled = (optionValue: string) => {
+    if (!maxSelection) return false;
+    return !value.includes(optionValue) && value.length >= maxSelection;
+  };
+
   return (
     <div className={cn('flex flex-col items-start gap-2', className)}>
-      <Label htmlFor={id}>{label}</Label>
+      <div className="flex w-full items-center justify-between">
+        <Label htmlFor={id}>{label}</Label>
+        {maxSelection && (
+          <span className="text-muted-foreground text-sm">
+            {value.length}/{maxSelection} 선택됨
+          </span>
+        )}
+      </div>
       <div className={cn('grid w-full gap-2', columnClasses[columns])}>
-        {options.map((option) => (
-          <label
-            key={option.value}
-            className="border-input hover:bg-muted/50 has-checked:border-primary has-checked:bg-primary/10 flex cursor-pointer items-center gap-2 rounded-md border p-3 transition-colors"
-          >
-            <input
-              type="checkbox"
-              value={option.value}
-              checked={value.includes(option.value)}
-              onChange={(e) => handleChange(option.value, e.target.checked)}
-              className="accent-primary size-4"
-            />
-            <span className="text-sm">{option.label}</span>
-          </label>
-        ))}
+        {options.map((option) => {
+          const disabled = isOptionDisabled(option.value);
+          const checked = value.includes(option.value);
+          return (
+            <label
+              key={option.value}
+              className={cn(
+                'flex cursor-pointer items-center gap-2 rounded-md border p-3 transition-colors',
+                'border-input hover:bg-muted/50',
+                'has-checked:border-primary has-checked:bg-primary/10',
+                disabled && 'cursor-not-allowed opacity-50'
+              )}
+            >
+              <input
+                type="checkbox"
+                value={option.value}
+                checked={checked}
+                disabled={disabled}
+                onChange={(e) => handleChange(option.value, e.target.checked)}
+                className="accent-primary size-4"
+              />
+              <span className="text-sm">{option.label}</span>
+            </label>
+          );
+        })}
       </div>
       {error && <p className="text-destructive text-sm">{error}</p>}
     </div>
@@ -79,3 +108,4 @@ function CheckboxGroup({
 
 export { CheckboxGroup };
 export type { CheckboxGroupProps, CheckboxOption };
+
