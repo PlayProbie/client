@@ -1,6 +1,7 @@
 /**
  * Game Streaming Survey Hooks exports
  */
+export { useProvisioningPolling } from './useProvisioningPolling';
 export {
   streamingResourceKeys,
   useCreateStreamingResource,

@@ -2,9 +2,8 @@
  * ResourceManagementStep - 리소스 관리 단계
  * Step 2: 스트리밍 리소스 설정 및 생성
  */
-import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useForm } from 'react-hook-form';
 
 import { Button, InlineAlert } from '@/components/ui';
@@ -20,11 +19,11 @@ import {
 import type { Build } from '@/features/game-streaming';
 import type { CreateStreamingResourceRequest } from '@/features/game-streaming-survey';
 import {
-  getStreamingResource,
-  streamingResourceKeys,
   useCreateStreamingResource,
+  useProvisioningPolling,
 } from '@/features/game-streaming-survey';
 import { useToast } from '@/hooks/useToast';
+import { useProvisioningStore } from '@/stores/useProvisioningStore';
 
 import { INSTANCE_TYPE_OPTIONS } from '../build-connection/constants';
 
@@ -49,9 +48,21 @@ export function ResourceManagementStep({
   const { toast } = useToast();
   const createMutation = useCreateStreamingResource(surveyUuid);
 
-  // Polling 상태 관리
-  const [isPolling, setIsPolling] = useState(false);
-  const hasNotifiedRef = useRef(false);
+  // 전역 스토어 사용
+  const startProvisioning = useProvisioningStore(
+    (state) => state.startProvisioning
+  );
+  const items = useProvisioningStore((state) => state.items);
+
+  // 현재 surveyUuid에 해당하는 진행 중인 항목 찾기
+  const activeItem = items.find(
+    (item) =>
+      item.surveyUuid === surveyUuid &&
+      ['CREATING', 'PROVISIONING', 'READY'].includes(item.status)
+  );
+
+  const [itemId, setItemId] = useState<string | null>(activeItem?.id ?? null);
+  const isPolling = !!activeItem;
 
   const {
     register,
@@ -68,43 +79,27 @@ export function ResourceManagementStep({
 
   const instanceType = watch('instanceType');
 
-  // Polling query - isPolling이 true일 때만 활성화
+  // 성공 콜백
+  const handlePollingSuccess = useCallback(() => {
+    toast({
+      variant: 'success',
+      title: '리소스 활성화 완료',
+      description: '스트리밍 리소스가 준비되었습니다.',
+    });
+    onSuccess();
+  }, [toast, onSuccess]);
+
+  // 프로비저닝 폴링 훅 사용
   const {
-    data: streamingResource,
     isError: isPollingError,
     error: pollingError,
     refetch: refetchResource,
-  } = useQuery({
-    queryKey: streamingResourceKeys.detail(surveyUuid),
-    queryFn: () => getStreamingResource(surveyUuid),
+  } = useProvisioningPolling({
+    surveyUuid,
+    itemId,
     enabled: isPolling,
-    refetchInterval: (query) => {
-      const status = query.state.data?.status;
-      // ACTIVE 상태가 되면 polling 중지
-      if (!isPolling || status === 'ACTIVE') {
-        return false;
-      }
-      return 5000; // 5초 간격
-    },
+    onSuccess: handlePollingSuccess,
   });
-
-  // ACTIVE 상태 감지 및 onSuccess 호출
-  useEffect(() => {
-    if (
-      isPolling &&
-      streamingResource?.status === 'ACTIVE' &&
-      !hasNotifiedRef.current
-    ) {
-      hasNotifiedRef.current = true;
-      setIsPolling(false);
-      toast({
-        variant: 'success',
-        title: '리소스 활성화 완료',
-        description: '스트리밍 리소스가 준비되었습니다.',
-      });
-      onSuccess();
-    }
-  }, [isPolling, streamingResource, onSuccess, toast]);
 
   const onSubmit = async (data: FormData) => {
     const request: CreateStreamingResourceRequest = {
@@ -115,15 +110,12 @@ export function ResourceManagementStep({
 
     try {
       await createMutation.mutateAsync(request);
-      // 리소스 생성 요청 성공 → polling 시작
-      toast({
-        variant: 'default',
-        title: '리소스 생성 요청됨',
-        description: '리소스 활성화를 기다리는 중...',
+      // 전역 스토어에 프로비저닝 시작 등록
+      const newItemId = startProvisioning({
+        surveyUuid,
+        buildName: selectedBuild.filename ?? `Build v${selectedBuild.version}`,
       });
-      hasNotifiedRef.current = false;
-      setIsPolling(true);
-      void refetchResource();
+      setItemId(newItemId);
     } catch (error) {
       const message =
         error instanceof Error ? error.message : '리소스 생성에 실패했습니다.';
@@ -140,7 +132,7 @@ export function ResourceManagementStep({
   const getButtonText = () => {
     if (createMutation.isPending) return '생성 요청 중...';
     if (isPolling) {
-      const status = streamingResource?.status;
+      const status = activeItem?.status;
       if (status === 'CREATING') return '리소스 생성 중...';
       if (status === 'PROVISIONING') return '프로비저닝 중...';
       if (status === 'READY') return '준비 중...';
@@ -220,7 +212,8 @@ export function ResourceManagementStep({
             variant="info"
             title="리소스 활성화 대기 중"
           >
-            리소스가 ACTIVE 상태가 될 때까지 자동으로 확인합니다. (5초 간격)
+            리소스가 ACTIVE 상태가 될 때까지 자동으로 확인합니다. 페이지를
+            이동해도 우측 하단 위젯에서 진행 상황을 확인할 수 있습니다.
           </InlineAlert>
         )}
 
