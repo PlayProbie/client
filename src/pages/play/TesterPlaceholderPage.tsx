@@ -285,7 +285,7 @@ export default function TesterPlaceholderPage() {
             <Button
               onClick={() => {
                 const baseUrl = import.meta.env.VITE_CLIENT_BASE_URL || '';
-                window.location.href = `${baseUrl}/interview/${surveyUuid}`;
+                window.location.href = `${baseUrl}/surveys/session/${surveyUuid}`;
               }}
             >
               이동하기
