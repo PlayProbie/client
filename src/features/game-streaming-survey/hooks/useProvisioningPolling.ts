@@ -40,10 +40,11 @@ function mapToProvisioningStatus(
     case 'SCALING':
       return 'PROVISIONING';
     case 'READY':
-    case 'CLEANING':
       return 'READY';
     case 'ACTIVE':
       return 'ACTIVE';
+    case 'CLEANING':
+      return 'READY';
     case 'TERMINATED':
     default:
       return 'ERROR';
@@ -70,8 +71,8 @@ export function useProvisioningPolling({
     enabled: enabled && !!itemId,
     refetchInterval: (query) => {
       const status = query.state.data?.status;
-      // ACTIVE 상태가 되면 polling 중지
-      if (!enabled || status === 'ACTIVE') {
+      // READY 또는 ACTIVE 상태가 되면 polling 중지
+      if (!enabled || status === 'READY' || status === 'ACTIVE') {
         return false;
       }
       return 5000; // 5초 간격
@@ -96,8 +97,11 @@ export function useProvisioningPolling({
       const mappedStatus = mapToProvisioningStatus(data.status);
       updateStatus(itemId, mappedStatus);
 
-      // ACTIVE 도달 시 콜백 호출 (한 번만)
-      if (data.status === 'ACTIVE' && !hasNotifiedRef.current) {
+      // READY 또는 ACTIVE 도달 시 콜백 호출 (한 번만)
+      if (
+        (data.status === 'READY' || data.status === 'ACTIVE') &&
+        !hasNotifiedRef.current
+      ) {
         hasNotifiedRef.current = true;
         onSuccess?.();
       }
