@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import type { UploadItem } from '@/stores/useUploadStore';
 
+import { StatusItemRow } from './StatusItemRow';
+
 interface UploadItemRowProps {
   item: UploadItem;
   onCancel: (id: string) => void;
@@ -34,12 +36,11 @@ export function UploadItemRow({
 }: UploadItemRowProps) {
   const { state, gameName, folderName } = item;
 
-  // 상태별 아이콘 및 색상
+  // 상태별 아이콘
   const getStatusIcon = () => {
     switch (state.step) {
       case 'requesting_sts_credentials':
       case 'completing_upload':
-        return <Loader2 className="text-primary size-4 animate-spin" />;
       case 'uploading_to_s3':
         return <Loader2 className="text-primary size-4 animate-spin" />;
       case 'success':
@@ -65,63 +66,57 @@ export function UploadItemRow({
     'completing_upload',
   ].includes(state.step);
 
+  // 액션 버튼들
+  const renderActions = () => (
+    <>
+      {/* 에러 시 재시도 버튼 */}
+      {state.step === 'error' && state.error.retriable && onRetry && (
+        <Button
+          size="icon"
+          variant="ghost"
+          className="size-6"
+          onClick={() => onRetry(item)}
+          title="다시 시도"
+        >
+          <RotateCcw className="size-3" />
+        </Button>
+      )}
+
+      {/* 진행중일 때 취소 버튼 */}
+      {isActive && (
+        <Button
+          size="icon"
+          variant="ghost"
+          className="size-6"
+          onClick={() => onCancel(item.id)}
+          title="취소"
+        >
+          <X className="size-3" />
+        </Button>
+      )}
+
+      {/* 완료/에러 시 제거 버튼 */}
+      {(state.step === 'success' || state.step === 'error') && (
+        <Button
+          size="icon"
+          variant="ghost"
+          className="size-6"
+          onClick={() => onRemove(item.id)}
+          title="제거"
+        >
+          <X className="size-3" />
+        </Button>
+      )}
+    </>
+  );
+
   return (
-    <div className="border-border space-y-2 border-b p-3 last:border-b-0">
-      {/* Header: 게임명, 폴더명, 상태 아이콘 */}
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex min-w-0 flex-1 items-center gap-2">
-          {getStatusIcon()}
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium">{gameName}</p>
-            <p className="text-muted-foreground truncate text-xs">
-              {folderName}
-            </p>
-          </div>
-        </div>
-
-        {/* 액션 버튼 */}
-        <div className="flex shrink-0 items-center gap-1">
-          {/* 에러 시 재시도 버튼 */}
-          {state.step === 'error' && state.error.retriable && onRetry && (
-            <Button
-              size="icon"
-              variant="ghost"
-              className="size-6"
-              onClick={() => onRetry(item)}
-              title="다시 시도"
-            >
-              <RotateCcw className="size-3" />
-            </Button>
-          )}
-
-          {/* 진행중일 때 취소 버튼 */}
-          {isActive && (
-            <Button
-              size="icon"
-              variant="ghost"
-              className="size-6"
-              onClick={() => onCancel(item.id)}
-              title="취소"
-            >
-              <X className="size-3" />
-            </Button>
-          )}
-
-          {/* 완료/에러 시 제거 버튼 */}
-          {(state.step === 'success' || state.step === 'error') && (
-            <Button
-              size="icon"
-              variant="ghost"
-              className="size-6"
-              onClick={() => onRemove(item.id)}
-              title="제거"
-            >
-              <X className="size-3" />
-            </Button>
-          )}
-        </div>
-      </div>
-
+    <StatusItemRow
+      icon={getStatusIcon()}
+      title={gameName}
+      subtitle={folderName}
+      actions={renderActions()}
+    >
       {/* Progress Bar (업로드 중일 때만) */}
       {progress && (
         <div className="space-y-1">
@@ -154,6 +149,6 @@ export function UploadItemRow({
       {state.step === 'success' && (
         <p className="text-success text-xs">업로드 완료</p>
       )}
-    </div>
+    </StatusItemRow>
   );
 }

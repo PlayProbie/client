@@ -3,6 +3,7 @@
  * Step 2: 스트리밍 리소스 설정 및 생성
  */
 import { ArrowLeft } from 'lucide-react';
+import { useCallback, useState } from 'react';
 import { useForm } from 'react-hook-form';
 
 import { Button, InlineAlert } from '@/components/ui';
@@ -17,8 +18,14 @@ import {
 } from '@/components/ui/Select';
 import type { Build } from '@/features/game-streaming';
 import type { CreateStreamingResourceRequest } from '@/features/game-streaming-survey';
-import { useCreateStreamingResource } from '@/features/game-streaming-survey';
+import {
+  useCreateStreamingResource,
+  useProvisioningPolling,
+} from '@/features/game-streaming-survey';
 import { useToast } from '@/hooks/useToast';
+import { useProvisioningStore } from '@/stores/useProvisioningStore';
+
+import { INSTANCE_TYPE_OPTIONS } from '../build-connection/constants';
 
 interface ResourceManagementStepProps {
   surveyUuid: string;
@@ -26,13 +33,6 @@ interface ResourceManagementStepProps {
   onBack: () => void;
   onSuccess: () => void;
 }
-
-const INSTANCE_TYPES = [
-  { value: 'g4dn.xlarge', label: 'g4dn.xlarge (NVIDIA T4)' },
-  { value: 'g4dn.2xlarge', label: 'g4dn.2xlarge (NVIDIA T4)' },
-  { value: 'g5.xlarge', label: 'g5.xlarge (NVIDIA A10G)' },
-  { value: 'g5.2xlarge', label: 'g5.2xlarge (NVIDIA A10G)' },
-];
 
 interface FormData {
   instanceType: string;
@@ -48,6 +48,22 @@ export function ResourceManagementStep({
   const { toast } = useToast();
   const createMutation = useCreateStreamingResource(surveyUuid);
 
+  // 전역 스토어 사용
+  const startProvisioning = useProvisioningStore(
+    (state) => state.startProvisioning
+  );
+  const items = useProvisioningStore((state) => state.items);
+
+  // 현재 surveyUuid에 해당하는 진행 중인 항목 찾기
+  const activeItem = items.find(
+    (item) =>
+      item.surveyUuid === surveyUuid &&
+      ['CREATING', 'PROVISIONING', 'READY'].includes(item.status)
+  );
+
+  const [itemId, setItemId] = useState<string | null>(activeItem?.id ?? null);
+  const isPolling = !!activeItem;
+
   const {
     register,
     handleSubmit,
@@ -56,12 +72,34 @@ export function ResourceManagementStep({
     formState: { errors },
   } = useForm<FormData>({
     defaultValues: {
-      instanceType: 'g4dn.xlarge',
+      instanceType: 'gen6n_pro_win2022',
       maxCapacity: 10,
     },
   });
 
   const instanceType = watch('instanceType');
+
+  // 성공 콜백
+  const handlePollingSuccess = useCallback(() => {
+    toast({
+      variant: 'success',
+      title: '리소스 활성화 완료',
+      description: '스트리밍 리소스가 준비되었습니다.',
+    });
+    onSuccess();
+  }, [toast, onSuccess]);
+
+  // 프로비저닝 폴링 훅 사용
+  const {
+    isError: isPollingError,
+    error: pollingError,
+    refetch: refetchResource,
+  } = useProvisioningPolling({
+    surveyUuid,
+    itemId,
+    enabled: isPolling,
+    onSuccess: handlePollingSuccess,
+  });
 
   const onSubmit = async (data: FormData) => {
     const request: CreateStreamingResourceRequest = {
@@ -72,12 +110,12 @@ export function ResourceManagementStep({
 
     try {
       await createMutation.mutateAsync(request);
-      toast({
-        variant: 'success',
-        title: '리소스 생성 완료',
-        description: '스트리밍 리소스가 생성되었습니다.',
+      // 전역 스토어에 프로비저닝 시작 등록
+      const newItemId = startProvisioning({
+        surveyUuid,
+        buildName: selectedBuild.filename ?? `Build v${selectedBuild.version}`,
       });
-      onSuccess();
+      setItemId(newItemId);
     } catch (error) {
       const message =
         error instanceof Error ? error.message : '리소스 생성에 실패했습니다.';
@@ -89,6 +127,20 @@ export function ResourceManagementStep({
     }
   };
 
+  // 버튼 상태
+  const isLoading = createMutation.isPending || isPolling;
+  const getButtonText = () => {
+    if (createMutation.isPending) return '생성 요청 중...';
+    if (isPolling) {
+      const status = activeItem?.status;
+      if (status === 'CREATING') return '리소스 생성 중...';
+      if (status === 'PROVISIONING') return '프로비저닝 중...';
+      if (status === 'READY') return '준비 중...';
+      return '활성화 대기 중...';
+    }
+    return '리소스 생성 및 다음 단계';
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2">
@@ -96,6 +148,7 @@ export function ResourceManagementStep({
           variant="ghost"
           size="icon"
           onClick={onBack}
+          disabled={isLoading}
         >
           <ArrowLeft className="size-4" />
         </Button>
@@ -134,25 +187,65 @@ export function ResourceManagementStep({
           </InlineAlert>
         )}
 
+        {isPolling && isPollingError && (
+          <InlineAlert
+            variant="error"
+            title="상태 확인 실패"
+            actions={
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => refetchResource()}
+              >
+                다시 시도
+              </Button>
+            }
+          >
+            {pollingError instanceof Error
+              ? pollingError.message
+              : '리소스 상태 조회에 실패했습니다.'}
+          </InlineAlert>
+        )}
+
+        {isPolling && !isPollingError && (
+          <InlineAlert
+            variant="info"
+            title="리소스 활성화 대기 중"
+          >
+            리소스가 ACTIVE 상태가 될 때까지 자동으로 확인합니다. 페이지를
+            이동해도 우측 하단 위젯에서 진행 상황을 확인할 수 있습니다.
+          </InlineAlert>
+        )}
+
         {/* Instance Type */}
         <div className="space-y-2">
           <Label htmlFor="instance-type">GPU 인스턴스 타입</Label>
           <Select
             value={instanceType}
             onValueChange={(value) => setValue('instanceType', value)}
+            disabled={isLoading}
           >
             <SelectTrigger id="instance-type">
               <SelectValue placeholder="인스턴스 타입 선택" />
             </SelectTrigger>
             <SelectContent>
-              {INSTANCE_TYPES.map((type) => (
-                <SelectItem
-                  key={type.value}
-                  value={type.value}
-                >
-                  {type.label}
-                </SelectItem>
-              ))}
+              {INSTANCE_TYPE_OPTIONS.map((type) => {
+                const isWindows = type.value.includes('win');
+                return (
+                  <SelectItem
+                    key={type.value}
+                    value={type.value}
+                    disabled={!isWindows}
+                  >
+                    <div className="flex flex-col">
+                      <span>{type.label}</span>
+                      <span className="text-muted-foreground text-xs">
+                        {type.detail}
+                      </span>
+                    </div>
+                  </SelectItem>
+                );
+              })}
             </SelectContent>
           </Select>
           <p className="text-muted-foreground text-xs">
@@ -168,6 +261,7 @@ export function ResourceManagementStep({
             type="number"
             min={1}
             max={100}
+            disabled={isLoading}
             {...register('maxCapacity', {
               required: '동시 접속자 수를 입력해주세요.',
               min: { value: 1, message: '최소 1명 이상이어야 합니다.' },
@@ -189,11 +283,12 @@ export function ResourceManagementStep({
         <div className="flex justify-end pt-4">
           <Button
             type="submit"
-            disabled={createMutation.isPending}
+            disabled={isLoading}
           >
-            {createMutation.isPending
-              ? '생성 중...'
-              : '리소스 생성 및 다음 단계'}
+            {isLoading && (
+              <span className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+            )}
+            {getButtonText()}
           </Button>
         </div>
       </form>

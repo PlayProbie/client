@@ -3,6 +3,7 @@
  */
 
 import { aiQuestionsHandlers } from './ai-questions';
+import { authHandlers } from './auth';
 import { fixedQuestionsHandlers } from './fixed-questions';
 import { gameStreamingHandlers } from './game-streaming';
 import { gameStreamingAdminHandlers } from './game-streaming-admin';
@@ -16,6 +17,7 @@ import { surveySessionHandlers } from './survey-session';
 import { workspacesHandlers } from './workspaces';
 
 export const handlers = [
+  ...authHandlers,
   ...gamesHandlers,
   ...gameStreamingHandlers,
   ...gameStreamingAdminHandlers,

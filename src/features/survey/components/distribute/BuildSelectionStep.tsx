@@ -1,13 +1,14 @@
 /**
  * BuildSelectionStep - 빌드 선택 단계
- * Step 1: 빌드 목록에서 READY 상태 빌드 선택
+ * Step 1: 빌드 목록에서 UPLOADED 상태 빌드 선택
  */
 import { Plus } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 
 import { Button, InlineAlert, Skeleton } from '@/components/ui';
+import { useGameDetailQuery } from '@/features/game';
 import type { Build } from '@/features/game-streaming';
-import { useBuildsQuery } from '@/features/game-streaming';
+import { BuildUploadModal, useBuildsQuery } from '@/features/game-streaming';
 
 interface BuildSelectionStepProps {
   gameUuid: string;
@@ -28,7 +29,8 @@ export function BuildSelectionStep({
   gameUuid,
   onSelectBuild,
 }: BuildSelectionStepProps) {
-  const navigate = useNavigate();
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const { data: game } = useGameDetailQuery(gameUuid);
   const {
     data: builds,
     isLoading,
@@ -36,9 +38,17 @@ export function BuildSelectionStep({
     refetch,
   } = useBuildsQuery(gameUuid);
 
-  const readyBuilds = (builds ?? []).filter(
-    (build) => build.status === 'READY'
+  const uploadedBuilds = (builds ?? []).filter(
+    (build) => build.status === 'UPLOADED'
   );
+
+  const handleUploadModalClose = (open: boolean) => {
+    setIsUploadModalOpen(open);
+    if (!open) {
+      // Refetch builds when modal closes (upload may have completed)
+      refetch();
+    }
+  };
 
   if (isLoading) {
     return (
@@ -74,41 +84,67 @@ export function BuildSelectionStep({
     );
   }
 
-  if (readyBuilds.length === 0) {
+  if (uploadedBuilds.length === 0) {
     return (
       <div className="space-y-4">
-        <div>
-          <h3 className="text-base font-semibold">빌드 선택</h3>
-          <p className="text-muted-foreground text-sm">
-            스트리밍에 사용할 빌드를 선택하세요.
-          </p>
-        </div>
-        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-12">
-          <p className="text-muted-foreground mb-4 text-sm">
-            READY 상태의 빌드가 없습니다.
-          </p>
+        <div className="flex items-start justify-between">
+          <div>
+            <h3 className="text-base font-semibold">빌드 선택</h3>
+            <p className="text-muted-foreground text-sm">
+              스트리밍에 사용할 빌드를 선택하세요.
+            </p>
+          </div>
           <Button
             variant="outline"
-            onClick={() => navigate(`/games/${gameUuid}/builds`)}
+            size="sm"
+            onClick={() => setIsUploadModalOpen(true)}
           >
             <Plus className="mr-2 size-4" />
             빌드 업로드하기
           </Button>
         </div>
+        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-12">
+          <p className="text-muted-foreground mb-4 text-sm">
+            UPLOADED 상태의 빌드가 없습니다.
+          </p>
+          <Button
+            variant="outline"
+            onClick={() => setIsUploadModalOpen(true)}
+          >
+            <Plus className="mr-2 size-4" />
+            빌드 업로드하기
+          </Button>
+        </div>
+        <BuildUploadModal
+          gameUuid={gameUuid}
+          gameName={game?.gameName ?? 'Unknown Game'}
+          open={isUploadModalOpen}
+          onOpenChange={handleUploadModalClose}
+        />
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
-      <div>
-        <h3 className="text-base font-semibold">빌드 선택</h3>
-        <p className="text-muted-foreground text-sm">
-          스트리밍에 사용할 빌드를 선택하세요.
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h3 className="text-base font-semibold">빌드 선택</h3>
+          <p className="text-muted-foreground text-sm">
+            스트리밍에 사용할 빌드를 선택하세요.
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setIsUploadModalOpen(true)}
+        >
+          <Plus className="mr-2 size-4" />
+          빌드 업로드하기
+        </Button>
       </div>
       <div className="space-y-2">
-        {readyBuilds.map((build) => (
+        {uploadedBuilds.map((build) => (
           <button
             key={build.uuid}
             type="button"
@@ -129,6 +165,12 @@ export function BuildSelectionStep({
           </button>
         ))}
       </div>
+      <BuildUploadModal
+        gameUuid={gameUuid}
+        gameName={game?.gameName ?? 'Unknown Game'}
+        open={isUploadModalOpen}
+        onOpenChange={handleUploadModalClose}
+      />
     </div>
   );
 }

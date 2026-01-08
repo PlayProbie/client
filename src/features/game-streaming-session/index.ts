@@ -16,12 +16,20 @@ export type {
   TerminateResponse,
 } from './types';
 
+// Lib
+export type { StreamClient, StreamClientConfig } from './lib';
+export { createStreamClient } from './lib';
+
 // API
 export { getSession, getSessionStatus, postSignal, postTerminate } from './api';
+
+// Components
+export { StreamPlayer } from './components';
 
 // Hooks
 export {
   sessionKeys,
+  useGameStream,
   useSessionInfo,
   useSessionStatus,
   useSignal,

@@ -6,7 +6,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
-import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import {
   Dialog,
   DialogContent,
@@ -54,7 +53,6 @@ export function BuildUploadModal({
     useState<BuildUploadFormData>(INITIAL_FORM_DATA);
   const [formError, setFormError] = useState<string | null>(null);
   const [uploadId, setUploadId] = useState<string | null>(null);
-  const [isCancelConfirmOpen, setIsCancelConfirmOpen] = useState(false);
   const toastGuardRef = useRef<Set<string>>(new Set());
 
   const uploadItem = useUploadStore((state) =>
@@ -100,7 +98,7 @@ export function BuildUploadModal({
 
   const handleDialogOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
-      handleClose();
+      handleCancel();
     }
   };
 
@@ -130,18 +128,14 @@ export function BuildUploadModal({
   }, [formData, gameUuid, gameName, startUpload]);
 
   const handleCancel = () => {
-    if (isUploading) {
-      setIsCancelConfirmOpen(true);
-      return;
-    }
+    // Just close the modal - upload continues in background
     handleClose();
   };
 
-  const handleCancelConfirm = () => {
+  const handleStopUpload = () => {
     if (uploadId) {
       cancelUpload(uploadId);
     }
-    setIsCancelConfirmOpen(false);
     handleClose();
   };
 
@@ -234,6 +228,21 @@ export function BuildUploadModal({
                   {uploadState?.error?.retriable ? 'Retry' : 'Restart'}
                 </Button>
               </>
+            ) : isUploading ? (
+              <>
+                <Button
+                  variant="outline"
+                  onClick={handleCancel}
+                >
+                  닫기
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={handleStopUpload}
+                >
+                  중단하기
+                </Button>
+              </>
             ) : (
               <>
                 <Button
@@ -242,31 +251,17 @@ export function BuildUploadModal({
                 >
                   Cancel
                 </Button>
-                {isIdle && (
-                  <Button
-                    onClick={handleStartUpload}
-                    disabled={!isFormValid}
-                  >
-                    Start Upload
-                  </Button>
-                )}
+                <Button
+                  onClick={handleStartUpload}
+                  disabled={!isFormValid}
+                >
+                  Start Upload
+                </Button>
               </>
             )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      <ConfirmDialog
-        open={isCancelConfirmOpen}
-        onOpenChange={setIsCancelConfirmOpen}
-        title="업로드를 취소할까요?"
-        description="지금까지 전송된 데이터는 저장되지 않을 수 있습니다."
-        cancelLabel="계속 업로드"
-        confirmLabel="취소하고 닫기"
-        confirmVariant="destructive"
-        onCancel={() => setIsCancelConfirmOpen(false)}
-        onConfirm={handleCancelConfirm}
-      />
     </>
   );
 }

@@ -22,5 +22,5 @@ export async function getSession(surveyUuid: string): Promise<SessionInfo> {
   }
 
   const data: ApiSessionInfoResponse = await response.json();
-  return toSessionInfo(data.result);
+  return toSessionInfo(data.data);
 }

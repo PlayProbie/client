@@ -7,7 +7,7 @@ import { delay, http, HttpResponse } from 'msw';
 /** Survey status for mock data */
 type SurveyStatus = 'DRAFT' | 'ACTIVE' | 'CLOSED';
 
-const API_BASE_URL = '/api';
+import { MSW_API_BASE_URL } from '../constants';
 
 // ----------------------------------------
 // Mock Data: Surveys (Phase 4-5 확장)
@@ -29,7 +29,7 @@ const MOCK_SURVEYS: Record<string, MockSurvey> = {
   'survey-001-uuid': {
     survey_uuid: 'survey-001-uuid',
     survey_name: '알파 테스트 설문',
-    status: 'DRAFT',
+    status: 'ACTIVE',
     game_name: '테스트 RPG 게임',
     stream_settings: { resolution: '1080p', fps: 60 },
     max_capacity: 10,
@@ -76,7 +76,7 @@ export const gameStreamingSessionHandlers = [
 
   // 세션 가용성 조회
   http.get(
-    `${API_BASE_URL}/surveys/:surveyUuid/session`,
+    `${MSW_API_BASE_URL}/surveys/:surveyUuid/session`,
     async ({ params }) => {
       await delay(300);
       const surveyUuid = params.surveyUuid as string;
@@ -95,7 +95,8 @@ export const gameStreamingSessionHandlers = [
         survey.current_capacity < survey.max_capacity;
 
       return HttpResponse.json({
-        result: {
+        success: true,
+        data: {
           survey_uuid: survey.survey_uuid,
           game_name: survey.game_name,
           is_available: isAvailable,
@@ -107,7 +108,7 @@ export const gameStreamingSessionHandlers = [
 
   // WebRTC 시그널 교환
   http.post(
-    `${API_BASE_URL}/surveys/:surveyUuid/signal`,
+    `${MSW_API_BASE_URL}/surveys/:surveyUuid/signal`,
     async ({ params, request }) => {
       await delay(500);
       const surveyUuid = params.surveyUuid as string;
@@ -165,7 +166,8 @@ export const gameStreamingSessionHandlers = [
       );
 
       return HttpResponse.json({
-        result: {
+        success: true,
+        data: {
           signal_response: mockSignalResponse,
           survey_session_uuid: sessionUuid,
           expires_in_seconds: 120,
@@ -176,7 +178,7 @@ export const gameStreamingSessionHandlers = [
 
   // 세션 상태 조회 (Heartbeat)
   http.get(
-    `${API_BASE_URL}/surveys/:surveyUuid/session/status`,
+    `${MSW_API_BASE_URL}/surveys/:surveyUuid/session/status`,
     async ({ params }) => {
       await delay(200);
       const surveyUuid = params.surveyUuid as string;
@@ -194,7 +196,8 @@ export const gameStreamingSessionHandlers = [
       }
 
       return HttpResponse.json({
-        result: {
+        success: true,
+        data: {
           is_active: activeSession.is_active,
           survey_session_uuid: activeSession.survey_session_uuid,
         },
@@ -204,7 +207,7 @@ export const gameStreamingSessionHandlers = [
 
   // 세션 종료
   http.post(
-    `${API_BASE_URL}/surveys/:surveyUuid/session/terminate`,
+    `${MSW_API_BASE_URL}/surveys/:surveyUuid/session/terminate`,
     async ({ params, request }) => {
       await delay(300);
       const surveyUuid = params.surveyUuid as string;
@@ -231,7 +234,8 @@ export const gameStreamingSessionHandlers = [
       }
 
       return HttpResponse.json({
-        result: { success: true },
+        success: true,
+        data: { success: true },
       });
     }
   ),

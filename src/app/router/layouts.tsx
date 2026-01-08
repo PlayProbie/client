@@ -2,7 +2,10 @@ import { Outlet } from 'react-router-dom';
 
 import { AuthGuard, GuestGuard } from '@/components/guards';
 import { PageLayout } from '@/components/layout';
-import { UploadStatusWidget } from '@/components/layout/UploadStatusWidget';
+import {
+  ProvisioningStatusWidget,
+  UploadStatusWidget,
+} from '@/components/layout/status-widget';
 import { Toaster } from '@/components/ui/Toaster';
 import { useDeviceCheck } from '@/hooks/useDeviceCheck';
 import DesktopOnlyPage from '@/pages/DesktopOnlyPage';
@@ -23,6 +26,7 @@ export function RootLayout() {
       <Outlet />
       <Toaster />
       <UploadStatusWidget />
+      <ProvisioningStatusWidget />
     </>
   );
 }

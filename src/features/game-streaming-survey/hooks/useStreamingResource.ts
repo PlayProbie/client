@@ -28,9 +28,9 @@ export function useStreamingResource(surveyUuid: string, enabled = true) {
     enabled,
     refetchOnMount: 'always',
     refetchInterval: (query) => {
-      // PROVISIONING 상태일 때 5초마다 폴링
+      // CREATING/PROVISIONING 상태일 때 5초마다 폴링
       const data = query.state.data;
-      if (data?.status === 'PROVISIONING') {
+      if (data?.status === 'CREATING' || data?.status === 'PROVISIONING') {
         return 5000;
       }
       return false;

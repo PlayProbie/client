@@ -14,18 +14,10 @@ import {
   useBuildDeleteMutation,
   useBuildsQuery,
   useGameDetailQuery,
-  useUnsavedChanges,
 } from '@/features/game-streaming';
-import {
-  selectHasActiveUploads,
-  useUploadStore,
-} from '@/stores/useUploadStore';
 
 export default function BuildsPage() {
-  const { gameUuid: routeGameUuid } = useParams<{ gameUuid: string }>();
-  // route placeholder(':gameUuid')가 아닌 유효한 UUID만 사용
-  const gameUuid =
-    routeGameUuid && !routeGameUuid.startsWith(':') ? routeGameUuid : undefined;
+  const { gameUuid } = useParams<{ gameUuid: string }>();
   const navigate = useNavigate();
   const {
     data: builds,
@@ -37,11 +29,6 @@ export default function BuildsPage() {
   const deleteBuildMutation = useBuildDeleteMutation(gameUuid || '');
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [buildToDelete, setBuildToDelete] = useState<Build | null>(null);
-  const hasActiveUploads = useUploadStore(selectHasActiveUploads);
-  const { showDialog, confirmLeave, cancelLeave } = useUnsavedChanges({
-    hasChanges: hasActiveUploads,
-    message: '변경사항이 저장되지 않았습니다. 페이지를 떠나시겠습니까?',
-  });
   const deleteTargetLabel = buildToDelete?.filename || buildToDelete?.uuid;
 
   const handleDeleteConfirm = () => {
@@ -154,19 +141,6 @@ export default function BuildsPage() {
         confirmVariant="destructive"
         onCancel={() => setBuildToDelete(null)}
         onConfirm={handleDeleteConfirm}
-      />
-
-      <ConfirmDialog
-        open={showDialog}
-        onOpenChange={(nextOpen) => {
-          if (!nextOpen) cancelLeave();
-        }}
-        title="변경사항이 저장되지 않았습니다"
-        description="이동하면 현재 입력이 사라집니다."
-        cancelLabel="취소"
-        confirmLabel="이동"
-        onCancel={cancelLeave}
-        onConfirm={confirmLeave}
       />
     </div>
   );

@@ -14,14 +14,14 @@ import { BuildStatusBadge } from '@/features/game-streaming';
 import { INSTANCE_TYPE_OPTIONS } from './constants';
 
 interface BuildConnectionFormProps {
-  readyBuilds: Build[];
+  uploadedBuilds: Build[];
   formAction: (formData: FormData) => void;
   isPending: boolean;
   errorMessage?: string | null;
 }
 
 export function BuildConnectionForm({
-  readyBuilds,
+  uploadedBuilds,
   formAction,
   isPending,
   errorMessage,
@@ -38,10 +38,10 @@ export function BuildConnectionForm({
           disabled={isPending}
         >
           <SelectTrigger id="build-select">
-            <SelectValue placeholder="READY 상태의 빌드를 선택하세요" />
+            <SelectValue placeholder="UPLOADED 상태의 빌드를 선택하세요" />
           </SelectTrigger>
           <SelectContent>
-            {readyBuilds.map((build) => (
+            {uploadedBuilds.map((build) => (
               <SelectItem
                 key={build.uuid}
                 value={build.uuid}

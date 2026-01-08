@@ -9,7 +9,7 @@ import { BuildConnectionForm } from './BuildConnectionForm';
 
 interface BuildConnectionNoResourceStateProps {
   gameUuid: string;
-  readyBuilds: Build[];
+  uploadedBuilds: Build[];
   isBuildsLoading: boolean;
   isBuildsError: boolean;
   onRetryBuilds: () => void;
@@ -20,7 +20,7 @@ interface BuildConnectionNoResourceStateProps {
 
 export function BuildConnectionNoResourceState({
   gameUuid,
-  readyBuilds,
+  uploadedBuilds,
   isBuildsLoading,
   isBuildsError,
   onRetryBuilds,
@@ -57,7 +57,7 @@ export function BuildConnectionNoResourceState({
     );
   }
 
-  if (readyBuilds.length === 0) {
+  if (uploadedBuilds.length === 0) {
     return (
       <InlineAlert
         variant="info"
@@ -72,14 +72,14 @@ export function BuildConnectionNoResourceState({
           </Button>
         }
       >
-        READY 상태의 빌드를 업로드한 뒤 연결을 진행해주세요.
+        UPLOADED 상태의 빌드를 업로드한 뒤 연결을 진행해주세요.
       </InlineAlert>
     );
   }
 
   return (
     <BuildConnectionForm
-      readyBuilds={readyBuilds}
+      uploadedBuilds={uploadedBuilds}
       formAction={formAction}
       isPending={isPending}
       errorMessage={errorMessage}
