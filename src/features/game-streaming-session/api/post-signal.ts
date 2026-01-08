@@ -4,11 +4,7 @@
  */
 
 import { API_BASE_URL } from '../constants';
-import type {
-  ApiSignalResponse,
-  SignalRequest,
-  SignalResponse,
-} from '../types';
+import type { SignalRequest, SignalResponse } from '../types';
 import { toApiSignalRequest, toSignalResponse } from '../types';
 
 /** WebRTC 시그널 요청 */
@@ -29,6 +25,15 @@ export async function postSignal(
     throw new Error(errorData?.message || '시그널 교환에 실패했습니다.');
   }
 
-  const data: ApiSignalResponse = await response.json();
-  return toSignalResponse(data.data);
+  const data = await response.json();
+
+  // result 또는 data 필드 처리
+  const resultData = data.result || data.data;
+  if (!resultData) {
+    throw new Error(
+      'Invalid API response structure: missing result or data field'
+    );
+  }
+
+  return toSignalResponse(resultData);
 }

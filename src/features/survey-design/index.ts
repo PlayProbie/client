@@ -11,7 +11,7 @@ export { SurveyDesignForm } from './components/SurveyDesignForm';
 export { useSurveyFormStore } from './store/useSurveyFormStore';
 
 // Hooks
-export { useFormSubmit } from './hooks/useFormSubmit';
+export { type SubmitResult, useFormSubmit } from './hooks/useFormSubmit';
 export { useQuestionEdit } from './hooks/useQuestionEdit';
 export { useQuestionGenerate } from './hooks/useQuestionGenerate';
 export { useQuestionUserGenerate } from './hooks/useQuestionUserGenerate';

@@ -8,7 +8,7 @@ export { API_BASE_URL } from '@/constants/api';
 export const HEARTBEAT_INTERVAL = 30000; // 30초
 
 /** 세션 종료 사유 */
-export type TerminateReason = 'user_exit' | 'timeout' | 'error';
+export type TerminateReason = 'USER_EXIT' | 'TIMEOUT' | 'ERROR';
 
 /** 에러 메시지 */
 export const ERROR_MESSAGES: Record<string, string> = {

@@ -7,7 +7,7 @@ import { delay, http, HttpResponse } from 'msw';
 /** Survey status for mock data */
 type SurveyStatus = 'DRAFT' | 'ACTIVE' | 'CLOSED';
 
-import { MSW_API_BASE_URL } from '../constants';
+import { MSW_API_BASE_URL } from '../../constants';
 
 // ----------------------------------------
 // Mock Data: Surveys (Phase 4-5 확장)

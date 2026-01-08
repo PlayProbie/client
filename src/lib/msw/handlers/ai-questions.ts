@@ -5,7 +5,7 @@ import type {
   GenerateAiQuestionsResponse,
 } from '@/features/survey-design';
 
-import { MSW_API_BASE_URL } from '../constants';
+import { MSW_API_BASE_URL } from '../../constants';
 
 /**
  * POST /api/surveys/ai-questions - AI 질문 생성 핸들러

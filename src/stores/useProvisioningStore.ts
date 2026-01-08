@@ -111,7 +111,10 @@ export const useProvisioningStore = create<ProvisioningStore>()((set) => ({
   clearCompleted: () => {
     set((state) => ({
       items: state.items.filter(
-        (item) => item.status !== 'ACTIVE' && item.status !== 'ERROR'
+        (item) =>
+          item.status !== 'ACTIVE' &&
+          item.status !== 'READY' &&
+          item.status !== 'ERROR'
       ),
     }));
   },
@@ -128,17 +131,20 @@ export const useProvisioningStore = create<ProvisioningStore>()((set) => ({
 /** 진행중인 프로비저닝이 있는지 */
 export const selectHasActiveProvisioning = (state: ProvisioningStore) =>
   state.items.some((item) =>
-    ['CREATING', 'PROVISIONING', 'READY'].includes(item.status)
+    ['CREATING', 'PROVISIONING'].includes(item.status)
   );
 
 /** 진행중인 항목 수 */
 export const selectActiveCount = (state: ProvisioningStore) =>
   state.items.filter((item) =>
-    ['CREATING', 'PROVISIONING', 'READY'].includes(item.status)
+    ['CREATING', 'PROVISIONING'].includes(item.status)
   ).length;
 
 /** 완료된 항목 수 (ACTIVE + ERROR) */
 export const selectCompletedCount = (state: ProvisioningStore) =>
   state.items.filter(
-    (item) => item.status === 'ACTIVE' || item.status === 'ERROR'
+    (item) =>
+      item.status === 'ACTIVE' ||
+      item.status === 'READY' ||
+      item.status === 'ERROR'
   ).length;

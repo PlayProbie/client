@@ -58,7 +58,7 @@ export function ResourceManagementStep({
   const activeItem = items.find(
     (item) =>
       item.surveyUuid === surveyUuid &&
-      ['CREATING', 'PROVISIONING', 'READY'].includes(item.status)
+      ['CREATING', 'PROVISIONING'].includes(item.status)
   );
 
   const [itemId, setItemId] = useState<string | null>(activeItem?.id ?? null);

@@ -2,9 +2,6 @@
  * Game Streaming Feature 상수
  */
 
-/** API Base URL - Vite proxy를 통해 실서버로 전달됨 (/api -> VITE_API_BASE_URL) */
-export const API_BASE_URL = '/api';
-
 /** Query/Mutation 기본 설정 */
 export const QUERY_CONFIG = {
   /** 기본 staleTime (5분) */

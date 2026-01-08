@@ -6,7 +6,7 @@ import type {
   QuestionFeedbackResponse,
 } from '@/features/survey-design';
 
-import { MSW_API_BASE_URL } from '../constants';
+import { MSW_API_BASE_URL } from '../../constants';
 
 /**
  * POST /api/surveys/question-feedback - 질문 피드백 핸들러

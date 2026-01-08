@@ -20,12 +20,13 @@ export interface StreamSettingsInfo {
 
 /** [API] 세션 정보 응답 */
 export interface ApiSessionInfoResponse {
-  success: boolean;
-  data: {
+  result: {
     survey_uuid: string;
     game_name: string;
     is_available: boolean;
-    stream_settings: {
+    wait_time_seconds?: number;
+    queue_position?: number;
+    stream_settings?: {
       resolution: string;
       fps: number;
     } | null;
@@ -37,6 +38,8 @@ export interface SessionInfo {
   surveyUuid: string;
   gameName: string;
   isAvailable: boolean;
+  waitTimeSeconds: number;
+  queuePosition: number;
   streamSettings: StreamSettingsInfo | null;
 }
 
@@ -51,8 +54,7 @@ export interface ApiSignalRequest {
 
 /** [API] 시그널 응답 */
 export interface ApiSignalResponse {
-  success: boolean;
-  data: {
+  result: {
     signal_response: string;
     survey_session_uuid: string;
     expires_in_seconds: number;
@@ -77,8 +79,7 @@ export interface SignalResponse {
 
 /** [API] 세션 상태 응답 */
 export interface ApiSessionStatusResponse {
-  success: boolean;
-  data: {
+  result: {
     survey_session_uuid?: string;
     is_active: boolean;
   };
@@ -95,7 +96,7 @@ export interface SessionStatus {
 // ----------------------------------------
 
 /** 종료 사유 */
-export type TerminateReason = 'user_exit' | 'timeout' | 'error';
+export type TerminateReason = 'USER_EXIT' | 'TIMEOUT' | 'ERROR';
 
 /** [API] 세션 종료 요청 */
 export interface ApiTerminateRequest {
@@ -105,8 +106,7 @@ export interface ApiTerminateRequest {
 
 /** [API] 세션 종료 응답 */
 export interface ApiTerminateResponse {
-  success: boolean;
-  data: {
+  result: {
     success: boolean;
   };
 }
@@ -128,12 +128,14 @@ export interface TerminateResponse {
 
 /** ApiSessionInfoResponse → SessionInfo 변환 */
 export function toSessionInfo(
-  api: ApiSessionInfoResponse['data']
+  api: ApiSessionInfoResponse['result']
 ): SessionInfo {
   return {
     surveyUuid: api.survey_uuid,
     gameName: api.game_name,
     isAvailable: api.is_available,
+    waitTimeSeconds: api.wait_time_seconds ?? 0,
+    queuePosition: api.queue_position ?? 0,
     streamSettings: api.stream_settings
       ? {
           resolution: api.stream_settings.resolution,
@@ -145,7 +147,7 @@ export function toSessionInfo(
 
 /** ApiSignalResponse → SignalResponse 변환 */
 export function toSignalResponse(
-  api: ApiSignalResponse['data']
+  api: ApiSignalResponse['result']
 ): SignalResponse {
   return {
     signalResponse: api.signal_response,
@@ -163,7 +165,7 @@ export function toApiSignalRequest(client: SignalRequest): ApiSignalRequest {
 
 /** ApiSessionStatusResponse → SessionStatus 변환 */
 export function toSessionStatus(
-  api: ApiSessionStatusResponse['data']
+  api: ApiSessionStatusResponse['result']
 ): SessionStatus {
   return {
     isActive: api.is_active,
@@ -183,7 +185,7 @@ export function toApiTerminateRequest(
 
 /** ApiTerminateResponse → TerminateResponse 변환 */
 export function toTerminateResponse(
-  api: ApiTerminateResponse['data']
+  api: ApiTerminateResponse['result']
 ): TerminateResponse {
   return {
     success: api.success,
