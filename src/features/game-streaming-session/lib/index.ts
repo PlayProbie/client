@@ -1,6 +1,7 @@
 /**
  * lib directory index
  */
+export { cleanupMockStream,createMockMediaStream } from './mock-stream';
 export type {
   StreamClient,
   StreamClientConfig,
