@@ -3,10 +3,18 @@
  *
  * 테스터가 게임을 스트리밍으로 플레이하는 페이지입니다.
  */
-import { useEffect, useMemo, useRef } from 'react';
+import { useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/Dialog';
 import { InlineAlert } from '@/components/ui/InlineAlert';
 import { PageSpinner } from '@/components/ui/loading';
 import {
@@ -27,7 +35,9 @@ export default function TesterPlaceholderPage() {
     () => typeof RTCPeerConnection !== 'undefined',
     []
   );
-  const AUTO_CONNECT_RETRY_INTERVAL_MS = 5000;
+
+  // 종료 완료 모달 상태
+  const [showCompletionModal, setShowCompletionModal] = useState(false);
 
   // 세션 정보 조회
   const {
@@ -40,12 +50,12 @@ export default function TesterPlaceholderPage() {
   // WebRTC 스트리밍 연결 훅
   const {
     videoRef,
+    audioRef,
     isConnecting,
     isConnected,
     sessionUuid,
     connect,
     disconnect,
-    sendInput,
   } = useGameStream({
     surveyUuid: surveyUuid || '',
     onConnected: () => {
@@ -87,41 +97,6 @@ export default function TesterPlaceholderPage() {
     },
   });
 
-  // 자동 연결 (세션 가용 시 즉시 연결)
-  const autoConnectAttemptedAtRef = useRef(0);
-  const autoConnectSurveyRef = useRef<string | null>(null);
-
-  useEffect(() => {
-    if (!surveyUuid) return;
-    if (autoConnectSurveyRef.current !== surveyUuid) {
-      autoConnectSurveyRef.current = surveyUuid;
-      autoConnectAttemptedAtRef.current = 0;
-    }
-  }, [surveyUuid]);
-
-  useEffect(() => {
-    if (!surveyUuid || !sessionInfo?.isAvailable) return;
-    if (isConnected || isConnecting) return;
-
-    const now = Date.now();
-    if (
-      now - autoConnectAttemptedAtRef.current <
-      AUTO_CONNECT_RETRY_INTERVAL_MS
-    ) {
-      return;
-    }
-
-    autoConnectAttemptedAtRef.current = now;
-    void connect();
-  }, [
-    surveyUuid,
-    sessionInfo?.isAvailable,
-    isConnected,
-    isConnecting,
-    connect,
-    AUTO_CONNECT_RETRY_INTERVAL_MS,
-  ]);
-
   // 연결 시작 핸들러 (수동 재시도용)
   const handleConnect = async () => {
     if (!surveyUuid || isConnecting || isConnected) return;
@@ -136,21 +111,18 @@ export default function TesterPlaceholderPage() {
       JSON.stringify({
         type: 'client_disconnect',
         surveySessionUuid: sessionUuid,
-        reason: 'user_exit',
+        reason: 'USER_EXIT',
         timestamp: Date.now(),
       })
     );
     signalMutation.mutate({ signalRequest: disconnectSignal });
 
     terminateMutation.mutate(
-      { surveySessionUuid: sessionUuid, reason: 'user_exit' },
+      { surveySessionUuid: sessionUuid, reason: 'USER_EXIT' },
       {
         onSuccess: () => {
           disconnect();
-          toast({
-            variant: 'success',
-            title: '세션이 종료되었습니다.',
-          });
+          setShowCompletionModal(true);
         },
         onError: (error) => {
           toast({
@@ -236,10 +208,10 @@ export default function TesterPlaceholderPage() {
       {/* 스트리밍 플레이어 */}
       <StreamPlayer
         videoRef={videoRef}
+        audioRef={audioRef}
         isConnected={isConnected}
         isConnecting={isConnecting}
         onDisconnect={handleDisconnect}
-        sendInput={sendInput}
         className="w-full"
       />
 
@@ -249,14 +221,9 @@ export default function TesterPlaceholderPage() {
           {isAvailable ? (
             <div className="flex flex-col items-center gap-4 py-8">
               <p className="text-muted-foreground">
-                세션에 연결하는 중입니다... 잠시만 기다려주세요.
+                스트리밍 세션에 연결할 준비가 되었습니다.
               </p>
-              <Button
-                onClick={handleConnect}
-                variant="outline"
-              >
-                연결이 안 되나요? 수동으로 연결하기
-              </Button>
+              <Button onClick={handleConnect}>스트리밍 연결</Button>
             </div>
           ) : (
             <InlineAlert
@@ -295,6 +262,37 @@ export default function TesterPlaceholderPage() {
           </Button>
         </div>
       )}
+
+      {/* 종료 완료 모달 */}
+      <Dialog
+        open={showCompletionModal}
+        onOpenChange={setShowCompletionModal}
+      >
+        <DialogContent showCloseButton={false}>
+          <DialogHeader>
+            <DialogTitle>스트리밍이 종료되었습니다</DialogTitle>
+            <DialogDescription>
+              게임 플레이가 완료되었습니다. 설문 페이지로 이동하시겠습니까?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowCompletionModal(false)}
+            >
+              닫기
+            </Button>
+            <Button
+              onClick={() => {
+                const baseUrl = import.meta.env.VITE_CLIENT_BASE_URL || '';
+                window.location.href = `${baseUrl}/interview/${surveyUuid}`;
+              }}
+            >
+              이동하기
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

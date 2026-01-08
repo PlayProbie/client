@@ -4,7 +4,7 @@
  */
 
 import { API_BASE_URL } from '../constants';
-import type { ApiSessionInfoResponse, SessionInfo } from '../types';
+import type { SessionInfo } from '../types';
 import { toSessionInfo } from '../types';
 
 /** 세션 가용성 조회 (테스터 진입 시) */
@@ -21,6 +21,6 @@ export async function getSession(surveyUuid: string): Promise<SessionInfo> {
     );
   }
 
-  const data: ApiSessionInfoResponse = await response.json();
-  return toSessionInfo(data.data);
+  const data = await response.json();
+  return toSessionInfo(data.result);
 }

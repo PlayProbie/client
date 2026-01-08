@@ -9,7 +9,7 @@ import tseslint from 'typescript-eslint';
 import { defineConfig, globalIgnores } from 'eslint/config';
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  globalIgnores(['dist', 'src/lib/gameliftstreams-*.d.ts']),
   {
     files: ['**/*.{ts,tsx}'],
     plugins: {

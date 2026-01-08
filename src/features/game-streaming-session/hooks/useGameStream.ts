@@ -1,16 +1,12 @@
 /**
  * WebRTC 스트리밍 연결 훅
  *
- * GameLift Streams와 호환되는 WebRTC 스트리밍 연결을 관리합니다.
+ * AWS GameLift Streams Web SDK를 사용한 WebRTC 스트리밍 연결을 관리합니다.
  */
 import { useCallback, useRef, useState } from 'react';
 
 import { postSignal } from '../api';
-import {
-  createStreamClient,
-  type StreamClient,
-  type StreamInputEvent,
-} from '../lib';
+import { createStreamClient, type StreamClient } from '../lib';
 
 /** useGameStream 옵션 */
 export interface UseGameStreamOptions {
@@ -28,6 +24,8 @@ export interface UseGameStreamOptions {
 export interface UseGameStreamReturn {
   /** Video element ref (이 ref를 video 태그에 연결) */
   videoRef: React.RefObject<HTMLVideoElement | null>;
+  /** Audio element ref (이 ref를 audio 태그에 연결) */
+  audioRef: React.RefObject<HTMLAudioElement | null>;
   /** 연결 중 상태 */
   isConnecting: boolean;
   /** 연결됨 상태 */
@@ -38,8 +36,6 @@ export interface UseGameStreamReturn {
   connect: () => Promise<void>;
   /** 스트리밍 연결 해제 */
   disconnect: () => void;
-  /** 입력 이벤트 전송 */
-  sendInput: (event: StreamInputEvent) => void;
 }
 
 /**
@@ -47,7 +43,7 @@ export interface UseGameStreamReturn {
  *
  * @example
  * ```tsx
- * const { videoRef, connect, disconnect, isConnected } = useGameStream({
+ * const { videoRef, audioRef, connect, disconnect, isConnected } = useGameStream({
  *   surveyUuid,
  *   onConnected: (sessionUuid) => console.log('Connected:', sessionUuid),
  *   onError: (error) => console.error('Error:', error),
@@ -56,6 +52,7 @@ export interface UseGameStreamReturn {
  * return (
  *   <>
  *     <video ref={videoRef} autoPlay playsInline />
+ *     <audio ref={audioRef} autoPlay />
  *     <button onClick={connect}>Connect</button>
  *   </>
  * );
@@ -67,6 +64,7 @@ export function useGameStream(
   const { surveyUuid, onConnected, onDisconnected, onError } = options;
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const clientRef = useRef<StreamClient | null>(null);
 
   const [isConnecting, setIsConnecting] = useState(false);
@@ -79,11 +77,29 @@ export function useGameStream(
     setIsConnecting(true);
 
     try {
-      // 1. StreamClient 생성
-      const client = createStreamClient(videoRef.current);
+      // 1. StreamClient 생성 (GameLift Streams SDK 사용)
+
+      const client = createStreamClient(videoRef.current, audioRef.current, {
+        onConnectionStateChange: (state) => {
+          if (state === 'connected') {
+            setIsConnected(true);
+          } else if (state === 'disconnected' || state === 'failed') {
+            setIsConnected(false);
+          }
+        },
+        onServerDisconnect: () => {
+          setIsConnected(false);
+          setSessionUuid(null);
+          onDisconnected?.();
+        },
+        onError: (error) => {
+          onError?.(error);
+        },
+      });
       clientRef.current = client;
 
-      // 2. WebRTC Offer 생성 (Base64 SignalRequest)
+      // 2. SignalRequest 생성 (SDK가 WebRTC SDP offer 생성)
+
       const signalRequest = await client.generateSignalRequest();
 
       // 3. Backend로 Signal 전송 및 Response 수신
@@ -92,7 +108,10 @@ export function useGameStream(
       // 4. SignalResponse로 연결 완료
       await client.processSignalResponse(response.signalResponse);
 
-      // 5. 상태 업데이트
+      // 5. 입력 활성화
+      client.attachInput();
+
+      // 6. 상태 업데이트
       setSessionUuid(response.surveySessionUuid);
       setIsConnected(true);
       setIsConnecting(false);
@@ -103,13 +122,27 @@ export function useGameStream(
       setIsConnected(false);
       setSessionUuid(null);
 
+      // 클라이언트 정리
+      if (clientRef.current) {
+        clientRef.current.disconnect();
+        clientRef.current = null;
+      }
+
       const err = error instanceof Error ? error : new Error(String(error));
       onError?.(err);
     }
-  }, [surveyUuid, isConnecting, isConnected, onConnected, onError]);
+  }, [
+    surveyUuid,
+    isConnecting,
+    isConnected,
+    onConnected,
+    onDisconnected,
+    onError,
+  ]);
 
   const disconnect = useCallback(() => {
     if (clientRef.current) {
+      clientRef.current.detachInput();
       clientRef.current.disconnect();
       clientRef.current = null;
     }
@@ -119,19 +152,13 @@ export function useGameStream(
     onDisconnected?.();
   }, [onDisconnected]);
 
-  const sendInput = useCallback((event: StreamInputEvent) => {
-    if (clientRef.current && clientRef.current.isConnected()) {
-      clientRef.current.sendInput(event);
-    }
-  }, []);
-
   return {
     videoRef,
+    audioRef,
     isConnecting,
     isConnected,
     sessionUuid,
     connect,
     disconnect,
-    sendInput,
   };
 }
