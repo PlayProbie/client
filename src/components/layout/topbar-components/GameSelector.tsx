@@ -27,6 +27,7 @@ function GameSelector() {
   const { currentWorkspace } = useCurrentWorkspaceStore();
   const { data: games, isLoading } = useGamesQuery({
     workspaceUuid: currentWorkspace?.workspaceUuid || '',
+    enabled: !!currentWorkspace,
   });
   const location = useLocation();
 
