@@ -94,7 +94,7 @@ export function UploadStatusWidget() {
   };
 
   return (
-    <StatusWidgetContainer bottomPosition="bottom-4">
+    <StatusWidgetContainer bottomPosition="bottom-8">
       <StatusWidgetHeader
         icon={<Upload className="size-4" />}
         title="업로드"
