@@ -38,17 +38,24 @@ function useQuestionGenerate() {
     mutationFn: async (
       params: Pick<ApiGenerateAiQuestionsRequest, 'count'>
     ) => {
-      const { gameName, gameGenre, gameContext, surveyName, themePriorities, themeDetails } =
-        formData;
+      const {
+        gameName,
+        gameGenre,
+        gameContext,
+        surveyName,
+        themePriorities,
+        themeDetails,
+      } = formData;
 
       // themeDetails에서 themePriorities에 있는 카테고리만 포함
-      const cleanedThemeDetails = themeDetails && themePriorities
-        ? Object.fromEntries(
-            Object.entries(themeDetails).filter(
-              ([key]) => themePriorities.includes(key as ThemeCategory)
+      const cleanedThemeDetails =
+        themeDetails && themePriorities
+          ? Object.fromEntries(
+              Object.entries(themeDetails).filter(([key]) =>
+                themePriorities.includes(key as ThemeCategory)
+              )
             )
-          )
-        : undefined;
+          : undefined;
 
       return postAiQuestions({
         game_name: gameName || '',
@@ -67,7 +74,12 @@ function useQuestionGenerate() {
     const { gameName, gameGenre, surveyName, themePriorities } = formData;
 
     // 필수 데이터 확인 (themePriorities가 1개 이상 있어야 함)
-    if (!gameName || !gameGenre?.length || !surveyName || !themePriorities?.length) {
+    if (
+      !gameName ||
+      !gameGenre?.length ||
+      !surveyName ||
+      !themePriorities?.length
+    ) {
       return;
     }
 
@@ -170,7 +182,12 @@ function useQuestionGenerate() {
   const handleAddQuestion = useCallback(async () => {
     const { gameName, gameGenre, surveyName, themePriorities } = formData;
 
-    if (!gameName || !gameGenre?.length || !surveyName || !themePriorities?.length) {
+    if (
+      !gameName ||
+      !gameGenre?.length ||
+      !surveyName ||
+      !themePriorities?.length
+    ) {
       return;
     }
 

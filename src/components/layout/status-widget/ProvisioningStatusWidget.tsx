@@ -36,7 +36,7 @@ export function ProvisioningStatusWidget() {
   }
 
   return (
-    <StatusWidgetContainer bottomPosition="bottom-24">
+    <StatusWidgetContainer bottomPosition="bottom-28">
       <StatusWidgetHeader
         icon={<Server className="size-4" />}
         title="프로비저닝"
