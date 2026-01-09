@@ -54,6 +54,7 @@ function GameSelector() {
     navigate(`/games/${uuid}`);
   };
 
+  // 잘못된 게임 경로 접근 시 /games로 리다이렉트
   useEffect(() => {
     if (
       !gameUuid &&
@@ -63,20 +64,6 @@ function GameSelector() {
       navigate('/games', { replace: true });
     }
   }, [gameUuid, location.pathname, navigate]);
-
-  // 게임 목록 로드 시 현재 게임이 없으면 첫 번째 게임을 기본값으로 설정
-  useEffect(() => {
-    if (
-      games &&
-      games.length > 0 &&
-      !gameUuid &&
-      location.pathname === '/games'
-    ) {
-      const firstGame = games[0];
-      setCurrentGame(firstGame);
-      navigate(`/games/${firstGame.gameUuid}`, { replace: true });
-    }
-  }, [games, gameUuid, location.pathname, navigate, setCurrentGame]);
 
   return (
     <div className="border-border mr-2 flex items-center gap-4 border-r pr-6">
