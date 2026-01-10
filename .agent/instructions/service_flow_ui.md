@@ -350,7 +350,6 @@ graph LR
 graph TD
     subgraph "게임 대시보드"
         BuildsPage["builds 탭"]
-        StreamSettingsPage["stream-settings 탭"]
     end
 
     subgraph "Survey Control Tower"
@@ -367,7 +366,6 @@ graph TD
 
     %% API 연결
     BuildsPage -->|GET/POST/DELETE builds| Phase1[Phase 1 APIs]
-    StreamSettingsPage -->|localStorage| LocalStore[(Local)]
 
     SurveyOverviewPage -->|PATCH status| Phase45[Phase 4-5 APIs]
     SurveyDistributePage -->|POST/GET/DELETE streaming-resource| Phase2[Phase 2 APIs]
@@ -401,7 +399,6 @@ graph TD
 | `SurveyDistributePage` | `pages/survey/`               | 탭3: 배포/연동                |
 | `StatusChangeModal`    | `features/survey/components/` | 설문 상태 변경 확인 모달      |
 | `BuildConnectionCard`  | `features/survey/components/` | 빌드 연결 UI                  |
-| `AdminTestPanel`       | `features/survey/components/` | 관리자 테스트 UI              |
 
 ### Hooks
 

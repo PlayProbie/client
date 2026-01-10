@@ -5,7 +5,12 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { getSourceGames } from '../api';
-import { sourceGameKeys } from './useGameMutations';
+
+/** Source Games Query Key */
+export const sourceGameKeys = {
+  all: ['source-games'] as const,
+  list: () => [...sourceGameKeys.all, 'list'] as const,
+};
 
 /** 스트리밍 등록 가능한 Source Game 목록 조회 */
 export function useSourceGamesQuery() {

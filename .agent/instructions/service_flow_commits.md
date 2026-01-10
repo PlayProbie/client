@@ -234,8 +234,7 @@ feat(survey): add Survey Control Tower with tabs
 | -------------------------------------------------------- | ----------------------- |
 | `src/pages/survey/SurveyDistributePage.tsx`              | [NEW] 배포/연동 탭      |
 | `src/features/survey/components/BuildConnectionCard.tsx` | [NEW] 빌드 연결 UI      |
-| `src/features/survey/components/AdminTestPanel.tsx`      | [NEW] 관리자 테스트 UI  |
-| `src/features/survey/api/streaming-resource.ts`          | [NEW] Phase 2 & 3 API   |
+| `src/features/survey/api/streaming-resource.ts`          | [NEW] Phase 2 API       |
 | `src/features/survey/hooks/useStreamingResource.ts`      | [NEW] React Query hooks |
 
 ### API 연동
@@ -254,8 +253,7 @@ feat(survey): implement distribute page with build connection
 
 - Create SurveyDistributePage for build connection and testing
 - Add BuildConnectionCard for selecting and connecting builds
-- Add AdminTestPanel for scale-up testing (0 -> 1)
-- Implement streaming resource APIs and hooks (Phase 2 & 3)
+- Implement streaming resource APIs and hooks (Phase 2)
 ```
 
 ### 테스트 방법
