@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Link, useOutletContext, useParams } from 'react-router-dom';
 
-
 import { Button } from '@/components/ui/button';
 import type { SurveyShellContext } from '@/features/survey/components/SurveyShell';
 import {
