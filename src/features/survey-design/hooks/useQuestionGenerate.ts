@@ -119,10 +119,13 @@ function useQuestionGenerate() {
   }, [manager.questions.length, isGenerating, generateQuestions]);
 
   // 전체 질문에 대한 피드백 요청 (초기 로드 시)
-  // useRef를 사용하여 최신 값을 참조하되, 불필요한 re-render를 방지
   const managerRef = useRef(manager);
   const fetchingQuestionsRef = useRef<Set<string>>(new Set());
-  managerRef.current = manager;
+
+  // useEffect 내에서 ref 동기화 (렌더링 중 side effect 방지)
+  useEffect(() => {
+    managerRef.current = manager;
+  }, [manager]);
 
   useEffect(() => {
     const fetchAllFeedback = async () => {
