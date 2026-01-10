@@ -212,7 +212,6 @@ export function useChatSession({
       isLoading,
       isComplete,
       addUserMessage,
-      setError,
       sendMessageAsync,
     ]
   );

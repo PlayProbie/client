@@ -71,8 +71,8 @@ function useQuestionAnalysis({
               [wrapper.fixed_question_id]: parsed,
             },
           }));
-        } catch (err) {
-          console.error('Failed to parse question analysis result:', err);
+        } catch {
+          // JSON 파싱 실패 시 무시
         }
       },
       (err: Error) => {
