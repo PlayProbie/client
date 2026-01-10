@@ -2,7 +2,6 @@
  * Game Streaming Feature 유틸리티
  */
 
-
 /**
  * localStorage에서 JSON 데이터 읽기
  * @param key - localStorage key
@@ -87,46 +86,4 @@ export function formatDateTime(dateString: string): string {
     hour: '2-digit',
     minute: '2-digit',
   });
-}
-
-// ----------------------------------------
-// API Fetch Utilities
-// ----------------------------------------
-
-type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
-
-interface FetchOptions<TBody = unknown> {
-  method: HttpMethod;
-  body?: TBody;
-}
-
-/**
- * API 요청 유틸리티 함수
- * @param url - API 엔드포인트
- * @param options - 요청 옵션
- * @param errorMessage - 에러 발생 시 표시할 메시지
- */
-export async function apiFetch<TResponse, TBody = unknown>(
-  url: string,
-  options: FetchOptions<TBody>,
-  errorMessage: string
-): Promise<TResponse> {
-  const fetchOptions: RequestInit = {
-    method: options.method,
-    headers: options.body ? { 'Content-Type': 'application/json' } : undefined,
-    body: options.body ? JSON.stringify(options.body) : undefined,
-  };
-
-  const response = await fetch(url, fetchOptions);
-
-  if (!response.ok) {
-    throw new Error(errorMessage);
-  }
-
-  // DELETE 요청 시 빈 응답 처리
-  if (options.method === 'DELETE') {
-    return undefined as TResponse;
-  }
-
-  return response.json() as Promise<TResponse>;
 }
