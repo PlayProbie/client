@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/Label';
 import {
   getStreamingResource,
   streamingResourceKeys,
+  StreamingResourceStatus,
 } from '@/features/game-streaming-survey';
 
 import {
@@ -125,7 +126,7 @@ function StreamSettingsFormContent({
     enabled: shouldEnablePolling,
     refetchInterval: (query) => {
       const status = query.state.data?.status;
-      if (!shouldEnablePolling || status === 'ACTIVE') {
+      if (!shouldEnablePolling || status === StreamingResourceStatus.ACTIVE) {
         return false;
       }
       return 5000;
@@ -133,7 +134,8 @@ function StreamSettingsFormContent({
   });
 
   const isPolling =
-    shouldEnablePolling && streamingResource?.status !== 'ACTIVE';
+    shouldEnablePolling &&
+    streamingResource?.status !== StreamingResourceStatus.ACTIVE;
 
   useEffect(() => {
     if (!shouldEnablePolling || !streamingResource) {
@@ -141,7 +143,7 @@ function StreamSettingsFormContent({
     }
 
     if (
-      streamingResource.status === 'ACTIVE' &&
+      streamingResource.status === StreamingResourceStatus.ACTIVE &&
       pollingRequestId > lastNotifiedRequestIdRef.current
     ) {
       lastNotifiedRequestIdRef.current = pollingRequestId;

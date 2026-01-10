@@ -1,4 +1,7 @@
-import type { ApiStreamingResource } from '@/features/game-streaming-survey/types';
+import {
+  type ApiStreamingResource,
+  StreamingResourceStatus,
+} from '@/features/game-streaming-survey/types';
 
 export type MockStreamingResource = ApiStreamingResource & {
   instances_ready?: boolean;
@@ -10,7 +13,7 @@ export const MOCK_STREAMING_RESOURCES: Record<
 > = {
   'survey-002-uuid': {
     uuid: 'resource-001-uuid',
-    status: 'READY',
+    status: StreamingResourceStatus.READY,
     current_capacity: 0,
     max_capacity: 10,
     instance_type: 'g4dn.xlarge',

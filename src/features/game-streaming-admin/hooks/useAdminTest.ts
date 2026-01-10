@@ -3,7 +3,10 @@
  */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { streamingResourceKeys } from '@/features/game-streaming-survey';
+import {
+  streamingResourceKeys,
+  StreamingResourceStatus,
+} from '@/features/game-streaming-survey';
 
 import { getResourceStatus, startTest, stopTest } from '../api';
 import type { AdminTestResult, ResourceStatus } from '../types';
@@ -24,7 +27,10 @@ export function useResourceStatus(surveyUuid: string, enabled = true) {
     refetchInterval: (query) => {
       // TESTING 상태일 때 3초마다 폴링 (instances_ready 확인)
       const data = query.state.data;
-      if (data?.status === 'TESTING' && !data.instancesReady) {
+      if (
+        data?.status === StreamingResourceStatus.TESTING &&
+        !data.instancesReady
+      ) {
         return 3000;
       }
       return false;

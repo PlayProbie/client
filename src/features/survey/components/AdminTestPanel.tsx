@@ -8,7 +8,10 @@ import {
   useStartTest,
   useStopTest,
 } from '@/features/game-streaming-admin';
-import type { StreamingResource } from '@/features/game-streaming-survey';
+import {
+  type StreamingResource,
+  StreamingResourceStatus,
+} from '@/features/game-streaming-survey';
 import { useToast } from '@/hooks/useToast';
 
 import { StreamingStatusBadge } from './StreamingStatusBadge';
@@ -32,7 +35,8 @@ export function AdminTestPanel({
   const startTestMutation = useStartTest(surveyUuid);
   const stopTestMutation = useStopTest(surveyUuid);
 
-  const isTesting = streamingResource?.status === 'TESTING';
+  const isTesting =
+    streamingResource?.status === StreamingResourceStatus.TESTING;
   const {
     data: resourceStatus,
     isLoading: isStatusLoading,
@@ -124,8 +128,8 @@ export function AdminTestPanel({
     }
 
     if (
-      streamingResource.status === 'PENDING' ||
-      streamingResource.status === 'PROVISIONING'
+      streamingResource.status === StreamingResourceStatus.PENDING ||
+      streamingResource.status === StreamingResourceStatus.PROVISIONING
     ) {
       return (
         <InlineAlert variant="info" title="리소스 준비 중">
@@ -135,8 +139,8 @@ export function AdminTestPanel({
     }
 
     if (
-      streamingResource.status === 'SCALING' ||
-      streamingResource.status === 'ACTIVE'
+      streamingResource.status === StreamingResourceStatus.SCALING ||
+      streamingResource.status === StreamingResourceStatus.ACTIVE
     ) {
       return (
         <InlineAlert variant="warning" title="서비스 운영 중">
@@ -146,8 +150,8 @@ export function AdminTestPanel({
     }
 
     if (
-      streamingResource.status === 'CLEANING' ||
-      streamingResource.status === 'TERMINATED'
+      streamingResource.status === StreamingResourceStatus.CLEANING ||
+      streamingResource.status === StreamingResourceStatus.TERMINATED
     ) {
       return (
         <InlineAlert variant="warning" title="리소스 정리 중">

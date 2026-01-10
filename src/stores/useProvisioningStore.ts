@@ -4,7 +4,7 @@
  */
 import { create } from 'zustand';
 
-import type { StreamingResourceStatus } from '@/features/game-streaming-survey';
+import { StreamingResourceStatus } from '@/features/game-streaming-survey';
 
 // ----------------------------------------
 // Types
@@ -15,20 +15,47 @@ import type { StreamingResourceStatus } from '@/features/game-streaming-survey';
  * StreamingResourceStatus의 서브셋 + UI 전용 ERROR 상태
  */
 export type ProvisioningStatus =
-  | Extract<
-      StreamingResourceStatus,
-      'CREATING' | 'PROVISIONING' | 'READY' | 'ACTIVE'
-    >
+  | typeof StreamingResourceStatus.CREATING
+  | typeof StreamingResourceStatus.PROVISIONING
+  | typeof StreamingResourceStatus.READY
+  | typeof StreamingResourceStatus.ACTIVE
   | 'ERROR';
 
 /** 프로비저닝 상태 상수 (런타임 값 참조용) */
 export const ProvisioningStatus = {
-  CREATING: 'CREATING',
-  PROVISIONING: 'PROVISIONING',
-  READY: 'READY',
-  ACTIVE: 'ACTIVE',
+  CREATING: StreamingResourceStatus.CREATING,
+  PROVISIONING: StreamingResourceStatus.PROVISIONING,
+  READY: StreamingResourceStatus.READY,
+  ACTIVE: StreamingResourceStatus.ACTIVE,
   ERROR: 'ERROR',
 } as const satisfies Record<string, ProvisioningStatus>;
+
+/**
+ * StreamingResourceStatus → ProvisioningStatus 변환
+ * UI에 표시되지 않는 중간 상태들을 적절히 매핑
+ */
+export function mapToProvisioningStatus(
+  status: StreamingResourceStatus
+): ProvisioningStatus {
+  switch (status) {
+    case StreamingResourceStatus.CREATING:
+      return ProvisioningStatus.CREATING;
+    case StreamingResourceStatus.PENDING:
+    case StreamingResourceStatus.PROVISIONING:
+    case StreamingResourceStatus.TESTING:
+    case StreamingResourceStatus.SCALING:
+      return ProvisioningStatus.PROVISIONING;
+    case StreamingResourceStatus.READY:
+      return ProvisioningStatus.READY;
+    case StreamingResourceStatus.ACTIVE:
+      return ProvisioningStatus.ACTIVE;
+    case StreamingResourceStatus.CLEANING:
+      return ProvisioningStatus.READY;
+    case StreamingResourceStatus.TERMINATED:
+    default:
+      return ProvisioningStatus.ERROR;
+  }
+}
 
 /** 프로비저닝 단건 항목 */
 export interface ProvisioningItem {
@@ -100,20 +127,29 @@ export const useProvisioningStore = create<ProvisioningStore>()((set) => ({
   },
 
   updateStatus: (id, status) => {
-    set((state) => ({
-      items: state.items.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              status,
-              errorMessage:
-                status === ProvisioningStatus.ERROR
-                  ? item.errorMessage
-                  : undefined,
-            }
-          : item
-      ),
-    }));
+    set((state) => {
+      let didUpdate = false;
+      const nextItems = state.items.map((item) => {
+        if (item.id !== id) return item;
+        const nextErrorMessage =
+          status === ProvisioningStatus.ERROR ? item.errorMessage : undefined;
+        if (
+          item.status === status &&
+          item.errorMessage === nextErrorMessage
+        ) {
+          return item;
+        }
+        didUpdate = true;
+        return {
+          ...item,
+          status,
+          errorMessage: nextErrorMessage,
+        };
+      });
+
+      if (!didUpdate) return state;
+      return { items: nextItems };
+    });
   },
 
   setError: (id, message) => {

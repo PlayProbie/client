@@ -1,5 +1,7 @@
 import { delay, http, HttpResponse } from 'msw';
 
+import { StreamingResourceStatus } from '@/features/game-streaming-survey/types';
+
 import { MOCK_STREAMING_RESOURCES } from './streaming-resource-store';
 
 const API_BASE_URL = '/api';
@@ -28,14 +30,15 @@ export const gameStreamingAdminHandlers = [
       }
 
       // 상태를 TESTING으로 변경, capacity를 1로
-      resource.status = 'TESTING';
+      resource.status = StreamingResourceStatus.TESTING;
       resource.current_capacity = 1;
 
       // 3초 후 instances_ready 상태로 변경 (비동기 시뮬레이션)
       setTimeout(() => {
         if (
           MOCK_STREAMING_RESOURCES[surveyUuid] &&
-          MOCK_STREAMING_RESOURCES[surveyUuid].status === 'TESTING'
+          MOCK_STREAMING_RESOURCES[surveyUuid].status ===
+            StreamingResourceStatus.TESTING
         ) {
           MOCK_STREAMING_RESOURCES[surveyUuid].instances_ready = true;
         }
@@ -99,7 +102,7 @@ export const gameStreamingAdminHandlers = [
       }
 
       // 상태를 READY로 변경, capacity를 0으로
-      resource.status = 'READY';
+      resource.status = StreamingResourceStatus.READY;
       resource.current_capacity = 0;
       resource.instances_ready = false;
 
