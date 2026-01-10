@@ -31,7 +31,6 @@ function useSurveyResults({ gameUuid }: UseSurveyResultsOptions) {
         sessionUuid: item.session_uuid,
         surveyName: item.survey_name,
         surveyUuid: item.survey_uuid,
-        surveyId: item.survey_id,
         testerId: item.tester_id,
         status: item.status,
         endedAt: item.ended_at,

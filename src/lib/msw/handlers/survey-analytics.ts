@@ -110,7 +110,6 @@ export const surveyAnalyticsHandlers = [
             session_uuid: sessionUuid,
             survey_name: 'Escape From Duckov 플레이테스트',
             survey_uuid: surveyUuid,
-            survey_id: 100,
             tester_id: 'tester-uuid-123',
             status: 'COMPLETED',
             ended_at: '2025-12-27T16:40:00+09:00',
@@ -475,10 +474,15 @@ export const surveyAnalyticsHandlers = [
         }),
       };
 
-      // Mock: 개발 환경에서는 배열로 반환 (SSE 대신)
+      // REST API 응답 구조 (AnalyticsResponse)
       const questions = [question1, question2, question3];
 
-      return HttpResponse.json(questions);
+      return HttpResponse.json({
+        analyses: questions,
+        status: 'COMPLETED',
+        total_questions: 3,
+        completed_questions: 3,
+      });
     }
   ),
 ];
