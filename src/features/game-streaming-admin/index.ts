@@ -5,7 +5,7 @@
  */
 
 // Types
-export type { AdminTestResult, AdminTestStatus, ResourceStatus } from './types';
+export type { AdminTestResult, ResourceStatus } from './types';
 
 // API
 export { getResourceStatus, startTest, stopTest } from './api';

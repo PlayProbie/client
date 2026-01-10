@@ -8,17 +8,16 @@
  * - 클라이언트 상태 타입: camelCase
  */
 
+import type { StreamingResourceStatus } from '@/features/game-streaming-survey';
+
 // ----------------------------------------
 // Admin Test Types
 // ----------------------------------------
 
-/** 관리자 테스트 상태 */
-export type AdminTestStatus = 'READY' | 'TESTING';
-
 /** [API] 테스트 시작/종료 응답 */
 export interface ApiAdminTestResponse {
   result: {
-    status: AdminTestStatus;
+    status: StreamingResourceStatus;
     current_capacity: number;
     message: string;
   };
@@ -26,7 +25,7 @@ export interface ApiAdminTestResponse {
 
 /** [Client] 테스트 결과 */
 export interface AdminTestResult {
-  status: AdminTestStatus;
+  status: StreamingResourceStatus;
   currentCapacity: number;
   message: string;
 }
@@ -38,7 +37,7 @@ export interface AdminTestResult {
 /** [API] 리소스 상태 조회 응답 */
 export interface ApiResourceStatusResponse {
   result: {
-    status: AdminTestStatus;
+    status: StreamingResourceStatus;
     current_capacity: number;
     instances_ready: boolean;
   };
@@ -46,7 +45,7 @@ export interface ApiResourceStatusResponse {
 
 /** [Client] 리소스 상태 */
 export interface ResourceStatus {
-  status: AdminTestStatus;
+  status: StreamingResourceStatus;
   currentCapacity: number;
   instancesReady: boolean;
 }

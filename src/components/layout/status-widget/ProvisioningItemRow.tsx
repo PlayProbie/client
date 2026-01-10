@@ -5,8 +5,8 @@ import { AlertCircle, CheckCircle2, Loader2, Server, X } from 'lucide-react';
 import { memo } from 'react';
 
 import { Button } from '@/components/ui/button';
-import type {
-  ProvisioningItem,
+import {
+  type ProvisioningItem,
   ProvisioningStatus,
 } from '@/stores/useProvisioningStore';
 
@@ -31,14 +31,14 @@ function formatElapsedTime(startedAt: number, now: number): string {
 
 function getStatusIcon(status: ProvisioningStatus) {
   switch (status) {
-    case 'CREATING':
+    case ProvisioningStatus.CREATING:
       return <Loader2 className="text-primary size-4 animate-spin" />;
-    case 'PROVISIONING':
+    case ProvisioningStatus.PROVISIONING:
       return <Server className="text-warning size-4 animate-pulse" />;
-    case 'READY':
-    case 'ACTIVE':
+    case ProvisioningStatus.READY:
+    case ProvisioningStatus.ACTIVE:
       return <CheckCircle2 className="text-success size-4" />;
-    case 'ERROR':
+    case ProvisioningStatus.ERROR:
       return <AlertCircle className="text-destructive size-4" />;
     default:
       return null;
@@ -47,15 +47,15 @@ function getStatusIcon(status: ProvisioningStatus) {
 
 function getStatusText(status: ProvisioningStatus): string {
   switch (status) {
-    case 'CREATING':
+    case ProvisioningStatus.CREATING:
       return '리소스 생성 중...';
-    case 'PROVISIONING':
+    case ProvisioningStatus.PROVISIONING:
       return '프로비저닝 중...';
-    case 'READY':
+    case ProvisioningStatus.READY:
       return '준비 완료';
-    case 'ACTIVE':
+    case ProvisioningStatus.ACTIVE:
       return '활성화 완료';
-    case 'ERROR':
+    case ProvisioningStatus.ERROR:
       return '오류 발생';
     default:
       return '대기 중...';
@@ -69,9 +69,13 @@ function ProvisioningItemRowComponent({
 }: ProvisioningItemRowProps) {
   const { id, buildName, status, startedAt, errorMessage } = item;
 
-  const isActive = ['CREATING', 'PROVISIONING'].includes(status);
+  const isActive =
+    status === ProvisioningStatus.CREATING ||
+    status === ProvisioningStatus.PROVISIONING;
   const isComplete =
-    status === 'ACTIVE' || status === 'READY' || status === 'ERROR';
+    status === ProvisioningStatus.ACTIVE ||
+    status === ProvisioningStatus.READY ||
+    status === ProvisioningStatus.ERROR;
   const elapsedTime = isActive
     ? formatElapsedTime(startedAt, now ?? startedAt)
     : '';
@@ -108,7 +112,7 @@ function ProvisioningItemRowComponent({
       </div>
 
       {/* 에러 메시지 */}
-      {status === 'ERROR' && errorMessage && (
+      {status === ProvisioningStatus.ERROR && errorMessage && (
         <p className="text-destructive text-xs">{errorMessage}</p>
       )}
     </StatusItemRow>

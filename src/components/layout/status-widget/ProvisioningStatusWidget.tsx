@@ -8,6 +8,7 @@ import { useShallow } from 'zustand/shallow';
 
 import { ScrollArea } from '@/components/ui/ScrollArea';
 import {
+  ProvisioningStatus,
   selectActiveCount,
   selectCompletedCount,
   selectHasActiveProvisioning,
@@ -83,7 +84,8 @@ export function ProvisioningStatusWidget() {
           <div className="divide-y">
             {items.map((item) => {
               const isActive =
-                item.status === 'CREATING' || item.status === 'PROVISIONING';
+                item.status === ProvisioningStatus.CREATING ||
+                item.status === ProvisioningStatus.PROVISIONING;
               return (
                 <ProvisioningItemRow
                   key={item.id}

@@ -4,16 +4,31 @@
  */
 import { create } from 'zustand';
 
+import type { StreamingResourceStatus } from '@/features/game-streaming-survey';
+
 // ----------------------------------------
 // Types
 // ----------------------------------------
 
+/**
+ * UI 위젯용 프로비저닝 상태
+ * StreamingResourceStatus의 서브셋 + UI 전용 ERROR 상태
+ */
 export type ProvisioningStatus =
-  | 'CREATING'
-  | 'PROVISIONING'
-  | 'READY'
-  | 'ACTIVE'
+  | Extract<
+      StreamingResourceStatus,
+      'CREATING' | 'PROVISIONING' | 'READY' | 'ACTIVE'
+    >
   | 'ERROR';
+
+/** 프로비저닝 상태 상수 (런타임 값 참조용) */
+export const ProvisioningStatus = {
+  CREATING: 'CREATING',
+  PROVISIONING: 'PROVISIONING',
+  READY: 'READY',
+  ACTIVE: 'ACTIVE',
+  ERROR: 'ERROR',
+} as const satisfies Record<string, ProvisioningStatus>;
 
 /** 프로비저닝 단건 항목 */
 export interface ProvisioningItem {
@@ -72,7 +87,7 @@ export const useProvisioningStore = create<ProvisioningStore>()((set) => ({
       id,
       surveyUuid: params.surveyUuid,
       buildName: params.buildName,
-      status: 'CREATING',
+      status: ProvisioningStatus.CREATING,
       startedAt: Date.now(),
     };
 
@@ -91,7 +106,10 @@ export const useProvisioningStore = create<ProvisioningStore>()((set) => ({
           ? {
               ...item,
               status,
-              errorMessage: status === 'ERROR' ? item.errorMessage : undefined,
+              errorMessage:
+                status === ProvisioningStatus.ERROR
+                  ? item.errorMessage
+                  : undefined,
             }
           : item
       ),
@@ -102,7 +120,7 @@ export const useProvisioningStore = create<ProvisioningStore>()((set) => ({
     set((state) => ({
       items: state.items.map((item) =>
         item.id === id
-          ? { ...item, status: 'ERROR' as const, errorMessage: message }
+          ? { ...item, status: ProvisioningStatus.ERROR, errorMessage: message }
           : item
       ),
     }));
@@ -118,9 +136,9 @@ export const useProvisioningStore = create<ProvisioningStore>()((set) => ({
     set((state) => ({
       items: state.items.filter(
         (item) =>
-          item.status !== 'ACTIVE' &&
-          item.status !== 'READY' &&
-          item.status !== 'ERROR'
+          item.status !== ProvisioningStatus.ACTIVE &&
+          item.status !== ProvisioningStatus.READY &&
+          item.status !== ProvisioningStatus.ERROR
       ),
     }));
   },
@@ -136,21 +154,25 @@ export const useProvisioningStore = create<ProvisioningStore>()((set) => ({
 
 /** 진행중인 프로비저닝이 있는지 */
 export const selectHasActiveProvisioning = (state: ProvisioningStore) =>
-  state.items.some((item) =>
-    ['CREATING', 'PROVISIONING'].includes(item.status)
+  state.items.some(
+    (item) =>
+      item.status === ProvisioningStatus.CREATING ||
+      item.status === ProvisioningStatus.PROVISIONING
   );
 
 /** 진행중인 항목 수 */
 export const selectActiveCount = (state: ProvisioningStore) =>
-  state.items.filter((item) =>
-    ['CREATING', 'PROVISIONING'].includes(item.status)
+  state.items.filter(
+    (item) =>
+      item.status === ProvisioningStatus.CREATING ||
+      item.status === ProvisioningStatus.PROVISIONING
   ).length;
 
 /** 완료된 항목 수 (ACTIVE + READY + ERROR) */
 export const selectCompletedCount = (state: ProvisioningStore) =>
   state.items.filter(
     (item) =>
-      item.status === 'ACTIVE' ||
-      item.status === 'READY' ||
-      item.status === 'ERROR'
+      item.status === ProvisioningStatus.ACTIVE ||
+      item.status === ProvisioningStatus.READY ||
+      item.status === ProvisioningStatus.ERROR
   ).length;

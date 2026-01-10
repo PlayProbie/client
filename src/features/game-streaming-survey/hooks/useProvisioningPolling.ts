@@ -6,7 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
 
 import {
-  type ProvisioningStatus,
+  ProvisioningStatus,
   useProvisioningStore,
 } from '@/stores/useProvisioningStore';
 
@@ -33,21 +33,21 @@ function mapToProvisioningStatus(
 ): ProvisioningStatus {
   switch (status) {
     case 'CREATING':
-      return 'CREATING';
+      return ProvisioningStatus.CREATING;
     case 'PENDING':
     case 'PROVISIONING':
     case 'TESTING':
     case 'SCALING':
-      return 'PROVISIONING';
+      return ProvisioningStatus.PROVISIONING;
     case 'READY':
-      return 'READY';
+      return ProvisioningStatus.READY;
     case 'ACTIVE':
-      return 'ACTIVE';
+      return ProvisioningStatus.ACTIVE;
     case 'CLEANING':
-      return 'READY';
+      return ProvisioningStatus.READY;
     case 'TERMINATED':
     default:
-      return 'ERROR';
+      return ProvisioningStatus.ERROR;
   }
 }
 
