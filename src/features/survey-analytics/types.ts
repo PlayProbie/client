@@ -25,7 +25,6 @@ export interface ApiSurveySession {
   session_uuid: string;
   survey_name: string;
   survey_uuid: string;
-  survey_id: number;
   tester_id: string;
   status: SurveySessionStatus;
   ended_at: string;
@@ -174,7 +173,6 @@ export interface SurveySession {
   sessionUuid: string;
   surveyName: string;
   surveyUuid: string;
-  surveyId: number;
   testerId: string;
   status: SurveySessionStatus;
   endedAt: string;
