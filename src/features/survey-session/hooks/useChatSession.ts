@@ -94,6 +94,11 @@ export function useChatSession({
         setStreaming(true);
       }
     },
+    onReaction: (data) => {
+      // 리액션: 현재 스트리밍 확정 후 별도 채팅박스로 표시
+      finalizeStreamingMessage();
+      addAIMessage(data.reactionText, data.turnNum, 'REACTION', null);
+    },
     onStart: () => {
       setStreaming(true);
     },

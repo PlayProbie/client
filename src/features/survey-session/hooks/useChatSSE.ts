@@ -14,12 +14,14 @@ import { API_BASE_URL } from '@/constants/api';
 import type {
   ApiSSEContinueEventData,
   ApiSSEQuestionEventData,
+  ApiSSEReactionEventData,
   UseChatSSEOptions,
   UseChatSSEReturn,
 } from '../types';
 import {
   toSSEContinueEventData,
   toSSEQuestionEventData,
+  toSSEReactionEventData,
 } from '../types';
 
 export function useChatSSE({
@@ -28,6 +30,7 @@ export function useChatSSE({
   onQuestion,
   onContinue,
   onGreetingContinue,
+  onReaction,
   onStart,
   onDone,
   onInterviewComplete,
@@ -43,6 +46,7 @@ export function useChatSSE({
   const onQuestionRef = useRef(onQuestion);
   const onContinueRef = useRef(onContinue);
   const onGreetingContinueRef = useRef(onGreetingContinue);
+  const onReactionRef = useRef(onReaction);
   const onStartRef = useRef(onStart);
   const onDoneRef = useRef(onDone);
   const onInterviewCompleteRef = useRef(onInterviewComplete);
@@ -56,6 +60,7 @@ export function useChatSSE({
     onQuestionRef.current = onQuestion;
     onContinueRef.current = onContinue;
     onGreetingContinueRef.current = onGreetingContinue;
+    onReactionRef.current = onReaction;
     onStartRef.current = onStart;
     onDoneRef.current = onDone;
     onInterviewCompleteRef.current = onInterviewComplete;
@@ -67,6 +72,7 @@ export function useChatSSE({
     onQuestion,
     onContinue,
     onGreetingContinue,
+    onReaction,
     onStart,
     onDone,
     onInterviewComplete,
@@ -141,6 +147,17 @@ export function useChatSSE({
     // start 이벤트 핸들러 (AI 처리 시작)
     eventSource.addEventListener('start', () => {
       onStartRef.current?.();
+    });
+
+    // reaction 이벤트 핸들러 (AI 리액션 메시지)
+    eventSource.addEventListener('reaction', (event) => {
+      try {
+        const apiData: ApiSSEReactionEventData = JSON.parse(event.data);
+        const data = toSSEReactionEventData(apiData);
+        onReactionRef.current?.(data);
+      } catch {
+        // JSON 파싱 실패 무시
+      }
     });
 
     // done 이벤트 핸들러 (AI 응답 완료)
