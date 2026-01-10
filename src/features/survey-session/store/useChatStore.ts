@@ -15,7 +15,8 @@ interface ChatState {
   appendStreamingToken: (
     token: string,
     turnNum: number,
-    qType?: InterviewLogQType
+    qType?: InterviewLogQType,
+    fixedQId?: number | null
   ) => void;
   // Session info
   sessionUuid: string | null;
@@ -59,6 +60,9 @@ interface ChatState {
   setStreaming: (streaming: boolean) => void;
   setComplete: (complete: boolean) => void;
   setError: (error: string | null) => void;
+  setCurrentTurnNum: (turnNum: number) => void;
+  incrementTurnNum: () => void;
+  setCurrentFixedQId: (fixedQId: number | null) => void;
   reset: () => void;
 }
 
@@ -123,7 +127,12 @@ export const useChatStore = create<ChatState>((set, get) => ({
       isLoading: true,
     })),
 
-  appendStreamingToken: (token, turnNum, qType: InterviewLogQType = 'TAIL') =>
+  appendStreamingToken: (
+    token,
+    turnNum,
+    qType: InterviewLogQType = 'TAIL',
+    fixedQId: number | null = null
+  ) =>
     set((state) => {
       const newContent = state.streamingContent + token;
 
@@ -137,13 +146,14 @@ export const useChatStore = create<ChatState>((set, get) => ({
         updatedMessages[existingStreamingIndex] = {
           ...updatedMessages[existingStreamingIndex],
           content: newContent,
-          // qType 업데이트 (혹시라도 변경될 경우)
           qType,
+          fixedQId: fixedQId ?? updatedMessages[existingStreamingIndex].fixedQId,
         };
         return {
           messages: updatedMessages,
           streamingContent: newContent,
           isStreaming: true,
+          currentFixedQId: fixedQId ?? state.currentFixedQId,
         };
       } else {
         return {
@@ -155,12 +165,13 @@ export const useChatStore = create<ChatState>((set, get) => ({
               content: newContent,
               turnNum,
               qType,
-              fixedQId: null,
+              fixedQId,
               timestamp: new Date(),
             },
           ],
           streamingContent: newContent,
           isStreaming: true,
+          currentFixedQId: fixedQId ?? state.currentFixedQId,
         };
       }
     }),
@@ -197,5 +208,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
   setStreaming: (streaming) => set({ isStreaming: streaming }),
   setComplete: (complete) => set({ isComplete: complete, isLoading: false }),
   setError: (error) => set({ error, isLoading: false }),
+  setCurrentTurnNum: (turnNum) => set({ currentTurnNum: turnNum }),
+  incrementTurnNum: () => set((state) => ({ currentTurnNum: state.currentTurnNum + 1 })),
+  setCurrentFixedQId: (fixedQId) => set({ currentFixedQId: fixedQId }),
   reset: () => set(initialState),
 }));

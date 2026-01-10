@@ -43,6 +43,8 @@ export function useChatSession({
     setStreaming,
     setComplete,
     setError,
+    setCurrentTurnNum,
+    setCurrentFixedQId,
     reset,
   } = useChatStore();
 
@@ -62,15 +64,17 @@ export function useChatSession({
         return;
       }
 
+      // ⭐ 새 질문의 fixed_q_id와 turn_num으로 상태 업데이트
+      setCurrentFixedQId(data.fixedQId);
+      setCurrentTurnNum(data.turnNum);
+
       // Phase 2: Opening
       if (data.qType === 'OPENING') {
-        // 이미 표시된 오프닝이면 스킵할 수도 있지만, 서버가 보내주는 대로 믿음
         addAIMessage(data.questionText, data.turnNum, data.qType, data.fixedQId);
       }
       // Phase 5: Closing
       else if (data.qType === 'CLOSING') {
         addAIMessage(data.questionText, data.turnNum, data.qType, data.fixedQId);
-        // 클로징은 보통 바로 done으로 이어지거나 인터뷰 완료 처리됨
       }
       // Phase 3-4: Main & Tail
       else {
@@ -81,15 +85,15 @@ export function useChatSession({
       setLoading(false);
     },
     onContinue: (data) => {
-      // 스트리밍 토큰 수신 (모든 단계 공통)
-      appendStreamingToken(data.questionText, data.turnNum, data.qType);
+      // 스트리밍 토큰 수신 (모든 단계 공통) - fixedQId도 전달
+      appendStreamingToken(data.questionText, data.turnNum, data.qType, data.fixedQId);
       if (!isStreaming) {
         setStreaming(true);
       }
     },
     onGreetingContinue: (data) => {
-      // 인사말 스트리밍 토큰 수신
-      appendStreamingToken(data.questionText, data.turnNum, data.qType);
+      // 인사말 스트리밍 토큰 수신 - fixedQId도 전달
+      appendStreamingToken(data.questionText, data.turnNum, data.qType, data.fixedQId);
       if (!isStreaming) {
         setStreaming(true);
       }
@@ -184,13 +188,10 @@ export function useChatSession({
         (m) => m.type === 'ai' && m.turnNum === currentTurnNum
       );
       const questionText = currentQuestion?.content ?? '';
-      // fixedQId는 null이 될 수 있음 (오프닝, 클로징 등)
-      // [FIX] 오프닝 질문(첫 턴)의 경우 fixedQId가 null일 수 있는데, 서버 에러 방지를 위해 1로 강제 설정
-      const rawFixedQId = currentQuestion?.fixedQId ?? currentFixedQId;
-      const fixedQId = rawFixedQId || 1;
 
-      // OPENING 단계 등에서는 fixedQId가 없을 수 있으므로 체크 완화
-      // 다만 일반적인 질문에서는 있어야 함. 우선순위: 서버에서 온 fixedQId
+      // ⭐ 스토어의 최신 currentFixedQId 직접 사용
+      const fixedQId = currentFixedQId;
+      // OPENING/GREETING 등 fixedQId가 null인 경우는 서버에서 처리
 
       // 낙관적 업데이트: UI에 먼저 표시
       addUserMessage(answerText, currentTurnNum);
