@@ -1,10 +1,6 @@
 import { useState } from 'react';
-import {
-  Link,
-  useNavigate,
-  useOutletContext,
-  useParams,
-} from 'react-router-dom';
+import { Link, useOutletContext, useParams } from 'react-router-dom';
+
 
 import { Button } from '@/components/ui/button';
 import type { SurveyShellContext } from '@/features/survey/components/SurveyShell';
@@ -25,21 +21,12 @@ function useSurveyShellContextSafe() {
 
 function SurveyDesignPage() {
   const params = useParams<{ gameUuid: string }>();
-  const navigate = useNavigate();
   const shellContext = useSurveyShellContextSafe();
 
   const [isCompleted, setIsCompleted] = useState(false);
   const [surveyUrl, setSurveyUrl] = useState<string | null>(null);
 
   const handleComplete = (result: SubmitResult) => {
-    // 첫 설문이면 상세 페이지로 바로 이동
-    if (result.isFirstSurvey && params.gameUuid) {
-      navigate(
-        `/games/${params.gameUuid}/surveys/${result.surveyUuid}/overview`
-      );
-      return;
-    }
-
     setSurveyUrl(result.surveyUrl);
     setIsCompleted(true);
   };
