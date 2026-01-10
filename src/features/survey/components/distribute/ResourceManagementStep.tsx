@@ -77,6 +77,7 @@ export function ResourceManagementStep({
     },
   });
 
+  // eslint-disable-next-line react-hooks/incompatible-library -- react-hook-form watch()
   const instanceType = watch('instanceType');
 
   // 성공 콜백

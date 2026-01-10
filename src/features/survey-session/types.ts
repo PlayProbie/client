@@ -20,7 +20,7 @@
 export type SurveySessionStatus = 'IN_PROGRESS' | 'COMPLETED' | 'DROPPED';
 
 /** 인터뷰 로그 질문 타입 */
-export type InterviewLogQType = 'FIXED' | 'TAIL' | 'OPENING' | 'CLOSING' | 'GREETING';
+export type InterviewLogQType = 'FIXED' | 'TAIL' | 'OPENING' | 'CLOSING' | 'GREETING' | 'REACTION';
 
 /** 테스터 프로필 데이터 */
 export interface TesterProfile {
@@ -87,6 +87,12 @@ export interface ApiSSEContinueEventData {
 /** [API] SSE start 이벤트 데이터 */
 export interface ApiSSEStartEventData {
   status: 'processing';
+}
+
+/** [API] SSE reaction 이벤트 데이터 */
+export interface ApiSSEReactionEventData {
+  reaction_text: string;
+  turn_num: number;
 }
 
 /** [API] SSE interview_complete 이벤트 데이터 */
@@ -175,6 +181,12 @@ export interface SSEContinueEventData {
   turnNum: number;
 }
 
+/** [Client] SSE Reaction 이벤트 데이터 */
+export interface SSEReactionEventData {
+  reactionText: string;
+  turnNum: number;
+}
+
 /** [Client] 채팅 메시지 데이터 (클라이언트 상태) */
 export interface ChatMessageData {
   id: string;
@@ -220,6 +232,7 @@ export interface UseChatSSEOptions {
   onQuestion?: (data: SSEQuestionEventData) => void;
   onContinue?: (data: SSEContinueEventData) => void;
   onGreetingContinue?: (data: SSEContinueEventData) => void;
+  onReaction?: (data: SSEReactionEventData) => void;
   onStart?: () => void;
   onDone?: (turnNum: number) => void;
   onInterviewComplete?: () => void;
@@ -278,6 +291,16 @@ export function toSSEContinueEventData(
     fixedQId: api.fixed_q_id,
     qType: api.q_type,
     questionText: api.question_text,
+    turnNum: api.turn_num,
+  };
+}
+
+/** API SSE Reaction 이벤트 -> 클라이언트 변환 */
+export function toSSEReactionEventData(
+  api: ApiSSEReactionEventData
+): SSEReactionEventData {
+  return {
+    reactionText: api.reaction_text,
     turnNum: api.turn_num,
   };
 }
