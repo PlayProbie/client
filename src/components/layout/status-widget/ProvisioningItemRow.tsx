@@ -2,7 +2,7 @@
  * ProvisioningItemRow - 개별 프로비저닝 항목 표시 컴포넌트
  */
 import { AlertCircle, CheckCircle2, Loader2, Server, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { memo } from 'react';
 
 import { Button } from '@/components/ui/button';
 import type {
@@ -14,11 +14,12 @@ import { StatusItemRow } from './StatusItemRow';
 
 interface ProvisioningItemRowProps {
   item: ProvisioningItem;
+  now?: number;
   onRemove: (id: string) => void;
 }
 
-function formatElapsedTime(startedAt: number): string {
-  const elapsed = Math.floor((Date.now() - startedAt) / 1000);
+function formatElapsedTime(startedAt: number, now: number): string {
+  const elapsed = Math.floor((now - startedAt) / 1000);
   const minutes = Math.floor(elapsed / 60);
   const seconds = elapsed % 60;
 
@@ -61,29 +62,19 @@ function getStatusText(status: ProvisioningStatus): string {
   }
 }
 
-export function ProvisioningItemRow({
+function ProvisioningItemRowComponent({
   item,
+  now,
   onRemove,
 }: ProvisioningItemRowProps) {
   const { id, buildName, status, startedAt, errorMessage } = item;
-  const [elapsedTime, setElapsedTime] = useState(() =>
-    formatElapsedTime(startedAt)
-  );
 
   const isActive = ['CREATING', 'PROVISIONING'].includes(status);
   const isComplete =
     status === 'ACTIVE' || status === 'READY' || status === 'ERROR';
-
-  // 경과 시간 업데이트 (진행 중일 때만)
-  useEffect(() => {
-    if (!isActive) return;
-
-    const interval = setInterval(() => {
-      setElapsedTime(formatElapsedTime(startedAt));
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [isActive, startedAt]);
+  const elapsedTime = isActive
+    ? formatElapsedTime(startedAt, now ?? startedAt)
+    : '';
 
   // 액션 버튼들
   const renderActions = () => (
@@ -123,3 +114,5 @@ export function ProvisioningItemRow({
     </StatusItemRow>
   );
 }
+
+export const ProvisioningItemRow = memo(ProvisioningItemRowComponent);

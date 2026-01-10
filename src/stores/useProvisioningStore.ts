@@ -87,7 +87,13 @@ export const useProvisioningStore = create<ProvisioningStore>()((set) => ({
   updateStatus: (id, status) => {
     set((state) => ({
       items: state.items.map((item) =>
-        item.id === id ? { ...item, status } : item
+        item.id === id
+          ? {
+              ...item,
+              status,
+              errorMessage: status === 'ERROR' ? item.errorMessage : undefined,
+            }
+          : item
       ),
     }));
   },
@@ -140,7 +146,7 @@ export const selectActiveCount = (state: ProvisioningStore) =>
     ['CREATING', 'PROVISIONING'].includes(item.status)
   ).length;
 
-/** 완료된 항목 수 (ACTIVE + ERROR) */
+/** 완료된 항목 수 (ACTIVE + READY + ERROR) */
 export const selectCompletedCount = (state: ProvisioningStore) =>
   state.items.filter(
     (item) =>

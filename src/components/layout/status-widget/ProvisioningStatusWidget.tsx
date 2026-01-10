@@ -3,6 +3,8 @@
  * 우측 하단에 고정되어 프로비저닝 진행 상태를 표시
  */
 import { Server } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useShallow } from 'zustand/shallow';
 
 import { ScrollArea } from '@/components/ui/ScrollArea';
 import {
@@ -17,18 +19,39 @@ import { StatusWidgetContainer } from './StatusWidgetContainer';
 import { StatusWidgetHeader } from './StatusWidgetHeader';
 
 export function ProvisioningStatusWidget() {
-  const items = useProvisioningStore((state) => state.items);
-  const isMinimized = useProvisioningStore((state) => state.isMinimized);
-  const hasActiveProvisioning = useProvisioningStore(
-    selectHasActiveProvisioning
+  const {
+    items,
+    isMinimized,
+    hasActiveProvisioning,
+    activeCount,
+    completedCount,
+    toggleMinimize,
+    removeItem,
+    clearCompleted,
+  } = useProvisioningStore(
+    useShallow((state) => ({
+      items: state.items,
+      isMinimized: state.isMinimized,
+      hasActiveProvisioning: selectHasActiveProvisioning(state),
+      activeCount: selectActiveCount(state),
+      completedCount: selectCompletedCount(state),
+      toggleMinimize: state.toggleMinimize,
+      removeItem: state.removeItem,
+      clearCompleted: state.clearCompleted,
+    }))
   );
 
-  const activeCount = useProvisioningStore(selectActiveCount);
-  const completedCount = useProvisioningStore(selectCompletedCount);
+  const [now, setNow] = useState(() => Date.now());
 
-  const toggleMinimize = useProvisioningStore((state) => state.toggleMinimize);
-  const removeItem = useProvisioningStore((state) => state.removeItem);
-  const clearCompleted = useProvisioningStore((state) => state.clearCompleted);
+  useEffect(() => {
+    if (!hasActiveProvisioning) return;
+
+    const interval = setInterval(() => {
+      setNow(Date.now());
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [hasActiveProvisioning]);
 
   // 프로비저닝 항목이 없으면 위젯 숨김
   if (items.length === 0) {
@@ -58,13 +81,18 @@ export function ProvisioningStatusWidget() {
       {!isMinimized && (
         <ScrollArea className="max-h-60">
           <div className="divide-y">
-            {items.map((item) => (
-              <ProvisioningItemRow
-                key={item.id}
-                item={item}
-                onRemove={removeItem}
-              />
-            ))}
+            {items.map((item) => {
+              const isActive =
+                item.status === 'CREATING' || item.status === 'PROVISIONING';
+              return (
+                <ProvisioningItemRow
+                  key={item.id}
+                  item={item}
+                  now={isActive ? now : undefined}
+                  onRemove={removeItem}
+                />
+              );
+            })}
           </div>
         </ScrollArea>
       )}
