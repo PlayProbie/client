@@ -18,6 +18,7 @@ import {
 import { CheckboxGroup } from '@/components/ui/CheckboxGroup';
 import { Spinner } from '@/components/ui/loading';
 import { GAME_GENRE_OPTIONS } from '@/constants';
+import type { GameGenre } from '@/features/game';
 import { createChatSession } from '@/features/survey-session';
 import type { TesterProfile } from '@/features/survey-session/types';
 
@@ -32,7 +33,7 @@ function SurveySessionStartPage() {
   // Form State
   const [gender, setGender] = useState<string>('');
   const [ageGroup, setAgeGroup] = useState<string>('');
-  const [preferGenre, setPreferGenre] = useState<string[]>([]);
+  const [preferGenre, setPreferGenre] = useState<GameGenre[]>([]);
 
   const handleStart = async () => {
     if (!surveyUuid) {
@@ -52,7 +53,7 @@ function SurveySessionStartPage() {
       const profile: TesterProfile = {
         gender,
         ageGroup,
-        preferGenre: preferGenre.join(', '), // DB 호환을 위해 콤마로 연결
+        preferGenre,
       };
 
       const response = await createChatSession({

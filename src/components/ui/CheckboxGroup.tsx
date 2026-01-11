@@ -1,22 +1,22 @@
 import { Label } from '@/components/ui/Label';
 import { cn } from '@/lib/utils';
 
-type CheckboxOption = {
-  value: string;
+type CheckboxOption<T> = {
+  value: T;
   label: string;
 };
 
-type CheckboxGroupProps = {
+type CheckboxGroupProps<T> = {
   /** 폼 필드의 고유 ID */
   id: string;
   /** 레이블 텍스트 */
   label: string;
   /** 선택 옵션 목록 */
-  options: CheckboxOption[];
+  options: CheckboxOption<T>[];
   /** 현재 선택된 값 배열 (controlled) */
-  value: string[];
+  value: T[];
   /** 값 변경 핸들러 (controlled) */
-  onChange: (value: string[]) => void;
+  onChange: (value: T[]) => void;
   /** 컬럼 수 (기본값: 3) */
   columns?: 2 | 3 | 4;
   /** 추가 CSS 클래스 */
@@ -36,7 +36,7 @@ const columnClasses = {
 /**
  * 다중 선택 체크박스 그룹 (controlled)
  */
-function CheckboxGroup({
+function CheckboxGroup<T extends string | number>({
   id,
   label,
   options,
@@ -46,8 +46,8 @@ function CheckboxGroup({
   className,
   error,
   maxSelection,
-}: CheckboxGroupProps) {
-  const handleChange = (optionValue: string, checked: boolean) => {
+}: CheckboxGroupProps<T>) {
+  const handleChange = (optionValue: T, checked: boolean) => {
     if (checked) {
       // 최대 선택 제한 체크
       if (maxSelection && value.length >= maxSelection) {
@@ -59,7 +59,7 @@ function CheckboxGroup({
     }
   };
 
-  const isOptionDisabled = (optionValue: string) => {
+  const isOptionDisabled = (optionValue: T) => {
     if (!maxSelection) return false;
     return !value.includes(optionValue) && value.length >= maxSelection;
   };
@@ -108,4 +108,3 @@ function CheckboxGroup({
 
 export { CheckboxGroup };
 export type { CheckboxGroupProps, CheckboxOption };
-

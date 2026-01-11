@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 
-import type { CreateGameRequest } from '../types';
+import type { CreateGameRequest, GameGenre } from '../types';
 
 const INITIAL_FORM_STATE: CreateGameRequest = {
   gameName: '',
@@ -30,7 +30,7 @@ export function useGameForm(initialData?: CreateGameRequest) {
     });
   }, []);
 
-  const handleGenreToggle = useCallback((genre: string) => {
+  const handleGenreToggle = useCallback((genre: GameGenre) => {
     setFormData((prev) => {
       const isSelected = prev.gameGenre.includes(genre);
       if (isSelected) {

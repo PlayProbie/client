@@ -11,7 +11,11 @@ import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
 import { Textarea } from '@/components/ui/Textarea';
 
-import { type CreateGameRequest, GameGenreConfig } from '../types';
+import {
+  type CreateGameRequest,
+  type GameGenre,
+  GameGenreConfig,
+} from '../types';
 
 const MAX_GENRE_SELECTION = 3;
 
@@ -22,7 +26,7 @@ interface GameFormModalProps {
   description: string;
   formData: CreateGameRequest;
   setFormData: React.Dispatch<React.SetStateAction<CreateGameRequest>>;
-  onGenreToggle: (genre: string) => void;
+  onGenreToggle: (genre: GameGenre) => void;
   onSubmit: () => void;
   isSubmitting: boolean;
   submitLabel: string;
@@ -75,25 +79,27 @@ export function GameFormModal({
               </span>
             </div>
             <div className="flex flex-wrap gap-2">
-              {Object.entries(GameGenreConfig).map(([key, { value, label }]) => {
-                const isSelected = formData.gameGenre.includes(value);
-                const isMaxReached =
-                  formData.gameGenre.length >= MAX_GENRE_SELECTION;
-                const isDisabled = !isSelected && isMaxReached;
+              {Object.entries(GameGenreConfig).map(
+                ([key, { value, label }]) => {
+                  const isSelected = formData.gameGenre.includes(value);
+                  const isMaxReached =
+                    formData.gameGenre.length >= MAX_GENRE_SELECTION;
+                  const isDisabled = !isSelected && isMaxReached;
 
-                return (
-                  <Button
-                    key={key}
-                    type="button"
-                    size="sm"
-                    variant={isSelected ? 'default' : 'outline'}
-                    disabled={isDisabled}
-                    onClick={() => onGenreToggle(value)}
-                  >
-                    {label}
-                  </Button>
-                );
-              })}
+                  return (
+                    <Button
+                      key={key}
+                      type="button"
+                      size="sm"
+                      variant={isSelected ? 'default' : 'outline'}
+                      disabled={isDisabled}
+                      onClick={() => onGenreToggle(value)}
+                    >
+                      {label}
+                    </Button>
+                  );
+                }
+              )}
             </div>
           </div>
 

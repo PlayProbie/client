@@ -14,21 +14,21 @@ import type { ConfigValue } from '@/types';
 
 /** 게임 장르 정의 (value + label) */
 export const GameGenreConfig = {
-  action: { value: 'ACTION', label: '액션' },
-  adventure: { value: 'ADVENTURE', label: '어드벤처' },
-  simulation: { value: 'SIMULATION', label: '시뮬레이션' },
-  puzzle: { value: 'PUZZLE', label: '퍼즐' },
-  strategy: { value: 'STRATEGY', label: '전략' },
-  rpg: { value: 'RPG', label: 'RPG' },
-  arcade: { value: 'ARCADE', label: '아케이드' },
-  horror: { value: 'HORROR', label: '호러' },
-  shooter: { value: 'SHOOTER', label: '슈팅' },
-  visualNovel: { value: 'VISUAL_NOVEL', label: '비주얼 노벨' },
-  roguelike: { value: 'ROGUELIKE', label: '로그라이크' },
-  sports: { value: 'SPORTS', label: '스포츠' },
-  rhythm: { value: 'RHYTHM', label: '리듬' },
-  fighting: { value: 'FIGHTING', label: '대전' },
-  casual: { value: 'CASUAL', label: '캐주얼' },
+  ACTION: { value: 'ACTION', label: '액션' },
+  ADVENTURE: { value: 'ADVENTURE', label: '어드벤처' },
+  SIMULATION: { value: 'SIMULATION', label: '시뮬레이션' },
+  PUZZLE: { value: 'PUZZLE', label: '퍼즐' },
+  STRATEGY: { value: 'STRATEGY', label: '전략' },
+  RPG: { value: 'RPG', label: 'RPG' },
+  ARCADE: { value: 'ARCADE', label: '아케이드' },
+  HORROR: { value: 'HORROR', label: '호러' },
+  SHOOTER: { value: 'SHOOTER', label: '슈팅' },
+  VISUAL_NOVEL: { value: 'VISUAL_NOVEL', label: '비주얼 노벨' },
+  ROGUELIKE: { value: 'ROGUELIKE', label: '로그라이크' },
+  SPORTS: { value: 'SPORTS', label: '스포츠' },
+  RHYTHM: { value: 'RHYTHM', label: '리듬' },
+  FIGHTING: { value: 'FIGHTING', label: '대전' },
+  CASUAL: { value: 'CASUAL', label: '캐주얼' },
 } as const;
 
 /** 게임 장르 타입 */
@@ -43,7 +43,7 @@ export interface ApiGame {
   game_uuid: string;
   workspace_uuid: string;
   game_name: string;
-  game_genre: string[];
+  game_genre: GameGenre[];
   game_context: string;
   created_at: string;
   updated_at: string;
@@ -52,14 +52,14 @@ export interface ApiGame {
 /** [API] POST /workspaces/{workspaceUuid}/games Request */
 export interface ApiCreateGameRequest {
   game_name: string;
-  game_genre: string[];
+  game_genre: GameGenre[];
   game_context: string;
 }
 
 /** [API] PUT /games/{gameUuid} Request */
 export interface ApiUpdateGameRequest {
   game_name: string;
-  game_genre: string[];
+  game_genre: GameGenre[];
   game_context: string;
 }
 
@@ -82,7 +82,7 @@ export interface Game {
   gameUuid: string;
   workspaceUuid: string;
   gameName: string;
-  gameGenre: string[];
+  gameGenre: GameGenre[];
   gameContext: string;
   createdAt: string;
   updatedAt: string;
@@ -91,14 +91,14 @@ export interface Game {
 /** [Client] 게임 생성 요청 */
 export interface CreateGameRequest {
   gameName: string;
-  gameGenre: string[];
+  gameGenre: GameGenre[];
   gameContext: string;
 }
 
 /** [Client] 게임 수정 요청 */
 export interface UpdateGameRequest {
   gameName: string;
-  gameGenre: string[];
+  gameGenre: GameGenre[];
   gameContext: string;
 }
 
