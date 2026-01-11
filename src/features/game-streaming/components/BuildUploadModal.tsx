@@ -3,7 +3,6 @@
  * 역할: 업로드 폼 입력 및 업로드 진행 상태 표시
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -43,7 +42,6 @@ export function BuildUploadModal({
   open,
   onOpenChange,
 }: BuildUploadModalProps) {
-  const navigate = useNavigate();
   const { toast } = useToast();
   const startUpload = useUploadStore((state) => state.startUpload);
   const cancelUpload = useUploadStore((state) => state.cancelUpload);
@@ -154,11 +152,6 @@ export function BuildUploadModal({
     setUploadId(newUploadId);
   };
 
-  const handleGoToStreamSettings = () => {
-    handleClose();
-    navigate(`/games/${gameUuid}/stream-settings`);
-  };
-
   const handleFormChange = (nextData: BuildUploadFormData) => {
     setFormData(nextData);
     if (formError) {
@@ -205,17 +198,12 @@ export function BuildUploadModal({
 
           <DialogFooter>
             {isSuccess ? (
-              <>
-                <Button
-                  variant="outline"
-                  onClick={handleClose}
-                >
-                  Close
-                </Button>
-                <Button onClick={handleGoToStreamSettings}>
-                  Go to Stream Settings
-                </Button>
-              </>
+              <Button
+                variant="outline"
+                onClick={handleClose}
+              >
+                Close
+              </Button>
             ) : isError ? (
               <>
                 <Button
