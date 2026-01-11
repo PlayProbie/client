@@ -123,7 +123,12 @@ export function GameFormModal({
           </Button>
           <Button
             onClick={onSubmit}
-            disabled={isSubmitting || !formData.gameName}
+            disabled={
+              isSubmitting ||
+              !formData.gameName.trim() ||
+              formData.gameGenre.length === 0 ||
+              !formData.gameContext.trim()
+            }
           >
             {isSubmitting ? '처리 중...' : submitLabel}
           </Button>
