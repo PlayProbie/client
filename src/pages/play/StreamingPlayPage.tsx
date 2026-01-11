@@ -4,22 +4,16 @@
  * 테스터가 게임을 스트리밍으로 플레이하는 페이지입니다.
  * 밝은 테마의 게임 스트리밍 UI를 제공합니다.
  */
-import { Clock, Gamepad2, Wifi, WifiOff } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/Dialog';
 import { InlineAlert } from '@/components/ui/InlineAlert';
 import { PageSpinner } from '@/components/ui/loading';
 import {
+  StreamCompletionDialog,
+  StreamFooter,
+  StreamHeader,
   StreamPlayer,
   useGameStream,
   useSessionInfo,
@@ -32,14 +26,7 @@ import { useToast } from '@/hooks/useToast';
 /** 세션 최대 시간 (초) - 2분 */
 const SESSION_MAX_DURATION_SECONDS = 120;
 
-/** 남은 시간 포맷팅 */
-function formatTime(seconds: number): string {
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  return `${mins}:${secs.toString().padStart(2, '0')}`;
-}
-
-export default function TesterPlaceholderPage() {
+export default function StreamingPlayPage() {
   const { surveyUuid } = useParams<{ surveyUuid: string }>();
   const { toast } = useToast();
 
@@ -241,86 +228,18 @@ export default function TesterPlaceholderPage() {
 
   const { gameName, isAvailable, streamSettings } = sessionInfo;
 
-  // 남은 시간 경고 상태
-  const isTimeWarning = remainingTime <= 30 && remainingTime > 0;
-  const isTimeCritical = remainingTime <= 10 && remainingTime > 0;
-
   return (
     <div className="bg-background flex min-h-screen flex-col">
-      {/* 상단 헤더 바 */}
-      <header className="bg-surface flex items-center justify-between border-b border-slate-200 px-4 py-3 shadow-sm">
-        <div className="flex items-center gap-3">
-          <div className="bg-primary/10 flex h-9 w-9 items-center justify-center rounded-lg">
-            <Gamepad2 className="text-primary h-5 w-5" />
-          </div>
-          <div>
-            <h1 className="text-foreground text-base font-semibold">
-              {gameName}
-            </h1>
-            {streamSettings && (
-              <p className="text-muted-foreground text-xs">
-                {streamSettings.resolution} • {streamSettings.fps} FPS
-              </p>
-            )}
-          </div>
-        </div>
-
-        <div className="flex items-center gap-4">
-          {/* 연결 상태 표시 */}
-          <div className="flex items-center gap-2">
-            {isConnected ? (
-              <>
-                <Wifi className="h-4 w-4 text-emerald-600" />
-                <span className="text-sm font-medium text-emerald-600">
-                  연결됨
-                </span>
-              </>
-            ) : isConnecting ? (
-              <>
-                <div className="border-primary h-4 w-4 animate-spin rounded-full border-2 border-t-transparent" />
-                <span className="text-muted-foreground text-sm">
-                  연결 중...
-                </span>
-              </>
-            ) : (
-              <>
-                <WifiOff className="text-muted-foreground h-4 w-4" />
-                <span className="text-muted-foreground text-sm">연결 대기</span>
-              </>
-            )}
-          </div>
-
-          {/* 남은 시간 표시 */}
-          {isConnected && (
-            <div
-              className={`flex items-center gap-2 rounded-lg px-3 py-1.5 ${
-                isTimeCritical
-                  ? 'animate-pulse bg-red-100 text-red-600'
-                  : isTimeWarning
-                    ? 'bg-amber-100 text-amber-600'
-                    : 'bg-slate-100 text-slate-600'
-              }`}
-            >
-              <Clock className="h-4 w-4" />
-              <span className="font-mono text-sm font-medium">
-                {formatTime(remainingTime)}
-              </span>
-            </div>
-          )}
-
-          {/* 세션 종료 버튼 */}
-          {isConnected && sessionUuid && (
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={handleDisconnect}
-              disabled={terminateMutation.isPending}
-            >
-              {terminateMutation.isPending ? '종료 중...' : '게임 종료'}
-            </Button>
-          )}
-        </div>
-      </header>
+      <StreamHeader
+        gameName={gameName}
+        streamSettings={streamSettings}
+        isConnected={isConnected}
+        isConnecting={isConnecting}
+        isTerminating={terminateMutation.isPending}
+        sessionUuid={sessionUuid || undefined}
+        remainingTime={remainingTime}
+        onDisconnect={handleDisconnect}
+      />
 
       {/* 메인 스트리밍 영역 */}
       <main className="flex flex-1 flex-col items-center justify-center bg-slate-100 p-4">
@@ -338,52 +257,16 @@ export default function TesterPlaceholderPage() {
         </div>
       </main>
 
-      {/* 하단 안내 바 */}
-      <footer className="bg-surface border-t border-slate-200 px-4 py-3">
-        <div className="mx-auto flex max-w-6xl items-center justify-between">
-          <p className="text-muted-foreground text-xs">
-            게임 스트리밍은 Chrome 최신 버전 / PC 환경에서 최적화되어 있습니다.
-          </p>
-          {isConnected && sessionUuid && (
-            <p className="text-muted-foreground text-xs">
-              세션: {sessionUuid.slice(0, 8)}...
-            </p>
-          )}
-        </div>
-      </footer>
+      <StreamFooter
+        isConnected={isConnected}
+        sessionUuid={sessionUuid || undefined}
+      />
 
-      {/* 종료 완료 모달 */}
-      <Dialog
+      <StreamCompletionDialog
         open={showCompletionModal}
         onOpenChange={setShowCompletionModal}
-      >
-        <DialogContent showCloseButton={false}>
-          <DialogHeader>
-            <DialogTitle>게임 플레이가 종료되었습니다</DialogTitle>
-            <DialogDescription>
-              플레이해주셔서 감사합니다. 설문 페이지에서 피드백을 남겨주세요.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setShowCompletionModal(false)}
-            >
-              닫기
-            </Button>
-            <Button
-              disabled={!sessionUuid}
-              onClick={() => {
-                if (!sessionUuid) return;
-                const baseUrl = import.meta.env.VITE_CLIENT_BASE_URL || '';
-                window.location.href = `${baseUrl}/surveys/session/${sessionUuid}`;
-              }}
-            >
-              설문 참여하기
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        sessionUuid={sessionUuid || undefined}
+      />
     </div>
   );
 }

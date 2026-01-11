@@ -259,7 +259,7 @@ export function StreamPlayer({
       {isConnected && (
         <div
           ref={controlsRef}
-          className="absolute right-0 bottom-0 left-0 flex items-center justify-between bg-gradient-to-t from-black/60 to-transparent p-4 opacity-0 transition-opacity hover:opacity-100"
+          className="absolute right-0 bottom-0 left-0 flex items-center justify-between bg-linear-to-t from-black/60 to-transparent p-4 opacity-0 transition-opacity hover:opacity-100"
         >
           <div className="flex items-center gap-2">
             <Button
