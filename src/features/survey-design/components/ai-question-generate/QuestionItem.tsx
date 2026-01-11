@@ -1,6 +1,7 @@
-import * as AccordionPrimitive from '@radix-ui/react-accordion';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Sparkles } from 'lucide-react';
+import { useState } from 'react';
 
+import { Button } from '@/components/ui';
 import { Checkbox } from '@/components/ui/Checkbox';
 import { cn } from '@/lib/utils';
 
@@ -53,11 +54,32 @@ function QuestionItem({
     onSubmit: (edited) => onRequestFeedback(index, edited),
   });
 
+  const [isOpen, setIsOpen] = useState(false);
+
+  // 피드백 토글 (열기/닫기 + 없으면 요청)
+  const handleFeedbackToggle = async () => {
+    // 닫혀있으면 -> 연다 (없으면 요청)
+    if (!isOpen) {
+      setIsOpen(true);
+      if (!feedback) {
+        await onRequestFeedback(index, question);
+      }
+    } else {
+      // 열려있으면 -> 닫는다
+      setIsOpen(false);
+    }
+  };
+
+  // 대안 선택 시 (질문 변경 + 닫기)
+  const handleSuggestionSelect = (idx: number, suggestion: string) => {
+    onSuggestionClick(idx, suggestion);
+    setIsOpen(false);
+  };
+
   const isDisabled = isLoading || isSubmitting;
 
   return (
-    <AccordionPrimitive.Item
-      value={`item-${index}`}
+    <div
       className={cn(
         'rounded-lg border transition-colors',
         isSelected
@@ -67,61 +89,80 @@ function QuestionItem({
       )}
     >
       {/* Question Header */}
-      <AccordionPrimitive.Header className="flex">
-        <div className="flex flex-1 items-center gap-3 px-4 py-4">
-          <Checkbox
-            id={`question-${index}`}
-            checked={isSelected}
-            onCheckedChange={() => onToggle(index)}
-            disabled={isDisabled}
-            onClick={(e) => e.stopPropagation()}
-          />
+      <div className="flex flex-1 items-center gap-3 px-4 py-4">
+        <Checkbox
+          id={`question-${index}`}
+          checked={isSelected}
+          onCheckedChange={() => onToggle(index)}
+          disabled={isDisabled}
+          onClick={(e) => e.stopPropagation()}
+        />
 
-          {/* Label or Edit Input */}
-          {isEditing ? (
-            <QuestionEditForm
-              editedQuestion={editedQuestion}
-              isSubmitting={isSubmitting}
-              onChangeQuestion={setEditedQuestion}
-              onSubmit={handleSubmitEdit}
-              onCancel={handleCancelEdit}
-            />
-          ) : (
-            <QuestionLabel
-              index={index}
-              question={question}
-              isSubmitting={isSubmitting}
-              isDisabled={isDisabled}
-              onStartEdit={handleStartEdit}
-            />
+        {/* Label or Edit Input */}
+        {isEditing ? (
+          <QuestionEditForm
+            editedQuestion={editedQuestion}
+            isSubmitting={isSubmitting}
+            onChangeQuestion={setEditedQuestion}
+            onSubmit={handleSubmitEdit}
+            onCancel={handleCancelEdit}
+          />
+        ) : (
+          <QuestionLabel
+            index={index}
+            question={question}
+            isSubmitting={isSubmitting}
+            isDisabled={isDisabled}
+            onStartEdit={handleStartEdit}
+          />
+        )}
+
+        {/* Feedback Toggle Button */}
+        <Button
+          variant="ghost"
+          size="sm"
+          className={cn(
+            'ml-auto gap-1 text-xs h-7 px-2',
+            isOpen ? 'text-primary' : 'text-muted-foreground'
           )}
-
-          <AccordionPrimitive.Trigger className="text-muted-foreground hover:text-foreground flex items-center gap-1 text-xs transition-colors [&[data-state=open]>svg]:rotate-180">
-            <span>대안</span>
-            <ChevronDown className="size-4 transition-transform duration-200" />
-          </AccordionPrimitive.Trigger>
-        </div>
-      </AccordionPrimitive.Header>
-
-      {/* AI Feedback */}
-      <QuestionFeedback
-        aiFeedback={feedback?.aiFeedback || ''}
-        isFetchingFeedback={isFetchingFeedback}
-        hasFeedback={!!feedback}
-      />
-
-      {/* Accordion Content - Suggestions */}
-      <AccordionPrimitive.Content className="data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down overflow-hidden text-sm">
-        <div className="border-border border-t px-4 pt-4 pb-4">
-          <QuestionSuggestions
-            suggestions={feedback?.suggestions || []}
-            questionIndex={index}
-            onSuggestionClick={onSuggestionClick}
-            disabled={isDisabled}
+          onClick={handleFeedbackToggle}
+          disabled={isDisabled}
+        >
+          <Sparkles className="size-3.5" />
+          <span>피드백</span>
+          <ChevronDown
+            className={cn(
+              'size-3.5 transition-transform duration-200',
+              isOpen && 'rotate-180'
+            )}
           />
+        </Button>
+      </div>
+
+      {/* Feedback & Suggestions Area (Expanded) */}
+      {isOpen && (
+        <div className="border-border border-t animate-accordion-down overflow-hidden text-sm">
+          {/* AI Feedback */}
+          <QuestionFeedback
+            aiFeedback={feedback?.aiFeedback || ''}
+            isFetchingFeedback={isFetchingFeedback}
+            hasFeedback={!!feedback}
+          />
+
+          {/* Suggestions */}
+          {(feedback?.suggestions?.length ?? 0) > 0 && (
+            <div className="border-border border-t px-4 pt-4 pb-4">
+              <QuestionSuggestions
+                suggestions={feedback?.suggestions || []}
+                questionIndex={index}
+                onSuggestionClick={handleSuggestionSelect}
+                disabled={isDisabled}
+              />
+            </div>
+          )}
         </div>
-      </AccordionPrimitive.Content>
-    </AccordionPrimitive.Item>
+      )}
+    </div>
   );
 }
 

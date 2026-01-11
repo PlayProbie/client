@@ -66,9 +66,9 @@ function StepQuestionUserGenerate() {
         <Button
           type="button"
           onClick={handleAddQuestion}
-          disabled={!newQuestion.trim() || isFetchingFeedback}
+          disabled={!newQuestion.trim()} // isFetchingFeedback 제거
         >
-          {isFetchingFeedback ? '추가 중...' : '피드백 받기'}
+          추가
         </Button>
       </div>
 
