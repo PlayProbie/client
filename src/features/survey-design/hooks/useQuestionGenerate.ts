@@ -1,8 +1,8 @@
 import { useMutation } from '@tanstack/react-query';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useFormContext } from 'react-hook-form';
 
-import { useToast } from '@/hooks/useToast';
+
 
 import { postAiQuestions } from '../api';
 import { useSurveyFormStore } from '../store/useSurveyFormStore';
@@ -24,15 +24,12 @@ const DEFAULT_QUESTION_COUNT = 3;
 function useQuestionGenerate() {
   const { formData, updateFormData } = useSurveyFormStore();
   const { setValue } = useFormContext<SurveyFormData>();
-  const { toast } = useToast();
+
 
   // 공통 질문 관리 로직
   const manager = useQuestionManager();
 
   // 추가 상태
-  const [pendingFeedbackQuestions, setPendingFeedbackQuestions] = useState<
-    Set<string>
-  >(new Set());
   const initialGenerateRef = useRef(false);
 
   // AI 질문 생성 mutation
@@ -129,64 +126,7 @@ function useQuestionGenerate() {
     });
   }, [manager.questions.length, isGenerating, generateQuestions]);
 
-  // 전체 질문에 대한 피드백 요청 (초기 로드 시)
-  const managerRef = useRef(manager);
-  const fetchingQuestionsRef = useRef<Set<string>>(new Set());
 
-  // useEffect 내에서 ref 동기화 (렌더링 중 side effect 방지)
-  useEffect(() => {
-    managerRef.current = manager;
-  }, [manager]);
-
-  useEffect(() => {
-    const fetchAllFeedback = async () => {
-      const currentManager = managerRef.current;
-
-      if (currentManager.questions.length === 0) return;
-
-      // 이미 피드백이 있는 질문은 스킵
-      const questionsToFetch = currentManager.questions.filter(
-        (q) =>
-          !currentManager.feedbackMap[q] && !fetchingQuestionsRef.current.has(q)
-      );
-      if (questionsToFetch.length === 0) return;
-
-      questionsToFetch.forEach((q) => fetchingQuestionsRef.current.add(q));
-      setPendingFeedbackQuestions((prev) => {
-        const next = new Set(prev);
-        questionsToFetch.forEach((q) => next.add(q));
-        return next;
-      });
-
-      try {
-        await Promise.all(
-          questionsToFetch.map(async (question) => {
-            const feedback =
-              await currentManager.fetchFeedbackForQuestion(question);
-            currentManager.setFeedbackMap((prev) => ({
-              ...prev,
-              [question]: feedback,
-            }));
-          })
-        );
-      } catch {
-        toast({
-          variant: 'destructive',
-          title: '피드백 요청 실패',
-          description: '질문 피드백을 가져오는데 실패했습니다.',
-        });
-      } finally {
-        questionsToFetch.forEach((q) => fetchingQuestionsRef.current.delete(q));
-        setPendingFeedbackQuestions((prev) => {
-          const next = new Set(prev);
-          questionsToFetch.forEach((q) => next.delete(q));
-          return next;
-        });
-      }
-    };
-
-    fetchAllFeedback();
-  }, [manager.questions, toast]);
 
   // 질문 재생성
   const handleRegenerate = useCallback(async () => {
@@ -233,7 +173,7 @@ function useQuestionGenerate() {
     // AI 전용 상태
     isGenerating,
     generateError: generateError?.message ?? null,
-    pendingFeedbackQuestions,
+    pendingFeedbackQuestions: new Set<string>(), // 호환성 유지용 빈 Set
 
     // 공통 핸들러 (from manager)
     handleToggle: manager.handleToggle,
