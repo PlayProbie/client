@@ -214,6 +214,8 @@ export const gameStreamingSessionHandlers = [
       const body = (await request.json()) as {
         survey_session_uuid: string;
         reason?: string;
+        /** true: 스트리밍만 종료, 세션은 IN_PROGRESS 유지 (인터뷰 진입 시) */
+        proceed_to_interview?: boolean;
       };
 
       const session = MOCK_SESSIONS[body.survey_session_uuid];
@@ -224,7 +226,17 @@ export const gameStreamingSessionHandlers = [
         );
       }
 
-      // 세션 종료 처리
+      // proceed_to_interview가 true면 스트리밍만 종료, 세션은 활성 상태 유지
+      if (body.proceed_to_interview) {
+        // 세션은 IN_PROGRESS 상태로 유지 (인터뷰용)
+        // 스트리밍(AWS)만 종료된 것으로 간주
+        return HttpResponse.json({
+          success: true,
+          data: { success: true },
+        });
+      }
+
+      // 기본 동작: 세션 완전 종료
       session.is_active = false;
 
       // capacity 감소

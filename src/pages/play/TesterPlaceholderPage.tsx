@@ -118,7 +118,11 @@ export default function TesterPlaceholderPage() {
     signalMutation.mutate({ signalRequest: disconnectSignal });
 
     terminateMutation.mutate(
-      { surveySessionUuid: sessionUuid, reason: 'USER_EXIT' },
+      {
+        surveySessionUuid: sessionUuid,
+        reason: 'GAME_FINISHED',
+        proceedToInterview: true,
+      },
       {
         onSuccess: () => {
           disconnect();
@@ -283,9 +287,11 @@ export default function TesterPlaceholderPage() {
               닫기
             </Button>
             <Button
+              disabled={!sessionUuid}
               onClick={() => {
+                if (!sessionUuid) return;
                 const baseUrl = import.meta.env.VITE_CLIENT_BASE_URL || '';
-                window.location.href = `${baseUrl}/surveys/session/${surveyUuid}`;
+                window.location.href = `${baseUrl}/surveys/session/${sessionUuid}`;
               }}
             >
               이동하기
