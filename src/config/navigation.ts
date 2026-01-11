@@ -62,7 +62,6 @@ export const NAV_ITEMS: NavItem[] = [
     children: [
       { to: '/games/:gameUuid/surveys', label: '설문 목록' },
       { to: '/games/:gameUuid/surveys/:surveyUuid/overview', label: '개요' },
-      { to: '/games/:gameUuid/surveys/:surveyUuid/design', label: '문항 설계' },
       {
         to: '/games/:gameUuid/surveys/:surveyUuid/distribute',
         label: '배포/연동',

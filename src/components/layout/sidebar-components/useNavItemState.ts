@@ -99,6 +99,7 @@ function shouldExpandInitially(
   resolvedPath: string,
   resolvedChildren?: ResolvedChild[]
 ): boolean {
+  return true;
   if (pathname.startsWith(resolvedPath)) return true;
   return (
     resolvedChildren?.some((child) => pathname.startsWith(child.resolvedTo)) ??
