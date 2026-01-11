@@ -45,9 +45,11 @@ const SurveySessionStartPage = lazy(
 );
 
 // Play 페이지
+const QueuePage = lazy(() => import('@/pages/play/QueuePage'));
 const TesterPlaceholderPage = lazy(
   () => import('@/pages/play/TesterPlaceholderPage')
 );
+import { QueuePageSkeleton } from '@/pages/play/components/QueuePageSkeleton';
 
 // 404 페이지 (작은 번들이므로 정적 import)
 import NotFoundPage from '@/pages/NotFoundPage';
@@ -77,6 +79,7 @@ export const preloadRoutes = {
   surveyAnalyticsPage: () => import('@/pages/survey/SurveyAnalyticsPage'),
 
   // Play/Tester 관련
+  queuePage: () => import('@/pages/play/QueuePage'),
   testerPlaceholderPage: () => import('@/pages/play/TesterPlaceholderPage'),
   surveySessionPage: () => import('@/pages/survey/SurveySessionPage'),
   surveySessionStartPage: () => import('@/pages/survey/SurveySessionStartPage'),
@@ -111,7 +114,9 @@ export function preloadByPath(path: string): void {
     preloadRoutes.gamesListPage();
   }
   // Play/Tester 페이지
-  else if (path.includes('/play/')) {
+  else if (path.includes('/play/queue/')) {
+    preloadRoutes.queuePage();
+  } else if (path.includes('/play/')) {
     preloadRoutes.testerPlaceholderPage();
   } else if (path.includes('/surveys/session/sessions')) {
     preloadRoutes.surveySessionPage();
@@ -280,6 +285,16 @@ export const router = createBrowserRouter([
       // ============================================
       // PUBLIC 경로
       // ============================================
+
+      // 테스터 Experience - 대기열 페이지
+      {
+        path: '/play/queue/:surveyUuid',
+        element: (
+          <Suspense fallback={<QueuePageSkeleton />}>
+            <QueuePage />
+          </Suspense>
+        ),
+      },
 
       // 테스터 Experience - 온라인 스트리밍
       {

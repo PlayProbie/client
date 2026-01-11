@@ -19,7 +19,7 @@ export function SurveyOpenStep({ surveyUuid }: SurveyOpenStepProps) {
 
   const baseUrl =
     import.meta.env.VITE_CLIENT_BASE_URL || window.location.origin;
-  const surveyLink = `${baseUrl}/play/${surveyUuid}`;
+  const surveyLink = `${baseUrl}/play/queue/${surveyUuid}`;
 
   const handleCopyLink = async () => {
     try {
