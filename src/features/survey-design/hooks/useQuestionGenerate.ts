@@ -1,11 +1,17 @@
 import { useMutation } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { useFormContext } from 'react-hook-form';
+
 import { useToast } from '@/hooks/useToast';
 
 import { postAiQuestions } from '../api';
 import { useSurveyFormStore } from '../store/useSurveyFormStore';
-import type { ApiGenerateAiQuestionsRequest, ThemeCategory } from '../types';
+import type {
+  ApiGenerateAiQuestionsRequest,
+  SurveyFormData,
+  ThemeCategory,
+} from '../types';
 import { useQuestionManager } from './useQuestionManager';
 
 /** 기본 AI 질문 생성 개수 */
@@ -18,6 +24,7 @@ const DEFAULT_QUESTION_COUNT = 3;
  */
 function useQuestionGenerate() {
   const { formData, updateFormData } = useSurveyFormStore();
+  const { setValue } = useFormContext<SurveyFormData>();
   const { toast } = useToast();
 
   // 공통 질문 관리 로직
@@ -88,16 +95,21 @@ function useQuestionGenerate() {
     });
 
     const generatedQuestions = response.result;
+    const selectedIndices = generatedQuestions.map((_, i) => i);
 
     // Store에 질문 저장 + 전체 선택
     updateFormData({
       questions: generatedQuestions,
-      selectedQuestionIndices: generatedQuestions.map((_, i) => i),
+      selectedQuestionIndices: selectedIndices,
     });
+
+    // RHF 동기화 (Store와 RHF 상태 일치)
+    setValue('questions', generatedQuestions);
+    setValue('selectedQuestionIndices', selectedIndices);
 
     // feedbackMap 초기화 (새 질문이므로)
     manager.setFeedbackMap({});
-  }, [formData, generateMutateAsync, updateFormData, manager]);
+  }, [formData, generateMutateAsync, updateFormData, manager, setValue]);
 
   // 페이지 렌더링 시 질문이 없으면 자동으로 API 호출
   useEffect(() => {
