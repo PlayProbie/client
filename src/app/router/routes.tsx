@@ -43,6 +43,9 @@ const SurveySessionPage = lazy(
 const SurveySessionStartPage = lazy(
   () => import('@/pages/survey/SurveySessionStartPage')
 );
+const SurveySessionCompletePage = lazy(
+  () => import('@/pages/survey/SurveySessionCompletePage')
+);
 
 // Play 페이지
 const QueuePage = lazy(() => import('@/pages/play/QueuePage'));
@@ -80,6 +83,8 @@ export const preloadRoutes = {
   streamingPlayPage: () => import('@/pages/play/StreamingPlayPage'),
   surveySessionPage: () => import('@/pages/survey/SurveySessionPage'),
   surveySessionStartPage: () => import('@/pages/survey/SurveySessionStartPage'),
+  surveySessionCompletePage: () =>
+    import('@/pages/survey/SurveySessionCompletePage'),
 
   // Auth 관련
   loginPage: () => import('@/pages/auth/LoginPage'),
@@ -303,6 +308,10 @@ export const router = createBrowserRouter([
       {
         path: '/surveys/session',
         children: [
+          {
+            path: 'complete',
+            element: withSuspense(SurveySessionCompletePage),
+          },
           {
             path: ':surveyUuid',
             element: withSuspense(SurveySessionStartPage),

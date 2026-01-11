@@ -3,7 +3,8 @@
  * URL: /surveys/session/sessions/:sessionUuid
  */
 
-import { useLocation, useParams } from 'react-router-dom';
+import { useEffect } from 'react';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { Button } from '@/components/ui';
 import { Spinner } from '@/components/ui/loading';
@@ -15,8 +16,11 @@ import {
 } from '@/features/survey-session';
 
 function SurveySessionPage() {
-  const { sessionUuid: sessionUuidParam } = useParams<{ sessionUuid: string }>();
+  const { sessionUuid: sessionUuidParam } = useParams<{
+    sessionUuid: string;
+  }>();
   const location = useLocation();
+  const navigate = useNavigate();
 
   // SurveySessionStartPage에서 전달받은 state
   const state = location.state as {
@@ -39,6 +43,17 @@ function SurveySessionPage() {
     sessionUuid,
     surveyUuid: state?.surveyUuid,
   });
+
+  // 완료 시 3초 후 이동
+  useEffect(() => {
+    if (isComplete) {
+      const timer = setTimeout(() => {
+        navigate('/surveys/session/complete');
+      }, 3000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [isComplete, navigate]);
 
   // 로딩 상태
   if (!isReady) {
