@@ -11,6 +11,7 @@ import type {
 export async function createChatSession({
   surveyUuid,
   testerProfile,
+  sessionUuid,
 }: CreateChatSessionParams): Promise<CreateChatSessionResponse> {
   const response = await fetch(`${API_BASE_URL}/interview/${surveyUuid}`, {
     method: 'POST',
@@ -21,6 +22,7 @@ export async function createChatSession({
       age_group: testerProfile?.ageGroup,
       gender: testerProfile?.gender,
       prefer_genre: testerProfile?.preferGenre,
+      session_uuid: sessionUuid,
     }), // 프로필 정보가 있으면 전송, 없으면 빈 객체 (또는 null)
   });
 

@@ -35,8 +35,11 @@ export default function StreamingPlayPage() {
     []
   );
 
-  // 종료 완료 모달 상태
-  const [showCompletionModal, setShowCompletionModal] = useState(false);
+  // 종료 완료 모달 상태 (데이터 포함)
+  const [completionInfo, setCompletionInfo] = useState<{
+    sessionUuid: string;
+    surveyUuid: string;
+  } | null>(null);
 
   // 남은 시간 타이머
   const [remainingTime, setRemainingTime] = useState(
@@ -164,8 +167,17 @@ export default function StreamingPlayPage() {
       },
       {
         onSuccess: () => {
+          if (!sessionUuid || !surveyUuid) {
+            toast({
+              variant: 'destructive',
+              title: '오류 발생',
+              description: '세션 정보가 없어 설문으로 이동할 수 없습니다.',
+            });
+            return;
+          }
+
+          setCompletionInfo({ sessionUuid, surveyUuid });
           disconnect();
-          setShowCompletionModal(true);
         },
         onError: (error) => {
           toast({
@@ -272,9 +284,10 @@ export default function StreamingPlayPage() {
       />
 
       <StreamCompletionDialog
-        open={showCompletionModal}
-        onOpenChange={setShowCompletionModal}
-        sessionUuid={sessionUuid || undefined}
+        open={!!completionInfo}
+        onOpenChange={(open) => !open && setCompletionInfo(null)}
+        sessionUuid={completionInfo?.sessionUuid ?? ''}
+        surveyUuid={completionInfo?.surveyUuid ?? ''}
       />
     </div>
   );

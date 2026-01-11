@@ -11,18 +11,20 @@ import {
 interface StreamCompletionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  sessionUuid?: string;
+  sessionUuid: string;
+  surveyUuid: string;
 }
 
 export function StreamCompletionDialog({
   open,
   onOpenChange,
   sessionUuid,
+  surveyUuid,
 }: StreamCompletionDialogProps) {
   const handleStartSurvey = () => {
     if (!sessionUuid) return;
     const baseUrl = import.meta.env.VITE_CLIENT_BASE_URL || '';
-    window.location.href = `${baseUrl}/surveys/session/${sessionUuid}`;
+    window.location.href = `${baseUrl}/surveys/session/${surveyUuid}?sessionUuid=${sessionUuid}`;
   };
 
   return (
