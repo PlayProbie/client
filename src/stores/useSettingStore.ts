@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-type TabValue = 'account' | 'workspace' | 'team' | 'billing';
+import { TabValue } from '@/components/layout/types';
 
 interface SettingState {
   isSettingsOpen: boolean;
@@ -19,7 +19,7 @@ type SettingStore = SettingState & SettingActions;
 export const useSettingStore = create<SettingStore>((set) => ({
   // State
   isSettingsOpen: false,
-  activeTab: 'workspace',
+  activeTab: TabValue.WORKSPACE,
 
   // Actions
   openSettings: () => set({ isSettingsOpen: true }),

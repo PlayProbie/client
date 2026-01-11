@@ -1,6 +1,6 @@
 import { useSettingStore } from '@/stores';
 
-import SettingsModal from '../SettingsModal';
+import SettingsModal from '../settings-modal/SettingsModal';
 import CollapseToggle from './CollapseToggle';
 import UserProfile from './UserProfile';
 

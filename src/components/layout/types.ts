@@ -23,3 +23,12 @@ export const MOCK_USER: User = {
     permission: 'Owner',
   },
 };
+
+export const TabValue = {
+  ACCOUNT: 'account',
+  WORKSPACE: 'workspace',
+  TEAM: 'team',
+  BILLING: 'billing',
+} as const;
+
+export type TabValue = (typeof TabValue)[keyof typeof TabValue];

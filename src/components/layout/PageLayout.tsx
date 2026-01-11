@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 
+import { TabValue } from '@/components/layout/types';
 import { useCurrentWorkspaceStore, useSettingStore } from '@/stores';
 
 import Sidebar from './Sidebar';
@@ -16,7 +17,7 @@ function PageLayout({ children }: PageLayoutProps) {
   useEffect(() => {
     if (!currentWorkspace) {
       openSettings();
-      setActiveTab('workspace');
+      setActiveTab(TabValue.WORKSPACE);
     }
   }, [currentWorkspace, openSettings, setActiveTab]);
 
