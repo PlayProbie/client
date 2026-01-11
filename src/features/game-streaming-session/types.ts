@@ -96,12 +96,18 @@ export interface SessionStatus {
 // ----------------------------------------
 
 /** 종료 사유 */
-export type TerminateReason = 'USER_EXIT' | 'TIMEOUT' | 'ERROR';
+export type TerminateReason =
+  | 'USER_EXIT'
+  | 'TIMEOUT'
+  | 'ERROR'
+  | 'GAME_FINISHED';
 
 /** [API] 세션 종료 요청 */
 export interface ApiTerminateRequest {
   survey_session_uuid: string;
   reason?: TerminateReason;
+  /** true: 스트리밍만 종료, 세션은 IN_PROGRESS 유지 (인터뷰 진입 시) */
+  proceed_to_interview?: boolean;
 }
 
 /** [API] 세션 종료 응답 */
@@ -115,6 +121,8 @@ export interface ApiTerminateResponse {
 export interface TerminateRequest {
   surveySessionUuid: string;
   reason?: TerminateReason;
+  /** true: 스트리밍만 종료, 세션은 IN_PROGRESS 유지 (인터뷰 진입 시) */
+  proceedToInterview?: boolean;
 }
 
 /** [Client] 세션 종료 응답 */
@@ -180,6 +188,7 @@ export function toApiTerminateRequest(
   return {
     survey_session_uuid: client.surveySessionUuid,
     reason: client.reason,
+    proceed_to_interview: client.proceedToInterview,
   };
 }
 

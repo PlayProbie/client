@@ -43,12 +43,14 @@ const SurveySessionPage = lazy(
 const SurveySessionStartPage = lazy(
   () => import('@/pages/survey/SurveySessionStartPage')
 );
-
-// Play 페이지
-const TesterPlaceholderPage = lazy(
-  () => import('@/pages/play/TesterPlaceholderPage')
+const SurveySessionCompletePage = lazy(
+  () => import('@/pages/survey/SurveySessionCompletePage')
 );
 
+// Play 페이지
+const QueuePage = lazy(() => import('@/pages/play/QueuePage'));
+const StreamingPlayPage = lazy(() => import('@/pages/play/StreamingPlayPage'));
+import { QueuePageSkeleton } from '@/features/game-streaming-session';
 // 404 페이지 (작은 번들이므로 정적 import)
 import NotFoundPage from '@/pages/NotFoundPage';
 
@@ -77,9 +79,12 @@ export const preloadRoutes = {
   surveyAnalyticsPage: () => import('@/pages/survey/SurveyAnalyticsPage'),
 
   // Play/Tester 관련
-  testerPlaceholderPage: () => import('@/pages/play/TesterPlaceholderPage'),
+  queuePage: () => import('@/pages/play/QueuePage'),
+  streamingPlayPage: () => import('@/pages/play/StreamingPlayPage'),
   surveySessionPage: () => import('@/pages/survey/SurveySessionPage'),
   surveySessionStartPage: () => import('@/pages/survey/SurveySessionStartPage'),
+  surveySessionCompletePage: () =>
+    import('@/pages/survey/SurveySessionCompletePage'),
 
   // Auth 관련
   loginPage: () => import('@/pages/auth/LoginPage'),
@@ -111,8 +116,10 @@ export function preloadByPath(path: string): void {
     preloadRoutes.gamesListPage();
   }
   // Play/Tester 페이지
-  else if (path.includes('/play/')) {
-    preloadRoutes.testerPlaceholderPage();
+  else if (path.includes('/play/queue/')) {
+    preloadRoutes.queuePage();
+  } else if (path.includes('/play/')) {
+    preloadRoutes.streamingPlayPage();
   } else if (path.includes('/surveys/session/sessions')) {
     preloadRoutes.surveySessionPage();
   } else if (path.includes('/surveys/session/')) {
@@ -281,16 +288,30 @@ export const router = createBrowserRouter([
       // PUBLIC 경로
       // ============================================
 
+      // 테스터 Experience - 대기열 페이지
+      {
+        path: '/play/queue/:surveyUuid',
+        element: (
+          <Suspense fallback={<QueuePageSkeleton />}>
+            <QueuePage />
+          </Suspense>
+        ),
+      },
+
       // 테스터 Experience - 온라인 스트리밍
       {
         path: '/play/:surveyUuid',
-        element: withSuspense(TesterPlaceholderPage),
+        element: withSuspense(StreamingPlayPage),
       },
 
       // 설문 세션 - interview / chat
       {
         path: '/surveys/session',
         children: [
+          {
+            path: 'complete',
+            element: withSuspense(SurveySessionCompletePage),
+          },
           {
             path: ':surveyUuid',
             element: withSuspense(SurveySessionStartPage),

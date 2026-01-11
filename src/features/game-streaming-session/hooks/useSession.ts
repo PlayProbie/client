@@ -20,6 +20,6 @@ export function useSessionInfo(surveyUuid: string, enabled = true) {
     queryKey: sessionKeys.detail(surveyUuid),
     queryFn: () => getSession(surveyUuid),
     enabled,
-    staleTime: 10000, // 10초
+    // staleTime: 1000, // 10초
   });
 }

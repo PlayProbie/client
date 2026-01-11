@@ -24,7 +24,7 @@ export { createStreamClient } from './lib';
 export { getSession, getSessionStatus, postSignal, postTerminate } from './api';
 
 // Components
-export { StreamPlayer } from './components';
+export * from './components';
 
 // Hooks
 export {
