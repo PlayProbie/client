@@ -4,7 +4,7 @@
  * 테스터가 게임을 스트리밍으로 플레이하는 페이지입니다.
  * 밝은 테마의 게임 스트리밍 UI를 제공합니다.
  */
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
@@ -42,6 +42,9 @@ export default function StreamingPlayPage() {
   const [remainingTime, setRemainingTime] = useState(
     SESSION_MAX_DURATION_SECONDS
   );
+
+  // 수동 종료 여부 (버튼 클릭 또는 타임아웃)
+  const isManuallyTerminated = useRef(false);
 
   // 세션 정보 조회
   const {
@@ -93,6 +96,9 @@ export default function StreamingPlayPage() {
   useSessionStatus(surveyUuid || '', sessionUuid || undefined, {
     enabled: !!surveyUuid && !!sessionUuid,
     onSessionExpired: () => {
+      // 수동으로 종료한 경우에는 세션 만료 알림을 띄우지 않음
+      if (isManuallyTerminated.current) return;
+
       disconnect();
       toast({
         variant: 'warning',
@@ -136,6 +142,9 @@ export default function StreamingPlayPage() {
   // 연결 종료 핸들러
   const handleDisconnect = () => {
     if (!surveyUuid || !sessionUuid) return;
+
+    // 수동 종료 플래그 설정
+    isManuallyTerminated.current = true;
 
     const disconnectSignal = btoa(
       JSON.stringify({

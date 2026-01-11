@@ -148,7 +148,6 @@ export function useGameStream(
     }
 
     setIsConnected(false);
-    setSessionUuid(null);
     onDisconnected?.();
   }, [onDisconnected]);
 
