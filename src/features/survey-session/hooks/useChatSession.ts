@@ -35,9 +35,10 @@ export function useChatSession({
     isComplete,
     error,
     addUserMessage,
-    addAIMessage,
-    appendStreamingToken,
-    finalizeStreamingMessage,
+    enqueueReaction,
+    enqueueQuestion,
+    enqueueStreamToken,
+    enqueueFinalize,
     setLoading,
     setConnecting,
     setStreaming,
@@ -54,65 +55,57 @@ export function useChatSession({
       setConnecting(true);
     },
     onQuestion: (data) => {
-      // 새 질문 도착 시 이전 스트리밍 메시지 확정 (인사말 등)
-      finalizeStreamingMessage();
+      // 새 질문 도착: 큐에 질문 말풍선 및 텍스트 추가
+      // (이전 말풍선은 이미 enqueueFinalize로 닫혔거나 자동 처리됨)
 
-      // GREETING은 이미 greeting_continue로 스트리밍되었으므로 스킵
+      // GREETING은 이미 greeting_continue로 처리되었으므로 스킵 가능하나, 
+      // 만약 onQuestion이 먼저 오거나 별도로 오는 경우를 대비해 처리해도 무방.
+      // 하지만 기존 로직에서 GREETING은 setIsReady(true)만 하고 리턴했음.
       if (data.qType === 'GREETING') {
         setIsReady(true);
         setLoading(false);
         return;
       }
 
-      // ⭐ 새 질문의 fixed_q_id와 turn_num으로 상태 업데이트
+      // 상태 업데이트 (큐 처리와 무관하게 즉시 반영해도 되는 메타 데이터)
       setCurrentFixedQId(data.fixedQId);
       setCurrentTurnNum(data.turnNum);
 
-      // Phase 2: Opening
-      if (data.qType === 'OPENING') {
-        addAIMessage(data.questionText, data.turnNum, data.qType, data.fixedQId);
-      }
-      // Phase 5: Closing
-      else if (data.qType === 'CLOSING') {
-        addAIMessage(data.questionText, data.turnNum, data.qType, data.fixedQId);
-      }
-      // Phase 3-4: Main & Tail
-      else {
-        addAIMessage(data.questionText, data.turnNum, data.qType, data.fixedQId);
-      }
+      // 큐에 추가: 말풍선 시작 -> 타이핑
+      enqueueQuestion(data.questionText, data.turnNum, data.fixedQId, data.qType);
 
       setIsReady(true);
       setLoading(false);
     },
     onContinue: (data) => {
-      // 스트리밍 토큰 수신 (모든 단계 공통) - fixedQId도 전달
-      appendStreamingToken(data.questionText, data.turnNum, data.qType, data.fixedQId);
+      // 스트리밍 토큰 -> 큐에 추가
+      enqueueStreamToken(data.questionText, data.turnNum, data.qType, data.fixedQId);
       if (!isStreaming) {
         setStreaming(true);
       }
     },
     onGreetingContinue: (data) => {
-      // 인사말 스트리밍 토큰 수신 - fixedQId도 전달
-      appendStreamingToken(data.questionText, data.turnNum, data.qType, data.fixedQId);
+      // 인사말 스트리밍 -> 큐에 추가
+      enqueueStreamToken(data.questionText, data.turnNum, data.qType, data.fixedQId);
       if (!isStreaming) {
         setStreaming(true);
       }
     },
     onReaction: (data) => {
-      // 리액션: 현재 스트리밍 확정 후 별도 채팅박스로 표시
-      finalizeStreamingMessage();
-      addAIMessage(data.reactionText, data.turnNum, 'REACTION', null);
+      // 리액션 -> 큐에 추가 (말풍선 -> 타이핑 -> 대기)
+      enqueueReaction(data.reactionText, data.turnNum);
     },
     onStart: () => {
       setStreaming(true);
     },
     onDone: (_turnNum) => {
-      finalizeStreamingMessage();
-      setStreaming(false);
-      setLoading(false);
+      // 말풍선 마무리 -> 큐에 추가
+      enqueueFinalize();
+      // setStreaming(false)는 큐 처리기가 담당하므로 여기선 생략 가능하나, 
+      // 큐 처리 완료 전까지 isStreaming이 true여야 하므로 store의 로직에 맡김
     },
     onInterviewComplete: () => {
-      finalizeStreamingMessage();
+      enqueueFinalize();
       setComplete(true);
       setStreaming(false);
     },
@@ -126,8 +119,8 @@ export function useChatSession({
     },
     onDisconnect: () => {
       setConnecting(false);
-      // 스트리밍 중이었다면 메시지 확정
-      finalizeStreamingMessage();
+      // 연결 끊기면 마지막 말풍선 닫기
+      enqueueFinalize();
     },
   });
 
