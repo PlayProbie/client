@@ -44,16 +44,20 @@ export interface SurveyStats {
 // ----------------------------------------
 
 /** 스트리밍 리소스 상태 */
+export const StreamingResourceStatus = {
+  CREATING: 'CREATING',
+  PENDING: 'PENDING',
+  PROVISIONING: 'PROVISIONING',
+  READY: 'READY',
+  TESTING: 'TESTING',
+  SCALING: 'SCALING',
+  ACTIVE: 'ACTIVE',
+  CLEANING: 'CLEANING',
+  TERMINATED: 'TERMINATED',
+} as const;
+
 export type StreamingResourceStatus =
-  | 'CREATING'
-  | 'PENDING'
-  | 'PROVISIONING'
-  | 'READY'
-  | 'TESTING'
-  | 'SCALING'
-  | 'ACTIVE'
-  | 'CLEANING'
-  | 'TERMINATED';
+  (typeof StreamingResourceStatus)[keyof typeof StreamingResourceStatus];
 
 /** [API] Streaming Resource 엔티티 */
 export interface ApiStreamingResource {

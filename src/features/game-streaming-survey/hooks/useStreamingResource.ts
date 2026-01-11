@@ -8,9 +8,10 @@ import {
   deleteStreamingResource,
   getStreamingResource,
 } from '../api';
-import type {
-  CreateStreamingResourceRequest,
-  StreamingResource,
+import {
+  type CreateStreamingResourceRequest,
+  type StreamingResource,
+  StreamingResourceStatus,
 } from '../types';
 
 /** Query Key Factory */
@@ -30,7 +31,10 @@ export function useStreamingResource(surveyUuid: string, enabled = true) {
     refetchInterval: (query) => {
       // CREATING/PROVISIONING 상태일 때 5초마다 폴링
       const data = query.state.data;
-      if (data?.status === 'CREATING' || data?.status === 'PROVISIONING') {
+      if (
+        data?.status === StreamingResourceStatus.CREATING ||
+        data?.status === StreamingResourceStatus.PROVISIONING
+      ) {
         return 5000;
       }
       return false;

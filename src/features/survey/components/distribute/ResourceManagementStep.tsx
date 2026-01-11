@@ -23,7 +23,10 @@ import {
   useProvisioningPolling,
 } from '@/features/game-streaming-survey';
 import { useToast } from '@/hooks/useToast';
-import { useProvisioningStore } from '@/stores/useProvisioningStore';
+import {
+  ProvisioningStatus,
+  useProvisioningStore,
+} from '@/stores/useProvisioningStore';
 
 import { INSTANCE_TYPE_OPTIONS } from '../build-connection/constants';
 
@@ -55,10 +58,13 @@ export function ResourceManagementStep({
   const items = useProvisioningStore((state) => state.items);
 
   // 현재 surveyUuid에 해당하는 진행 중인 항목 찾기
+  const activeStatuses: ProvisioningStatus[] = [
+    ProvisioningStatus.CREATING,
+    ProvisioningStatus.PROVISIONING,
+  ];
   const activeItem = items.find(
     (item) =>
-      item.surveyUuid === surveyUuid &&
-      ['CREATING', 'PROVISIONING'].includes(item.status)
+      item.surveyUuid === surveyUuid && activeStatuses.includes(item.status)
   );
 
   const [itemId, setItemId] = useState<string | null>(activeItem?.id ?? null);
@@ -72,8 +78,8 @@ export function ResourceManagementStep({
     formState: { errors },
   } = useForm<FormData>({
     defaultValues: {
-      instanceType: 'gen6n_pro_win2022',
-      maxCapacity: 10,
+      instanceType: 'gen4n_win2022',
+      maxCapacity: 1,
     },
   });
 
@@ -99,6 +105,7 @@ export function ResourceManagementStep({
     surveyUuid,
     itemId,
     enabled: isPolling,
+    syncStore: false,
     onSuccess: handlePollingSuccess,
   });
 
@@ -134,9 +141,13 @@ export function ResourceManagementStep({
     if (createMutation.isPending) return '생성 요청 중...';
     if (isPolling) {
       const status = activeItem?.status;
-      if (status === 'CREATING') return '리소스 생성 중...';
-      if (status === 'PROVISIONING') return '프로비저닝 중...';
-      if (status === 'READY') return '준비 중...';
+      if (status === ProvisioningStatus.CREATING) {
+        return '리소스 생성 중...';
+      }
+      if (status === ProvisioningStatus.PROVISIONING) {
+        return '프로비저닝 중...';
+      }
+      if (status === ProvisioningStatus.READY) return '준비 중...';
       return '활성화 대기 중...';
     }
     return '리소스 생성 및 다음 단계';
