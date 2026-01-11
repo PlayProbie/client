@@ -1,55 +1,19 @@
 import { GitBranch, Lock, PenLine, Sparkles } from 'lucide-react';
-import { useState } from 'react';
-import { useFormContext, useWatch } from 'react-hook-form';
-import { useLocation, useNavigate } from 'react-router-dom';
 
-import { Button } from '@/components/ui';
 import { Badge } from '@/components/ui/Badge';
 import { cn } from '@/lib/utils';
 
-import { useSurveyFormStore } from '../../store/useSurveyFormStore';
-import type { SurveyFormData } from '../../types';
+export type GenerateMethod = 'ai' | 'manual' | 'flow' | null;
 
-type GenerateMethod = 'ai' | 'manual' | 'flow' | null;
+type StepMethodSelectionProps = {
+    selectedMethod: GenerateMethod;
+    onSelectMethod: (method: GenerateMethod) => void;
+};
 
 /**
  * Step 1: 질문 생성 방식 선택
  */
-function StepMethodSelection() {
-    const navigate = useNavigate();
-    const location = useLocation();
-    const { updateFormData } = useSurveyFormStore();
-    const { control } = useFormContext<SurveyFormData>();
-
-    const [selectedMethod, setSelectedMethod] = useState<GenerateMethod>(null);
-
-    // 현재 경로에서 step 부분을 제거한 base path 계산
-    const pathWithoutStep = location.pathname.replace(/\/step-\d+$/, '');
-
-    // 폼 상태 감시 (테마는 Step 0에서 이미 선택됨)
-    const themePriorities = useWatch({ control, name: 'themePriorities' }) || [];
-
-    // 질문 초기화 후 이동 (AI용)
-    const handleAIGenerate = () => {
-        if (themePriorities.length === 0) return;
-        updateFormData({ questions: [], selectedQuestionIndices: [] });
-        navigate(`${pathWithoutStep}/step-2?actor=ai`);
-    };
-
-    // 수동 생성 다음 버튼
-    const handleManualNext = () => {
-        updateFormData({ questions: [], selectedQuestionIndices: [] });
-        navigate(`${pathWithoutStep}/step-2?actor=user`);
-    };
-
-    // AI 생성 버튼 활성화 조건 (테마는 Step 0에서 이미 선택됨)
-    const canAIGenerate = selectedMethod === 'ai' &&
-        themePriorities.length >= 1 &&
-        themePriorities.length <= 3;
-
-    // 수동 생성 다음 버튼 활성화 조건
-    const canManualNext = selectedMethod === 'manual' &&
-        themePriorities.length >= 1;
+function StepMethodSelection({ selectedMethod, onSelectMethod }: StepMethodSelectionProps) {
 
     const methods = [
         {
@@ -94,7 +58,7 @@ function StepMethodSelection() {
 
                     const handleClick = () => {
                         if (method.disabled) return;
-                        setSelectedMethod(method.id);
+                        onSelectMethod(method.id);
                     };
 
                     return (
@@ -158,34 +122,6 @@ function StepMethodSelection() {
                     );
                 })}
             </div>
-
-            {/* 생성 버튼 (AI 선택 시) */}
-            {selectedMethod === 'ai' && (
-                <div className="flex justify-end mt-4">
-                    <Button
-                        type="button"
-                        onClick={handleAIGenerate}
-                        disabled={!canAIGenerate}
-                        size="lg"
-                    >
-                        AI 질문 생성
-                    </Button>
-                </div>
-            )}
-
-            {/* 다음 버튼 (수동 생성 선택 시) */}
-            {selectedMethod === 'manual' && (
-                <div className="flex justify-end mt-4">
-                    <Button
-                        type="button"
-                        onClick={handleManualNext}
-                        disabled={!canManualNext}
-                        size="lg"
-                    >
-                        다음
-                    </Button>
-                </div>
-            )}
         </div>
     );
 }

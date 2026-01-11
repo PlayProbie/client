@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import {
   useLocation,
@@ -141,6 +141,23 @@ function SurveyDesignForm({ className, onComplete }: SurveyDesignFormProps) {
   const stepLabels = SURVEY_FORM_STEPS.map((s) => s.label);
   const isLastStep = currentStep === SURVEY_FORM_STEPS.length - 1;
 
+  // 질문 생성 방식 선택 상태 (Step 1)
+  const [generationMethod, setGenerationMethod] = useState<'ai' | 'manual' | 'flow' | null>(null);
+
+  const createHandleGenMethodNext = () => {
+    const themePriorities = form.getValues('themePriorities');
+
+    if (generationMethod === 'ai') {
+      if (!themePriorities || themePriorities.length === 0) return;
+      updateFormData({ questions: [], selectedQuestionIndices: [] });
+      navigate(getStepPath(2, 'ai'));
+    } else if (generationMethod === 'manual') {
+      if (!themePriorities || themePriorities.length === 0) return;
+      updateFormData({ questions: [], selectedQuestionIndices: [] });
+      navigate(getStepPath(2, 'user'));
+    }
+  };
+
   /** 현재 Step에 해당하는 컴포넌트 렌더링 */
   const renderStepContent = () => {
     const isUserGenerate = searchParams.get('actor') === 'user';
@@ -149,7 +166,12 @@ function SurveyDesignForm({ className, onComplete }: SurveyDesignFormProps) {
       case 0:
         return <StepBasicInfo control={control} />;
       case 1:
-        return <StepMethodSelection />;
+        return (
+          <StepMethodSelection
+            selectedMethod={generationMethod}
+            onSelectMethod={setGenerationMethod}
+          />
+        );
       case 2:
         return isUserGenerate ? (
           <StepQuestionUserGenerate />
@@ -162,6 +184,15 @@ function SurveyDesignForm({ className, onComplete }: SurveyDesignFormProps) {
         return null;
     }
   };
+
+  // Step 1 버튼 활성화 조건
+  const themePriorities = useWatch({ control, name: 'themePriorities' }) || [];
+  const canAIGenerate =
+    generationMethod === 'ai' &&
+    themePriorities.length >= 1 &&
+    themePriorities.length <= 3;
+  const canManualNext =
+    generationMethod === 'manual' && themePriorities.length >= 1;
 
   return (
     <div className={cn('flex flex-col gap-8', className)}>
@@ -191,8 +222,26 @@ function SurveyDesignForm({ className, onComplete }: SurveyDesignFormProps) {
               이전
             </Button>
             <div className="flex gap-2">
-              {currentStep ===
-              1 ? null /* StepMethodSelection에서 자체 네비게이션 */ : (
+              {currentStep === 1 ? (
+                // Step 1: 생성 방식 선택 시 별도 로직
+                generationMethod === 'ai' ? (
+                  <Button
+                    type="button"
+                    onClick={createHandleGenMethodNext}
+                    disabled={!canAIGenerate}
+                  >
+                    AI 질문 생성
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    onClick={createHandleGenMethodNext}
+                    disabled={!canManualNext} // Manual 선택 안되면 버튼 안보임(null) or disabled
+                  >
+                    다음
+                  </Button>
+                )
+              ) : (
                 <Button
                   type="button"
                   disabled={isPending}

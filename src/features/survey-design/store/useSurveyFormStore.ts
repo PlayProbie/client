@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { createJSONStorage, persist } from 'zustand/middleware';
 
 import { SURVEY_FORM_STEPS, type SurveyFormData } from '../types';
 
@@ -40,34 +41,42 @@ const INITIAL_STATE = {
   surveyUrl: null,
 };
 
-export const useSurveyFormStore = create<SurveyFormState>()((set) => ({
-  ...INITIAL_STATE,
+export const useSurveyFormStore = create<SurveyFormState>()(
+  persist(
+    (set) => ({
+      ...INITIAL_STATE,
 
-  nextStep: () =>
-    set((state) => ({
-      currentStep: Math.min(state.currentStep + 1, MAX_STEP_INDEX),
-    })),
+      nextStep: () =>
+        set((state) => ({
+          currentStep: Math.min(state.currentStep + 1, MAX_STEP_INDEX),
+        })),
 
-  prevStep: () =>
-    set((state) => ({
-      currentStep: Math.max(state.currentStep - 1, 0),
-    })),
+      prevStep: () =>
+        set((state) => ({
+          currentStep: Math.max(state.currentStep - 1, 0),
+        })),
 
-  goToStep: (step) =>
-    set({
-      currentStep: Math.max(0, Math.min(step, MAX_STEP_INDEX)),
+      goToStep: (step) =>
+        set({
+          currentStep: Math.max(0, Math.min(step, MAX_STEP_INDEX)),
+        }),
+
+      updateFormData: (data) =>
+        set((state) => ({
+          formData: { ...state.formData, ...data },
+        })),
+
+      setSurveyUrl: (url) =>
+        set({
+          surveyUrl: url,
+        }),
+
+      reset: () => set(INITIAL_STATE),
     }),
-
-  updateFormData: (data) =>
-    set((state) => ({
-      formData: { ...state.formData, ...data },
-    })),
-
-  setSurveyUrl: (url) =>
-    set({
-      surveyUrl: url,
-    }),
-
-  reset: () => set(INITIAL_STATE),
-}));
+    {
+      name: 'survey-design-storage',
+      storage: createJSONStorage(() => sessionStorage),
+    }
+  )
+);
 
