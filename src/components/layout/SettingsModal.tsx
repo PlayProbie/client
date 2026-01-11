@@ -12,26 +12,17 @@ import { useNavigate } from 'react-router-dom';
 
 import { Dialog, DialogContent, DialogHeader } from '@/components/ui/Dialog';
 import { postLogout } from '@/features/auth';
-import { useAuthStore } from '@/stores';
+import { useAuthStore, useSettingStore } from '@/stores';
 
 import AccountSettingsTab from './settings-modal/AccountSettingsTab';
 import { TeamSettingsTab } from './settings-modal-member/TeamSettingsTab';
 import { WorkspaceSettingsTab } from './settings-modal-workspace/WorkspaceSettingsTab';
 
-interface SettingsModalProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}
-
-type TabValue = 'account' | 'workspace' | 'team' | 'billing';
-
-export default function SettingsModal({
-  open,
-  onOpenChange,
-}: SettingsModalProps) {
+export default function SettingsModal() {
   const navigate = useNavigate();
   const { logout } = useAuthStore();
-  const [activeTab, setActiveTab] = useState<TabValue>('workspace');
+  const { isSettingsOpen, closeSettings, activeTab, setActiveTab } =
+    useSettingStore();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleLogout = async () => {
@@ -50,8 +41,8 @@ export default function SettingsModal({
 
   return (
     <Dialog
-      open={open}
-      onOpenChange={onOpenChange}
+      open={isSettingsOpen}
+      onOpenChange={closeSettings}
     >
       <DialogContent className="h-[600px] max-w-[900px] p-0">
         <div className="flex h-full">

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useSettingStore } from '@/stores';
 
 import SettingsModal from '../SettingsModal';
 import CollapseToggle from './CollapseToggle';
@@ -10,14 +10,14 @@ interface SidebarFooterProps {
 }
 
 function SidebarFooter({ isCollapsed, onToggle }: SidebarFooterProps) {
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const { openSettings } = useSettingStore();
 
   return (
     <>
       <div className="border-sidebar-border flex shrink-0 flex-col gap-3 border-t p-4">
         <UserProfile
           isCollapsed={isCollapsed}
-          onSettingsClick={() => setIsSettingsOpen(true)}
+          onSettingsClick={openSettings}
         />
         <CollapseToggle
           isCollapsed={isCollapsed}
@@ -25,10 +25,7 @@ function SidebarFooter({ isCollapsed, onToggle }: SidebarFooterProps) {
         />
       </div>
 
-      <SettingsModal
-        open={isSettingsOpen}
-        onOpenChange={setIsSettingsOpen}
-      />
+      <SettingsModal />
     </>
   );
 }

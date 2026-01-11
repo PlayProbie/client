@@ -1,3 +1,7 @@
+import { useEffect } from 'react';
+
+import { useCurrentWorkspaceStore, useSettingStore } from '@/stores';
+
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
 
@@ -6,6 +10,16 @@ interface PageLayoutProps {
 }
 
 function PageLayout({ children }: PageLayoutProps) {
+  const { currentWorkspace } = useCurrentWorkspaceStore();
+  const { openSettings, setActiveTab } = useSettingStore();
+
+  useEffect(() => {
+    if (!currentWorkspace) {
+      openSettings();
+      setActiveTab('workspace');
+    }
+  }, [currentWorkspace, openSettings, setActiveTab]);
+
   return (
     <div className="bg-background flex h-screen overflow-hidden">
       {/* Sidebar */}
