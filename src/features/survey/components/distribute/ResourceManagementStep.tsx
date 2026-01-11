@@ -64,8 +64,7 @@ export function ResourceManagementStep({
   ];
   const activeItem = items.find(
     (item) =>
-      item.surveyUuid === surveyUuid &&
-      activeStatuses.includes(item.status)
+      item.surveyUuid === surveyUuid && activeStatuses.includes(item.status)
   );
 
   const [itemId, setItemId] = useState<string | null>(activeItem?.id ?? null);
@@ -79,8 +78,8 @@ export function ResourceManagementStep({
     formState: { errors },
   } = useForm<FormData>({
     defaultValues: {
-      instanceType: 'gen6n_pro_win2022',
-      maxCapacity: 10,
+      instanceType: 'gen4n_win2022',
+      maxCapacity: 1,
     },
   });
 
