@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query';
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 
 import { postAiQuestions } from '../api';
@@ -29,11 +29,12 @@ function useQuestionGenerate() {
 
   // 추가 상태
   const initialGenerateRef = useRef(false);
+  const [isLocalGenerating, setIsLocalGenerating] = useState(false);
 
   // AI 질문 생성 mutation
   const {
     mutateAsync: generateMutateAsync,
-    isPending: isGenerating,
+    isPending: isMutationPending,
     error: generateError,
   } = useMutation({
     mutationFn: async (
@@ -68,6 +69,9 @@ function useQuestionGenerate() {
         count: params.count,
       });
     },
+    onSettled: () => {
+      setIsLocalGenerating(false);
+    },
   });
 
   // AI 질문 생성 API 호출
@@ -84,31 +88,38 @@ function useQuestionGenerate() {
       return;
     }
 
-    const response = await generateMutateAsync({
-      count: DEFAULT_QUESTION_COUNT,
-    });
+    setIsLocalGenerating(true);
+    
+    try {
+      const response = await generateMutateAsync({
+        count: DEFAULT_QUESTION_COUNT,
+      });
 
-    const generatedQuestions = response.result;
-    const selectedIndices = generatedQuestions.map((_, i) => i);
+      const generatedQuestions = response.result;
+      const selectedIndices = generatedQuestions.map((_, i) => i);
 
-    // Store에 질문 저장 + 전체 선택
-    updateFormData({
-      questions: generatedQuestions,
-      selectedQuestionIndices: selectedIndices,
-    });
+      // Store에 질문 저장 + 전체 선택
+      updateFormData({
+        questions: generatedQuestions,
+        selectedQuestionIndices: selectedIndices,
+      });
 
-    // RHF 동기화 (Store와 RHF 상태 일치)
-    setValue('questions', generatedQuestions);
-    setValue('selectedQuestionIndices', selectedIndices);
+      // RHF 동기화 (Store와 RHF 상태 일치)
+      setValue('questions', generatedQuestions);
+      setValue('selectedQuestionIndices', selectedIndices);
 
-    // feedbackMap 초기화 (새 질문이므로)
-    manager.setFeedbackMap({});
+      // feedbackMap 초기화 (새 질문이므로)
+      manager.setFeedbackMap({});
+    } finally {
+      // onSettled에서 처리하지만 안전장치로 한 번 더
+      setIsLocalGenerating(false);
+    }
   }, [formData, generateMutateAsync, updateFormData, manager, setValue]);
 
   // 페이지 렌더링 시 질문이 없으면 자동으로 API 호출
   useEffect(() => {
     // 이미 생성 중이거나 초기 생성 진행 중이면 스킵
-    if (isGenerating || initialGenerateRef.current) {
+    if (isMutationPending || isLocalGenerating || initialGenerateRef.current) {
       return;
     }
 
@@ -119,10 +130,14 @@ function useQuestionGenerate() {
 
     initialGenerateRef.current = true;
 
-    generateQuestions().finally(() => {
-      initialGenerateRef.current = false;
-    });
-  }, [manager.questions.length, isGenerating, generateQuestions]);
+    generateQuestions()
+      .catch(() => {
+        // Error is handled by mutation.error
+      })
+      .finally(() => {
+        initialGenerateRef.current = false;
+      });
+  }, [manager.questions.length, isMutationPending, isLocalGenerating, generateQuestions]);
 
 
 
@@ -143,6 +158,7 @@ function useQuestionGenerate() {
       return;
     }
 
+    setIsLocalGenerating(true);
     try {
       const response = await generateMutateAsync({ count: 1 });
 
@@ -153,6 +169,8 @@ function useQuestionGenerate() {
       manager.addQuestionAtFront(newQuestion);
     } catch {
       // Error is handled by mutation.error
+    } finally {
+      setIsLocalGenerating(false);
     }
   }, [formData, generateMutateAsync, manager]);
 
@@ -169,7 +187,7 @@ function useQuestionGenerate() {
     validationError: manager.validationError,
 
     // AI 전용 상태
-    isGenerating,
+    isGenerating: isLocalGenerating,
     generateError: generateError?.message ?? null,
     pendingFeedbackQuestions: new Set<string>(), // 호환성 유지용 빈 Set
 
