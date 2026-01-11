@@ -1,4 +1,4 @@
-import { BarChart3, MessageSquare, Smile, Users } from 'lucide-react';
+import { MessageSquare, Smile, Users } from 'lucide-react';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { PageSpinner } from '@/components/ui/loading';
@@ -49,19 +49,7 @@ function SurveyOverview({ summary, questionAnalysis }: SurveyOverviewProps) {
   return (
     <div className="space-y-6">
       {/* 요약 통계 카드 */}
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <Card>
-          <CardContent className="flex items-center gap-4 pt-6">
-            <div className="rounded-lg bg-primary/10 p-3">
-              <BarChart3 className="h-6 w-6 text-primary" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">설문 수</p>
-              <p className="text-2xl font-bold">{summary.surveyCount}</p>
-            </div>
-          </CardContent>
-        </Card>
-
+      <div className="grid grid-cols-3 gap-4">
         <Card>
           <CardContent className="flex items-center gap-4 pt-6">
             <div className="rounded-lg bg-primary/10 p-3">
