@@ -18,24 +18,17 @@ function SurveySessionCompletePage() {
           </p>
         </div>
 
-        <div className="bg-card rounded-lg border p-6 shadow-sm">
-          <h2 className="mb-2 text-xl font-semibold">PlayProbie</h2>
+        <div className="bg-card rounded-lg border p-10 px-6 shadow-sm">
+          <h2 className="mb-4 text-xl font-semibold">PlayProbie</h2>
           <p className="text-muted-foreground mb-6">
-            AI 기술을 활용한 차세대 게임 테스트 자동화 서비스를 만나보세요.
+            AI 기술을 활용한 게임 테스트 자동화 서비스를 만나보세요.
           </p>
 
           <Button
-            className="w-full"
+            className="bg-primary w-full text-white"
             size="lg"
-            asChild
           >
-            <a
-              href="https://playprobie.do_not_exist_yet.com"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              서비스 소개 보러가기
-            </a>
+            서비스 소개 보러가기
           </Button>
         </div>
       </div>
