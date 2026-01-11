@@ -18,6 +18,7 @@ export { StatusWidgetHeader } from './StatusWidgetHeader';
 
 // 위젯 컴포넌트
 export { ProvisioningItemRow } from './ProvisioningItemRow';
+export { ProvisioningPollingProvider } from './ProvisioningPollingProvider';
 export { ProvisioningStatusWidget } from './ProvisioningStatusWidget';
 export { UploadItemRow } from './UploadItemRow';
 export { UploadStatusWidget } from './UploadStatusWidget';

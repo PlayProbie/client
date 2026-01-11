@@ -21,14 +21,12 @@ import { BuildStatusBadge } from './BuildStatusBadge';
 interface BuildsTableProps {
   builds: Build[];
   onViewDetails?: (build: Build) => void;
-  onRowClick?: (build: Build) => void;
   onDelete?: (build: Build) => void;
 }
 
 export function BuildsTable({
   builds,
   onViewDetails,
-  onRowClick,
   onDelete,
 }: BuildsTableProps) {
   const { toast } = useToast();
@@ -55,15 +53,7 @@ export function BuildsTable({
       </TableHeader>
       <TableBody>
         {builds.map((build) => (
-          <TableRow
-            key={build.uuid}
-            className={onRowClick ? 'hover:bg-muted/20 cursor-pointer' : ''}
-            onClick={() => {
-              if (onRowClick) {
-                onRowClick(build);
-              }
-            }}
-          >
+          <TableRow key={build.uuid}>
             <TableCell className="font-medium">
               <div>
                 <span>{build.filename}</span>
@@ -113,7 +103,7 @@ export function BuildsTable({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="size-8 text-destructive hover:text-destructive"
+                    className="text-destructive hover:text-destructive size-8"
                     onClick={(event) => {
                       event.stopPropagation();
                       onDelete(build);

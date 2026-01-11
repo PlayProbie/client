@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom';
 import { AuthGuard, GuestGuard } from '@/components/guards';
 import { PageLayout } from '@/components/layout';
 import {
+  ProvisioningPollingProvider,
   ProvisioningStatusWidget,
   UploadStatusWidget,
 } from '@/components/layout/status-widget';
@@ -25,6 +26,7 @@ export function RootLayout() {
     <>
       <Outlet />
       <Toaster />
+      <ProvisioningPollingProvider />
       <UploadStatusWidget />
       <ProvisioningStatusWidget />
     </>

@@ -5,14 +5,6 @@ export {
   getStreamingGameByUuid,
   getStreamingGames,
 } from './get-streaming-games';
-export {
-  registerStreamingGame,
-  type RegisterStreamingGameInput,
-} from './register-streaming-game';
-export {
-  unregisterStreamingGame,
-  type UnregisterStreamingGameInput,
-} from './unregister-streaming-game';
 
 // Source Games (Survey 시스템)
 export { getSourceGames } from './get-source-games';
@@ -34,7 +26,3 @@ export {
   createTestGame,
   postCreateGame,
 } from './post-create-game';
-
-// Stream Settings
-export { getStreamSettings } from './get-stream-settings';
-export { putStreamSettings } from './put-stream-settings';

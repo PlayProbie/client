@@ -21,9 +21,6 @@ const GameOverviewPage = lazy(() => import('@/pages/game/GameOverviewPage'));
 
 // Studio 페이지
 const BuildsPage = lazy(() => import('@/pages/studio/BuildsPage'));
-const StreamSettingsPage = lazy(
-  () => import('@/pages/studio/StreamSettingsPage')
-);
 const SurveyListPage = lazy(() => import('@/pages/studio/SurveyListPage'));
 
 // Survey 페이지
@@ -69,7 +66,6 @@ export const preloadRoutes = {
 
   // Studio 관련
   buildsPage: () => import('@/pages/studio/BuildsPage'),
-  streamSettingsPage: () => import('@/pages/studio/StreamSettingsPage'),
   surveyListPage: () => import('@/pages/studio/SurveyListPage'),
 
   // Survey 관련
@@ -100,8 +96,6 @@ export function preloadByPath(path: string): void {
     preloadRoutes.gameOverviewPage();
   } else if (path.includes('/games') && path.includes('/builds')) {
     preloadRoutes.buildsPage();
-  } else if (path.includes('/games') && path.includes('/stream-settings')) {
-    preloadRoutes.streamSettingsPage();
   } else if (path.includes('/surveys') && path.includes('/design')) {
     preloadRoutes.surveyDesignPage();
   } else if (path.includes('/surveys') && path.includes('/distribute')) {
@@ -219,12 +213,6 @@ export const router = createBrowserRouter([
           {
             path: '/games/:gameUuid/builds',
             element: withSuspense(BuildsPage),
-          },
-
-          // 스트리밍 설정
-          {
-            path: '/games/:gameUuid/stream-settings',
-            element: withSuspense(StreamSettingsPage),
           },
 
           // 설문 목록

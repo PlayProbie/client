@@ -2,7 +2,10 @@ import { Button } from '@/components/ui/button';
 import { InlineAlert } from '@/components/ui/InlineAlert';
 import type { Build } from '@/features/game-streaming';
 import { BuildStatusBadge } from '@/features/game-streaming';
-import type { StreamingResource } from '@/features/game-streaming-survey';
+import {
+  type StreamingResource,
+  StreamingResourceStatus,
+} from '@/features/game-streaming-survey';
 
 import { INSTANCE_TYPE_LABELS } from './constants';
 
@@ -29,7 +32,7 @@ export function BuildConnectionSummary({
 
   return (
     <div className="space-y-4">
-      {streamingResource.status === 'PROVISIONING' && (
+      {streamingResource.status === StreamingResourceStatus.PROVISIONING && (
         <InlineAlert variant="info" title="리소스 생성 중">
           스트리밍 리소스를 준비하고 있습니다. 준비가 완료되면 테스트를 시작할
           수 있습니다.

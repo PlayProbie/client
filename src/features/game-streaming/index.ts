@@ -23,8 +23,4 @@ export {
   type BuildUploadFormData,
   BuildUploadModal,
   DragDropFolderInput,
-  GameShell,
-  RegisterGameModal,
-  StreamSettingsForm,
-  UnregisterGameDialog,
 } from './components';

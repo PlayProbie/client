@@ -8,11 +8,16 @@ import type {
   ApiCreateStreamingResourceRequest,
   ApiSurvey,
 } from '@/features/game-streaming-survey/types';
+import { StreamingResourceStatus } from '@/features/game-streaming-survey/types';
 
 import {
   MOCK_STREAMING_RESOURCES,
   type MockStreamingResource,
 } from './streaming-resource-store';
+
+// 프로비저닝 시작 시간 추적 (10초 후 READY로 전환)
+const PROVISIONING_START_TIMES: Record<string, number> = {};
+const PROVISIONING_DELAY_MS = 10000; // 10초
 
 const API_BASE_URL = '/api';
 
@@ -102,7 +107,7 @@ export const gameStreamingSurveyHandlers = [
   // Streaming Resource API
   // ----------------------------------------
 
-  // 스트리밍 리소스 조회
+  // 스트리밍 리소스 조회 (폴링 시뮬레이션: CREATING -> 10초 후 READY)
   http.get(
     `${API_BASE_URL}/surveys/:surveyUuid/streaming-resource`,
     async ({ params }) => {
@@ -119,6 +124,15 @@ export const gameStreamingSurveyHandlers = [
           },
           { status: 404 }
         );
+      }
+
+      // 10초 경과 후 CREATING -> READY 상태 전환
+      if (resource.status === StreamingResourceStatus.CREATING) {
+        const startTime = PROVISIONING_START_TIMES[surveyUuid];
+        if (startTime && Date.now() - startTime >= PROVISIONING_DELAY_MS) {
+          resource.status = StreamingResourceStatus.READY;
+          delete PROVISIONING_START_TIMES[surveyUuid];
+        }
       }
 
       return HttpResponse.json({ result: resource });
@@ -156,7 +170,7 @@ export const gameStreamingSurveyHandlers = [
       resourceIdCounter++;
       const newResource: MockStreamingResource = {
         uuid: `resource-${resourceIdCounter}-uuid`,
-        status: 'PROVISIONING',
+        status: StreamingResourceStatus.CREATING,
         current_capacity: 0,
         max_capacity: body.max_capacity,
         instance_type: body.instance_type,
@@ -164,13 +178,8 @@ export const gameStreamingSurveyHandlers = [
       };
 
       MOCK_STREAMING_RESOURCES[surveyUuid] = newResource;
-
-      // 3초 후 READY 상태로 변경 (비동기 시뮬레이션)
-      setTimeout(() => {
-        if (MOCK_STREAMING_RESOURCES[surveyUuid]) {
-          MOCK_STREAMING_RESOURCES[surveyUuid].status = 'READY';
-        }
-      }, 3000);
+      // 프로비저닝 시작 시간 기록 (조회 시 10초 후 READY로 전환)
+      PROVISIONING_START_TIMES[surveyUuid] = Date.now();
 
       return HttpResponse.json({ result: newResource }, { status: 201 });
     }
@@ -230,7 +239,7 @@ export const gameStreamingSurveyHandlers = [
             status: survey.status,
             streaming_resource: resource
               ? {
-                  status: 'SCALING',
+                  status: StreamingResourceStatus.SCALING,
                   current_capacity: resource.current_capacity,
                   message: '서버 확장 중입니다.',
                 }

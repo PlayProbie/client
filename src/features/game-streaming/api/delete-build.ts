@@ -6,8 +6,6 @@
  */
 import { API_BASE_URL } from '@/constants/api';
 
-import { apiFetch } from '../utils';
-
 export interface DeleteBuildInput {
   gameUuid: string;
   buildUuid: string;
@@ -15,9 +13,12 @@ export interface DeleteBuildInput {
 
 /** 빌드 삭제 */
 export async function deleteBuild(input: DeleteBuildInput): Promise<void> {
-  await apiFetch<void>(
+  const response = await fetch(
     `${API_BASE_URL}/games/${input.gameUuid}/builds/${input.buildUuid}`,
-    { method: 'DELETE' },
-    '빌드 삭제에 실패했습니다.'
+    { method: 'DELETE' }
   );
+
+  if (!response.ok) {
+    throw new Error('빌드 삭제에 실패했습니다.');
+  }
 }

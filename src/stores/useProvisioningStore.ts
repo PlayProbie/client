@@ -4,16 +4,58 @@
  */
 import { create } from 'zustand';
 
+import { StreamingResourceStatus } from '@/features/game-streaming-survey';
+
 // ----------------------------------------
 // Types
 // ----------------------------------------
 
+/**
+ * UI 위젯용 프로비저닝 상태
+ * StreamingResourceStatus의 서브셋 + UI 전용 ERROR 상태
+ */
 export type ProvisioningStatus =
-  | 'CREATING'
-  | 'PROVISIONING'
-  | 'READY'
-  | 'ACTIVE'
+  | typeof StreamingResourceStatus.CREATING
+  | typeof StreamingResourceStatus.PROVISIONING
+  | typeof StreamingResourceStatus.READY
+  | typeof StreamingResourceStatus.ACTIVE
   | 'ERROR';
+
+/** 프로비저닝 상태 상수 (런타임 값 참조용) */
+export const ProvisioningStatus = {
+  CREATING: StreamingResourceStatus.CREATING,
+  PROVISIONING: StreamingResourceStatus.PROVISIONING,
+  READY: StreamingResourceStatus.READY,
+  ACTIVE: StreamingResourceStatus.ACTIVE,
+  ERROR: 'ERROR',
+} as const satisfies Record<string, ProvisioningStatus>;
+
+/**
+ * StreamingResourceStatus → ProvisioningStatus 변환
+ * UI에 표시되지 않는 중간 상태들을 적절히 매핑
+ */
+export function mapToProvisioningStatus(
+  status: StreamingResourceStatus
+): ProvisioningStatus {
+  switch (status) {
+    case StreamingResourceStatus.CREATING:
+      return ProvisioningStatus.CREATING;
+    case StreamingResourceStatus.PENDING:
+    case StreamingResourceStatus.PROVISIONING:
+    case StreamingResourceStatus.TESTING:
+    case StreamingResourceStatus.SCALING:
+      return ProvisioningStatus.PROVISIONING;
+    case StreamingResourceStatus.READY:
+      return ProvisioningStatus.READY;
+    case StreamingResourceStatus.ACTIVE:
+      return ProvisioningStatus.ACTIVE;
+    case StreamingResourceStatus.CLEANING:
+      return ProvisioningStatus.READY;
+    case StreamingResourceStatus.TERMINATED:
+    default:
+      return ProvisioningStatus.ERROR;
+  }
+}
 
 /** 프로비저닝 단건 항목 */
 export interface ProvisioningItem {
@@ -72,7 +114,7 @@ export const useProvisioningStore = create<ProvisioningStore>()((set) => ({
       id,
       surveyUuid: params.surveyUuid,
       buildName: params.buildName,
-      status: 'CREATING',
+      status: ProvisioningStatus.CREATING,
       startedAt: Date.now(),
     };
 
@@ -85,18 +127,36 @@ export const useProvisioningStore = create<ProvisioningStore>()((set) => ({
   },
 
   updateStatus: (id, status) => {
-    set((state) => ({
-      items: state.items.map((item) =>
-        item.id === id ? { ...item, status } : item
-      ),
-    }));
+    set((state) => {
+      let didUpdate = false;
+      const nextItems = state.items.map((item) => {
+        if (item.id !== id) return item;
+        const nextErrorMessage =
+          status === ProvisioningStatus.ERROR ? item.errorMessage : undefined;
+        if (
+          item.status === status &&
+          item.errorMessage === nextErrorMessage
+        ) {
+          return item;
+        }
+        didUpdate = true;
+        return {
+          ...item,
+          status,
+          errorMessage: nextErrorMessage,
+        };
+      });
+
+      if (!didUpdate) return state;
+      return { items: nextItems };
+    });
   },
 
   setError: (id, message) => {
     set((state) => ({
       items: state.items.map((item) =>
         item.id === id
-          ? { ...item, status: 'ERROR' as const, errorMessage: message }
+          ? { ...item, status: ProvisioningStatus.ERROR, errorMessage: message }
           : item
       ),
     }));
@@ -112,9 +172,9 @@ export const useProvisioningStore = create<ProvisioningStore>()((set) => ({
     set((state) => ({
       items: state.items.filter(
         (item) =>
-          item.status !== 'ACTIVE' &&
-          item.status !== 'READY' &&
-          item.status !== 'ERROR'
+          item.status !== ProvisioningStatus.ACTIVE &&
+          item.status !== ProvisioningStatus.READY &&
+          item.status !== ProvisioningStatus.ERROR
       ),
     }));
   },
@@ -130,21 +190,25 @@ export const useProvisioningStore = create<ProvisioningStore>()((set) => ({
 
 /** 진행중인 프로비저닝이 있는지 */
 export const selectHasActiveProvisioning = (state: ProvisioningStore) =>
-  state.items.some((item) =>
-    ['CREATING', 'PROVISIONING'].includes(item.status)
+  state.items.some(
+    (item) =>
+      item.status === ProvisioningStatus.CREATING ||
+      item.status === ProvisioningStatus.PROVISIONING
   );
 
 /** 진행중인 항목 수 */
 export const selectActiveCount = (state: ProvisioningStore) =>
-  state.items.filter((item) =>
-    ['CREATING', 'PROVISIONING'].includes(item.status)
+  state.items.filter(
+    (item) =>
+      item.status === ProvisioningStatus.CREATING ||
+      item.status === ProvisioningStatus.PROVISIONING
   ).length;
 
-/** 완료된 항목 수 (ACTIVE + ERROR) */
+/** 완료된 항목 수 (ACTIVE + READY + ERROR) */
 export const selectCompletedCount = (state: ProvisioningStore) =>
   state.items.filter(
     (item) =>
-      item.status === 'ACTIVE' ||
-      item.status === 'READY' ||
-      item.status === 'ERROR'
+      item.status === ProvisioningStatus.ACTIVE ||
+      item.status === ProvisioningStatus.READY ||
+      item.status === ProvisioningStatus.ERROR
   ).length;

@@ -6,12 +6,12 @@
 export type {
   CreateStreamingResourceRequest,
   StreamingResource,
-  StreamingResourceStatus,
   Survey,
   SurveyStatus,
   SurveyStatusValue,
   UpdateSurveyStatusResponse,
 } from './types';
+export { StreamingResourceStatus } from './types';
 
 // API
 export {

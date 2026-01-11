@@ -2,11 +2,11 @@
  * ProvisioningItemRow - 개별 프로비저닝 항목 표시 컴포넌트
  */
 import { AlertCircle, CheckCircle2, Loader2, Server, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { memo } from 'react';
 
 import { Button } from '@/components/ui/button';
-import type {
-  ProvisioningItem,
+import {
+  type ProvisioningItem,
   ProvisioningStatus,
 } from '@/stores/useProvisioningStore';
 
@@ -14,11 +14,12 @@ import { StatusItemRow } from './StatusItemRow';
 
 interface ProvisioningItemRowProps {
   item: ProvisioningItem;
+  now?: number;
   onRemove: (id: string) => void;
 }
 
-function formatElapsedTime(startedAt: number): string {
-  const elapsed = Math.floor((Date.now() - startedAt) / 1000);
+function formatElapsedTime(startedAt: number, now: number): string {
+  const elapsed = Math.floor((now - startedAt) / 1000);
   const minutes = Math.floor(elapsed / 60);
   const seconds = elapsed % 60;
 
@@ -30,14 +31,14 @@ function formatElapsedTime(startedAt: number): string {
 
 function getStatusIcon(status: ProvisioningStatus) {
   switch (status) {
-    case 'CREATING':
+    case ProvisioningStatus.CREATING:
       return <Loader2 className="text-primary size-4 animate-spin" />;
-    case 'PROVISIONING':
+    case ProvisioningStatus.PROVISIONING:
       return <Server className="text-warning size-4 animate-pulse" />;
-    case 'READY':
-    case 'ACTIVE':
+    case ProvisioningStatus.READY:
+    case ProvisioningStatus.ACTIVE:
       return <CheckCircle2 className="text-success size-4" />;
-    case 'ERROR':
+    case ProvisioningStatus.ERROR:
       return <AlertCircle className="text-destructive size-4" />;
     default:
       return null;
@@ -46,44 +47,38 @@ function getStatusIcon(status: ProvisioningStatus) {
 
 function getStatusText(status: ProvisioningStatus): string {
   switch (status) {
-    case 'CREATING':
+    case ProvisioningStatus.CREATING:
       return '리소스 생성 중...';
-    case 'PROVISIONING':
+    case ProvisioningStatus.PROVISIONING:
       return '프로비저닝 중...';
-    case 'READY':
+    case ProvisioningStatus.READY:
       return '준비 완료';
-    case 'ACTIVE':
+    case ProvisioningStatus.ACTIVE:
       return '활성화 완료';
-    case 'ERROR':
+    case ProvisioningStatus.ERROR:
       return '오류 발생';
     default:
       return '대기 중...';
   }
 }
 
-export function ProvisioningItemRow({
+function ProvisioningItemRowComponent({
   item,
+  now,
   onRemove,
 }: ProvisioningItemRowProps) {
   const { id, buildName, status, startedAt, errorMessage } = item;
-  const [elapsedTime, setElapsedTime] = useState(() =>
-    formatElapsedTime(startedAt)
-  );
 
-  const isActive = ['CREATING', 'PROVISIONING'].includes(status);
+  const isActive =
+    status === ProvisioningStatus.CREATING ||
+    status === ProvisioningStatus.PROVISIONING;
   const isComplete =
-    status === 'ACTIVE' || status === 'READY' || status === 'ERROR';
-
-  // 경과 시간 업데이트 (진행 중일 때만)
-  useEffect(() => {
-    if (!isActive) return;
-
-    const interval = setInterval(() => {
-      setElapsedTime(formatElapsedTime(startedAt));
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [isActive, startedAt]);
+    status === ProvisioningStatus.ACTIVE ||
+    status === ProvisioningStatus.READY ||
+    status === ProvisioningStatus.ERROR;
+  const elapsedTime = isActive
+    ? formatElapsedTime(startedAt, now ?? startedAt)
+    : '';
 
   // 액션 버튼들
   const renderActions = () => (
@@ -117,9 +112,11 @@ export function ProvisioningItemRow({
       </div>
 
       {/* 에러 메시지 */}
-      {status === 'ERROR' && errorMessage && (
+      {status === ProvisioningStatus.ERROR && errorMessage && (
         <p className="text-destructive text-xs">{errorMessage}</p>
       )}
     </StatusItemRow>
   );
 }
+
+export const ProvisioningItemRow = memo(ProvisioningItemRowComponent);

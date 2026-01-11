@@ -4,7 +4,7 @@
  */
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 
 import { Button, InlineAlert, Skeleton } from '@/components/ui';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
@@ -18,7 +18,6 @@ import {
 
 export default function BuildsPage() {
   const { gameUuid } = useParams<{ gameUuid: string }>();
-  const navigate = useNavigate();
   const {
     data: builds,
     isLoading,
@@ -106,11 +105,6 @@ export default function BuildsPage() {
           <BuildsTable
             builds={builds}
             onDelete={setBuildToDelete}
-            onRowClick={() => {
-              if (gameUuid) {
-                navigate(`/games/${gameUuid}/stream-settings`);
-              }
-            }}
           />
         </div>
       )}
