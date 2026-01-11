@@ -124,7 +124,7 @@ function StepBasicInfo({ control }: StepBasicInfoProps) {
         rules={{ required: '설문 이름을 입력해주세요' }}
         render={({ field }) => (
           <FormItem>
-            <FormLabel>설문 이름</FormLabel>
+            <FormLabel required>설문 이름</FormLabel>
             <FormControl>
               <Input
                 placeholder="예: v1.2 플레이테스트 설문"
@@ -207,7 +207,7 @@ function StepBasicInfo({ control }: StepBasicInfoProps) {
         rules={{ required: '테스트 단계를 선택해주세요' }}
         render={({ field, fieldState }) => (
           <FormItem>
-            <FormLabel>테스트 단계</FormLabel>
+            <FormLabel required>테스트 단계</FormLabel>
             <div className="mt-2 grid grid-cols-1 gap-4 md:grid-cols-3">
               {Object.values(TEST_STAGE_CONFIG).map((stage) => {
                 const Icon = stage.icon;

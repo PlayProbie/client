@@ -1,72 +1,34 @@
-import { useState } from 'react';
+import { useActionState, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { Button, SubmitButton } from '@/components/ui';
 import { Input } from '@/components/ui/Input';
+import { Label } from '@/components/ui/Label';
 import { API_BASE_URL } from '@/constants/api';
-import { cn } from '@/lib/utils';
 
-interface RegisterFormData {
-  email: string;
-  password: string;
-  passwordConfirm: string;
-  name: string;
-  phone: string;
+interface RegisterState {
+  success: boolean;
+  errors?: {
+    email?: string;
+    password?: string;
+    passwordConfirm?: string;
+    name?: string;
+    root?: string;
+  };
+  defaultValues?: {
+    email: string;
+    name: string;
+    phone: string;
+  };
 }
 
-interface FormErrors {
-  email?: string;
-  password?: string;
-  passwordConfirm?: string;
-  name?: string;
-  phone?: string;
-}
+const initialState: RegisterState = {
+  success: false,
+};
 
 export default function RegisterPage() {
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(false);
-  const [apiError, setApiError] = useState<string | null>(null);
-  const [formData, setFormData] = useState<RegisterFormData>({
-    email: '',
-    password: '',
-    passwordConfirm: '',
-    name: '',
-    phone: '',
-  });
-  const [errors, setErrors] = useState<FormErrors>({});
-
-  const validateForm = (): boolean => {
-    const newErrors: FormErrors = {};
-
-    // 이메일 검증
-    if (!formData.email) {
-      newErrors.email = '이메일을 입력해주세요';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = '올바른 이메일 형식이 아닙니다';
-    }
-
-    // 비밀번호 검증
-    if (!formData.password) {
-      newErrors.password = '비밀번호를 입력해주세요';
-    } else if (formData.password.length < 8) {
-      newErrors.password = '비밀번호는 8자 이상이어야 합니다';
-    }
-
-    // 비밀번호 확인 검증
-    if (!formData.passwordConfirm) {
-      newErrors.passwordConfirm = '비밀번호 확인을 입력해주세요';
-    } else if (formData.password !== formData.passwordConfirm) {
-      newErrors.passwordConfirm = '비밀번호가 일치하지 않습니다';
-    }
-
-    // 이름 검증
-    if (!formData.name) {
-      newErrors.name = '이름을 입력해주세요';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  const [phoneValue, setPhoneValue] = useState('');
 
   // 전화번호 포맷팅 (010-1234-1234)
   const formatPhoneNumber = (value: string): string => {
@@ -86,29 +48,59 @@ export default function RegisterPage() {
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-
-    // 전화번호 필드는 포맷팅 적용
-    const formattedValue = name === 'phone' ? formatPhoneNumber(value) : value;
-
-    setFormData((prev) => ({ ...prev, [name]: formattedValue }));
-    // 입력 시 해당 필드 에러 및 API 에러 제거
-    if (errors[name as keyof FormErrors]) {
-      setErrors((prev) => ({ ...prev, [name]: undefined }));
-    }
-    if (apiError) {
-      setApiError(null);
-    }
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatPhoneNumber(e.target.value);
+    setPhoneValue(formatted);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setApiError(null);
+  const registerAction = async (
+    _: RegisterState,
+    formData: FormData
+  ): Promise<RegisterState> => {
+    const email = formData.get('email') as string;
+    const password = formData.get('password') as string;
+    const passwordConfirm = formData.get('passwordConfirm') as string;
+    const name = formData.get('name') as string;
+    // phone은 controlled input이지만 formData에도 포함됨 (name="phone")
+    const phone = formData.get('phone') as string;
 
-    if (!validateForm()) return;
+    // Validation
+    const errors: RegisterState['errors'] = {};
 
-    setIsLoading(true);
+    // 이메일 검증
+    if (!email) {
+      errors.email = '이메일을 입력해주세요';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errors.email = '올바른 이메일 형식이 아닙니다';
+    }
+
+    // 비밀번호 검증
+    if (!password) {
+      errors.password = '비밀번호를 입력해주세요';
+    } else if (password.length < 8) {
+      errors.password = '비밀번호는 8자 이상이어야 합니다';
+    }
+
+    // 비밀번호 확인 검증
+    if (!passwordConfirm) {
+      errors.passwordConfirm = '비밀번호 확인을 입력해주세요';
+    } else if (password !== passwordConfirm) {
+      errors.passwordConfirm = '비밀번호가 일치하지 않습니다';
+    }
+
+    // 이름 검증
+    if (!name) {
+      errors.name = '이름을 입력해주세요';
+    }
+
+    if (Object.keys(errors).length > 0) {
+      return {
+        success: false,
+        errors,
+        defaultValues: { email, name, phone },
+      };
+    }
+
     try {
       const response = await fetch(`${API_BASE_URL}/auth/signup`, {
         method: 'POST',
@@ -116,10 +108,10 @@ export default function RegisterPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-          name: formData.name,
-          phone: formData.phone || undefined,
+          email,
+          password,
+          name,
+          phone: phone || undefined,
         }),
       });
 
@@ -128,25 +120,41 @@ export default function RegisterPage() {
 
         // 이메일 중복 에러 (code: U002)
         if (errorData.code === 'U002') {
-          setErrors((prev) => ({ ...prev, email: errorData.message }));
-          return;
+          return {
+            success: false,
+            errors: { email: errorData.message },
+            defaultValues: { email, name, phone },
+          };
         }
 
         throw new Error(errorData.message || '회원가입에 실패했습니다');
       }
 
-      // 성공 시 로그인 페이지로 이동
-      navigate('/login', { state: { registered: true } });
+      return { success: true };
     } catch (error) {
-      setApiError(
-        error instanceof Error
-          ? error.message
-          : '회원가입 중 오류가 발생했습니다'
-      );
-    } finally {
-      setIsLoading(false);
+      return {
+        success: false,
+        errors: {
+          root:
+            error instanceof Error
+              ? error.message
+              : '회원가입 중 오류가 발생했습니다',
+        },
+        defaultValues: { email, name, phone },
+      };
     }
   };
+
+  const [state, formAction, isPending] = useActionState(
+    registerAction,
+    initialState
+  );
+
+  useEffect(() => {
+    if (state.success) {
+      navigate('/login', { state: { registered: true } });
+    }
+  }, [state.success, navigate]);
 
   const handleBackToLogin = () => {
     navigate('/login');
@@ -169,135 +177,121 @@ export default function RegisterPage() {
         </div>
 
         {/* API Error Message */}
-        {apiError && (
+        {state.errors?.root && (
           <div className="bg-destructive/10 border-destructive text-destructive mb-4 rounded-md border p-3 text-sm">
-            {apiError}
+            {state.errors.root}
           </div>
         )}
 
         {/* Form */}
         <form
-          onSubmit={handleSubmit}
+          action={formAction}
           className="space-y-4"
         >
           {/* 이메일 */}
           <div className="space-y-2">
-            <label
+            <Label
               htmlFor="email"
-              className="text-foreground text-sm font-medium"
+              required
             >
-              이메일 <span className="text-destructive">*</span>
-            </label>
+              이메일
+            </Label>
             <Input
               id="email"
               name="email"
               type="email"
               placeholder="example@email.com"
-              value={formData.email}
-              onChange={handleChange}
-              className={cn(errors.email && 'border-destructive')}
               autoComplete="email"
+              defaultValue={state.defaultValues?.email}
             />
-            {errors.email && (
-              <p className="text-destructive text-sm">{errors.email}</p>
+            {state.errors?.email && (
+              <p className="text-destructive text-sm">{state.errors.email}</p>
             )}
           </div>
 
           {/* 비밀번호 */}
           <div className="space-y-2">
-            <label
+            <Label
               htmlFor="password"
-              className="text-foreground text-sm font-medium"
+              required
             >
-              비밀번호 <span className="text-destructive">*</span>
-            </label>
+              비밀번호
+            </Label>
             <Input
               id="password"
               name="password"
               type="password"
               placeholder="8자 이상 입력해주세요"
-              value={formData.password}
-              onChange={handleChange}
-              className={cn(errors.password && 'border-destructive')}
               autoComplete="new-password"
             />
-            {errors.password && (
-              <p className="text-destructive text-sm">{errors.password}</p>
+            {state.errors?.password && (
+              <p className="text-destructive text-sm">
+                {state.errors.password}
+              </p>
             )}
           </div>
 
           {/* 비밀번호 확인 */}
           <div className="space-y-2">
-            <label
+            <Label
               htmlFor="passwordConfirm"
-              className="text-foreground text-sm font-medium"
+              required
             >
-              비밀번호 확인 <span className="text-destructive">*</span>
-            </label>
+              비밀번호 확인
+            </Label>
             <Input
               id="passwordConfirm"
               name="passwordConfirm"
               type="password"
               placeholder="비밀번호를 다시 입력해주세요"
-              value={formData.passwordConfirm}
-              onChange={handleChange}
-              className={cn(errors.passwordConfirm && 'border-destructive')}
               autoComplete="new-password"
             />
-            {errors.passwordConfirm && (
+            {state.errors?.passwordConfirm && (
               <p className="text-destructive text-sm">
-                {errors.passwordConfirm}
+                {state.errors.passwordConfirm}
               </p>
             )}
           </div>
 
           {/* 이름 */}
           <div className="space-y-2">
-            <label
+            <Label
               htmlFor="name"
-              className="text-foreground text-sm font-medium"
+              required
             >
-              이름 <span className="text-destructive">*</span>
-            </label>
+              이름
+            </Label>
             <Input
               id="name"
               name="name"
               type="text"
               placeholder="이름을 입력해주세요"
-              value={formData.name}
-              onChange={handleChange}
-              className={cn(errors.name && 'border-destructive')}
               autoComplete="name"
+              defaultValue={state.defaultValues?.name}
             />
-            {errors.name && (
-              <p className="text-destructive text-sm">{errors.name}</p>
+            {state.errors?.name && (
+              <p className="text-destructive text-sm">{state.errors.name}</p>
             )}
           </div>
 
           {/* 전화번호 (선택) */}
           <div className="space-y-2">
-            <label
-              htmlFor="phone"
-              className="text-foreground text-sm font-medium"
-            >
-              전화번호{' '}
-              <span className="text-muted-foreground text-xs">(선택)</span>
-            </label>
+            <Label htmlFor="phone">전화번호</Label>
             <Input
               id="phone"
               name="phone"
               type="tel"
               placeholder="010-0000-0000"
-              value={formData.phone}
-              onChange={handleChange}
               autoComplete="tel"
+              value={phoneValue}
+              onChange={handlePhoneChange}
             />
           </div>
 
           {/* Submit Button */}
           <SubmitButton
             className="mt-6 w-full"
-            isPending={isLoading}
+            isPending={isPending}
           >
             가입하기
           </SubmitButton>

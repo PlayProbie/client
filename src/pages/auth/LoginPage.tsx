@@ -1,82 +1,65 @@
-import { useState } from 'react';
+import { useActionState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import { Button, SubmitButton } from '@/components/ui';
 import { Input } from '@/components/ui/Input';
+import { Label } from '@/components/ui/Label';
 import { API_BASE_URL } from '@/constants/api';
-import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores';
 
-interface LoginFormData {
-  email: string;
-  password: string;
+interface LoginState {
+  success: boolean;
+  errors?: {
+    email?: string;
+    password?: string;
+    root?: string;
+  };
+  defaultValues?: {
+    email: string;
+  };
 }
 
-interface FormErrors {
-  email?: string;
-  password?: string;
-}
+const initialState: LoginState = {
+  success: false,
+};
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { login } = useAuthStore();
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [apiError, setApiError] = useState<string | null>(null);
-  const [formData, setFormData] = useState<LoginFormData>({
-    email: '',
-    password: '',
-  });
-  const [errors, setErrors] = useState<FormErrors>({});
-
   const from = (location.state as { from?: Location })?.from?.pathname || '/';
 
-  const validateForm = (): boolean => {
-    const newErrors: FormErrors = {};
+  const loginAction = async (
+    _: LoginState,
+    formData: FormData
+  ): Promise<LoginState> => {
+    const email = formData.get('email') as string;
+    const password = formData.get('password') as string;
 
-    if (!formData.email) {
-      newErrors.email = '이메일을 입력해주세요';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = '올바른 이메일 형식이 아닙니다';
+    // Validation
+    const errors: LoginState['errors'] = {};
+    if (!email) {
+      errors.email = '이메일을 입력해주세요';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errors.email = '올바른 이메일 형식이 아닙니다';
     }
 
-    if (!formData.password) {
-      newErrors.password = '비밀번호를 입력해주세요';
+    if (!password) {
+      errors.password = '비밀번호를 입력해주세요';
     }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    if (errors[name as keyof FormErrors]) {
-      setErrors((prev) => ({ ...prev, [name]: undefined }));
+    if (Object.keys(errors).length > 0) {
+      return { success: false, errors, defaultValues: { email } };
     }
-    if (apiError) {
-      setApiError(null);
-    }
-  };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setApiError(null);
-
-    if (!validateForm()) return;
-
-    setIsLoading(true);
     try {
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-        }),
+        body: JSON.stringify({ email, password }),
       });
 
       if (!response.ok) {
@@ -84,39 +67,44 @@ export default function LoginPage() {
         throw new Error(errorData.message || '로그인에 실패했습니다');
       }
 
-      const data = await response.json();
-      const { user, access_token: accessToken } = data.result;
+      const responseData = await response.json();
+      const { user, access_token: accessToken } = responseData.result;
 
-      // accessToken을 localStorage에 저장 (전역 fetch 인터셉터가 자동으로 헤더에 추가)
       if (accessToken) {
         localStorage.setItem('accessToken', accessToken);
       }
 
-      // 사용자 정보 저장
       login({
         id: String(user.id),
         email: user.email,
         name: user.name,
       });
 
-      navigate(from, { replace: true });
+      return { success: true };
     } catch (error) {
-      setApiError(
-        error instanceof Error ? error.message : '로그인 중 오류가 발생했습니다'
-      );
-    } finally {
-      setIsLoading(false);
+      return {
+        success: false,
+        errors: {
+          root:
+            error instanceof Error
+              ? error.message
+              : '로그인 중 오류가 발생했습니다',
+        },
+        defaultValues: { email },
+      };
     }
   };
 
-  const handleDemoLogin = () => {
-    login({
-      id: '1',
-      email: 'user@example.com',
-      name: 'Test User',
-    });
-    navigate(from, { replace: true });
-  };
+  const [state, formAction, isPending] = useActionState(
+    loginAction,
+    initialState
+  );
+
+  useEffect(() => {
+    if (state.success) {
+      navigate(from, { replace: true });
+    }
+  }, [state.success, navigate, from]);
 
   const handleRegister = () => {
     navigate('/auth/register');
@@ -139,67 +127,54 @@ export default function LoginPage() {
         </div>
 
         {/* API Error Message */}
-        {apiError && (
+        {state.errors?.root && (
           <div className="bg-destructive/10 border-destructive text-destructive mb-4 rounded-md border p-3 text-sm">
-            {apiError}
+            {state.errors.root}
           </div>
         )}
 
         {/* Login Form */}
         <form
-          onSubmit={handleSubmit}
+          action={formAction}
           className="space-y-4"
         >
           {/* 이메일 */}
           <div className="space-y-2">
-            <label
-              htmlFor="email"
-              className="text-foreground text-sm font-medium"
-            >
-              이메일
-            </label>
+            <Label htmlFor="email">이메일</Label>
             <Input
               id="email"
               name="email"
               type="email"
               placeholder="example@email.com"
-              value={formData.email}
-              onChange={handleChange}
-              className={cn(errors.email && 'border-destructive')}
               autoComplete="email"
+              defaultValue={state.defaultValues?.email}
             />
-            {errors.email && (
-              <p className="text-destructive text-sm">{errors.email}</p>
+            {state.errors?.email && (
+              <p className="text-destructive text-sm">{state.errors.email}</p>
             )}
           </div>
 
           {/* 비밀번호 */}
           <div className="space-y-2">
-            <label
-              htmlFor="password"
-              className="text-foreground text-sm font-medium"
-            >
-              비밀번호
-            </label>
+            <Label htmlFor="password">비밀번호</Label>
             <Input
               id="password"
               name="password"
               type="password"
               placeholder="비밀번호를 입력해주세요"
-              value={formData.password}
-              onChange={handleChange}
-              className={cn(errors.password && 'border-destructive')}
               autoComplete="current-password"
             />
-            {errors.password && (
-              <p className="text-destructive text-sm">{errors.password}</p>
+            {state.errors?.password && (
+              <p className="text-destructive text-sm">
+                {state.errors.password}
+              </p>
             )}
           </div>
 
           {/* Submit Button */}
           <SubmitButton
             className="mt-6 w-full"
-            isPending={isLoading}
+            isPending={isPending}
           >
             로그인
           </SubmitButton>
@@ -248,15 +223,6 @@ export default function LoginPage() {
           className="mb-4 w-full"
         >
           회원가입
-        </Button>
-
-        {/* Demo Login */}
-        <Button
-          variant="outline"
-          onClick={handleDemoLogin}
-          className="w-full"
-        >
-          데모 계정으로 시작하기
         </Button>
       </div>
     </div>

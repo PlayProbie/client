@@ -62,7 +62,12 @@ export function WorkspaceFormModal({
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="ws-name">이름</Label>
+              <Label
+                htmlFor="ws-name"
+                required
+              >
+                이름
+              </Label>
               <Input
                 id="ws-name"
                 value={name}

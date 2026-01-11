@@ -32,7 +32,12 @@ export function BuildConnectionForm({
       className="space-y-4"
     >
       <div className="space-y-2">
-        <Label htmlFor="build-select">빌드 선택</Label>
+        <Label
+          htmlFor="build-select"
+          required
+        >
+          빌드 선택
+        </Label>
         <Select
           name="buildUuid"
           disabled={isPending}
@@ -57,7 +62,12 @@ export function BuildConnectionForm({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="instance-type">Instance Type</Label>
+        <Label
+          htmlFor="instance-type"
+          required
+        >
+          Instance Type
+        </Label>
         <Select
           name="instanceType"
           disabled={isPending}
@@ -84,7 +94,12 @@ export function BuildConnectionForm({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="max-capacity">목표 동시 접속자 수</Label>
+        <Label
+          htmlFor="max-capacity"
+          required
+        >
+          목표 동시 접속자 수
+        </Label>
         <Input
           id="max-capacity"
           name="maxCapacity"
