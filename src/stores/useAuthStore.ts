@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
+import { useSurveyFormStore } from '@/features/survey-design/store/useSurveyFormStore';
+
 interface User {
   id: string;
   email: string;
@@ -38,12 +40,15 @@ export const useAuthStore = create<AuthStore>()(
           isLoading: false,
         }),
 
-      logout: () =>
+      logout: () => {
+        useSurveyFormStore.getState().reset();
+        sessionStorage.removeItem('survey-design-storage');
         set({
           isAuthenticated: false,
           user: null,
           isLoading: false,
-        }),
+        });
+      },
 
       setLoading: (loading) => set({ isLoading: loading }),
     }),

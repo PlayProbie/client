@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useOutletContext, useParams } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import {
   SurveyCreated,
   SurveyDesignForm,
 } from '@/features/survey-design';
+import { useSurveyFormStore } from '@/features/survey-design/store/useSurveyFormStore';
 // SubmitResult가 features/survey-design/index.ts에서 export되어야 함. 확인 필요.
 
 function useSurveyShellContextSafe() {
@@ -21,6 +22,20 @@ function useSurveyShellContextSafe() {
 function SurveyDesignPage() {
   const params = useParams<{ gameUuid: string }>();
   const shellContext = useSurveyShellContextSafe();
+  const resetForm = useSurveyFormStore((state) => state.reset);
+
+  // 페이지 진입 시 초기화 로직 (새로고침 제외)
+  useEffect(() => {
+    // Navigation Timing API v2
+    const entries = performance.getEntriesByType('navigation');
+    const navTiming = entries[0] as PerformanceNavigationTiming;
+
+    // 새로고침(reload)이 아닌 경우에만 스토어 초기화
+    // 즉, 다른 페이지에서 진입했거나 뒤로가기로 왔을 때 등은 초기화하여 이전 데이터 삭제
+    if (navTiming && navTiming.type !== 'reload') {
+      resetForm();
+    }
+  }, [resetForm]);
 
   const [isCompleted, setIsCompleted] = useState(false);
   const [surveyUrl, setSurveyUrl] = useState<string | null>(null);
