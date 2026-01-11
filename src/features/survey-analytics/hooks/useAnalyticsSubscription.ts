@@ -46,14 +46,10 @@ export function useAnalyticsSubscription(
     connectedUuidRef.current = uuid;
 
     eventSource.addEventListener('connect', () => {
-      // eslint-disable-next-line no-console
-      console.log('✅ SSE Connected');
       retryCountRef.current = 0; // 연결 성공 시 재시도 횟수 초기화
     });
 
     eventSource.addEventListener('refresh', () => {
-      // eslint-disable-next-line no-console
-      console.log('🔄 Analytics updated event received');
       handleUpdate();
     });
 
@@ -62,16 +58,12 @@ export function useAnalyticsSubscription(
     });
 
     eventSource.onerror = () => {
-      // eslint-disable-next-line no-console
-      console.warn('⚠️ SSE connection error/timeout');
       eventSource.close();
       eventSourceRef.current = null;
 
       // 재연결 시도 (최대 MAX_RETRY_COUNT 회)
       if (retryCountRef.current < MAX_RETRY_COUNT) {
         const delay = INITIAL_RETRY_DELAY * Math.pow(2, retryCountRef.current);
-        // eslint-disable-next-line no-console
-        console.log(`🔄 Reconnecting in ${delay}ms (attempt ${retryCountRef.current + 1}/${MAX_RETRY_COUNT})`);
         
         retryTimeoutRef.current = setTimeout(() => {
           retryCountRef.current++;
@@ -81,8 +73,6 @@ export function useAnalyticsSubscription(
           }
         }, delay);
       } else {
-        // eslint-disable-next-line no-console
-        console.error('❌ SSE max retries reached, giving up');
         connectedUuidRef.current = null;
       }
     };
