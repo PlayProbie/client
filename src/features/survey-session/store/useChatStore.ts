@@ -187,30 +187,6 @@ export const useChatStore = create<ChatState>((set, get) => ({
   enqueueStreamToken: (token, turnNum, qType = 'TAIL', fixedQId = null) => {
     const { processQueue } = get();
 
-    // 현재 스트리밍 중인 말풍선이 없는데 토큰이 들어오면 말풍선 시작 추가
-    // 단, 큐에 이미 START_BUBBLE이 대기 중일 수 있으므로 큐 체크는 복잡함
-    // 간단하게: 현재 messages에 스트리밍 중인 게 없고, 큐 맨 뒤가 START/TYPE이 아니면 추가?
-    // 안전하게: 항상 TYPE_TEXT로 넣고, process 단계에서 현재 스트리밍 말풍선 없으면 생성하도록 처리
-    // 하지만 fixedQId 정보가 필요하므로 첫 토큰에는 START_BUBBLE이 동반되는 게 좋음.
-
-    // 이미 스트리밍 중(isStreaming)이거나 큐에 작업이 있다면 그냥 TYPE_TEXT만 추가
-    // 하지만 SSE 이벤트 순서상 onQuestion -> onContinue 토큰 들이 옴.
-    // onQuestion에서 enqueueQuestion을 호출하면 START_BUBBLE이 이미 들어감.
-    // onContinue는 TYPE_TEXT만 추가하면 됨.
-
-    // 만약 onQuestion 없이 onContinue만 오는 경우(Greeting 등) 대비:
-    // 이 부분은 useChatSession에서 처리 (GreetingContinue도 enqueueStreamToken 사용)
-    // Greeting의 경우 첫 토큰에 START_BUBBLE을 넣어주는 게 좋음.
-    // -> useChatSession 로직 변경 필요: "첫 토큰 여부" 판단은 hook에서 하기 어려움.
-    // -> Store에서 "마지막 큐 아이템"을 확인하거나 "현재 상태" 확인
-
-    // 여기서는 단순히 TYPE_TEXT 추가.
-    // 만약 처리 시점에 말풍선이 없으면 processQueue에서 생성하도록(fallback) 하거나
-    // useChatSession에서 START_BUBBLE을 명시적으로 넣어줘야 함.
-    // ==> useChatSession에서 onQuestion이 오면 START_BUBBLE, onContinue는 TYPE_TEXT
-    // ==> GreetingContinue는? 첫 이벤트에만 START_BUBBLE?
-    // ==> 안전하게: TYPE_TEXT payload에 메타데이터 다 넣고, 처리기에서 "현재 스트리밍 중 아니면 시작" 판단
-
     set((state) => ({
       streamQueue: [
         ...state.streamQueue,
