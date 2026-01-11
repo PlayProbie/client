@@ -20,7 +20,13 @@
 export type SurveySessionStatus = 'IN_PROGRESS' | 'COMPLETED' | 'DROPPED';
 
 /** 인터뷰 로그 질문 타입 */
-export type InterviewLogQType = 'FIXED' | 'TAIL' | 'OPENING' | 'CLOSING' | 'GREETING' | 'REACTION';
+export type InterviewLogQType =
+  | 'FIXED'
+  | 'TAIL'
+  | 'OPENING'
+  | 'CLOSING'
+  | 'GREETING'
+  | 'REACTION';
 
 /** 테스터 프로필 데이터 */
 export interface TesterProfile {
@@ -205,6 +211,7 @@ export interface ChatMessageData {
 /** 새 대화 세션 생성 요청 파라미터 */
 export interface CreateChatSessionParams {
   surveyUuid: string;
+  sessionUuid?: string;
   testerProfile?: TesterProfile;
 }
 

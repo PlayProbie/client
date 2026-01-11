@@ -4,7 +4,7 @@
  */
 
 import { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 import {
   Button,
@@ -22,6 +22,8 @@ import type { TesterProfile } from '@/features/survey-session/types';
 
 function SurveySessionStartPage() {
   const { surveyUuid } = useParams<{ surveyUuid: string }>();
+  const [searchParams] = useSearchParams();
+  const sessionUuid = searchParams.get('sessionUuid');
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -55,6 +57,7 @@ function SurveySessionStartPage() {
       const response = await createChatSession({
         surveyUuid: surveyUuid,
         testerProfile: profile,
+        sessionUuid: sessionUuid || undefined,
       });
 
       const { session, sse_url: sseUrl } = response.result;
@@ -78,7 +81,10 @@ function SurveySessionStartPage() {
   if (isLoading) {
     return (
       <div className="bg-background flex min-h-screen flex-col items-center justify-center px-4">
-        <Spinner size="lg" className="text-primary mb-4" />
+        <Spinner
+          size="lg"
+          className="text-primary mb-4"
+        />
         <p className="text-muted-foreground">인터뷰를 준비하고 있습니다...</p>
       </div>
     );
@@ -88,7 +94,9 @@ function SurveySessionStartPage() {
     <div className="bg-background flex min-h-screen flex-col items-center justify-center px-4 py-8">
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
-          <h1 className="text-2xl font-bold tracking-tight">테스터 정보 입력</h1>
+          <h1 className="text-2xl font-bold tracking-tight">
+            테스터 정보 입력
+          </h1>
           <p className="text-muted-foreground mt-2">
             원활한 인터뷰 진행을 위해 간단한 정보를 입력해주세요.
           </p>
@@ -98,7 +106,10 @@ function SurveySessionStartPage() {
           {/* 성별 선택 */}
           <div className="space-y-2">
             <Label>성별</Label>
-            <Select onValueChange={setGender} value={gender}>
+            <Select
+              onValueChange={setGender}
+              value={gender}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="성별을 선택하세요" />
               </SelectTrigger>
@@ -112,7 +123,10 @@ function SurveySessionStartPage() {
           {/* 연령대 선택 */}
           <div className="space-y-2">
             <Label>연령대</Label>
-            <Select onValueChange={setAgeGroup} value={ageGroup}>
+            <Select
+              onValueChange={setAgeGroup}
+              value={ageGroup}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="연령대를 선택하세요" />
               </SelectTrigger>
@@ -140,7 +154,11 @@ function SurveySessionStartPage() {
             <p className="text-destructive text-sm font-medium">{error}</p>
           )}
 
-          <Button className="w-full" size="lg" onClick={handleStart}>
+          <Button
+            className="w-full"
+            size="lg"
+            onClick={handleStart}
+          >
             인터뷰 시작하기
           </Button>
         </div>
