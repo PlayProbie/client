@@ -38,13 +38,26 @@ function useQuestionAnalysis({
   const isError = state.status === 'error';
   const isComplete = state.status === 'complete';
 
+  // Refetch control
+  const [refetchCount, setRefetchCount] = useState(0);
+
+  const refetch = () => {
+    // Reset requesting ref to allow new request
+    requestedSurveyUuidRef.current = null;
+    setRefetchCount((c) => c + 1);
+  };
+
   useEffect(() => {
     if (!surveyUuid || !enabled) {
       return;
     }
 
     // 이미 요청 중이거나 같은 surveyUuid로 완료된 요청이 있으면 스킵
-    if (isRequestingRef.current || surveyUuid === requestedSurveyUuidRef.current) {
+    // 단, refetchCount가 변경되면 재요청 허용
+    if (
+      isRequestingRef.current ||
+      (surveyUuid === requestedSurveyUuidRef.current && refetchCount === 0)
+    ) {
       return;
     }
 
@@ -97,11 +110,12 @@ function useQuestionAnalysis({
       isRequestingRef.current = false;
       // 언마운트 시에는 requestedSurveyUuidRef는 유지 (리마운트 시 중복 요청 방지)
     };
-  }, [surveyUuid, enabled]);
+  }, [surveyUuid, enabled, refetchCount]);
 
   return {
     data: state.data,
     questionIds: Object.keys(state.data).map(Number),
+    refetch,
     isLoading,
     isError,
     error: state.error,

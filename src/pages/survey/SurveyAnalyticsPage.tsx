@@ -8,6 +8,7 @@ import {
   SurveyOverview,
   SurveyResultsTable,
   type Tab,
+  useAnalyticsSubscription,
   useQuestionAnalysis,
   useSurveyResults,
 } from '@/features/survey-analytics';
@@ -32,6 +33,9 @@ function SurveyAnalyticsPage() {
     surveyUuid: surveyUuid || null,
     enabled: Boolean(surveyUuid),
   });
+
+  // SSE 구독 및 업데이트 시 리패치 트리거
+  useAnalyticsSubscription(surveyUuid || null, questionAnalysis.refetch);
 
   return (
     <main className="container mx-auto max-w-7xl px-4 py-8">
