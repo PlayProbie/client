@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import {
   useLocation,
@@ -39,6 +39,9 @@ function SurveyDesignForm({ className, onComplete }: SurveyDesignFormProps) {
   const { currentStep, goToStep, formData, updateFormData, reset } =
     useSurveyFormStore();
 
+  // StrictMode 중복 제출 방지 ref
+  const isSubmittingRef = useRef(false);
+
   const form = useForm<SurveyFormData>({
     defaultValues: formData,
   });
@@ -51,11 +54,11 @@ function SurveyDesignForm({ className, onComplete }: SurveyDesignFormProps) {
   // 설문 생성 API 호출 훅
   const { mutate: submitSurvey, isPending } = useFormSubmit({
     onSuccess: (result) => {
-      // 임시 저장 초기화 후 완료 콜백 호출
-      // reset(); // onSuccess에서 reset하면 바로 step-0으로 튕김
+      isSubmittingRef.current = false;
       onComplete?.(result);
     },
     onError: () => {
+      isSubmittingRef.current = false;
       toast({
         variant: 'destructive',
         title: '설문 생성 실패',
@@ -91,12 +94,25 @@ function SurveyDesignForm({ className, onComplete }: SurveyDesignFormProps) {
     };
   }, [reset]);
 
+  /** 공통 경로 생성 함수 (쿼리 파라미터 유지) */
+  const getStepPath = (stepNum: number, actor?: 'user' | 'ai') => {
+    const actorValue = actor || searchParams.get('actor');
+    let nextPath = `${pathWithoutStep}/step-${stepNum}`;
+    if (actorValue) {
+      nextPath += `?actor=${actorValue}`;
+    }
+    return nextPath;
+  };
+
   const createHandleNext = (actor?: 'user' | 'ai') =>
     handleSubmit((data) => {
       updateFormData(data);
 
       // 최종 확인 단계 (Step 3)에서 설문 생성 버튼 클릭 시 API 호출
       if (currentStep === SURVEY_FORM_STEPS.length - 1) {
+        // StrictMode 중복 제출 방지
+        if (isSubmittingRef.current || isPending) return;
+        isSubmittingRef.current = true;
         submitSurvey(formData);
         return;
       }
@@ -109,25 +125,17 @@ function SurveyDesignForm({ className, onComplete }: SurveyDesignFormProps) {
       }
 
       // 다음 단계로 이동
-      const nextStepNum = currentStep + 1;
-
-      // actor 파라미터가 전달되었거나 기존 searchParams에 있으면 추가
-      const actorValue = actor || searchParams.get('actor');
-      let nextPath = `${pathWithoutStep}/step-${nextStepNum}`;
-      if (actorValue) {
-        nextPath += `?actor=${actorValue}`;
-      }
-      navigate(nextPath);
+      navigate(getStepPath(currentStep + 1, actor));
     });
 
   const handlePrev = () => {
     if (currentStep > 0) {
-      navigate(`${pathWithoutStep}/step-${currentStep - 1}`);
+      navigate(getStepPath(currentStep - 1));
     }
   };
 
   const handleStepClick = (index: number) => {
-    navigate(`${pathWithoutStep}/step-${index}`);
+    navigate(getStepPath(index));
   };
 
   const stepLabels = SURVEY_FORM_STEPS.map((s) => s.label);

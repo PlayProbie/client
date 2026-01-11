@@ -68,25 +68,28 @@ function StepQuestionAIGenerate() {
           const isLoading = loadingIndex === index;
 
           return (
-            <button
-              type="button"
+            <div
               key={`${question}-${index}`}
               className={cn(
-                'w-full text-left rounded-lg border p-4 transition-colors cursor-pointer',
+                'w-full rounded-lg border p-4 transition-colors',
                 isSelected
                   ? 'border-primary/30 bg-primary/5'
                   : 'border-border bg-background hover:bg-muted/30',
                 isLoading && 'opacity-70'
               )}
-              onClick={() => !isLoading && handleToggle(index)}
             >
-              <div className="flex items-start gap-3">
+              <label
+                htmlFor={`question-${index}`}
+                className={cn(
+                  'flex items-start gap-3 cursor-pointer select-none',
+                  isLoading && 'cursor-not-allowed'
+                )}
+              >
                 <Checkbox
                   id={`question-${index}`}
                   checked={isSelected}
                   onCheckedChange={() => handleToggle(index)}
                   disabled={isLoading}
-                  onClick={(e) => e.stopPropagation()}
                 />
                 <div className="flex-1">
                   <span className="text-sm font-medium text-muted-foreground mr-2">
@@ -99,8 +102,8 @@ function StepQuestionAIGenerate() {
                 {isSelected && (
                   <Check className="size-5 text-primary shrink-0" />
                 )}
-              </div>
-            </button>
+              </label>
+            </div>
           );
         })}
       </div>

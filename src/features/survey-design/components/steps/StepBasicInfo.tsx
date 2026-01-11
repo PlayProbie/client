@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { Lightbulb, Rocket, Users } from 'lucide-react';
 import { useEffect } from 'react';
-import { type Control } from 'react-hook-form';
+import { type Control, useWatch } from 'react-hook-form';
 import { useParams } from 'react-router-dom';
 
 import { Badge } from '@/components/ui/Badge';
@@ -22,6 +22,7 @@ import { cn } from '@/lib/utils';
 
 import { useSurveyFormStore } from '../../store/useSurveyFormStore';
 import type { SurveyFormData, TestStage, ThemeCategory } from '../../types';
+import { ThemeSelection } from '../ThemeSelection';
 
 type StepBasicInfoProps = {
     control: Control<SurveyFormData>;
@@ -57,6 +58,9 @@ const TEST_STAGE_CONFIG = {
 
 function StepBasicInfo({ control }: StepBasicInfoProps) {
     const { gameUuid } = useParams<{ gameUuid: string }>();
+
+    // testStage 값 감시 (테마 선택 표시 여부 결정)
+    const testStage = useWatch({ control, name: 'testStage' });
 
     // 게임 정보 로드
     const { data: gameData, isLoading: isLoadingGame } = useQuery({
@@ -201,6 +205,11 @@ function StepBasicInfo({ control }: StepBasicInfoProps) {
                     </FormItem>
                 )}
             />
+
+            {/* 5. 테마 선택 (테스트 단계 선택 후 표시) */}
+            {testStage && (
+                <ThemeSelection control={control} testStage={testStage} />
+            )}
         </div>
     );
 }
