@@ -8,7 +8,6 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 import {
   Button,
-  Input,
   Label,
   Select,
   SelectContent,
@@ -16,7 +15,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui';
+import { CheckboxGroup } from '@/components/ui/CheckboxGroup';
 import { Spinner } from '@/components/ui/loading';
+import { GAME_GENRE_OPTIONS } from '@/constants';
 import { createChatSession } from '@/features/survey-session';
 import type { TesterProfile } from '@/features/survey-session/types';
 
@@ -31,7 +32,7 @@ function SurveySessionStartPage() {
   // Form State
   const [gender, setGender] = useState<string>('');
   const [ageGroup, setAgeGroup] = useState<string>('');
-  const [preferGenre, setPreferGenre] = useState<string>('');
+  const [preferGenre, setPreferGenre] = useState<string[]>([]);
 
   const handleStart = async () => {
     if (!surveyUuid) {
@@ -39,7 +40,7 @@ function SurveySessionStartPage() {
       return;
     }
 
-    if (!gender || !ageGroup || !preferGenre) {
+    if (!gender || !ageGroup || preferGenre.length === 0) {
       setError('모든 정보를 입력해주세요.');
       return;
     }
@@ -51,7 +52,7 @@ function SurveySessionStartPage() {
       const profile: TesterProfile = {
         gender,
         ageGroup,
-        preferGenre,
+        preferGenre: preferGenre.join(', '), // DB 호환을 위해 콤마로 연결
       };
 
       const response = await createChatSession({
@@ -140,15 +141,16 @@ function SurveySessionStartPage() {
             </Select>
           </div>
 
-          {/* 선호 장르 입력 */}
-          <div className="space-y-2">
-            <Label>선호하는 게임 장르</Label>
-            <Input
-              placeholder="예: RPG, FPS, 퍼즐 등"
-              value={preferGenre}
-              onChange={(e) => setPreferGenre(e.target.value)}
-            />
-          </div>
+          {/* 선호 장르 선택 */}
+          <CheckboxGroup
+            id="preferGenre"
+            label="선호하는 게임 장르"
+            options={GAME_GENRE_OPTIONS}
+            value={preferGenre}
+            onChange={setPreferGenre}
+            columns={2}
+            maxSelection={3}
+          />
 
           {error && (
             <p className="text-destructive text-sm font-medium">{error}</p>
