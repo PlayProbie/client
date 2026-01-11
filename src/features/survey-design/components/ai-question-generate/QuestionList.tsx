@@ -1,6 +1,3 @@
-import * as AccordionPrimitive from '@radix-ui/react-accordion';
-import { useMemo } from 'react';
-
 import type { QuestionFeedbackItem } from '../../types';
 import { QuestionItem } from './QuestionItem';
 
@@ -30,18 +27,10 @@ function QuestionList({
   onSuggestionClick,
   onRequestFeedback,
 }: QuestionListProps) {
-  // 아코디언 기본 펼침 상태 (모든 항목)
-  const defaultOpenItems = useMemo(
-    () => questions.map((_, i) => `item-${i}`),
-    [questions]
-  );
+
 
   return (
-    <AccordionPrimitive.Root
-      type="multiple"
-      defaultValue={defaultOpenItems}
-      className="flex flex-col gap-3"
-    >
+    <div className="flex flex-col gap-3">
       {questions.map((question, index) => (
         <QuestionItem
           key={question}
@@ -59,7 +48,7 @@ function QuestionList({
           onRequestFeedback={onRequestFeedback}
         />
       ))}
-    </AccordionPrimitive.Root>
+    </div>
   );
 }
 

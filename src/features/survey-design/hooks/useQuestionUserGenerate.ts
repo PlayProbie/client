@@ -1,7 +1,5 @@
 import { useCallback, useState } from 'react';
 
-import { useToast } from '@/hooks/useToast';
-
 import { useQuestionManager } from './useQuestionManager';
 
 /**
@@ -12,7 +10,7 @@ import { useQuestionManager } from './useQuestionManager';
 function useQuestionUserGenerate() {
   // 공통 질문 관리 로직
   const manager = useQuestionManager();
-  const { toast } = useToast();
+
 
   // 새 질문 입력 상태
   const [newQuestion, setNewQuestion] = useState('');
@@ -22,27 +20,12 @@ function useQuestionUserGenerate() {
     const trimmedQuestion = newQuestion.trim();
     if (!trimmedQuestion) return;
 
-    try {
-      // 맨 앞에 추가 + 선택 인덱스 재조정
-      manager.addQuestionAtFront(trimmedQuestion);
+    // 맨 앞에 추가 + 선택 인덱스 재조정
+    manager.addQuestionAtFront(trimmedQuestion);
 
-      // 피드백 요청
-      const feedback = await manager.fetchFeedbackForQuestion(trimmedQuestion);
-      manager.setFeedbackMap((prev) => ({
-        ...prev,
-        [trimmedQuestion]: feedback,
-      }));
-
-      // 입력창 초기화
-      setNewQuestion('');
-    } catch {
-      toast({
-        variant: 'destructive',
-        title: '피드백 요청 실패',
-        description: '질문 피드백을 가져오는데 실패했습니다.',
-      });
-    }
-  }, [newQuestion, manager, toast]);
+    // 입력창 초기화
+    setNewQuestion('');
+  }, [newQuestion, manager]);
 
   // 질문 삭제
   const handleRemoveQuestion = useCallback(
