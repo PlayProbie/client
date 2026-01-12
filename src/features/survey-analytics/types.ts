@@ -152,6 +152,13 @@ export interface OutlierInfo {
   sample_answers?: string[]; // 서버에서 변환된 실제 답변 텍스트 (최대 5개)
 }
 
+/** 테스터 프로필 정보 (답변별 매핑) */
+export interface AnswerProfile {
+  age_group: string;
+  gender: string;
+  prefer_genre: string; // "RPG, FPS" 형태
+}
+
 /** 질문별 AI 분석 결과 */
 export interface QuestionAnalysisResult {
   question_id: number;
@@ -160,6 +167,7 @@ export interface QuestionAnalysisResult {
   sentiment: SentimentStats;
   outliers: OutlierInfo | null;
   meta_summary: string | null;
+  answer_profiles?: Record<string, AnswerProfile>;
 }
 
 /** SSE로 받는 질문 분석 래퍼 (API 응답 - snake_case) */
