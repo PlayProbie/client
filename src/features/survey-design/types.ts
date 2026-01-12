@@ -124,7 +124,6 @@ export interface ApiCreateSurveyRequest {
 export interface ApiSurvey {
   survey_uuid: string;
   survey_name: string;
-  survey_url: string;
   started_at: string;
   ended_at: string;
   created_at: string;
