@@ -3,6 +3,8 @@ import { persist } from 'zustand/middleware';
 
 import { useSurveyFormStore } from '@/features/survey-design/store/useSurveyFormStore';
 
+import { useCurrentWorkspaceStore } from './useCurrentWorkspaceStore';
+
 interface User {
   id: string;
   email: string;
@@ -42,7 +44,11 @@ export const useAuthStore = create<AuthStore>()(
 
       logout: () => {
         useSurveyFormStore.getState().reset();
+        useCurrentWorkspaceStore.getState().clearCurrentWorkspace();
+
         sessionStorage.removeItem('survey-design-storage');
+        localStorage.removeItem('workspace-storage');
+
         set({
           isAuthenticated: false,
           user: null,
