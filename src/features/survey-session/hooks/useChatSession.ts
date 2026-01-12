@@ -72,21 +72,42 @@ export function useChatSession({
       setCurrentTurnNum(data.turnNum);
 
       // 큐에 추가: 말풍선 시작 -> 타이핑
-      enqueueQuestion(data.questionText, data.turnNum, data.fixedQId, data.qType);
+      enqueueQuestion(
+        data.questionText,
+        data.turnNum,
+        data.fixedQId,
+        data.qType,
+        data.order,
+        data.totalQuestions
+      );
 
       setIsReady(true);
       setLoading(false);
     },
     onContinue: (data) => {
       // 스트리밍 토큰 -> 큐에 추가
-      enqueueStreamToken(data.questionText, data.turnNum, data.qType, data.fixedQId);
+      enqueueStreamToken(
+        data.questionText,
+        data.turnNum,
+        data.qType,
+        data.fixedQId,
+        data.order,
+        data.totalQuestions
+      );
       if (!isStreaming) {
         setStreaming(true);
       }
     },
     onGreetingContinue: (data) => {
       // 인사말 스트리밍 -> 큐에 추가
-      enqueueStreamToken(data.questionText, data.turnNum, data.qType, data.fixedQId);
+      enqueueStreamToken(
+        data.questionText,
+        data.turnNum,
+        data.qType,
+        data.fixedQId,
+        data.order,
+        data.totalQuestions
+      );
       if (!isStreaming) {
         setStreaming(true);
       }
@@ -94,6 +115,9 @@ export function useChatSession({
     onReaction: (data) => {
       // 리액션 -> 큐에 추가 (말풍선 -> 타이핑 -> 대기)
       enqueueReaction(data.reactionText, data.turnNum);
+    },
+    onGenerateTailComplete: (data) => {
+      console.log('Tail questions generated:', data);
     },
     onStart: () => {
       setStreaming(true);
