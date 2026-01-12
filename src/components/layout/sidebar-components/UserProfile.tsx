@@ -1,27 +1,52 @@
 import { Building2, Settings, Shield } from 'lucide-react';
 
+import type { MemberRole } from '@/features/workspace';
+import { useWorkspaceMembers } from '@/features/workspace/hooks';
 import { cn } from '@/lib/utils';
-import { useAuthStore } from '@/stores';
-
-import { MOCK_USER } from '../types';
+import { useAuthStore, useCurrentWorkspaceStore } from '@/stores';
 
 interface UserProfileProps {
   isCollapsed: boolean;
   onSettingsClick?: () => void;
 }
 
+function getRoleName(role?: MemberRole): string {
+  switch (role) {
+    case 'OWNER':
+      return '소유자';
+    case 'ADMIN':
+      return '관리자';
+    case 'VIEWER':
+      return '뷰어';
+    default:
+      return '멤버';
+  }
+}
+
 function UserProfile({ isCollapsed, onSettingsClick }: UserProfileProps) {
   const { user } = useAuthStore();
+  const { currentWorkspace } = useCurrentWorkspaceStore();
+  const { data: members } = useWorkspaceMembers(
+    currentWorkspace?.workspaceUuid || ''
+  );
 
-  // 스토어에 유저 정보가 없으면 Mock 데이터 사용 (개발 중 편의)
-  const displayUser = user
-    ? {
-        name: user.name,
-        email: user.email,
-        avatar: user.avatar || MOCK_USER.avatar,
-        workspace: MOCK_USER.workspace, // 워크스페이스 정보는 아직 스토어에 없음
-      }
-    : MOCK_USER;
+  // 현재 멤버 정보 조회
+  const currentMember = members?.result.find(
+    (member) => member.userUuid === user?.id
+  );
+
+  const displayUser = {
+    name: user?.name ?? '',
+    email: user?.email ?? '',
+    avatar:
+      user?.avatar ||
+      'https://ui-avatars.com/api/?name=User&background=4F46E5&color=fff',
+    workspace: {
+      name: currentWorkspace?.name ?? '',
+      role: getRoleName(currentMember?.role),
+      permission: currentMember?.role ?? 'Member',
+    },
+  };
 
   const handleSettingsClick = (e: React.MouseEvent) => {
     e.stopPropagation();

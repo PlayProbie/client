@@ -44,13 +44,15 @@ export interface ApiWorkspacesListResponse {
   result: ApiWorkspace[];
 }
 
+export type MemberRole = 'OWNER' | 'ADMIN' | 'MEMBER' | 'VIEWER';
+
 /** [API] Member 엔티티 */
 export interface ApiMember {
   memberId: number;
   userUuid: string;
   email: string;
   name: string;
-  role: 'OWNER' | 'MEMBER';
+  role: MemberRole;
   joined_at: string;
 }
 
@@ -103,7 +105,7 @@ export interface Member {
   userUuid: string;
   email: string;
   name: string;
-  role: 'OWNER' | 'MEMBER';
+  role: MemberRole;
   joinedAt: string;
 }
 

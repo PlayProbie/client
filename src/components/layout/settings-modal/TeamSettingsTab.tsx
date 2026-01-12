@@ -10,6 +10,7 @@ import {
   useRemoveMemberMutation,
   useWorkspaceMembers,
 } from '@/features/workspace';
+import { toMember } from '@/features/workspace/types';
 import { useCurrentWorkspaceStore } from '@/stores/useCurrentWorkspaceStore';
 
 export function TeamSettingsTab() {
@@ -67,7 +68,7 @@ export function TeamSettingsTab() {
       </div>
 
       <MemberList
-        members={members}
+        members={members?.result.map(toMember)}
         isLoading={isLoading}
         isError={isError}
         onRemove={handleRemove}

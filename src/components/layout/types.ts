@@ -12,18 +12,6 @@ export interface User {
   workspace: WorkspaceRole;
 }
 
-// Mock data - TODO: Replace with actual user context from useAuthStore
-export const MOCK_USER: User = {
-  name: '김개발',
-  email: 'dev@playprobie.com',
-  avatar: 'https://ui-avatars.com/api/?name=Kim&background=4F46E5&color=fff',
-  workspace: {
-    name: '스튜디오 A',
-    role: '관리자',
-    permission: 'Owner',
-  },
-};
-
 export const TabValue = {
   ACCOUNT: 'account',
   WORKSPACE: 'workspace',
