@@ -74,13 +74,8 @@ export function RecentBuildsList({
               >
                 <div>
                   <span className="font-medium">
-                    {build.filename || 'Unknown Build'}
+                    {build.version ? `v${build.version}` : 'Unknown Build'}
                   </span>
-                  {build.version && (
-                    <span className="text-muted-foreground ml-2 text-xs">
-                      v{build.version}
-                    </span>
-                  )}
                 </div>
                 <span className={getBuildStatusClass(build.status)}>
                   {build.status}

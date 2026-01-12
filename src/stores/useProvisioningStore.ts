@@ -206,7 +206,8 @@ export const selectHasActiveProvisioning = (state: ProvisioningStore) =>
   state.items.some(
     (item) =>
       item.status === ProvisioningStatus.CREATING ||
-      item.status === ProvisioningStatus.PROVISIONING
+      item.status === ProvisioningStatus.PROVISIONING ||
+      item.status === ProvisioningStatus.READY
   );
 
 /** 진행중인 항목 수 */
@@ -214,14 +215,14 @@ export const selectActiveCount = (state: ProvisioningStore) =>
   state.items.filter(
     (item) =>
       item.status === ProvisioningStatus.CREATING ||
-      item.status === ProvisioningStatus.PROVISIONING
+      item.status === ProvisioningStatus.PROVISIONING ||
+      item.status === ProvisioningStatus.READY
   ).length;
 
-/** 완료된 항목 수 (ACTIVE + READY + ERROR) */
+/** 완료된 항목 수 (ACTIVE + ERROR) */
 export const selectCompletedCount = (state: ProvisioningStore) =>
   state.items.filter(
     (item) =>
       item.status === ProvisioningStatus.ACTIVE ||
-      item.status === ProvisioningStatus.READY ||
       item.status === ProvisioningStatus.ERROR
   ).length;

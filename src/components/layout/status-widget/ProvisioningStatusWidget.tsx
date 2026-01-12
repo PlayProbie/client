@@ -94,7 +94,8 @@ export function ProvisioningStatusWidget() {
             {items.map((item) => {
               const isActive =
                 item.status === ProvisioningStatus.CREATING ||
-                item.status === ProvisioningStatus.PROVISIONING;
+                item.status === ProvisioningStatus.PROVISIONING ||
+                item.status === ProvisioningStatus.READY;
               return (
                 <ProvisioningItemRow
                   key={item.id}

@@ -31,7 +31,8 @@ export function ProvisioningPollingProvider() {
       const activeItems = items.filter(
         (item) =>
           item.status === ProvisioningStatus.CREATING ||
-          item.status === ProvisioningStatus.PROVISIONING
+          item.status === ProvisioningStatus.PROVISIONING ||
+          item.status === ProvisioningStatus.READY
       );
 
       if (activeItems.length === 0) return;

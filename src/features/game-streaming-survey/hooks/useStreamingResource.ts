@@ -29,11 +29,12 @@ export function useStreamingResource(surveyUuid: string, enabled = true) {
     enabled,
     refetchOnMount: 'always',
     refetchInterval: (query) => {
-      // CREATING/PROVISIONING 상태일 때 5초마다 폴링
+      // CREATING/PROVISIONING/READY 상태일 때 5초마다 폴링
       const data = query.state.data;
       if (
         data?.status === StreamingResourceStatus.CREATING ||
-        data?.status === StreamingResourceStatus.PROVISIONING
+        data?.status === StreamingResourceStatus.PROVISIONING ||
+        data?.status === StreamingResourceStatus.READY
       ) {
         return 5000;
       }
