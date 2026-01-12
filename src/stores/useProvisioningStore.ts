@@ -78,6 +78,8 @@ interface ProvisioningStoreState {
   items: ProvisioningItem[];
   /** 위젯 최소화 상태 */
   isMinimized: boolean;
+  /** 위젯 표시 상태 (항목은 유지하되 UI만 숨김) */
+  isVisible: boolean;
 }
 
 interface ProvisioningStoreActions {
@@ -93,6 +95,10 @@ interface ProvisioningStoreActions {
   clearCompleted: () => void;
   /** 위젯 최소화 토글 */
   toggleMinimize: () => void;
+  /** 위젯 보이기 */
+  showWidget: () => void;
+  /** 위젯 숨기기 */
+  hideWidget: () => void;
 }
 
 type ProvisioningStore = ProvisioningStoreState & ProvisioningStoreActions;
@@ -105,6 +111,7 @@ export const useProvisioningStore = create<ProvisioningStore>()((set) => ({
   // State
   items: [],
   isMinimized: false,
+  isVisible: true,
 
   // Actions
   startProvisioning: (params) => {
@@ -121,6 +128,7 @@ export const useProvisioningStore = create<ProvisioningStore>()((set) => ({
     set((state) => ({
       items: [...state.items, newItem],
       isMinimized: false, // 새 프로비저닝 시작 시 위젯 펼치기
+      isVisible: true, // 새 작업 시작 시 위젯 보이기
     }));
 
     return id;
@@ -133,10 +141,7 @@ export const useProvisioningStore = create<ProvisioningStore>()((set) => ({
         if (item.id !== id) return item;
         const nextErrorMessage =
           status === ProvisioningStatus.ERROR ? item.errorMessage : undefined;
-        if (
-          item.status === status &&
-          item.errorMessage === nextErrorMessage
-        ) {
+        if (item.status === status && item.errorMessage === nextErrorMessage) {
           return item;
         }
         didUpdate = true;
@@ -181,6 +186,14 @@ export const useProvisioningStore = create<ProvisioningStore>()((set) => ({
 
   toggleMinimize: () => {
     set((state) => ({ isMinimized: !state.isMinimized }));
+  },
+
+  showWidget: () => {
+    set({ isVisible: true });
+  },
+
+  hideWidget: () => {
+    set({ isVisible: false });
   },
 }));
 

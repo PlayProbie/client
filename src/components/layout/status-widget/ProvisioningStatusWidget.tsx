@@ -23,20 +23,24 @@ export function ProvisioningStatusWidget() {
   const {
     items,
     isMinimized,
+    isVisible,
     hasActiveProvisioning,
     activeCount,
     completedCount,
     toggleMinimize,
+    hideWidget,
     removeItem,
     clearCompleted,
   } = useProvisioningStore(
     useShallow((state) => ({
       items: state.items,
       isMinimized: state.isMinimized,
+      isVisible: state.isVisible,
       hasActiveProvisioning: selectHasActiveProvisioning(state),
       activeCount: selectActiveCount(state),
       completedCount: selectCompletedCount(state),
       toggleMinimize: state.toggleMinimize,
+      hideWidget: state.hideWidget,
       removeItem: state.removeItem,
       clearCompleted: state.clearCompleted,
     }))
@@ -54,8 +58,8 @@ export function ProvisioningStatusWidget() {
     return () => clearInterval(interval);
   }, [hasActiveProvisioning]);
 
-  // 프로비저닝 항목이 없으면 위젯 숨김
-  if (items.length === 0) {
+  // 프로비저닝 항목이 없거나 숨김 상태면 렌더링 안 함
+  if (items.length === 0 || !isVisible) {
     return null;
   }
 
@@ -74,6 +78,11 @@ export function ProvisioningStatusWidget() {
         }
         isMinimized={isMinimized}
         onToggleMinimize={toggleMinimize}
+        // Action (Close/Hide Widget)
+        showAction={true} // 항상 닫기 버튼 표시 (숨기기 기능)
+        onAction={hideWidget}
+        actionLabel="닫기"
+        // Clear Completed (Optional explicit clear)
         showClearCompleted={completedCount > 0}
         onClearCompleted={clearCompleted}
       />

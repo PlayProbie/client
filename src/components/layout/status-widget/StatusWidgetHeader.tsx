@@ -20,6 +20,12 @@ interface StatusWidgetHeaderProps {
   isMinimized: boolean;
   /** 최소화 토글 */
   onToggleMinimize: () => void;
+  /** 추가 액션 표시 여부 */
+  showAction?: boolean;
+  /** 추가 액션 클릭 핸들러 */
+  onAction?: () => void;
+  /** 추가 액션 라벨 */
+  actionLabel?: string;
   /** 완료 지우기 표시 여부 */
   showClearCompleted?: boolean;
   /** 완료 지우기 클릭 */
@@ -35,6 +41,9 @@ export function StatusWidgetHeader({
   progressInfo,
   isMinimized,
   onToggleMinimize,
+  showAction,
+  onAction,
+  actionLabel,
   showClearCompleted,
   onClearCompleted,
   extraActions,
@@ -58,6 +67,18 @@ export function StatusWidgetHeader({
             onClick={onClearCompleted}
           >
             완료 지우기
+          </Button>
+        )}
+
+        {/* 추가 액션 (e.g. 닫기) */}
+        {showAction && onAction && actionLabel && (
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-6 px-2 text-xs"
+            onClick={onAction}
+          >
+            {actionLabel}
           </Button>
         )}
 
