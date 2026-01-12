@@ -192,8 +192,8 @@ export default function SurveyOverviewPage() {
             survey?.status === 'ACTIVE' &&
             relatedItems &&
             relatedItems.length > 0 &&
-            relatedItems[relatedItems.length - 1].status === 'READY' &&
-            relatedItems[relatedItems.length - 1].status === 'ACTIVE'
+            (relatedItems[relatedItems.length - 1].status === 'READY' ||
+              relatedItems[relatedItems.length - 1].status === 'ACTIVE')
           }
         />
       </div>

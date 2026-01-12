@@ -50,12 +50,8 @@ export function useProvisioningPolling({
     refetchIntervalInBackground: true,
     refetchInterval: (query) => {
       const status = query.state.data?.status;
-      // READY 또는 ACTIVE 상태가 되면 polling 중지
-      if (
-        !enabled ||
-        status === StreamingResourceStatus.READY ||
-        status === StreamingResourceStatus.ACTIVE
-      ) {
+      // ACTIVE 상태가 되면 polling 중지
+      if (!enabled || status === StreamingResourceStatus.ACTIVE) {
         return false;
       }
       return 5000; // 5초 간격
