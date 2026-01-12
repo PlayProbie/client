@@ -72,6 +72,11 @@ export function SurveyShell() {
               )}
             </h1>
             <div className="text-muted-foreground mt-2 flex items-center gap-2 text-sm">
+              <span>생성 시간:</span>
+              <span className="font-medium">
+                {survey ? new Date(survey.createdAt).toLocaleString() : '-'}
+              </span>
+              <div className="bg-border h-4 w-px" />
               <span>UUID:</span>
               <code className="bg-muted rounded px-2 py-0.5 font-mono text-xs">
                 {surveyUuid || '-'}

@@ -12,17 +12,14 @@ import type { SurveyStatusValue } from '@/features/game-streaming-survey/types';
 import { StatusChangeModal, type SurveyShellContext } from '@/features/survey';
 import {
   ProvisioningStatusStep,
-  SurveyAnalyticsSummary,
   SurveyLifecycleActions,
   SurveyStatusStep,
 } from '@/features/survey/components/overview';
-import { useQuestionAnalysis } from '@/features/survey-analytics';
-import { useSurveyResults } from '@/features/survey-analytics/hooks/useSurveyResults';
 import { useToast } from '@/hooks/useToast';
 import { useProvisioningStore } from '@/stores/useProvisioningStore';
 
 export default function SurveyOverviewPage() {
-  const { survey, isLoading, isError, refetch, surveyUuid, gameUuid } =
+  const { survey, isLoading, isError, refetch, surveyUuid } =
     useOutletContext<SurveyShellContext>();
   const items = useProvisioningStore((state) => state.items);
   const { toast } = useToast();
@@ -37,16 +34,6 @@ export default function SurveyOverviewPage() {
     useUpdateSurveyStatus(resolvedSurveyUuid);
 
   const statusConfig = survey ? SURVEY_STATUS_CONFIG[survey.status] : null;
-
-  // Analytics Data
-  const { questionIds } = useQuestionAnalysis({
-    surveyUuid: resolvedSurveyUuid,
-    enabled: !!resolvedSurveyUuid,
-  });
-
-  const { summary: surveyResultSummary } = useSurveyResults({
-    gameUuid: gameUuid ?? '',
-  });
 
   const handleModalOpenChange = (open: boolean) => {
     if (!open && !isPending) {
@@ -121,7 +108,7 @@ export default function SurveyOverviewPage() {
     <div className="space-y-6">
       <div className="grid gap-6 md:grid-cols-2">
         {/* Left Column: Survey Management */}
-        <Card className="flex flex-col overflow-hidden border-none shadow-md">
+        <Card className="flex h-full flex-col overflow-hidden border-none shadow-md">
           <div className="bg-muted/30 border-b p-6 pb-4">
             <h3 className="font-semibold tracking-tight">설문 상태 및 관리</h3>
             <p className="text-muted-foreground mt-1 text-sm">
@@ -143,7 +130,7 @@ export default function SurveyOverviewPage() {
         </Card>
 
         {/* Right Column: Provisioning Status */}
-        <Card className="flex flex-col overflow-hidden border-none shadow-md">
+        <Card className="flex h-full flex-col overflow-hidden border-none shadow-md">
           <div className="bg-muted/30 border-b p-6 pb-4">
             <h3 className="font-semibold tracking-tight">프로비저닝 상태</h3>
             <p className="text-muted-foreground mt-1 text-sm">
@@ -154,16 +141,6 @@ export default function SurveyOverviewPage() {
             <ProvisioningStatusStep relatedItems={relatedItems} />
           </CardContent>
         </Card>
-
-        {/* Bottom Row: Analytics Summary */}
-        <SurveyAnalyticsSummary
-          className="md:col-span-2"
-          responseCount={surveyResultSummary?.responseCount ?? 0}
-          questionAnalysisRate={
-            (questionIds.length / (surveyResultSummary?.responseCount ?? 1)) *
-            100
-          }
-        />
       </div>
 
       {nextStatus && (
