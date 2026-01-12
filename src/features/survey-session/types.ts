@@ -7,8 +7,6 @@
  * - 클라이언트 상태 타입: camelCase (컴포넌트에서 사용)
  */
 
-import type { GameGenre } from '../game';
-
 // ----------------------------------------
 // Common Types
 // ----------------------------------------
@@ -34,7 +32,7 @@ export type InterviewLogQType =
 export interface TesterProfile {
   ageGroup: string;
   gender: string;
-  preferGenre: GameGenre[];
+  preferGenre: string;
 }
 
 // ----------------------------------------

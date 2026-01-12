@@ -106,7 +106,7 @@ function StepBasicInfo({ control }: StepBasicInfoProps) {
     }
   }, [game, updateFormData]);
 
-  const getGenreLabels = (genres: GameGenre[]) => {
+  const getGenreLabels = (genres: string[]) => {
     return genres.map((code) => {
       const config = Object.values(GameGenreConfig).find(
         (c) => c.value === code

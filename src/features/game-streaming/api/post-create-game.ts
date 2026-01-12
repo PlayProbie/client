@@ -6,11 +6,10 @@
  */
 
 import { API_BASE_URL } from '@/constants/api';
-import type { GameGenre } from '@/features/game/types';
 
 export interface CreateGameRequest {
   game_name: string;
-  game_genre: GameGenre[];
+  game_genre: string[];
   game_context: string;
 }
 
@@ -18,7 +17,7 @@ export interface CreateGameResponse {
   result: {
     game_uuid: string;
     game_name: string;
-    game_genre: GameGenre[];
+    game_genre: string[];
     game_context: string;
     created_at: string;
   };

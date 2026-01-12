@@ -6,8 +6,6 @@
  * - 클라이언트 상태 타입: camelCase
  */
 
-import type { GameGenre } from '../game/types';
-
 // ----------------------------------------
 // Build Types
 // ----------------------------------------
@@ -237,7 +235,7 @@ export interface StreamSettings {
 export interface ApiSourceGame {
   game_uuid: string;
   game_name: string;
-  game_genre: GameGenre[];
+  game_genre: string[];
   created_at: string;
   is_streaming: boolean;
 }
@@ -246,7 +244,7 @@ export interface ApiSourceGame {
 export interface SourceGame {
   gameUuid: string;
   gameName: string;
-  gameGenre: GameGenre[];
+  gameGenre: string[];
   createdAt: string;
   isStreaming: boolean;
 }

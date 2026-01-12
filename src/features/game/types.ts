@@ -43,7 +43,7 @@ export interface ApiGame {
   game_uuid: string;
   workspace_uuid: string;
   game_name: string;
-  game_genre: GameGenre[];
+  game_genre: string[];
   game_context: string;
   created_at: string;
   updated_at: string;
@@ -52,14 +52,14 @@ export interface ApiGame {
 /** [API] POST /workspaces/{workspaceUuid}/games Request */
 export interface ApiCreateGameRequest {
   game_name: string;
-  game_genre: GameGenre[];
+  game_genre: string[];
   game_context: string;
 }
 
 /** [API] PUT /games/{gameUuid} Request */
 export interface ApiUpdateGameRequest {
   game_name: string;
-  game_genre: GameGenre[];
+  game_genre: string[];
   game_context: string;
 }
 
@@ -82,7 +82,7 @@ export interface Game {
   gameUuid: string;
   workspaceUuid: string;
   gameName: string;
-  gameGenre: GameGenre[];
+  gameGenre: string[];
   gameContext: string;
   createdAt: string;
   updatedAt: string;
@@ -91,14 +91,14 @@ export interface Game {
 /** [Client] 게임 생성 요청 */
 export interface CreateGameRequest {
   gameName: string;
-  gameGenre: GameGenre[];
+  gameGenre: string[];
   gameContext: string;
 }
 
 /** [Client] 게임 수정 요청 */
 export interface UpdateGameRequest {
   gameName: string;
-  gameGenre: GameGenre[];
+  gameGenre: string[];
   gameContext: string;
 }
 
