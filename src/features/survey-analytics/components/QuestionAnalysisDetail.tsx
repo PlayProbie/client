@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 
 import type { QuestionAnalysisResult } from '../types';
+import { getSentimentColorClass } from '../utils';
 import { AnswerList, type AnswerListItem } from './AnswerList';
 import { ClusterDetailPanel } from './ClusterDetailPanel';
 import { ClusterSelector } from './ClusterSelector';
@@ -50,11 +51,7 @@ function QuestionAnalysisDetail({ data }: QuestionAnalysisDetailProps) {
           : 'neutral',
   }));
 
-  const getSentimentColor = (score: number) => {
-    if (score >= 60) return 'bg-success text-success-foreground';
-    if (score >= 40) return 'bg-warning text-warning-foreground';
-    return 'bg-destructive text-destructive-foreground';
-  };
+
 
   return (
     <div className="space-y-6">
@@ -71,7 +68,7 @@ function QuestionAnalysisDetail({ data }: QuestionAnalysisDetailProps) {
               </p>
             </div>
             
-            <Badge className={`px-3 py-1 text-sm font-semibold ${getSentimentColor(data.sentiment.score)}`}>
+            <Badge className={`px-3 py-1 text-sm font-semibold ${getSentimentColorClass(data.sentiment.score, 'bg')} ${getSentimentColorClass(data.sentiment.score, 'bg').replace('bg-', 'text-')}-foreground`}>
               {data.sentiment.score}점
             </Badge>
           </div>
@@ -104,6 +101,7 @@ function QuestionAnalysisDetail({ data }: QuestionAnalysisDetailProps) {
           <ClusterDetailPanel
             cluster={selectedCluster}
             clusterIndex={safeClusterIndex}
+            profiles={data.answer_profiles}
           />
 
           {/* 대표 답변 */}

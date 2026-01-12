@@ -129,24 +129,27 @@ function calculateTotalAnswers(
   );
 }
 
+
 /**
  * 감정 점수에 따른 라벨 반환
+ * Threshold: 60 (Positive) / 40 (Neutral) / <40 (Negative)
  */
 function getSentimentLabel(score: number): string {
-  if (score >= 80) return '매우 긍정적';
   if (score >= 60) return '긍정적';
   if (score >= 40) return '보통';
-  if (score >= 20) return '부정적';
-  return '매우 부정적';
+  return '부정적';
 }
 
 /**
  * 감정 점수에 따른 색상 클래스 반환
+ * Threshold: 60 (Positive) / 40 (Neutral) / <40 (Negative)
+ * @param score 점수
+ * @param type 'text' | 'bg' (default: 'text')
  */
-function getSentimentColorClass(score: number): string {
-  if (score >= 70) return 'text-success';
-  if (score >= 50) return 'text-warning';
-  return 'text-destructive';
+function getSentimentColorClass(score: number, type: 'text' | 'bg' = 'text'): string {
+  if (score >= 60) return type === 'bg' ? 'bg-success' : 'text-success';
+  if (score >= 40) return type === 'bg' ? 'bg-warning' : 'text-warning';
+  return type === 'bg' ? 'bg-destructive' : 'text-destructive';
 }
 
 export {

@@ -3,45 +3,38 @@ import { BarChart3, MessageCircle, Tag } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { Card, CardContent, CardDescription,CardHeader, CardTitle } from '@/components/ui/Card';
 
-import type { ClusterInfo } from '../types';
+import type { AnswerProfile, ClusterInfo } from '../types';
+import { getSentimentColorClass } from '../utils';
+import { ClusterDemographics } from './ClusterDemographics';
 import { GEQRadarChart } from './GEQRadarChart';
 
 type ClusterDetailPanelProps = {
   readonly cluster: ClusterInfo;
   readonly clusterIndex: number;
+  readonly profiles?: Record<string, AnswerProfile>;
 };
 
 /**
  * 클러스터 상세 패널
  * 이미지의 세그먼트 분석 (Who), 원인 태그 (Why), 감정 강도 (Intensity) 영역
  */
-function ClusterDetailPanel({ cluster, clusterIndex }: ClusterDetailPanelProps) {
-  const getSatisfactionColor = (score: number) => {
-    if (score >= 60) return 'text-success';
-    if (score >= 40) return 'text-warning';
-    return 'text-destructive';
-  };
+function ClusterDetailPanel({ cluster, clusterIndex, profiles }: ClusterDetailPanelProps) {
 
-  const getSatisfactionBarColor = (score: number) => {
-    if (score >= 60) return 'bg-success';
-    if (score >= 40) return 'bg-warning';
-    return 'bg-destructive';
-  };
 
   return (
     <Card>
       <CardHeader className="border-b">
-        <div className="flex items-start justify-between">
-          <div>
-            <CardTitle className="text-lg">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1 min-w-0">
+            <CardTitle className="text-lg break-words leading-snug">
               클러스터 {clusterIndex + 1}: {cluster.summary}
             </CardTitle>
             <CardDescription>
               {cluster.count}명 응답 ({cluster.percentage}%)
             </CardDescription>
           </div>
-          <div className="text-right">
-            <div className={`text-3xl font-bold ${getSatisfactionColor(cluster.satisfaction)}`}>
+          <div className="text-right shrink-0">
+            <div className={`text-3xl font-bold ${getSentimentColorClass(cluster.satisfaction)}`}>
               {cluster.satisfaction}
             </div>
             <p className="text-xs text-muted-foreground">만족도</p>
@@ -119,7 +112,7 @@ function ClusterDetailPanel({ cluster, clusterIndex }: ClusterDetailPanelProps) 
                   <div className="flex items-center gap-2">
                     <div className="h-2 w-32 overflow-hidden rounded-full bg-muted">
                       <div
-                        className={`h-full transition-all ${getSatisfactionBarColor(cluster.satisfaction)}`}
+                        className={`h-full transition-all ${getSentimentColorClass(cluster.satisfaction, 'bg')}`}
                         style={{ width: `${cluster.satisfaction}%` }}
                       />
                     </div>
@@ -173,15 +166,25 @@ function ClusterDetailPanel({ cluster, clusterIndex }: ClusterDetailPanelProps) 
             </div>
           </div>
 
-          {/* 오른쪽: GEQ 레이더 차트 */}
-          <div className="rounded-lg border bg-card p-4">
-            <div className="mb-2">
-              <h4 className="font-semibold text-foreground">유저 감정 분석</h4>
+
+
+          {/* 오른쪽: GEQ 레이더 차트 & 데모그래픽 */}
+          <div className="space-y-6">
+            <div className="rounded-lg border bg-card p-4">
+              <div className="mb-2">
+                <h4 className="font-semibold text-foreground">유저 감정 분석</h4>
+              </div>
+              
+              <div className="flex items-center justify-center">
+                <GEQRadarChart scores={cluster.geq_scores} />
+              </div>
             </div>
-            
-            <div className="flex items-center justify-center">
-              <GEQRadarChart scores={cluster.geq_scores} />
-            </div>
+
+            {/* 인구통계 정보 */}
+            <ClusterDemographics 
+              answerIds={cluster.answer_ids}
+              profiles={profiles}
+            />
           </div>
         </div>
       </CardContent>
