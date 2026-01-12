@@ -48,15 +48,20 @@ export function GameFormModal({
       open={isOpen}
       onOpenChange={onClose}
     >
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[640px]">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
 
-        <div className="grid gap-4 py-4">
+        <div className="grid gap-8 py-4">
           <div className="grid gap-2">
-            <Label htmlFor="gameName">게임 이름</Label>
+            <Label
+              htmlFor="gameName"
+              required
+            >
+              게임 이름
+            </Label>
             <Input
               id="gameName"
               value={formData.gameName}
@@ -64,12 +69,13 @@ export function GameFormModal({
                 setFormData((prev) => ({ ...prev, gameName: e.target.value }))
               }
               placeholder="예: My RPG Game"
+              required
             />
           </div>
 
           <div className="grid gap-2">
             <div className="flex items-center justify-between">
-              <Label>장르 (최대 3개 선택)</Label>
+              <Label required>장르 (최대 3개 선택)</Label>
               <span className="text-muted-foreground text-sm">
                 {formData.gameGenre.length}/{MAX_GENRE_SELECTION} 선택됨
               </span>
@@ -98,7 +104,12 @@ export function GameFormModal({
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="gameContext">게임 설명</Label>
+            <Label
+              htmlFor="gameContext"
+              required
+            >
+              게임 설명
+            </Label>
             <Textarea
               id="gameContext"
               value={formData.gameContext}
@@ -109,7 +120,8 @@ export function GameFormModal({
                 }))
               }
               placeholder="게임에 대한 간단한 설명을 입력하세요."
-              rows={3}
+              rows={5}
+              required
             />
           </div>
         </div>

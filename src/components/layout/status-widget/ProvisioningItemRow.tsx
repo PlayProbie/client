@@ -36,6 +36,7 @@ function getStatusIcon(status: ProvisioningStatus) {
     case ProvisioningStatus.PROVISIONING:
       return <Server className="text-warning size-4 animate-pulse" />;
     case ProvisioningStatus.READY:
+      return <Loader2 className="text-primary size-4 animate-spin" />;
     case ProvisioningStatus.ACTIVE:
       return <CheckCircle2 className="text-success size-4" />;
     case ProvisioningStatus.ERROR:
@@ -52,7 +53,7 @@ function getStatusText(status: ProvisioningStatus): string {
     case ProvisioningStatus.PROVISIONING:
       return '프로비저닝 중...';
     case ProvisioningStatus.READY:
-      return '준비 완료';
+      return '활성화 중...';
     case ProvisioningStatus.ACTIVE:
       return '활성화 완료';
     case ProvisioningStatus.ERROR:
@@ -71,11 +72,10 @@ function ProvisioningItemRowComponent({
 
   const isActive =
     status === ProvisioningStatus.CREATING ||
-    status === ProvisioningStatus.PROVISIONING;
+    status === ProvisioningStatus.PROVISIONING ||
+    status === ProvisioningStatus.READY;
   const isComplete =
-    status === ProvisioningStatus.ACTIVE ||
-    status === ProvisioningStatus.READY ||
-    status === ProvisioningStatus.ERROR;
+    status === ProvisioningStatus.ACTIVE || status === ProvisioningStatus.ERROR;
   const elapsedTime = isActive
     ? formatElapsedTime(startedAt, now ?? startedAt)
     : '';

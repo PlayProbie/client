@@ -9,14 +9,19 @@ const labelVariants = cva(
 );
 
 type LabelProps = ComponentProps<typeof LabelPrimitive.Root> &
-  VariantProps<typeof labelVariants>;
+  VariantProps<typeof labelVariants> & {
+    required?: boolean;
+  };
 
-function Label({ className, ...props }: LabelProps) {
+function Label({ className, required, children, ...props }: LabelProps) {
   return (
     <LabelPrimitive.Root
       className={cn(labelVariants(), className)}
       {...props}
-    />
+    >
+      {children}
+      {required && <span className="text-destructive ml-0.5">*</span>}
+    </LabelPrimitive.Root>
   );
 }
 

@@ -99,6 +99,7 @@ function shouldExpandInitially(
   resolvedPath: string,
   resolvedChildren?: ResolvedChild[]
 ): boolean {
+  return true; // 메뉴 개수가 적어서 전부 펼침
   if (pathname.startsWith(resolvedPath)) return true;
   return (
     resolvedChildren?.some((child) => pathname.startsWith(child.resolvedTo)) ??

@@ -14,21 +14,21 @@ import type { ConfigValue } from '@/types';
 
 /** 게임 장르 정의 (value + label) */
 export const GameGenreConfig = {
-  action: { value: 'ACTION', label: '액션' },
-  adventure: { value: 'ADVENTURE', label: '어드벤처' },
-  simulation: { value: 'SIMULATION', label: '시뮬레이션' },
-  puzzle: { value: 'PUZZLE', label: '퍼즐' },
-  strategy: { value: 'STRATEGY', label: '전략' },
-  rpg: { value: 'RPG', label: 'RPG' },
-  arcade: { value: 'ARCADE', label: '아케이드' },
-  horror: { value: 'HORROR', label: '호러' },
-  shooter: { value: 'SHOOTER', label: '슈팅' },
-  visualNovel: { value: 'VISUAL_NOVEL', label: '비주얼 노벨' },
-  roguelike: { value: 'ROGUELIKE', label: '로그라이크' },
-  sports: { value: 'SPORTS', label: '스포츠' },
-  rhythm: { value: 'RHYTHM', label: '리듬' },
-  fighting: { value: 'FIGHTING', label: '대전' },
-  casual: { value: 'CASUAL', label: '캐주얼' },
+  ACTION: { value: 'ACTION', label: '액션' },
+  ADVENTURE: { value: 'ADVENTURE', label: '어드벤처' },
+  SIMULATION: { value: 'SIMULATION', label: '시뮬레이션' },
+  PUZZLE: { value: 'PUZZLE', label: '퍼즐' },
+  STRATEGY: { value: 'STRATEGY', label: '전략' },
+  RPG: { value: 'RPG', label: 'RPG' },
+  ARCADE: { value: 'ARCADE', label: '아케이드' },
+  HORROR: { value: 'HORROR', label: '호러' },
+  SHOOTER: { value: 'SHOOTER', label: '슈팅' },
+  VISUAL_NOVEL: { value: 'VISUAL_NOVEL', label: '비주얼 노벨' },
+  ROGUELIKE: { value: 'ROGUELIKE', label: '로그라이크' },
+  SPORTS: { value: 'SPORTS', label: '스포츠' },
+  RHYTHM: { value: 'RHYTHM', label: '리듬' },
+  FIGHTING: { value: 'FIGHTING', label: '대전' },
+  CASUAL: { value: 'CASUAL', label: '캐주얼' },
 } as const;
 
 /** 게임 장르 타입 */

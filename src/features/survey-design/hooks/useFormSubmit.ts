@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
 
 import { surveyKeys } from '@/features/game-streaming-survey/hooks/useSurveys';
+import { getSurveySessionUrl } from '@/features/survey/utils/url';
 
 import { postFixedQuestions, postSurvey } from '../api';
 import { useSurveyFormStore } from '../store/useSurveyFormStore';
@@ -117,7 +118,7 @@ export function useFormSubmit(options?: UseFormSubmitOptions) {
           version_note: versionNote,
         });
         surveyUuid = surveyResponse.result.survey_uuid;
-        surveyUrl = `${import.meta.env.VITE_CLIENT_BASE_URL}/surveys/session/${surveyUuid}`;
+        surveyUrl = getSurveySessionUrl(surveyUuid);
         transactionState.surveyUuid = surveyUuid;
       } catch (error) {
         // TODO: 서버에 rollback API가 있다면 여기서 게임 삭제 호출

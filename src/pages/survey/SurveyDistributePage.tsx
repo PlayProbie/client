@@ -18,7 +18,7 @@ import {
   type SurveyShellContext,
 } from '@/features/survey';
 
-const DISTRIBUTE_STEPS = ['빌드 선택', '리소스 관리', '설문 오픈'];
+const DISTRIBUTE_STEPS = ['빌드 선택', '리소스 관리', '설정 저장'];
 
 export default function SurveyDistributePage() {
   const { survey, isLoading, isError, refetch, surveyUuid, gameUuid } =
@@ -107,7 +107,12 @@ export default function SurveyDistributePage() {
   const renderStepContent = () => {
     // Step 3: 설문 오픈 (리소스가 이미 생성된 경우)
     if (streamingResource) {
-      return <SurveyOpenStep surveyUuid={resolvedSurveyUuid} />;
+      return (
+        <SurveyOpenStep
+          gameUuid={gameUuid}
+          surveyUuid={resolvedSurveyUuid}
+        />
+      );
     }
 
     // Step 2: 리소스 관리 (빌드 선택 완료)

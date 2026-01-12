@@ -5,7 +5,7 @@ import { useId } from 'react';
 import type { ControllerProps, FieldPath, FieldValues } from 'react-hook-form';
 import { Controller, FormProvider } from 'react-hook-form';
 
-import { Label } from '@/components/ui/Label';
+import { Label, type LabelProps } from '@/components/ui/Label';
 import { cn } from '@/lib/utils';
 
 import { FormFieldContext, FormItemContext } from './form-context';
@@ -57,7 +57,7 @@ function FormItem({ className, ...props }: FormItemProps) {
 
 type FormLabelProps = ComponentProps<typeof LabelPrimitive.Root>;
 
-function FormLabel({ className, ...props }: FormLabelProps) {
+function FormLabel({ className, ...props }: FormLabelProps & LabelProps) {
   const { formItemId } = useFormField();
 
   return (

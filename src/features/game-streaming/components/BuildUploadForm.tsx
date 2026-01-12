@@ -53,7 +53,12 @@ export function BuildUploadForm({ data, onChange }: BuildUploadFormProps) {
     <>
       {/* Folder Input */}
       <div className="space-y-2">
-        <Label htmlFor="build-folder">Build Folder (required)</Label>
+        <Label
+          htmlFor="build-folder"
+          required
+        >
+          Build Folder
+        </Label>
         {files.length > 0 ? (
           <div className="bg-muted/50 flex items-center justify-between rounded-lg border p-3">
             <div className="flex items-center gap-2">
@@ -78,7 +83,12 @@ export function BuildUploadForm({ data, onChange }: BuildUploadFormProps) {
 
       {/* Executable Path */}
       <div className="space-y-2">
-        <Label htmlFor="executable-path">Executable Path (required)</Label>
+        <Label
+          htmlFor="executable-path"
+          required
+        >
+          Executable Path
+        </Label>
         <Input
           id="executable-path"
           placeholder="Binaries/Win64/MyGame.exe"

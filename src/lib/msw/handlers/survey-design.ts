@@ -5,7 +5,7 @@ import type {
   CreateSurveyResponse,
 } from '@/features/survey-design';
 
-import { MSW_API_BASE_URL, MSW_CLIENT_BASE_URL } from '../../constants';
+import { MSW_API_BASE_URL } from '../../constants';
 import { toKSTISOString } from '../utils';
 
 /**
@@ -24,7 +24,7 @@ export const surveyDesignHandlers = [
         result: {
           survey_uuid: surveyUuid,
           survey_name: body.survey_name,
-          survey_url: `${MSW_CLIENT_BASE_URL}/surveys/session/sessions/84266fdbd31d4c2c6d0665f7e8380fa3`,
+          status: 'DRAFT',
           started_at: body.started_at,
           ended_at: body.ended_at,
           theme_priorities: body.theme_priorities,

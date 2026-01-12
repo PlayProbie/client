@@ -2,28 +2,50 @@ import { useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/Card';
 import { InlineAlert } from '@/components/ui/InlineAlert';
-import { PageSpinner } from '@/components/ui/loading';
+import { Skeleton } from '@/components/ui/loading/Skeleton';
 import { SURVEY_STATUS_CONFIG } from '@/config/navigation';
 import { useUpdateSurveyStatus } from '@/features/game-streaming-survey';
 import type { SurveyStatusValue } from '@/features/game-streaming-survey/types';
 import { StatusChangeModal, type SurveyShellContext } from '@/features/survey';
+import {
+  ProvisioningStatusStep,
+  SurveyLifecycleActions,
+  SurveyStatusStep,
+} from '@/features/survey/components/overview';
+import { DistributionCard } from '@/features/survey/components/overview/DistributionCard';
+import {
+  getSurveyPlayUrl,
+  getSurveySessionUrl,
+} from '@/features/survey/utils/url';
 import { useToast } from '@/hooks/useToast';
-import { cn } from '@/lib/utils';
+import { useProvisioningStore } from '@/stores/useProvisioningStore';
 
 export default function SurveyOverviewPage() {
   const { survey, isLoading, isError, refetch, surveyUuid } =
     useOutletContext<SurveyShellContext>();
+  const items = useProvisioningStore((state) => state.items);
   const { toast } = useToast();
-  const [nextStatus, setNextStatus] = useState<SurveyStatusValue | null>(
-    null
-  );
+  const [nextStatus, setNextStatus] = useState<SurveyStatusValue | null>(null);
 
   const resolvedSurveyUuid = survey?.surveyUuid ?? surveyUuid ?? '';
-  const {
-    mutate: updateStatus,
-    isPending,
-  } = useUpdateSurveyStatus(resolvedSurveyUuid);
+  const relatedItems = items.filter(
+    (item) => item.surveyUuid === resolvedSurveyUuid
+  );
+
+  const surveySessionUrl = resolvedSurveyUuid
+    ? getSurveySessionUrl(resolvedSurveyUuid)
+    : '';
+
+  const surveyPlayUrl = resolvedSurveyUuid
+    ? getSurveyPlayUrl(resolvedSurveyUuid)
+    : '';
+
+  const { mutate: updateStatus, isPending } =
+    useUpdateSurveyStatus(resolvedSurveyUuid);
+
+  const statusConfig = survey ? SURVEY_STATUS_CONFIG[survey.status] : null;
 
   const handleModalOpenChange = (open: boolean) => {
     if (!open && !isPending) {
@@ -59,10 +81,6 @@ export default function SurveyOverviewPage() {
     );
   };
 
-  if (isLoading) {
-    return <PageSpinner message="설문 정보를 불러오는 중..." />;
-  }
-
   if (isError) {
     return (
       <InlineAlert
@@ -83,7 +101,8 @@ export default function SurveyOverviewPage() {
     );
   }
 
-  if (!survey) {
+  // If not loading and no survey, show error
+  if (!isLoading && (!survey || !statusConfig)) {
     return (
       <InlineAlert
         variant="error"
@@ -94,91 +113,89 @@ export default function SurveyOverviewPage() {
     );
   }
 
-  const statusConfig = SURVEY_STATUS_CONFIG[survey.status];
-  const createdAtText = new Date(survey.createdAt).toLocaleDateString();
+  const showSkeleton = isLoading;
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-lg font-semibold">Overview</h2>
-        <p className="text-muted-foreground text-sm">
-          설문 상태를 확인하고 변경할 수 있습니다.
-        </p>
-      </div>
-
-      <div className="grid gap-4 lg:grid-cols-2">
-        <section className="bg-card rounded-lg border p-6">
-          <div className="space-y-4">
-            <div>
-              <p className="text-muted-foreground text-sm">설문 상태</p>
-              <div className="mt-2 flex flex-wrap items-center gap-3">
-                <span
-                  className={cn(
-                    'rounded-full px-3 py-1 text-xs font-medium',
-                    statusConfig.color
-                  )}
-                >
-                  {statusConfig.label}
-                </span>
-                <span className="text-muted-foreground text-xs">
-                  {survey.status}
-                </span>
-              </div>
-              <p className="text-muted-foreground mt-2 text-sm">
-                {statusConfig.description}
-              </p>
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-              {survey.status === 'DRAFT' && (
-                <Button
-                  variant="default"
-                  onClick={() => setNextStatus('ACTIVE')}
-                  disabled={!resolvedSurveyUuid || isPending}
-                >
-                  설문 시작
-                </Button>
-              )}
-              {survey.status === 'ACTIVE' && (
-                <Button
-                  variant="destructive"
-                  onClick={() => setNextStatus('CLOSED')}
-                  disabled={!resolvedSurveyUuid || isPending}
-                >
-                  설문 종료
-                </Button>
-              )}
-              {survey.status === 'CLOSED' && (
-                <Button
-                  variant="outline"
-                  disabled
-                >
-                  설문 종료됨
-                </Button>
-              )}
-            </div>
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Left Column: Survey Management */}
+        <Card className="flex h-full flex-col overflow-hidden border-none shadow-md">
+          <div className="bg-muted/30 border-b p-6 pb-4">
+            <h3 className="font-semibold tracking-tight">설문 상태 및 관리</h3>
+            <p className="text-muted-foreground mt-1 text-sm">
+              설문의 생명 주기 관리 및 상태 변경
+            </p>
           </div>
-        </section>
+          <div className="flex flex-1 flex-col justify-between space-y-6 p-6">
+            {showSkeleton ? (
+              <div className="space-y-4">
+                <Skeleton className="h-10 w-full rounded-full" />
+                <div className="flex gap-2">
+                  <Skeleton className="h-9 flex-1" />
+                  <Skeleton className="h-9 w-20" />
+                </div>
+              </div>
+            ) : (
+              survey && (
+                <>
+                  <SurveyStatusStep status={survey.status} />
+                  <div className="px-4">
+                    <SurveyLifecycleActions
+                      status={survey.status}
+                      isPending={isPending}
+                      canExecute={!!resolvedSurveyUuid}
+                      onSetStatus={setNextStatus}
+                    />
+                  </div>
+                </>
+              )
+            )}
+          </div>
+        </Card>
 
-        <section className="bg-card rounded-lg border p-6">
-          <p className="text-muted-foreground text-sm">기본 정보</p>
-          <dl className="mt-4 space-y-3 text-sm">
-            <div className="flex items-center justify-between gap-4">
-              <dt className="text-muted-foreground">설문명</dt>
-              <dd className="font-medium">{survey.surveyName}</dd>
-            </div>
-            <div className="flex items-center justify-between gap-4">
-              <dt className="text-muted-foreground">설문 UUID</dt>
-              <dd className="bg-muted rounded px-2 py-0.5 font-mono text-xs">
-                {survey.surveyUuid}
-              </dd>
-            </div>
-            <div className="flex items-center justify-between gap-4">
-              <dt className="text-muted-foreground">생성일</dt>
-              <dd className="font-medium">{createdAtText}</dd>
-            </div>
-          </dl>
-        </section>
+        {/* Right Column: Provisioning Status */}
+        <Card className="flex h-full flex-col overflow-hidden border-none shadow-md">
+          <div className="bg-muted/30 border-b p-6 pb-4">
+            <h3 className="font-semibold tracking-tight">프로비저닝 상태</h3>
+            <p className="text-muted-foreground mt-1 text-sm">
+              게임 스트리밍 리소스 프로비저닝 현황
+            </p>
+          </div>
+          <div className="flex flex-1 flex-col p-6">
+            {showSkeleton ? (
+              <div className="space-y-4">
+                <Skeleton className="h-16 w-full" />
+                <Skeleton className="h-16 w-full" />
+              </div>
+            ) : (
+              <ProvisioningStatusStep relatedItems={relatedItems} />
+            )}
+          </div>
+        </Card>
+
+        {/* Card 3: Survey Session Only Link */}
+        <DistributionCard
+          title="인터뷰 링크"
+          description="for 설문"
+          url={surveySessionUrl}
+          isLoading={showSkeleton}
+          enabled={survey?.status === 'ACTIVE'}
+        />
+
+        {/* Card 4: Game Play & Survey Link */}
+        <DistributionCard
+          title="게임 플레이 링크"
+          description="for 설문 & 게임"
+          url={surveyPlayUrl}
+          isLoading={showSkeleton}
+          enabled={
+            survey?.status === 'ACTIVE' &&
+            relatedItems &&
+            relatedItems.length > 0 &&
+            (relatedItems[relatedItems.length - 1].status === 'READY' ||
+              relatedItems[relatedItems.length - 1].status === 'ACTIVE')
+          }
+        />
       </div>
 
       {nextStatus && (

@@ -1,7 +1,7 @@
 import { User } from 'lucide-react';
 
-import { MOCK_USER } from '@/components/layout/types';
 import { Button } from '@/components/ui';
+import { useAuthStore } from '@/stores';
 
 /**
  * AccountSettingsTab - 계정 설정 탭
@@ -10,22 +10,25 @@ import { Button } from '@/components/ui';
  * - 로그아웃 기능
  */
 function AccountSettingsTab() {
+  const { user } = useAuthStore();
+
   return (
     <div className="flex flex-col gap-6">
       {/* 프로필 정보 */}
       <div className="flex items-center gap-4">
         <div className="border-border relative size-16 shrink-0 overflow-hidden rounded-full border-2 shadow-sm">
           <img
-            src={MOCK_USER.avatar}
-            alt={MOCK_USER.name}
+            src={
+              user?.avatar ||
+              'https://ui-avatars.com/api/?name=User&background=4F46E5&color=fff'
+            }
+            alt={user?.name}
             className="h-full w-full object-cover"
           />
         </div>
         <div className="flex flex-col">
-          <p className="text-foreground text-lg font-semibold">
-            {MOCK_USER.name}
-          </p>
-          <p className="text-muted-foreground text-sm">{MOCK_USER.email}</p>
+          <p className="text-foreground text-lg font-semibold">{user?.name}</p>
+          <p className="text-muted-foreground text-sm">{user?.email}</p>
         </div>
       </div>
 

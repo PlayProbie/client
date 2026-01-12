@@ -12,26 +12,18 @@ import { useNavigate } from 'react-router-dom';
 
 import { Dialog, DialogContent, DialogHeader } from '@/components/ui/Dialog';
 import { postLogout } from '@/features/auth';
-import { useAuthStore } from '@/stores';
+import { useAuthStore, useSettingStore } from '@/stores';
 
-import AccountSettingsTab from './settings-modal/AccountSettingsTab';
-import { TeamSettingsTab } from './settings-modal-member/TeamSettingsTab';
-import { WorkspaceSettingsTab } from './settings-modal-workspace/WorkspaceSettingsTab';
+import { TabValue } from '../types';
+import AccountSettingsTab from './AccountSettingsTab';
+import { TeamSettingsTab } from './TeamSettingsTab';
+import { WorkspaceSettingsTab } from './WorkspaceSettingsTab';
 
-interface SettingsModalProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}
-
-type TabValue = 'account' | 'workspace' | 'team' | 'billing';
-
-export default function SettingsModal({
-  open,
-  onOpenChange,
-}: SettingsModalProps) {
+export default function SettingsModal() {
   const navigate = useNavigate();
   const { logout } = useAuthStore();
-  const [activeTab, setActiveTab] = useState<TabValue>('workspace');
+  const { isSettingsOpen, closeSettings, activeTab, setActiveTab } =
+    useSettingStore();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleLogout = async () => {
@@ -50,8 +42,8 @@ export default function SettingsModal({
 
   return (
     <Dialog
-      open={open}
-      onOpenChange={onOpenChange}
+      open={isSettingsOpen}
+      onOpenChange={closeSettings}
     >
       <DialogContent className="h-[600px] max-w-[900px] p-0">
         <div className="flex h-full">
@@ -63,43 +55,43 @@ export default function SettingsModal({
             <nav className="flex flex-1 flex-col gap-1 px-4">
               <button
                 className={`flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-                  activeTab === 'workspace'
+                  activeTab === TabValue.WORKSPACE
                     ? 'bg-primary/10 text-primary'
                     : 'text-muted-foreground hover:bg-muted'
                 }`}
-                onClick={() => setActiveTab('workspace')}
+                onClick={() => setActiveTab(TabValue.WORKSPACE)}
               >
                 <Building2 className="size-4" />
                 워크스페이스
               </button>
               <button
                 className={`flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-                  activeTab === 'team'
+                  activeTab === TabValue.TEAM
                     ? 'bg-primary/10 text-primary'
                     : 'text-muted-foreground hover:bg-muted'
                 }`}
-                onClick={() => setActiveTab('team')}
+                onClick={() => setActiveTab(TabValue.TEAM)}
               >
                 <Users className="size-4" />팀 관리
               </button>
               <button
                 className={`flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-                  activeTab === 'billing'
+                  activeTab === TabValue.BILLING
                     ? 'bg-primary/10 text-primary'
                     : 'text-muted-foreground hover:bg-muted'
                 }`}
-                onClick={() => setActiveTab('billing')}
+                onClick={() => setActiveTab(TabValue.BILLING)}
               >
                 <CreditCard className="size-4" />
                 청구 및 결제
               </button>
               <button
                 className={`flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-                  activeTab === 'account'
+                  activeTab === TabValue.ACCOUNT
                     ? 'bg-primary/10 text-primary'
                     : 'text-muted-foreground hover:bg-muted'
                 }`}
-                onClick={() => setActiveTab('account')}
+                onClick={() => setActiveTab(TabValue.ACCOUNT)}
               >
                 <User className="size-4" />
                 계정 설정
@@ -120,10 +112,10 @@ export default function SettingsModal({
 
           {/* Content */}
           <div className="flex-1 overflow-y-auto p-6">
-            {activeTab === 'account' && <AccountSettingsTab />}
-            {activeTab === 'workspace' && <WorkspaceSettingsTab />}
-            {activeTab === 'team' && <TeamSettingsTab />}
-            {activeTab === 'billing' && (
+            {activeTab === TabValue.ACCOUNT && <AccountSettingsTab />}
+            {activeTab === TabValue.WORKSPACE && <WorkspaceSettingsTab />}
+            {activeTab === TabValue.TEAM && <TeamSettingsTab />}
+            {activeTab === TabValue.BILLING && (
               <div className="flex h-full flex-col items-center justify-center text-center">
                 <Settings className="text-muted-foreground mb-4 size-12 opacity-20" />
                 <h3 className="text-lg font-semibold">준비 중인 기능입니다</h3>

@@ -92,6 +92,16 @@ export const ThemeDetailConfig = {
 /** 테마 소분류 타입 */
 export type ThemeDetail = ConfigValue<typeof ThemeDetailConfig>;
 
+/** 설문 상태 정의 */
+export const SurveyStatusConfig = {
+  DRAFT: { value: 'DRAFT', label: '초안' },
+  ACTIVE: { value: 'ACTIVE', label: '진행 중' },
+  CLOSED: { value: 'CLOSED', label: '종료됨' },
+} as const;
+
+/** 설문 상태 타입 */
+export type SurveyStatus = ConfigValue<typeof SurveyStatusConfig>;
+
 // ----------------------------------------
 // API Request/Response Types (snake_case)
 // ----------------------------------------
@@ -114,10 +124,10 @@ export interface ApiCreateSurveyRequest {
 export interface ApiSurvey {
   survey_uuid: string;
   survey_name: string;
-  survey_url: string;
   started_at: string;
   ended_at: string;
   created_at: string;
+  status: SurveyStatus;
   test_stage?: TestStage;
   /** 테마 대분류 우선순위 (1~3개, 순서대로) */
   theme_priorities: ThemeCategory[];
@@ -224,6 +234,7 @@ export interface Survey {
   endedAt: string;
   testPurpose: TestPurpose;
   createdAt: string;
+  status: SurveyStatus;
   // 신규 필드
   testStage: TestStage;
   themePriorities: ThemeCategory[];
