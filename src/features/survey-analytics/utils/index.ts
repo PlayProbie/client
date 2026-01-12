@@ -5,3 +5,4 @@ export {
   getSentimentColorClass,
   getSentimentLabel,
 } from './aggregateAnalysis';
+export * from './parsePreferGenre';
