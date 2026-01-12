@@ -25,6 +25,8 @@ interface QueueItem {
     turnNum?: number;
     qType?: InterviewLogQType;
     fixedQId?: number | null;
+    order?: number;
+    totalQuestions?: number;
     duration?: number; // WAIT 시간 (ms)
   };
 }
@@ -69,13 +71,17 @@ interface ChatState {
     text: string,
     turnNum: number,
     fixedQId: number | null,
-    qType: InterviewLogQType
+    qType: InterviewLogQType,
+    order?: number,
+    totalQuestions?: number
   ) => void;
   enqueueStreamToken: (
     token: string,
     turnNum: number,
     qType?: InterviewLogQType,
-    fixedQId?: number | null
+    fixedQId?: number | null,
+    order?: number,
+    totalQuestions?: number
   ) => void;
   enqueueFinalize: () => void;
 
@@ -168,14 +174,21 @@ export const useChatStore = create<ChatState>((set, get) => ({
   },
 
   /** Question (Full Text): 말풍선 시작 -> 전체 텍스트 타이핑 */
-  enqueueQuestion: (text, turnNum, fixedQId, qType) => {
+  enqueueQuestion: (
+    text,
+    turnNum,
+    fixedQId,
+    qType,
+    order,
+    totalQuestions
+  ) => {
     const { processQueue } = get();
     set((state) => ({
       streamQueue: [
         ...state.streamQueue,
         {
           type: 'START_BUBBLE',
-          payload: { turnNum, qType, fixedQId },
+          payload: { turnNum, qType, fixedQId, order, totalQuestions },
         },
         { type: 'TYPE_TEXT', payload: { text } },
       ],
@@ -184,7 +197,14 @@ export const useChatStore = create<ChatState>((set, get) => ({
   },
 
   /** Question (Streaming Token): 말풍선 시작(필요시) -> 토큰 타이핑 */
-  enqueueStreamToken: (token, turnNum, qType = 'TAIL', fixedQId = null) => {
+  enqueueStreamToken: (
+    token,
+    turnNum,
+    qType = 'TAIL',
+    fixedQId = null,
+    order,
+    totalQuestions
+  ) => {
     const { processQueue } = get();
 
     set((state) => ({
@@ -192,7 +212,14 @@ export const useChatStore = create<ChatState>((set, get) => ({
         ...state.streamQueue,
         {
           type: 'TYPE_TEXT',
-          payload: { text: token, turnNum, qType, fixedQId },
+          payload: {
+            text: token,
+            turnNum,
+            qType,
+            fixedQId,
+            order,
+            totalQuestions,
+          },
         },
       ],
     }));
@@ -257,6 +284,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
                 turnNum: payload?.turnNum ?? 0,
                 qType: payload?.qType,
                 fixedQId: payload?.fixedQId,
+                order: payload?.order,
+                totalQuestions: payload?.totalQuestions,
                 timestamp: new Date(),
               },
             ],
@@ -323,6 +352,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
                 turnNum: payload?.turnNum ?? s.currentTurnNum,
                 qType: payload?.qType,
                 fixedQId: payload?.fixedQId,
+                order: payload?.order,
+                totalQuestions: payload?.totalQuestions,
                 timestamp: new Date(),
               },
             ],

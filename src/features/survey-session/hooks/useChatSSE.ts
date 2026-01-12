@@ -13,6 +13,7 @@ import { API_BASE_URL } from '@/constants/api';
 
 import type {
   ApiSSEContinueEventData,
+  ApiSSEGenerateTailCompleteEventData,
   ApiSSEQuestionEventData,
   ApiSSEReactionEventData,
   UseChatSSEOptions,
@@ -20,6 +21,7 @@ import type {
 } from '../types';
 import {
   toSSEContinueEventData,
+  toSSEGenerateTailCompleteEventData,
   toSSEQuestionEventData,
   toSSEReactionEventData,
 } from '../types';
@@ -31,6 +33,7 @@ export function useChatSSE({
   onContinue,
   onGreetingContinue,
   onReaction,
+  onGenerateTailComplete,
   onStart,
   onDone,
   onInterviewComplete,
@@ -47,6 +50,7 @@ export function useChatSSE({
   const onContinueRef = useRef(onContinue);
   const onGreetingContinueRef = useRef(onGreetingContinue);
   const onReactionRef = useRef(onReaction);
+  const onGenerateTailCompleteRef = useRef(onGenerateTailComplete);
   const onStartRef = useRef(onStart);
   const onDoneRef = useRef(onDone);
   const onInterviewCompleteRef = useRef(onInterviewComplete);
@@ -61,6 +65,7 @@ export function useChatSSE({
     onContinueRef.current = onContinue;
     onGreetingContinueRef.current = onGreetingContinue;
     onReactionRef.current = onReaction;
+    onGenerateTailCompleteRef.current = onGenerateTailComplete;
     onStartRef.current = onStart;
     onDoneRef.current = onDone;
     onInterviewCompleteRef.current = onInterviewComplete;
@@ -73,6 +78,7 @@ export function useChatSSE({
     onContinue,
     onGreetingContinue,
     onReaction,
+    onGenerateTailComplete,
     onStart,
     onDone,
     onInterviewComplete,
@@ -155,6 +161,19 @@ export function useChatSSE({
         const apiData: ApiSSEReactionEventData = JSON.parse(event.data);
         const data = toSSEReactionEventData(apiData);
         onReactionRef.current?.(data);
+      } catch {
+        // JSON 파싱 실패 무시
+      }
+    });
+
+    // generate_tail_complete 이벤트 핸들러
+    eventSource.addEventListener('generate_tail_complete', (event) => {
+      try {
+        const apiData: ApiSSEGenerateTailCompleteEventData = JSON.parse(
+          event.data
+        );
+        const data = toSSEGenerateTailCompleteEventData(apiData);
+        onGenerateTailCompleteRef.current?.(data);
       } catch {
         // JSON 파싱 실패 무시
       }

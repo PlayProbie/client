@@ -80,6 +80,8 @@ export interface ApiSSEQuestionEventData {
   q_type: InterviewLogQType;
   question_text: string;
   turn_num: number;
+  order: number;
+  total_questions: number;
 }
 
 /** [API] SSE continue 이벤트 데이터 (스트리밍) */
@@ -88,6 +90,8 @@ export interface ApiSSEContinueEventData {
   q_type: InterviewLogQType;
   question_text: string; // 부분 텍스트
   turn_num: number;
+  order: number;
+  total_questions: number;
 }
 
 /** [API] SSE start 이벤트 데이터 */
@@ -99,6 +103,13 @@ export interface ApiSSEStartEventData {
 export interface ApiSSEReactionEventData {
   reaction_text: string;
   turn_num: number;
+}
+
+/** [API] SSE generate_tail_complete 이벤트 데이터 */
+export interface ApiSSEGenerateTailCompleteEventData {
+  fixed_q_id: number | null;
+  order: number;
+  total_questions: number;
 }
 
 /** [API] SSE interview_complete 이벤트 데이터 */
@@ -126,6 +137,7 @@ export type ApiSSEEvent =
   | { event: 'start'; data: ApiSSEStartEventData }
   | { event: 'done'; data: ApiSSEDoneEventData }
   | { event: 'interview_complete'; data: ApiSSEInterviewCompleteEventData }
+  | { event: 'generate_tail_complete'; data: ApiSSEGenerateTailCompleteEventData }
   | { event: 'error'; data: ApiSSEErrorEventData };
 
 /** [API] 응답자 대답 전송 요청 바디 */
@@ -177,6 +189,8 @@ export interface SSEQuestionEventData {
   qType: InterviewLogQType;
   questionText: string;
   turnNum: number;
+  order: number;
+  totalQuestions: number;
 }
 
 /** [Client] SSE Continue 이벤트 데이터 */
@@ -185,12 +199,21 @@ export interface SSEContinueEventData {
   qType: InterviewLogQType;
   questionText: string;
   turnNum: number;
+  order: number;
+  totalQuestions: number;
 }
 
 /** [Client] SSE Reaction 이벤트 데이터 */
 export interface SSEReactionEventData {
   reactionText: string;
   turnNum: number;
+}
+
+/** [Client] SSE GenerateTailComplete 이벤트 데이터 */
+export interface SSEGenerateTailCompleteEventData {
+  fixedQId: number | null;
+  order: number;
+  totalQuestions: number;
 }
 
 /** [Client] 채팅 메시지 데이터 (클라이언트 상태) */
@@ -201,6 +224,8 @@ export interface ChatMessageData {
   turnNum: number;
   qType?: InterviewLogQType;
   fixedQId?: number | null;
+  order?: number;
+  totalQuestions?: number;
   timestamp: Date;
 }
 
@@ -240,6 +265,7 @@ export interface UseChatSSEOptions {
   onContinue?: (data: SSEContinueEventData) => void;
   onGreetingContinue?: (data: SSEContinueEventData) => void;
   onReaction?: (data: SSEReactionEventData) => void;
+  onGenerateTailComplete?: (data: SSEGenerateTailCompleteEventData) => void;
   onStart?: () => void;
   onDone?: (turnNum: number) => void;
   onInterviewComplete?: () => void;
@@ -287,6 +313,8 @@ export function toSSEQuestionEventData(
     qType: api.q_type,
     questionText: api.question_text,
     turnNum: api.turn_num,
+    order: api.order,
+    totalQuestions: api.total_questions,
   };
 }
 
@@ -299,6 +327,8 @@ export function toSSEContinueEventData(
     qType: api.q_type,
     questionText: api.question_text,
     turnNum: api.turn_num,
+    order: api.order,
+    totalQuestions: api.total_questions,
   };
 }
 
@@ -309,5 +339,16 @@ export function toSSEReactionEventData(
   return {
     reactionText: api.reaction_text,
     turnNum: api.turn_num,
+  };
+}
+
+/** API SSE GenerateTailComplete 이벤트 -> 클라이언트 변환 */
+export function toSSEGenerateTailCompleteEventData(
+  api: ApiSSEGenerateTailCompleteEventData
+): SSEGenerateTailCompleteEventData {
+  return {
+    fixedQId: api.fixed_q_id,
+    order: api.order,
+    totalQuestions: api.total_questions,
   };
 }
