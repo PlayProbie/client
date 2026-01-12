@@ -116,8 +116,9 @@ export function useChatSession({
       // 리액션 -> 큐에 추가 (말풍선 -> 타이핑 -> 대기)
       enqueueReaction(data.reactionText, data.turnNum);
     },
-    onGenerateTailComplete: (data) => {
-      console.log('Tail questions generated:', data);
+    onGenerateTailComplete: (/* data */) => {
+      // 꼬리 질문 생성 완료 이벤트
+      // 추후 로딩 상태 제어 등에 활용 예정
     },
     onStart: () => {
       setStreaming(true);
