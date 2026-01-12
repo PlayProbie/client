@@ -33,22 +33,22 @@ export function ProvisioningStatusStep({
               {
                 id: ProvisioningStatus.CREATING,
                 icon: Server,
-                label: '생성',
+                label: 'Creating',
               },
               {
                 id: ProvisioningStatus.PROVISIONING,
                 icon: Activity,
-                label: '설정',
+                label: 'Provisioning',
               },
               {
                 id: ProvisioningStatus.READY,
                 icon: CheckCircle2,
-                label: '준비',
+                label: 'Ready',
               },
               {
                 id: ProvisioningStatus.ACTIVE,
                 icon: Layers,
-                label: '활성',
+                label: 'Active',
               },
             ].map((step, index, array) => {
               const latestItem = relatedItems[relatedItems.length - 1];

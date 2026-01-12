@@ -26,7 +26,6 @@ function SurveyDesignPage() {
 
   // 페이지 진입 시 초기화 로직 (새로고침 제외)
   useEffect(() => {
-    // Navigation Timing API v2
     const entries = performance.getEntriesByType('navigation');
     const navTiming = entries[0] as PerformanceNavigationTiming;
 
@@ -38,10 +37,10 @@ function SurveyDesignPage() {
   }, [resetForm]);
 
   const [isCompleted, setIsCompleted] = useState(false);
-  const [surveyUrl, setSurveyUrl] = useState<string | null>(null);
+  const [surveyUuid, setSurveyUuid] = useState<string | null>(null);
 
   const handleComplete = (result: SubmitResult) => {
-    setSurveyUrl(result.surveyUrl);
+    setSurveyUuid(result.surveyUuid);
     setIsCompleted(true);
   };
 
@@ -53,6 +52,10 @@ function SurveyDesignPage() {
   const description = isEditing
     ? '설문의 문항을 수정하거나 삭제할 수 있습니다.'
     : '새로운 설문을 만들어 테스터에게 배포해 보세요.';
+
+  if (!params.gameUuid) {
+    return <div>잘못된 접근입니다.</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -77,8 +80,11 @@ function SurveyDesignPage() {
         </div>
       </div>
 
-      {isCompleted && surveyUrl ? (
-        <SurveyCreated surveyUrl={surveyUrl} />
+      {isCompleted && surveyUuid ? (
+        <SurveyCreated
+          gameUuid={params.gameUuid}
+          surveyUuid={surveyUuid}
+        />
       ) : (
         <SurveyDesignForm onComplete={handleComplete} />
       )}
