@@ -2,10 +2,9 @@ import { useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/Card';
+import { Card } from '@/components/ui/Card';
 import { InlineAlert } from '@/components/ui/InlineAlert';
-import { PageSpinner } from '@/components/ui/loading';
-import {} from '@/components/ui/Table';
+import { Skeleton } from '@/components/ui/loading/Skeleton';
 import { SURVEY_STATUS_CONFIG } from '@/config/navigation';
 import { useUpdateSurveyStatus } from '@/features/game-streaming-survey';
 import type { SurveyStatusValue } from '@/features/game-streaming-survey/types';
@@ -15,6 +14,11 @@ import {
   SurveyLifecycleActions,
   SurveyStatusStep,
 } from '@/features/survey/components/overview';
+import { DistributionCard } from '@/features/survey/components/overview/DistributionCard';
+import {
+  getSurveyPlayUrl,
+  getSurveySessionUrl,
+} from '@/features/survey/utils/url';
 import { useToast } from '@/hooks/useToast';
 import { useProvisioningStore } from '@/stores/useProvisioningStore';
 
@@ -29,6 +33,14 @@ export default function SurveyOverviewPage() {
   const relatedItems = items.filter(
     (item) => item.surveyUuid === resolvedSurveyUuid
   );
+
+  const surveySessionUrl = resolvedSurveyUuid
+    ? getSurveySessionUrl(resolvedSurveyUuid)
+    : '';
+
+  const surveyPlayUrl = resolvedSurveyUuid
+    ? getSurveyPlayUrl(resolvedSurveyUuid)
+    : '';
 
   const { mutate: updateStatus, isPending } =
     useUpdateSurveyStatus(resolvedSurveyUuid);
@@ -69,10 +81,6 @@ export default function SurveyOverviewPage() {
     );
   };
 
-  if (isLoading) {
-    return <PageSpinner message="설문 정보를 불러오는 중..." />;
-  }
-
   if (isError) {
     return (
       <InlineAlert
@@ -93,7 +101,8 @@ export default function SurveyOverviewPage() {
     );
   }
 
-  if (!survey || !statusConfig) {
+  // If not loading and no survey, show error
+  if (!isLoading && (!survey || !statusConfig)) {
     return (
       <InlineAlert
         variant="error"
@@ -103,6 +112,8 @@ export default function SurveyOverviewPage() {
       </InlineAlert>
     );
   }
+
+  const showSkeleton = isLoading;
 
   return (
     <div className="space-y-6">
@@ -115,18 +126,31 @@ export default function SurveyOverviewPage() {
               설문의 생명 주기 관리 및 상태 변경
             </p>
           </div>
-          <CardContent className="flex flex-1 flex-col justify-between space-y-6 p-6">
-            <SurveyStatusStep status={survey.status} />
-
-            <div className="px-4">
-              <SurveyLifecycleActions
-                status={survey.status}
-                isPending={isPending}
-                canExecute={!!resolvedSurveyUuid}
-                onSetStatus={setNextStatus}
-              />
-            </div>
-          </CardContent>
+          <div className="flex flex-1 flex-col justify-between space-y-6 p-6">
+            {showSkeleton ? (
+              <div className="space-y-4">
+                <Skeleton className="h-10 w-full rounded-full" />
+                <div className="flex gap-2">
+                  <Skeleton className="h-9 flex-1" />
+                  <Skeleton className="h-9 w-20" />
+                </div>
+              </div>
+            ) : (
+              survey && (
+                <>
+                  <SurveyStatusStep status={survey.status} />
+                  <div className="px-4">
+                    <SurveyLifecycleActions
+                      status={survey.status}
+                      isPending={isPending}
+                      canExecute={!!resolvedSurveyUuid}
+                      onSetStatus={setNextStatus}
+                    />
+                  </div>
+                </>
+              )
+            )}
+          </div>
         </Card>
 
         {/* Right Column: Provisioning Status */}
@@ -137,10 +161,41 @@ export default function SurveyOverviewPage() {
               게임 스트리밍 리소스 프로비저닝 현황
             </p>
           </div>
-          <CardContent className="flex flex-1 flex-col p-6">
-            <ProvisioningStatusStep relatedItems={relatedItems} />
-          </CardContent>
+          <div className="flex flex-1 flex-col p-6">
+            {showSkeleton ? (
+              <div className="space-y-4">
+                <Skeleton className="h-16 w-full" />
+                <Skeleton className="h-16 w-full" />
+              </div>
+            ) : (
+              <ProvisioningStatusStep relatedItems={relatedItems} />
+            )}
+          </div>
         </Card>
+
+        {/* Card 3: Survey Session Only Link */}
+        <DistributionCard
+          title="인터뷰 링크"
+          description="for 설문"
+          url={surveySessionUrl}
+          isLoading={showSkeleton}
+          enabled={survey?.status === 'ACTIVE'}
+        />
+
+        {/* Card 4: Game Play & Survey Link */}
+        <DistributionCard
+          title="게임 플레이 링크"
+          description="for 설문 & 게임"
+          url={surveyPlayUrl}
+          isLoading={showSkeleton}
+          enabled={
+            survey?.status === 'ACTIVE' &&
+            relatedItems &&
+            relatedItems.length > 0 &&
+            relatedItems[relatedItems.length - 1].status === 'READY' &&
+            relatedItems[relatedItems.length - 1].status === 'ACTIVE'
+          }
+        />
       </div>
 
       {nextStatus && (

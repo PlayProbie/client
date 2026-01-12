@@ -7,6 +7,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
+import { getSurveyPlayUrl } from '@/features/survey/utils/url';
 import { useToast } from '@/hooks/useToast';
 
 interface SurveyOpenStepProps {
@@ -17,9 +18,7 @@ export function SurveyOpenStep({ surveyUuid }: SurveyOpenStepProps) {
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
 
-  const baseUrl =
-    import.meta.env.VITE_CLIENT_BASE_URL || window.location.origin;
-  const surveyLink = `${baseUrl}/play/queue/${surveyUuid}`;
+  const surveyLink = getSurveyPlayUrl(surveyUuid);
 
   const handleCopyLink = async () => {
     try {
