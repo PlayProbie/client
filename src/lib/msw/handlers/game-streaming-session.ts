@@ -96,7 +96,7 @@ export const gameStreamingSessionHandlers = [
 
       return HttpResponse.json({
         success: true,
-        data: {
+        result: {
           survey_uuid: survey.survey_uuid,
           game_name: survey.game_name,
           is_available: isAvailable,
@@ -167,7 +167,7 @@ export const gameStreamingSessionHandlers = [
 
       return HttpResponse.json({
         success: true,
-        data: {
+        result: {
           signal_response: mockSignalResponse,
           survey_session_uuid: sessionUuid,
           expires_in_seconds: 120,
@@ -197,7 +197,7 @@ export const gameStreamingSessionHandlers = [
 
       return HttpResponse.json({
         success: true,
-        data: {
+        result: {
           is_active: activeSession.is_active,
           survey_session_uuid: activeSession.survey_session_uuid,
         },
@@ -232,7 +232,7 @@ export const gameStreamingSessionHandlers = [
         // 스트리밍(AWS)만 종료된 것으로 간주
         return HttpResponse.json({
           success: true,
-          data: { success: true },
+          result: { success: true },
         });
       }
 
@@ -247,7 +247,7 @@ export const gameStreamingSessionHandlers = [
 
       return HttpResponse.json({
         success: true,
-        data: { success: true },
+        result: { success: true },
       });
     }
   ),
