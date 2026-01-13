@@ -18,7 +18,7 @@ type QuestionAnalysisState = {
 /**
  * 설문 질문별 AI 분석 결과 페칭 훅 (SSE)
  */
-function useQuestionAnalysis({
+export function useQuestionAnalysis({
   surveyUuid,
   enabled = true,
 }: UseQuestionAnalysisOptions) {
@@ -27,6 +27,7 @@ function useQuestionAnalysis({
     data: {} as QuestionAnalysisState,
     error: null as Error | null,
     status: 'idle' as 'idle' | 'loading' | 'complete' | 'error',
+    totalParticipants: 0,
   });
 
   // ref를 사용해 중복 요청 방지 (React StrictMode 대응)
@@ -65,7 +66,7 @@ function useQuestionAnalysis({
     isRequestingRef.current = true;
 
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setState({ data: {}, error: null, status: 'loading' });
+    setState({ data: {}, error: null, status: 'loading', totalParticipants: 0 });
 
     let cleanupFn: (() => void) | null = null;
     let isCancelled = false;
@@ -95,8 +96,8 @@ function useQuestionAnalysis({
         // 에러 시에는 재시도할 수 있도록 requestedSurveyUuidRef 초기화
         requestedSurveyUuidRef.current = null;
       },
-      () => {
-        setState((prev) => ({ ...prev, status: 'complete' }));
+      (totalParticipants: number) => {
+        setState((prev) => ({ ...prev, status: 'complete', totalParticipants }));
         isRequestingRef.current = false;
         // 성공 완료 시에는 requestedSurveyUuidRef 유지 (중복 요청 방지)
       }
@@ -120,7 +121,8 @@ function useQuestionAnalysis({
     isError,
     error: state.error,
     isComplete,
+    totalParticipants: state.totalParticipants,
   };
 }
 
-export { useQuestionAnalysis };
+

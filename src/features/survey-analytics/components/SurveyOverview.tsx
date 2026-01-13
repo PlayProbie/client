@@ -22,6 +22,7 @@ type QuestionAnalysisData = {
   questionIds: number[];
   isLoading: boolean;
   isError: boolean;
+  totalParticipants?: number;
 };
 
 type SurveyOverviewProps = {
@@ -67,7 +68,9 @@ function SurveyOverview({ summary, questionAnalysis }: SurveyOverviewProps) {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">총 응답 수</p>
-              <p className="text-2xl font-bold">{summary.responseCount}</p>
+              <p className="text-2xl font-bold">
+                {questionAnalysis.totalParticipants ?? summary.responseCount}
+              </p>
             </div>
           </CardContent>
         </Card>
