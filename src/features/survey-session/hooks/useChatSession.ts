@@ -89,7 +89,7 @@ export function useChatSession({
       enqueueStreamToken(
         data.questionText,
         data.turnNum,
-        data.qType,
+        undefined, // q_type은 더 이상 continue 이벤트에 포함되지 않음
         data.fixedQId,
         data.order,
         data.totalQuestions
@@ -103,7 +103,7 @@ export function useChatSession({
       enqueueStreamToken(
         data.questionText,
         data.turnNum,
-        data.qType,
+        undefined, // q_type은 더 이상 continue 이벤트에 포함되지 않음
         data.fixedQId,
         data.order,
         data.totalQuestions
