@@ -57,6 +57,10 @@ interface UploadStoreState {
   uploads: UploadItem[];
   /** 위젯 최소화 상태 */
   isMinimized: boolean;
+  /** 모달 열림 상태 (모달이 열려있으면 위젯 숨김) */
+  isModalOpen: boolean;
+  /** 모달로 확장된 업로드 ID */
+  expandedUploadId: string | null;
 }
 
 interface UploadStoreActions {
@@ -76,6 +80,12 @@ interface UploadStoreActions {
   clearCompleted: () => void;
   /** 위젯 최소화 토글 */
   toggleMinimize: () => void;
+  /** 모달로 확장 (위젯 숨기기) */
+  expandToModal: (uploadId: string) => void;
+  /** 위젯으로 축소 (모달 닫기) */
+  collapseToWidget: () => void;
+  /** 모달 열림 상태 설정 */
+  setModalOpen: (open: boolean) => void;
 }
 
 type UploadStore = UploadStoreState & UploadStoreActions;
@@ -88,6 +98,8 @@ export const useUploadStore = create<UploadStore>()((set, get) => ({
   // State
   uploads: [],
   isMinimized: false,
+  isModalOpen: false,
+  expandedUploadId: null,
 
   // Actions
   startUpload: (params) => {
@@ -188,6 +200,18 @@ export const useUploadStore = create<UploadStore>()((set, get) => ({
 
   toggleMinimize: () => {
     set((state) => ({ isMinimized: !state.isMinimized }));
+  },
+
+  expandToModal: (uploadId) => {
+    set({ isModalOpen: true, expandedUploadId: uploadId });
+  },
+
+  collapseToWidget: () => {
+    set({ isModalOpen: false, expandedUploadId: null });
+  },
+
+  setModalOpen: (open) => {
+    set({ isModalOpen: open });
   },
 }));
 
