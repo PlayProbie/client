@@ -3,7 +3,7 @@
  * Route: /games/:gameUuid/builds
  */
 import { Plus } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { Button, InlineAlert, Skeleton } from '@/components/ui';
@@ -29,6 +29,12 @@ export default function BuildsPage() {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [buildToDelete, setBuildToDelete] = useState<Build | null>(null);
   const deleteTargetLabel = buildToDelete?.filename || buildToDelete?.uuid;
+
+  // DELETED 상태인 빌드 필터링
+  const filteredBuilds = useMemo(
+    () => builds?.filter((build) => build.status !== 'DELETED'),
+    [builds]
+  );
 
   const handleDeleteConfirm = () => {
     if (!gameUuid || !buildToDelete || deleteBuildMutation.isPending) {
@@ -92,7 +98,7 @@ export default function BuildsPage() {
         >
           빌드 목록을 불러오지 못했습니다.
         </InlineAlert>
-      ) : !builds || builds.length === 0 ? (
+      ) : !filteredBuilds || filteredBuilds.length === 0 ? (
         <div className="bg-card flex flex-col items-center justify-center rounded-lg border py-16">
           <p className="text-muted-foreground mb-4">첫 빌드를 업로드하세요</p>
           <Button onClick={() => setIsUploadModalOpen(true)}>
@@ -103,7 +109,7 @@ export default function BuildsPage() {
       ) : (
         <div className="bg-card rounded-lg border">
           <BuildsTable
-            builds={builds}
+            builds={filteredBuilds}
             onDelete={setBuildToDelete}
           />
         </div>

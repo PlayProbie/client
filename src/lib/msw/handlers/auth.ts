@@ -27,13 +27,13 @@ const MOCK_USERS: Array<{
   {
     id: 1,
     email: 'test@example.com',
-    password: 'password123',
+    password: '12341234',
     name: '테스트 사용자',
   },
   {
     id: 2,
     email: 'admin@playprobie.com',
-    password: 'admin123',
+    password: '12341234',
     name: '관리자',
   },
 ];
