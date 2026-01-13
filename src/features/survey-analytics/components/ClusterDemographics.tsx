@@ -41,9 +41,9 @@ export function ClusterDemographics({
 
       // Gender
       const g =
-        profile.gender === 'M'
+        profile.gender === 'MALE'
           ? 'M'
-          : profile.gender === 'F'
+          : profile.gender === 'FEMALE'
             ? 'F'
             : 'Unknown';
       rawStats.gender[g]++;
