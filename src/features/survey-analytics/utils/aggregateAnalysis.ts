@@ -34,18 +34,20 @@ function calculateAverageGEQ(
 
   questionIds.forEach((questionId) => {
     const analysis = analysisMap[questionId];
-    analysis.clusters.forEach((cluster) => {
-      const weight = cluster.count;
-      totalWeight += weight;
+    if (analysis.clusters) {
+      analysis.clusters.forEach((cluster) => {
+        const weight = cluster.count;
+        totalWeight += weight;
 
-      sums.competence += cluster.geq_scores.competence * weight;
-      sums.immersion += cluster.geq_scores.immersion * weight;
-      sums.flow += cluster.geq_scores.flow * weight;
-      sums.tension += cluster.geq_scores.tension * weight;
-      sums.challenge += cluster.geq_scores.challenge * weight;
-      sums.positive_affect += cluster.geq_scores.positive_affect * weight;
-      sums.negative_affect += cluster.geq_scores.negative_affect * weight;
-    });
+        sums.competence += cluster.geq_scores.competence * weight;
+        sums.immersion += cluster.geq_scores.immersion * weight;
+        sums.flow += cluster.geq_scores.flow * weight;
+        sums.tension += cluster.geq_scores.tension * weight;
+        sums.challenge += cluster.geq_scores.challenge * weight;
+        sums.positive_affect += cluster.geq_scores.positive_affect * weight;
+        sums.negative_affect += cluster.geq_scores.negative_affect * weight;
+      });
+    }
   });
 
   if (totalWeight === 0) {

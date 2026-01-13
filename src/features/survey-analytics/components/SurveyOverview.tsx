@@ -10,6 +10,7 @@ import {
   getSentimentColorClass,
   getSentimentLabel,
 } from '../utils';
+import { ClusterDemographics } from './ClusterDemographics';
 import { GEQRadarChart } from './GEQRadarChart';
 
 type QuestionAnalysisState = {
@@ -44,7 +45,16 @@ function SurveyOverview({ summary, questionAnalysis }: SurveyOverviewProps) {
   const { data, questionIds, isLoading, isError } = questionAnalysis;
 
   const averageGEQ = calculateAverageGEQ(data);
+
+
+
   const sentimentStats = calculateAverageSentiment(data);
+
+  const firstAnalysis = Object.values(data)[0];
+  const demographics = {
+    answerIds: firstAnalysis?.answer_profiles ? Object.keys(firstAnalysis.answer_profiles) : [],
+    profiles: firstAnalysis?.answer_profiles || {},
+  };
 
   return (
     <div className="space-y-6">
@@ -104,7 +114,7 @@ function SurveyOverview({ summary, questionAnalysis }: SurveyOverviewProps) {
 
       {/* 분석 결과 */}
       {!isLoading && !isError && questionIds.length > 0 && (
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid gap-6 lg:grid-cols-3">
           {/* 전체 감정 분석 */}
           <Card>
             <CardHeader>
@@ -173,6 +183,15 @@ function SurveyOverview({ summary, questionAnalysis }: SurveyOverviewProps) {
 
             </CardContent>
           </Card>
+
+
+          {/* 테스터 분포 (Demographics) */}
+          <div>
+             <ClusterDemographics 
+               answerIds={demographics.answerIds}
+               profiles={demographics.profiles}
+             />
+          </div>
         </div>
       )}
 

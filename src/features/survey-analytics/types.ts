@@ -159,15 +159,23 @@ export interface AnswerProfile {
   prefer_genre: string; // "RPG, FPS" 형태
 }
 
+/** 참여자 통계 정보 */
+export interface ParticipantStats {
+  age_groups: Record<string, number>;
+  genders: Record<string, number>;
+  genres: Record<string, number>;
+}
+
 /** 질문별 AI 분석 결과 */
 export interface QuestionAnalysisResult {
   question_id: number;
   total_answers: number;
-  clusters: ClusterInfo[];
+  clusters: ClusterInfo[] | null;
   sentiment: SentimentStats;
   outliers: OutlierInfo | null;
   meta_summary: string | null;
   answer_profiles?: Record<string, AnswerProfile>;
+  participant_stats?: ParticipantStats;
 }
 
 /** SSE로 받는 질문 분석 래퍼 (API 응답 - snake_case) */
