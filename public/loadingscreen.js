@@ -54,6 +54,7 @@
             onerror="this.style.display='none'"
           />
         </div>
+        
         <!-- 로딩 텍스트 -->
         <p style="
           color: #ffffff;
@@ -82,6 +83,7 @@
             0%, 100% { opacity: 0.7; }
             50% { opacity: 1; }
           }
+
         </style>
       </div>
     `;
