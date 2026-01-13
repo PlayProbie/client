@@ -28,14 +28,31 @@ function SurveyAnalyticsPage() {
     gameUuid: gameUuid || '',
   });
 
+  const effectiveSurveyUuid = surveyUuid || null;
+
   // 페이지 레벨에서 SSE 분석 요청 (한 번만 실행)
-  const questionAnalysis = useQuestionAnalysis({
-    surveyUuid: surveyUuid || null,
-    enabled: Boolean(surveyUuid),
+  const {
+    data: questionAnalysisData,
+    questionIds: analyzedQuestionIds,
+    refetch: refetchAnalysis,
+    isLoading: isAnalysisLoading,
+    isError: isAnalysisError,
+    totalParticipants,
+  } = useQuestionAnalysis({
+    surveyUuid: effectiveSurveyUuid,
+    enabled: !!effectiveSurveyUuid,
   });
 
   // SSE 구독 및 업데이트 시 리패치 트리거
-  useAnalyticsSubscription(surveyUuid || null, questionAnalysis.refetch);
+  useAnalyticsSubscription(effectiveSurveyUuid, refetchAnalysis);
+
+  const questionAnalysis = {
+    data: questionAnalysisData,
+    questionIds: analyzedQuestionIds,
+    isLoading: isAnalysisLoading,
+    isError: isAnalysisError,
+    totalParticipants,
+  };
 
   return (
     <main className="container mx-auto max-w-7xl px-4 py-8">
