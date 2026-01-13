@@ -3,8 +3,8 @@
  * URL: /surveys/session/sessions/:sessionUuid
  */
 
-import { useEffect } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useLocation, useParams } from 'react-router-dom';
 
 import { Button } from '@/components/ui';
 import { Spinner } from '@/components/ui/loading';
@@ -12,15 +12,21 @@ import {
   ChatHeader,
   ChatInput,
   ChatMessageList,
+  CompletionModal,
   useChatSession,
 } from '@/features/survey-session';
+
+// 설문 완료 후 모달 표시까지 대기 시간 (ms)
+const MODAL_OPEN_DELAY_MS = 3000;
 
 function SurveySessionPage() {
   const { sessionUuid: sessionUuidParam } = useParams<{
     sessionUuid: string;
   }>();
   const location = useLocation();
-  const navigate = useNavigate();
+
+  // 완료 모달 상태
+  const [showCompleteModal, setShowCompleteModal] = useState(false);
 
   // SurveySessionStartPage에서 전달받은 state
   const state = location.state as {
@@ -44,16 +50,16 @@ function SurveySessionPage() {
     surveyUuid: state?.surveyUuid,
   });
 
-  // 완료 시 3초 후 이동
+  // 완료 시 3초 후 모달 표시
   useEffect(() => {
     if (isComplete) {
       const timer = setTimeout(() => {
-        navigate('/surveys/session/complete');
-      }, 3000);
+        setShowCompleteModal(true);
+      }, MODAL_OPEN_DELAY_MS);
 
       return () => clearTimeout(timer);
     }
-  }, [isComplete, navigate]);
+  }, [isComplete]);
 
   // 로딩 상태
   if (!isReady) {
@@ -101,6 +107,11 @@ function SurveySessionPage() {
           isComplete ? '설문이 완료되었습니다' : '답변을 입력하세요...'
         }
       />
+
+      {/* 완료 모달 */}
+      {showCompleteModal && (
+        <CompletionModal onClose={() => setShowCompleteModal(false)} />
+      )}
     </div>
   );
 }
