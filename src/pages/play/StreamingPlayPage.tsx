@@ -79,7 +79,7 @@ export default function StreamingPlayPage() {
     } else if (el.msRequestFullscreen) {
       el.msRequestFullscreen();
     }
-  }, []);
+  }, [toast]);
 
   // 세션 정보 조회
   const {
