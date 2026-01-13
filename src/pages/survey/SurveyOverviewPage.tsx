@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
@@ -6,7 +6,11 @@ import { Card } from '@/components/ui/Card';
 import { InlineAlert } from '@/components/ui/InlineAlert';
 import { Skeleton } from '@/components/ui/loading/Skeleton';
 import { SURVEY_STATUS_CONFIG } from '@/config/navigation';
-import { useUpdateSurveyStatus } from '@/features/game-streaming-survey';
+import {
+  StreamingResourceStatus,
+  useStreamingResource,
+  useUpdateSurveyStatus,
+} from '@/features/game-streaming-survey';
 import type { SurveyStatusValue } from '@/features/game-streaming-survey/types';
 import { StatusChangeModal, type SurveyShellContext } from '@/features/survey';
 import {
@@ -20,12 +24,16 @@ import {
   getSurveySessionUrl,
 } from '@/features/survey/utils/url';
 import { useToast } from '@/hooks/useToast';
-import { useProvisioningStore } from '@/stores/useProvisioningStore';
+import {
+  mapToProvisioningStatus,
+  useProvisioningStore,
+} from '@/stores/useProvisioningStore';
 
 export default function SurveyOverviewPage() {
   const { survey, isLoading, isError, refetch, surveyUuid } =
     useOutletContext<SurveyShellContext>();
   const items = useProvisioningStore((state) => state.items);
+  const restoreItem = useProvisioningStore((state) => state.restoreItem);
   const { toast } = useToast();
   const [nextStatus, setNextStatus] = useState<SurveyStatusValue | null>(null);
 
@@ -33,6 +41,27 @@ export default function SurveyOverviewPage() {
   const relatedItems = items.filter(
     (item) => item.surveyUuid === resolvedSurveyUuid
   );
+
+  // 스토어에 해당 survey의 아이템이 없을 때만 API 조회
+  const shouldFetchResource =
+    !!resolvedSurveyUuid && relatedItems.length === 0 && !isLoading;
+  const { data: streamingResource } = useStreamingResource(
+    resolvedSurveyUuid,
+    shouldFetchResource
+  );
+
+  // API 응답으로 스토어 복원
+  useEffect(() => {
+    if (!streamingResource || !resolvedSurveyUuid) return;
+    // TERMINATED 상태는 복원하지 않음
+    if (streamingResource.status === StreamingResourceStatus.TERMINATED) return;
+
+    const mappedStatus = mapToProvisioningStatus(streamingResource.status);
+    restoreItem({
+      surveyUuid: resolvedSurveyUuid,
+      status: mappedStatus,
+    });
+  }, [streamingResource, resolvedSurveyUuid, restoreItem]);
 
   const surveySessionUrl = resolvedSurveyUuid
     ? getSurveySessionUrl(resolvedSurveyUuid)

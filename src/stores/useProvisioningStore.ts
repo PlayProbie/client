@@ -82,9 +82,17 @@ interface ProvisioningStoreState {
   isVisible: boolean;
 }
 
+/** 프로비저닝 복원 파라미터 (페이지 새로고침 시 API 응답에서 복원) */
+export interface RestoreProvisioningParams {
+  surveyUuid: string;
+  status: ProvisioningStatus;
+}
+
 interface ProvisioningStoreActions {
   /** 프로비저닝 시작 */
   startProvisioning: (params: StartProvisioningParams) => string;
+  /** 프로비저닝 상태 복원 (페이지 새로고침 시) */
+  restoreItem: (params: RestoreProvisioningParams) => string;
   /** 상태 업데이트 */
   updateStatus: (id: string, status: ProvisioningStatus) => void;
   /** 에러 설정 */
@@ -130,6 +138,33 @@ export const useProvisioningStore = create<ProvisioningStore>()((set) => ({
       isMinimized: false, // 새 프로비저닝 시작 시 위젯 펼치기
       isVisible: true, // 새 작업 시작 시 위젯 보이기
     }));
+
+    return id;
+  },
+
+  restoreItem: (params) => {
+    const id = `restored-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+
+    const newItem: ProvisioningItem = {
+      id,
+      surveyUuid: params.surveyUuid,
+      buildName: 'Restored Resource', // API에서 buildName을 받을 수 없으므로 기본값 사용
+      status: params.status,
+      startedAt: Date.now(),
+    };
+
+    set((state) => {
+      // 이미 해당 surveyUuid의 아이템이 있으면 추가하지 않음
+      const existing = state.items.find(
+        (item) => item.surveyUuid === params.surveyUuid
+      );
+      if (existing) {
+        return state;
+      }
+      return {
+        items: [...state.items, newItem],
+      };
+    });
 
     return id;
   },

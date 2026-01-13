@@ -46,6 +46,9 @@ export function BuildUploadModal({
   const startUpload = useUploadStore((state) => state.startUpload);
   const cancelUpload = useUploadStore((state) => state.cancelUpload);
   const removeUpload = useUploadStore((state) => state.removeUpload);
+  const setModalOpen = useUploadStore((state) => state.setModalOpen);
+  const collapseToWidget = useUploadStore((state) => state.collapseToWidget);
+  const expandedUploadId = useUploadStore((state) => state.expandedUploadId);
 
   const [formData, setFormData] =
     useState<BuildUploadFormData>(INITIAL_FORM_DATA);
@@ -56,7 +59,17 @@ export function BuildUploadModal({
   const uploadItem = useUploadStore((state) =>
     uploadId ? state.uploads.find((item) => item.id === uploadId) : undefined
   );
-  const uploadState = uploadItem?.state;
+
+  // 위젯에서 확장된 업로드 아이템
+  const expandedUploadItem = useUploadStore((state) =>
+    expandedUploadId
+      ? state.uploads.find((item) => item.id === expandedUploadId)
+      : undefined
+  );
+
+  // 현재 표시할 아이템 (직접 업로드 또는 확장된 업로드)
+  const currentItem = uploadItem || expandedUploadItem;
+  const uploadState = currentItem?.state;
   const isIdle = !uploadState || uploadState.step === 'idle';
   const isUploading = uploadState
     ? [
@@ -83,6 +96,11 @@ export function BuildUploadModal({
     }
   }, [toast, uploadId, uploadState?.step]);
 
+  // 모달 열림 상태를 store에 동기화
+  useEffect(() => {
+    setModalOpen(open || !!expandedUploadId);
+  }, [open, expandedUploadId, setModalOpen]);
+
   const resetForm = useCallback(() => {
     setFormData(INITIAL_FORM_DATA);
     setFormError(null);
@@ -96,7 +114,15 @@ export function BuildUploadModal({
 
   const handleDialogOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
-      handleCancel();
+      // 위젯에서 확장된 경우 위젯으로 축소
+      if (expandedUploadId) {
+        collapseToWidget();
+        onOpenChange(false);
+        return;
+      }
+      // 업로드 진행 중이면 위젯 표시 (모달 닫으면 자동으로 위젯이 보임)
+      // setModalOpen은 handleClose에서 onOpenChange를 통해 간접적으로 호출됨
+      handleClose();
     }
   };
 
@@ -126,7 +152,7 @@ export function BuildUploadModal({
   }, [formData, gameUuid, gameName, startUpload]);
 
   const handleCancel = () => {
-    // Just close the modal - upload continues in background
+    // 모달이 닫히면 useEffect에서 isModalOpen이 false가 되어 위젯이 자동으로 표시됨
     handleClose();
   };
 
@@ -138,18 +164,23 @@ export function BuildUploadModal({
   };
 
   const handleRestart = () => {
-    if (!uploadItem) return;
-    removeUpload(uploadItem.id);
+    const targetItem = currentItem;
+    if (!targetItem) return;
+    removeUpload(targetItem.id);
     const newUploadId = startUpload({
-      gameUuid: uploadItem.gameUuid,
-      gameName: uploadItem.gameName,
-      files: uploadItem.files,
-      folderName: uploadItem.folderName,
-      executablePath: uploadItem.executablePath,
-      version: uploadItem.version,
-      note: uploadItem.note,
+      gameUuid: targetItem.gameUuid,
+      gameName: targetItem.gameName,
+      files: targetItem.files,
+      folderName: targetItem.folderName,
+      executablePath: targetItem.executablePath,
+      version: targetItem.version,
+      note: targetItem.note,
     });
     setUploadId(newUploadId);
+    // 확장된 상태였다면 초기화
+    if (expandedUploadId) {
+      collapseToWidget();
+    }
   };
 
   const handleFormChange = (nextData: BuildUploadFormData) => {
@@ -162,10 +193,13 @@ export function BuildUploadModal({
   const isFormValid =
     formData.files.length > 0 && !!formData.executablePath.trim();
 
+  // 위젯에서 확장된 경우 모달 자동 열기
+  const isModalOpen = open || !!expandedUploadId;
+
   return (
     <>
       <Dialog
-        open={open}
+        open={isModalOpen}
         onOpenChange={handleDialogOpenChange}
       >
         <DialogContent className="sm:max-w-[720px]">

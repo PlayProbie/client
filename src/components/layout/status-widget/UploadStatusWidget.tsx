@@ -2,7 +2,7 @@
  * UploadStatusWidget - 플로팅 업로드 상태 위젯
  * 우측 하단에 고정되어 업로드 진행 상태를 표시
  */
-import { Upload, X } from 'lucide-react';
+import { Maximize2, Upload, X } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -22,6 +22,7 @@ import { UploadItemRow } from './UploadItemRow';
 export function UploadStatusWidget() {
   const uploads = useUploadStore((state) => state.uploads);
   const isMinimized = useUploadStore((state) => state.isMinimized);
+  const isModalOpen = useUploadStore((state) => state.isModalOpen);
   const hasActiveUploads = useUploadStore(selectHasActiveUploads);
   const overallProgress = useUploadStore(selectOverallProgress);
 
@@ -30,6 +31,7 @@ export function UploadStatusWidget() {
   const removeUpload = useUploadStore((state) => state.removeUpload);
   const clearCompleted = useUploadStore((state) => state.clearCompleted);
   const startUpload = useUploadStore((state) => state.startUpload);
+  const expandToModal = useUploadStore((state) => state.expandToModal);
 
   const { invalidateBuildQuery } = useUploadQueryInvalidation();
   const handledUploadsRef = useRef<Set<string>>(new Set());
@@ -47,8 +49,8 @@ export function UploadStatusWidget() {
     });
   }, [uploads, invalidateBuildQuery]);
 
-  // 업로드 항목이 없으면 위젯 숨김
-  if (uploads.length === 0) {
+  // 업로드 항목이 없거나 모달이 열려있으면 위젯 숨김
+  if (uploads.length === 0 || isModalOpen) {
     return null;
   }
 
@@ -130,13 +132,35 @@ export function UploadStatusWidget() {
         <ScrollArea className="max-h-80">
           <div className="divide-y">
             {uploads.map((item) => (
-              <UploadItemRow
+              <div
                 key={item.id}
-                item={item}
-                onCancel={cancelUpload}
-                onRemove={removeUpload}
-                onRetry={handleRetry}
-              />
+                className="flex items-center gap-2"
+              >
+                <div className="min-w-0 flex-1">
+                  <UploadItemRow
+                    item={item}
+                    onCancel={cancelUpload}
+                    onRemove={removeUpload}
+                    onRetry={handleRetry}
+                  />
+                </div>
+                {/* 확장 버튼 (업로드 진행 중일 때만) */}
+                {[
+                  'requesting_sts_credentials',
+                  'uploading_to_s3',
+                  'completing_upload',
+                ].includes(item.state.step) && (
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="mr-2 size-6 shrink-0"
+                    onClick={() => expandToModal(item.id)}
+                    title="모달로 확장"
+                  >
+                    <Maximize2 className="size-3" />
+                  </Button>
+                )}
+              </div>
             ))}
           </div>
         </ScrollArea>

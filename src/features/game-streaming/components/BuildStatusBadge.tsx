@@ -21,10 +21,16 @@ const STATUS_CONFIG: Record<
   REGISTERING: { label: 'Registering', variant: 'info' },
   READY: { label: 'Ready', variant: 'success' },
   FAILED: { label: 'Failed', variant: 'destructive' },
+  DELETED: { label: 'Deleted', variant: 'muted' },
+};
+
+const DEFAULT_CONFIG = {
+  label: 'Unknown',
+  variant: 'muted' as StatusVariant,
 };
 
 export function BuildStatusBadge({ status, className }: BuildStatusBadgeProps) {
-  const config = STATUS_CONFIG[status];
+  const config = STATUS_CONFIG[status] ?? DEFAULT_CONFIG;
 
   return (
     <StatusBadge

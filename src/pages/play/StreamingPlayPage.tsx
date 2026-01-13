@@ -4,7 +4,7 @@
  * 테스터가 게임을 스트리밍으로 플레이하는 페이지입니다.
  * 밝은 테마의 게임 스트리밍 UI를 제공합니다.
  */
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
@@ -23,12 +23,15 @@ import {
 } from '@/features/game-streaming-session';
 import { useToast } from '@/hooks/useToast';
 
-/** 세션 최대 시간 (초) - 2분 */
-const SESSION_MAX_DURATION_SECONDS = 120;
+/** 세션 최대 시간 (초) - 30분 */
+const SESSION_MAX_DURATION_SECONDS = 1800;
 
 export default function StreamingPlayPage() {
   const { surveyUuid } = useParams<{ surveyUuid: string }>();
   const { toast } = useToast();
+
+  // 전체화면 전환을 위한 컨테이너 ref
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const isWebRtcSupported = useMemo(
     () => typeof RTCPeerConnection !== 'undefined',
@@ -48,6 +51,35 @@ export default function StreamingPlayPage() {
 
   // 수동 종료 여부 (버튼 클릭 또는 타임아웃)
   const isManuallyTerminated = useRef(false);
+
+  // 전체화면 전환 함수 (vendor-prefixed APIs 지원)
+  const requestFullscreen = useCallback(() => {
+    // Loading Screen(body 자식)을 포함하기 위해 documentElement를 전체화면 대상으로 설정
+    const element = document.documentElement;
+    if (!element) return;
+
+    // Vendor-prefixed fullscreen API 타입
+    type FullscreenElement = HTMLElement & {
+      webkitRequestFullscreen?: () => Promise<void>;
+      msRequestFullscreen?: () => Promise<void>;
+    };
+
+    const el = element as FullscreenElement;
+
+    if (el.requestFullscreen) {
+      el.requestFullscreen().catch((err) => {
+        toast({
+          variant: 'warning',
+          title: '전체 화면 전환 실패',
+          description: err,
+        });
+      });
+    } else if (el.webkitRequestFullscreen) {
+      el.webkitRequestFullscreen();
+    } else if (el.msRequestFullscreen) {
+      el.msRequestFullscreen();
+    }
+  }, [toast]);
 
   // 세션 정보 조회
   const {
@@ -70,6 +102,12 @@ export default function StreamingPlayPage() {
     surveyUuid: surveyUuid || '',
     onConnected: () => {
       setRemainingTime(SESSION_MAX_DURATION_SECONDS);
+
+      // 로딩 화면 숨김
+      if (window.GameLiftLoadingScreen) {
+        window.GameLiftLoadingScreen.hide();
+      }
+
       toast({
         variant: 'success',
         title: '스트리밍 연결 완료',
@@ -82,8 +120,16 @@ export default function StreamingPlayPage() {
         title: '스트리밍 연결 실패',
         description: error.message,
       });
+      // 에러 발생 시 로딩 화면 숨김
+      if (window.GameLiftLoadingScreen) {
+        window.GameLiftLoadingScreen.hide();
+      }
     },
     onDisconnected: () => {
+      // 연결 종료 시 로딩 화면 숨김 (안전장치)
+      if (window.GameLiftLoadingScreen) {
+        window.GameLiftLoadingScreen.hide();
+      }
       toast({
         variant: 'default',
         title: '스트리밍이 종료되었습니다.',
@@ -139,6 +185,15 @@ export default function StreamingPlayPage() {
   // 연결 시작 핸들러 (수동 재시도용)
   const handleConnect = async () => {
     if (!surveyUuid || isConnecting || isConnected) return;
+
+    // 사용자 제스처로 전체화면 전환 (버튼 클릭 시점에 호출해야 브라우저가 허용)
+    requestFullscreen();
+
+    // 로딩 화면 표시
+    if (window.GameLiftLoadingScreen) {
+      window.GameLiftLoadingScreen.show();
+    }
+
     await connect();
   };
 
@@ -250,7 +305,10 @@ export default function StreamingPlayPage() {
   const { gameName, isAvailable, streamSettings } = sessionInfo;
 
   return (
-    <div className="bg-background flex min-h-screen flex-col">
+    <div
+      ref={containerRef}
+      className="bg-background flex min-h-screen flex-col"
+    >
       <StreamHeader
         gameName={gameName}
         streamSettings={streamSettings}

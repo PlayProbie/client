@@ -16,7 +16,8 @@ export type BuildStatus =
   | 'UPLOADED'
   | 'REGISTERING'
   | 'READY'
-  | 'FAILED';
+  | 'FAILED'
+  | 'DELETED';
 
 /** [API] Build 엔티티 */
 export interface ApiBuild {
