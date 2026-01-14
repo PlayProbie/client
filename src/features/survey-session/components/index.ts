@@ -1,5 +1,6 @@
-export { ChatFeedback } from './ChatFeedback';
-export { ChatHeader } from './ChatHeader';
-export { ChatInput } from './ChatInput';
-export { ChatMessage } from './ChatMessage';
-export { ChatMessageList } from './ChatMessageList';
+export * from './ChatFeedback';
+export * from './ChatHeader';
+export * from './ChatInput';
+export * from './ChatMessage';
+export * from './ChatMessageList';
+export * from './CompletionModal';

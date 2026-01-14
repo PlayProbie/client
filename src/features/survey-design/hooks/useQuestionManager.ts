@@ -55,12 +55,16 @@ function useQuestionManager() {
     [selection, feedback, toast]
   );
 
-  // 추천 대안 클릭 시 질문 변경 및 피드백 요청
+  // 추천 대안 클릭 시 질문 텍스트만 변경 (API 재요청 없음)
   const handleSuggestionClick = useCallback(
-    async (questionIndex: number, suggestion: string) => {
-      await handleRequestFeedback(questionIndex, suggestion);
+    (questionIndex: number, suggestion: string) => {
+      // 질문 텍스트만 교체
+      const newQuestions = selection.questions.map((q, idx) =>
+        idx === questionIndex ? suggestion : q
+      );
+      selection.setQuestions(newQuestions);
     },
-    [handleRequestFeedback]
+    [selection]
   );
 
   // 질문 삭제 시 피드백도 함께 삭제

@@ -87,7 +87,6 @@ export interface ApiSSEQuestionEventData {
 /** [API] SSE continue 이벤트 데이터 (스트리밍) */
 export interface ApiSSEContinueEventData {
   fixed_q_id: number | null;
-  q_type: InterviewLogQType;
   question_text: string; // 부분 텍스트
   turn_num: number;
   order: number;
@@ -196,7 +195,6 @@ export interface SSEQuestionEventData {
 /** [Client] SSE Continue 이벤트 데이터 */
 export interface SSEContinueEventData {
   fixedQId: number | null;
-  qType: InterviewLogQType;
   questionText: string;
   turnNum: number;
   order: number;
@@ -324,7 +322,6 @@ export function toSSEContinueEventData(
 ): SSEContinueEventData {
   return {
     fixedQId: api.fixed_q_id,
-    qType: api.q_type,
     questionText: api.question_text,
     turnNum: api.turn_num,
     order: api.order,
