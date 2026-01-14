@@ -19,6 +19,9 @@ const RegisterPage = lazy(() => import('@/pages/auth/RegisterPage'));
 const GamesListPage = lazy(() => import('@/pages/game/GamesListPage'));
 const GameOverviewPage = lazy(() => import('@/pages/game/GameOverviewPage'));
 
+// Version 페이지
+const VersionDetailPage = lazy(() => import('@/pages/version/VersionDetailPage'));
+
 // Studio 페이지
 const BuildsPage = lazy(() => import('@/pages/studio/BuildsPage'));
 const SurveyListPage = lazy(() => import('@/pages/studio/SurveyListPage'));
@@ -213,6 +216,12 @@ export const router = createBrowserRouter([
           {
             path: '/games/:gameUuid/builds',
             element: withSuspense(BuildsPage),
+          },
+
+          // 버전 상세 (빌드 + 설문 리스트)
+          {
+            path: '/games/:gameUuid/versions/:versionUuid',
+            element: withSuspense(VersionDetailPage),
           },
 
           // 설문 목록

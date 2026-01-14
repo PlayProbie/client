@@ -1,7 +1,7 @@
 import { Outlet } from 'react-router-dom';
 
 import { AuthGuard, GuestGuard } from '@/components/guards';
-import { PageLayout } from '@/components/layout';
+import { DualSidebarLayout } from '@/components/layout';
 import {
   ProvisioningPollingProvider,
   ProvisioningStatusWidget,
@@ -35,13 +35,14 @@ export function RootLayout() {
 
 /**
  * AuthLayout - 인증된 사용자 전용 레이아웃
+ * DualSidebarLayout: IconBar + GameSidebar 이중 사이드바 구조
  */
 export function AuthLayout() {
   return (
     <AuthGuard>
-      <PageLayout>
+      <DualSidebarLayout>
         <Outlet />
-      </PageLayout>
+      </DualSidebarLayout>
     </AuthGuard>
   );
 }
