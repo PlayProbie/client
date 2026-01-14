@@ -6,7 +6,7 @@ import type {
 } from '../types';
 
 /**
- * GET /surveys/results/{game_uuid}/listup - 전체 응답 리스트
+ * GET /surveys/results/{survey_uuid}/listup - 설문별 응답 리스트
  */
 export async function getSurveyResultsList(
   params: GetSurveyResultsListParams
@@ -19,7 +19,7 @@ export async function getSurveyResultsList(
     searchParams.set('cursor', params.cursor);
   }
 
-  const url = `${API_BASE_URL}/surveys/results/${params.gameUuid}/listup${
+  const url = `${API_BASE_URL}/surveys/results/${params.surveyUuid}/listup${
     searchParams.toString() ? `?${searchParams.toString()}` : ''
   }`;
 

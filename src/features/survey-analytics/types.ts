@@ -244,7 +244,7 @@ export interface GetSurveyResultsSummaryParams {
 
 /** 전체 응답 리스트 요청 파라미터 */
 export interface GetSurveyResultsListParams {
-  gameUuid: string;
+  surveyUuid: string;
   limit?: number;
   cursor?: string;
 }
