@@ -5,26 +5,26 @@ import { getSurveyResultsSummary } from '../api/get-survey-results-summary';
 import type { ApiSurveyResultListItem, SurveyResultsList, SurveyResultsSummary } from '../types';
 
 type UseSurveyResultsOptions = {
-  gameUuid: string;
+  surveyUuid: string;
 };
 
 /**
  * 설문 결과 데이터 페칭 훅
  * - 요약 정보 + 리스트 데이터 조회
  */
-function useSurveyResults({ gameUuid }: UseSurveyResultsOptions) {
+function useSurveyResults({ surveyUuid }: UseSurveyResultsOptions) {
   const summaryQuery = useQuery({
-    queryKey: ['survey-results-summary', gameUuid],
-    queryFn: () => getSurveyResultsSummary({ gameUuid }),
+    queryKey: ['survey-results-summary', surveyUuid],
+    queryFn: () => getSurveyResultsSummary({ surveyUuid }),
     select: (response): SurveyResultsSummary => ({
       surveyCount: response.result.survey_count,
       responseCount: response.result.response_count,
     }),
-    enabled: !!gameUuid,
+    enabled: !!surveyUuid,
   });
 
   const listQuery = useQuery({
-    queryKey: ['survey-results-list', gameUuid],
+    queryKey: ['survey-results-list', surveyUuid],
     queryFn: async () => {
       let allContent: ApiSurveyResultListItem[] = [];
       let cursor: string | undefined = undefined;
@@ -32,7 +32,7 @@ function useSurveyResults({ gameUuid }: UseSurveyResultsOptions) {
 
       while (hasNext) {
         const response = await getSurveyResultsList({
-           gameUuid, 
+           surveyUuid, 
            limit: 100, // Fetch more items per request to reduce roundtrips
            cursor 
         });
@@ -67,7 +67,7 @@ function useSurveyResults({ gameUuid }: UseSurveyResultsOptions) {
       nextCursor: null,
       hasNext: false,
     }),
-    enabled: !!gameUuid,
+    enabled: !!surveyUuid,
   });
 
   return {
@@ -80,3 +80,4 @@ function useSurveyResults({ gameUuid }: UseSurveyResultsOptions) {
 }
 
 export { useSurveyResults };
+
