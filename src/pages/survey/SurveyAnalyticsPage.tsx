@@ -15,17 +15,16 @@ import {
 
 /**
  * 설문 분석 결과 페이지
- * URL: /survey/analytics/:gameUuid
+ * URL: /survey/analytics/:surveyUuid
  */
 function SurveyAnalyticsPage() {
-  const { gameUuid, surveyUuid } = useParams<{
-    gameUuid: string;
+  const { surveyUuid } = useParams<{
     surveyUuid: string;
   }>();
   const [activeTab, setActiveTab] = useState<Tab>('overview');
 
   const { summary, list, isLoading, isError } = useSurveyResults({
-    gameUuid: gameUuid || '',
+    surveyUuid: surveyUuid || '',
   });
 
   const effectiveSurveyUuid = surveyUuid || null;

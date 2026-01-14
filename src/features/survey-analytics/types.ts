@@ -71,12 +71,12 @@ export interface ApiSurveyResultDetails {
 // API Response Wrappers
 // ----------------------------------------
 
-/** GET /surveys/results/{game_uuid} Response */
+/** GET /surveys/results/{survey_uuid} Response */
 export interface GetSurveyResultsSummaryResponse {
   result: ApiSurveyResultsSummary;
 }
 
-/** GET /surveys/results/{game_uuid}/listup Response */
+/** GET /surveys/results/{survey_uuid}/listup Response */
 export interface GetSurveyResultsListResponse {
   result: ApiSurveyResultsList;
 }
@@ -238,7 +238,7 @@ export interface SurveyResultDetails {
 
 /** 전체 응답 요약 요청 파라미터 */
 export interface GetSurveyResultsSummaryParams {
-  gameUuid: string;
+  surveyUuid: string;
   status?: SurveySessionStatus;
 }
 

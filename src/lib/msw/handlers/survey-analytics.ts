@@ -42,9 +42,9 @@ const generateMockSessionItems = (count: number): ApiSurveyResultListItem[] => {
  * Survey Analytics MSW Handlers
  */
 export const surveyAnalyticsHandlers = [
-  // GET /api/surveys/results/{game_id} - 전체 응답 요약
+  // GET /api/surveys/results/{survey_uuid} - 설문별 응답 요약
   http.get(
-    `${MSW_API_BASE_URL}/surveys/results/:gameId`,
+    `${MSW_API_BASE_URL}/surveys/results/:surveyUuid`,
     async ({ request }) => {
       await delay(200);
 
@@ -68,9 +68,9 @@ export const surveyAnalyticsHandlers = [
     }
   ),
 
-  // GET /api/surveys/results/{game_id}/listup - 전체 응답 리스트
+  // GET /api/surveys/results/{survey_uuid}/listup - 설문별 응답 리스트
   http.get(
-    `${MSW_API_BASE_URL}/surveys/results/:gameId/listup`,
+    `${MSW_API_BASE_URL}/surveys/results/:surveyUuid/listup`,
     async ({ request }) => {
       await delay(300);
 
