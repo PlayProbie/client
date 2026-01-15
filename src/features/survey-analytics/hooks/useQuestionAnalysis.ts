@@ -2,12 +2,14 @@ import { useEffect, useRef, useState } from 'react';
 
 import { getQuestionAnalysis } from '../api';
 import type {
+  AnalysisFilters,
   QuestionAnalysisResult,
   QuestionResponseAnalysisWrapper,
 } from '../types';
 
 type UseQuestionAnalysisOptions = {
   surveyUuid: string | null;
+  filters?: AnalysisFilters;
   enabled?: boolean;
 };
 
@@ -20,6 +22,7 @@ type QuestionAnalysisState = {
  */
 export function useQuestionAnalysis({
   surveyUuid,
+  filters,
   enabled = true,
 }: UseQuestionAnalysisOptions) {
   // 단일 객체 상태로 통합
@@ -33,6 +36,7 @@ export function useQuestionAnalysis({
 
   // ref를 사용해 중복 요청 방지 (React StrictMode 대응)
   const requestedSurveyUuidRef = useRef<string | null>(null);
+  const lastFilterKeyRef = useRef<string>('{}');
   const isRequestingRef = useRef(false);
 
   // Derived state (계산된 값)
@@ -54,16 +58,26 @@ export function useQuestionAnalysis({
       return;
     }
 
-    // 이미 요청 중이거나 같은 surveyUuid로 완료된 요청이 있으면 스킵
-    // 단, refetchCount가 변경되면 재요청 허용
+    // 필터 직렬화하여 비교 (변경 감지용)
+    const currentFilterKey = JSON.stringify(filters ?? {});
+
+    // 이미 요청 중이면 스킵
+    if (isRequestingRef.current) {
+      return;
+    }
+
+    // 같은 surveyUuid로 완료된 요청이 있으면 스킵
+    // 단, refetchCount가 변경되거나 필터가 변경되면 재요청 허용
     if (
-      isRequestingRef.current ||
-      (surveyUuid === requestedSurveyUuidRef.current && refetchCount === 0)
+      surveyUuid === requestedSurveyUuidRef.current &&
+      refetchCount === 0 &&
+      currentFilterKey === lastFilterKeyRef.current
     ) {
       return;
     }
 
     requestedSurveyUuidRef.current = surveyUuid;
+    lastFilterKeyRef.current = currentFilterKey;
     isRequestingRef.current = true;
 
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -74,6 +88,7 @@ export function useQuestionAnalysis({
 
     getQuestionAnalysis(
       surveyUuid,
+      filters,
       (wrapper: QuestionResponseAnalysisWrapper) => {
         try {
           const parsed: QuestionAnalysisResult = JSON.parse(
@@ -112,7 +127,14 @@ export function useQuestionAnalysis({
       isRequestingRef.current = false;
       // 언마운트 시에는 requestedSurveyUuidRef는 유지 (리마운트 시 중복 요청 방지)
     };
-  }, [surveyUuid, enabled, refetchCount]);
+  }, [
+    surveyUuid,
+    enabled,
+    refetchCount,
+    filters?.gender,
+    filters?.ageGroup,
+    filters?.preferGenre,
+  ]);
 
   return {
     data: state.data,

@@ -254,3 +254,10 @@ export interface GetSurveyResultDetailsParams {
   surveyUuid: string;
   sessionUuid: string;
 }
+
+/** 분석 필터 조건 */
+export interface AnalysisFilters {
+  gender?: string | null;
+  ageGroup?: string | null;
+  preferGenre?: string | null;
+}

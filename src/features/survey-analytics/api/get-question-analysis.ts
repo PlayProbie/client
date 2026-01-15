@@ -1,6 +1,9 @@
 import { API_BASE_URL } from '@/constants/api';
 
-import type { QuestionResponseAnalysisWrapper } from '../types';
+import type {
+  AnalysisFilters,
+  QuestionResponseAnalysisWrapper,
+} from '../types';
 
 /** Analytics 응답 타입 */
 interface AnalyticsResponse {
@@ -18,15 +21,26 @@ interface AnalyticsResponse {
  */
 export async function getQuestionAnalysis(
   surveyUuid: string,
+  filters: AnalysisFilters | undefined,
   onMessage: (data: QuestionResponseAnalysisWrapper) => void,
   onError?: (error: Error) => void,
   onComplete?: (totalParticipants: number, surveySummary?: string) => void
 ): Promise<() => void> {
   try {
+    // Query Params 생성
+    const params = new URLSearchParams();
+    if (filters?.gender) params.append('gender', filters.gender);
+    if (filters?.ageGroup) params.append('ageGroup', filters.ageGroup);
+    if (filters?.preferGenre) params.append('preferGenre', filters.preferGenre);
+
+    const queryString = params.toString();
+
     // REST API 호출 (Authorization 헤더는 글로벌 인터셉터가 자동 추가)
-    const url = import.meta.env.DEV
+    const baseUrl = import.meta.env.DEV
       ? `/api/analytics/${surveyUuid}`
       : `${API_BASE_URL}/analytics/${surveyUuid}`;
+
+    const url = queryString ? `${baseUrl}?${queryString}` : baseUrl;
 
     const response = await fetch(url);
 
