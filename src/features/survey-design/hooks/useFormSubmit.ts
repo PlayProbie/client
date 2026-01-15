@@ -81,6 +81,7 @@ export function useFormSubmit(options?: UseFormSubmitOptions) {
         themePriorities,
         themeDetails,
         versionNote,
+        versionUuid,
       } = formData;
 
       const transactionState: TransactionState = {};
@@ -109,6 +110,7 @@ export function useFormSubmit(options?: UseFormSubmitOptions) {
 
         const surveyResponse = await postSurvey({
           game_uuid: gameUuid!,
+          version_uuid: versionUuid || '',
           survey_name: surveyName || '',
           started_at: formatToISO(startedAt || ''),
           ended_at: formatToISO(endedAt || ''),

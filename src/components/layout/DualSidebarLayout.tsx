@@ -19,6 +19,7 @@ import {
   VersionFormModal,
   type CreateVersionRequest,
 } from '@/features/version';
+import { useWorkspaceMembers, toMember } from '@/features/workspace';
 import { TabValue } from '@/components/layout/types';
 import { useCurrentWorkspaceStore, useSettingStore } from '@/stores';
 
@@ -27,6 +28,7 @@ import GameSidebar from './GameSidebar';
 import GlobalSidebarFooter from './GlobalSidebarFooter';
 import IconBar from './IconBar';
 import Topbar from './Topbar';
+import WorkspaceSidebar from './WorkspaceSidebar';
 
 interface DualSidebarLayoutProps {
   children: React.ReactNode;
@@ -51,12 +53,20 @@ function DualSidebarLayout({ children }: DualSidebarLayoutProps) {
   // 게임 목록 조회
   const { data: games = [] } = useGamesQuery();
 
-  // 선택된 게임 (URL 기반 또는 첫 번째 게임)
+  // 선택된 게임 (URL 기반)
+  // URL에 gameUuid가 없으면 선택된 게임 없음 (게임 목록 페이지 등)
   const selectedGameUuid = routeGameUuid && !routeGameUuid.startsWith(':')
     ? routeGameUuid
-    : games[0]?.gameUuid;
+    : undefined;
 
   const selectedGame = games.find((g) => g.gameUuid === selectedGameUuid);
+
+  // 현재 워크스페이스 멤버 조회
+  const { data: membersResponse } = useWorkspaceMembers(
+    currentWorkspace?.workspaceUuid || ''
+  );
+  // API 타입을 Client 타입으로 변환
+  const workspaceMembers = (membersResponse?.result || []).map(toMember);
 
   // 버전 목록 조회
   const { data: versions = [] } = useVersionsQuery({
@@ -157,7 +167,19 @@ function DualSidebarLayout({ children }: DualSidebarLayoutProps) {
   return (
     <div className="bg-background flex h-screen overflow-hidden">
       {/* 왼쪽 사이드바 영역 */}
-      <div className="flex h-full flex-col">
+      <div className="border-sidebar-border bg-sidebar flex h-full flex-col border-r">
+        {/* 사이드바 상단 헤더 (로고 + 서비스명) */}
+        <div className="border-border flex shrink-0 items-center gap-3 border-b p-4">
+          <img
+            src="/logo.png"
+            alt="PlayProbie"
+            className="size-10 shrink-0 rounded-lg"
+          />
+          <h1 className="text-sidebar-foreground truncate text-lg font-bold leading-none tracking-tight">
+            PlayProbie
+          </h1>
+        </div>
+
         <div className="flex flex-1 overflow-hidden">
           {/* IconBar (항상 표시) */}
           <IconBar
@@ -168,10 +190,12 @@ function DualSidebarLayout({ children }: DualSidebarLayoutProps) {
             selectedGameUuid={selectedGameUuid}
             onGameSelect={handleGameSelect}
             onAddGame={handleAddGame}
+            onHomeClick={() => navigate('/games')}
+            isHomeSelected={!routeGameUuid}
           />
 
-          {/* GameSidebar (게임 선택 시만) */}
-          {hasSelectedGame && (
+          {/* GameSidebar (게임 선택 시만, 아니면 WorkspaceSidebar) */}
+          {hasSelectedGame ? (
             <GameSidebar
               game={{
                 gameUuid: selectedGame.gameUuid,
@@ -182,11 +206,16 @@ function DualSidebarLayout({ children }: DualSidebarLayoutProps) {
               onVersionSelect={handleVersionSelect}
               onAddVersion={handleAddVersion}
             />
+          ) : (
+            <WorkspaceSidebar
+              workspace={currentWorkspace}
+              members={workspaceMembers}
+            />
           )}
         </div>
 
-        {/* 하단 유저 프로필 */}
-        <GlobalSidebarFooter hasGameSidebar={hasSelectedGame} />
+        {/* 하단 유저 프로필 (항상 확장) */}
+        <GlobalSidebarFooter hasGameSidebar={true} />
       </div>
 
       {/* 메인 콘텐츠 영역 */}

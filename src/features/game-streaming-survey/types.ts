@@ -151,7 +151,7 @@ export function toApiCreateStreamingResourceRequest(
 // ----------------------------------------
 
 /** 설문 상태 변경 요청값 */
-export type SurveyStatusValue = 'ACTIVE' | 'CLOSED';
+export type SurveyStatusValue = 'DRAFT' | 'ACTIVE' | 'CLOSED';
 
 /** [API] 스트리밍 리소스 상태 (상태 변경 응답용) */
 export interface ApiStreamingResourceStatusInfo {

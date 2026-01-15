@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Lightbulb, Rocket, Users } from 'lucide-react';
 import { useEffect } from 'react';
 import { type Control, useWatch } from 'react-hook-form';
-import { useParams } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
 
 import { Badge } from '@/components/ui/Badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -15,9 +15,17 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/Input';
 import { Spinner } from '@/components/ui/loading';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/Select';
 import { Textarea } from '@/components/ui/Textarea';
 import { getGame } from '@/features/game/api/get-game';
 import { type GameGenre, GameGenreConfig } from '@/features/game/types';
+import { useVersionsQuery } from '@/features/version';
 import { cn } from '@/lib/utils';
 
 import { useSurveyFormStore } from '../../store/useSurveyFormStore';
@@ -79,6 +87,8 @@ const TEST_STAGE_CONFIG = {
 
 function StepBasicInfo({ control }: StepBasicInfoProps) {
   const { gameUuid } = useParams<{ gameUuid: string }>();
+  const location = useLocation();
+  const navState = location.state as { versionUuid?: string } | undefined;
 
   // testStage 값 감시 (테마 선택 표시 여부 결정)
   const testStage = useWatch({ control, name: 'testStage' });
@@ -90,10 +100,16 @@ function StepBasicInfo({ control }: StepBasicInfoProps) {
     enabled: !!gameUuid,
   });
 
+  // 버전 목록 로드
+  const { data: versions = [], isLoading: isLoadingVersions } = useVersionsQuery({
+    gameUuid: gameUuid,
+    enabled: !!gameUuid,
+  });
+
   const game = gameData;
 
   // store 접근
-  const { updateFormData } = useSurveyFormStore();
+  const { updateFormData, formData } = useSurveyFormStore();
 
   // 게임 정보가 로드되면 store에 저장
   useEffect(() => {
@@ -105,6 +121,13 @@ function StepBasicInfo({ control }: StepBasicInfoProps) {
       });
     }
   }, [game, updateFormData]);
+
+  // navigation state에서 versionUuid가 전달되었으면 초기값으로 설정
+  useEffect(() => {
+    if (navState?.versionUuid && !formData.versionUuid) {
+      updateFormData({ versionUuid: navState.versionUuid });
+    }
+  }, [navState?.versionUuid, formData.versionUuid, updateFormData]);
 
   const getGenreLabels = (genres: string[]) => {
     return genres.map((code) => {
@@ -180,6 +203,52 @@ function StepBasicInfo({ control }: StepBasicInfoProps) {
           )}
         </CardContent>
       </Card>
+
+      {/* 3. 버전 선택 (필수) */}
+      <FormField
+        control={control}
+        name="versionUuid"
+        rules={{ required: '버전을 선택해주세요' }}
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel required>버전 선택</FormLabel>
+            {isLoadingVersions ? (
+              <div className="flex items-center gap-2">
+                <Spinner size="sm" />
+                <span className="text-muted-foreground">버전 목록 로딩 중...</span>
+              </div>
+            ) : versions.length === 0 ? (
+              <div className="text-destructive text-sm">
+                등록된 버전이 없습니다. 먼저 게임에 버전을 추가해주세요.
+              </div>
+            ) : (
+              <Select
+                value={field.value}
+                onValueChange={field.onChange}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="버전을 선택하세요" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {versions.map((version) => (
+                    <SelectItem key={version.versionUuid} value={version.versionUuid}>
+                      {version.versionName}
+                      {version.status && (
+                        <span className="text-muted-foreground ml-2">
+                          ({version.status})
+                        </span>
+                      )}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+            <FormMessage />
+          </FormItem>
+        )}
+      />
 
       {/* 3. 버전 메모 */}
       <FormField

@@ -109,6 +109,8 @@ export type SurveyStatus = ConfigValue<typeof SurveyStatusConfig>;
 /** [API] POST /surveys Request */
 export interface ApiCreateSurveyRequest {
   game_uuid: string;
+  /** 필수: 설문을 연결할 버전 UUID */
+  version_uuid: string;
   survey_name: string;
   started_at: string;
   ended_at: string;
@@ -272,6 +274,8 @@ export type SurveyFormData = {
   gameName: string;
   gameGenre: GameGenre[];
   gameContext: string;
+  /** 버전 UUID (필수) */
+  versionUuid: string;
 
   // Step 1: 설문 정보
   surveyName: string;

@@ -1,60 +1,101 @@
-import type { Version } from '../types';
+/**
+ * Version API
+ * - GET /games/{gameUuid}/versions
+ * - GET /versions/{versionUuid}
+ * - POST /games/{gameUuid}/versions
+ */
+import { API_BASE_URL } from '@/constants/api';
+
+import type {
+  ApiVersionResponse,
+  ApiVersionsResponse,
+  CreateVersionRequest,
+  Version,
+} from '../types';
+import { toApiCreateVersionRequest, toVersion } from '../types';
 
 // ----------------------------------------
-// Mock Data
-// ----------------------------------------
-
-const MOCK_VERSIONS: Version[] = [
-  {
-    versionUuid: 'ver-001',
-    gameUuid: 'game-001',
-    versionName: 'v1.2.0-stable',
-    description: 'Current Production Build',
-    status: 'stable',
-    createdAt: '2026-01-10T10:00:00Z',
-    updatedAt: '2026-01-10T10:00:00Z',
-  },
-  {
-    versionUuid: 'ver-002',
-    gameUuid: 'game-001',
-    versionName: 'v1.3.0-beta.1',
-    description: 'Internal testing stage',
-    status: 'beta',
-    createdAt: '2026-01-12T10:00:00Z',
-    updatedAt: '2026-01-12T10:00:00Z',
-  },
-  {
-    versionUuid: 'ver-003',
-    gameUuid: 'game-001',
-    versionName: 'v1.1.9-legacy',
-    description: 'Archived build',
-    status: 'legacy',
-    createdAt: '2026-01-05T10:00:00Z',
-    updatedAt: '2026-01-05T10:00:00Z',
-  },
-];
-
-// ----------------------------------------
-// Mock API Functions
+// API Functions
 // ----------------------------------------
 
 /**
- * 게임별 버전 목록 조회 (Mock)
- * TODO: 실제 API로 교체
+ * 게임별 버전 목록 조회
+ * GET /games/{gameUuid}/versions
  */
 export async function getVersions(gameUuid: string): Promise<Version[]> {
-  // Simulate network delay
-  await new Promise((resolve) => setTimeout(resolve, 300));
+  const response = await fetch(`${API_BASE_URL}/games/${gameUuid}/versions`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
 
-  return MOCK_VERSIONS.filter((v) => v.gameUuid === gameUuid);
+  if (!response.ok) {
+    if (response.status === 404) {
+      throw new Error('게임을 찾을 수 없습니다.');
+    }
+    throw new Error('버전 목록을 불러오는데 실패했습니다.');
+  }
+
+  const data: ApiVersionsResponse = await response.json();
+  return data.result.map(toVersion);
 }
 
 /**
- * 버전 상세 조회 (Mock)
- * TODO: 실제 API로 교체
+ * 버전 상세 조회
+ * GET /versions/{versionUuid}
  */
 export async function getVersion(versionUuid: string): Promise<Version | null> {
-  await new Promise((resolve) => setTimeout(resolve, 200));
+  const response = await fetch(`${API_BASE_URL}/versions/${versionUuid}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
 
-  return MOCK_VERSIONS.find((v) => v.versionUuid === versionUuid) ?? null;
+  if (!response.ok) {
+    if (response.status === 404) {
+      return null;
+    }
+    throw new Error('버전 정보를 불러오는데 실패했습니다.');
+  }
+
+  const data: ApiVersionResponse = await response.json();
+  return toVersion(data.result);
 }
+
+/**
+ * 버전 생성
+ * POST /games/{gameUuid}/versions
+ */
+export async function createVersion(
+  gameUuid: string,
+  req: CreateVersionRequest
+): Promise<Version> {
+  const body = toApiCreateVersionRequest(req);
+
+  const response = await fetch(`${API_BASE_URL}/games/${gameUuid}/versions`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    if (response.status === 400) {
+      throw new Error('유효하지 않은 요청입니다.');
+    }
+    if (response.status === 404) {
+      throw new Error('게임을 찾을 수 없습니다.');
+    }
+    throw new Error('버전 생성에 실패했습니다.');
+  }
+
+  const data: ApiVersionResponse = await response.json();
+  return toVersion(data.result);
+}
+
+// Legacy export for compatibility (can be removed later)
+export { createVersion as createVersionMock };
+

@@ -1,5 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Link, useOutletContext, useParams } from 'react-router-dom';
+import { Link, useLocation, useOutletContext, useParams } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
+
+import { versionKeys } from '@/features/version/hooks/keys';
+
 
 import { Button } from '@/components/ui/button';
 import type { SurveyShellContext } from '@/features/survey/components/SurveyShell';
@@ -21,6 +25,8 @@ function useSurveyShellContextSafe() {
 
 function SurveyDesignPage() {
   const params = useParams<{ gameUuid: string }>();
+  const location = useLocation();
+  const queryClient = useQueryClient();
   const shellContext = useSurveyShellContextSafe();
   const resetForm = useSurveyFormStore((state) => state.reset);
 
@@ -37,11 +43,17 @@ function SurveyDesignPage() {
   }, [resetForm]);
 
   const [isCompleted, setIsCompleted] = useState(false);
-  const [surveyUuid, setSurveyUuid] = useState<string | null>(null);
+  const [createdSurveyUuid, setCreatedSurveyUuid] = useState<string | null>(null);
 
   const handleComplete = (result: SubmitResult) => {
-    setSurveyUuid(result.surveyUuid);
+    setCreatedSurveyUuid(result.surveyUuid);
     setIsCompleted(true);
+
+    // 설문 생성 후 설문 목록 쿼리 무효화 (버전 상세 페이지 갱신용)
+    const versionUuid = location.state?.versionUuid;
+    if (versionUuid) {
+      queryClient.invalidateQueries({ queryKey: versionKeys.surveys(versionUuid) });
+    }
   };
 
   const isEditing = Boolean(shellContext?.survey);
@@ -80,10 +92,12 @@ function SurveyDesignPage() {
         </div>
       </div>
 
-      {isCompleted && surveyUuid ? (
+      {isCompleted && createdSurveyUuid ? (
+
         <SurveyCreated
           gameUuid={params.gameUuid}
-          surveyUuid={surveyUuid}
+          surveyUuid={createdSurveyUuid}
+
         />
       ) : (
         <SurveyDesignForm onComplete={handleComplete} />

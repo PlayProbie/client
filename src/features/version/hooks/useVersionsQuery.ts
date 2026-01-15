@@ -3,13 +3,21 @@ import { useQuery } from '@tanstack/react-query';
 import { getVersions } from '../api';
 import type { Version } from '../types';
 
-/** Version Query Keys */
-export const versionKeys = {
-  all: ['versions'] as const,
-  byGame: (gameUuid: string) => [...versionKeys.all, 'game', gameUuid] as const,
-  detail: (versionUuid: string) =>
-    [...versionKeys.all, 'detail', versionUuid] as const,
-};
+import { getVersion } from '../api';
+import { versionKeys } from './keys';
+
+
+/**
+ * 버전 상세 조회 훅
+ */
+export function useVersionDetailQuery(versionUuid: string) {
+  return useQuery({
+    queryKey: versionKeys.detail(versionUuid),
+    queryFn: () => getVersion(versionUuid),
+    enabled: !!versionUuid,
+  });
+}
+
 
 interface UseVersionsOptions {
   gameUuid?: string;

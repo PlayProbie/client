@@ -37,6 +37,7 @@ const INITIAL_STATE = {
     themePriorities: [],
     themeDetails: {},
     versionNote: '',
+    versionUuid: '',
   },
   surveyUrl: null,
 };

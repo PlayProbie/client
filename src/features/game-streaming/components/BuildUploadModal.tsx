@@ -25,6 +25,7 @@ interface BuildUploadModalProps {
   gameName: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  defaultVersion?: string;
 }
 
 const INITIAL_FORM_DATA: BuildUploadFormData = {
@@ -41,6 +42,7 @@ export function BuildUploadModal({
   gameName,
   open,
   onOpenChange,
+  defaultVersion,
 }: BuildUploadModalProps) {
   const { toast } = useToast();
   const startUpload = useUploadStore((state) => state.startUpload);
@@ -50,8 +52,17 @@ export function BuildUploadModal({
   const collapseToWidget = useUploadStore((state) => state.collapseToWidget);
   const expandedUploadId = useUploadStore((state) => state.expandedUploadId);
 
-  const [formData, setFormData] =
-    useState<BuildUploadFormData>(INITIAL_FORM_DATA);
+  const [formData, setFormData] = useState<BuildUploadFormData>(() => ({
+    ...INITIAL_FORM_DATA,
+    version: defaultVersion || '',
+  }));
+
+  // Update form data if defaultVersion changes when opening
+  useEffect(() => {
+    if (open && defaultVersion) {
+      setFormData((prev) => ({ ...prev, version: defaultVersion }));
+    }
+  }, [open, defaultVersion]);
   const [formError, setFormError] = useState<string | null>(null);
   const [uploadId, setUploadId] = useState<string | null>(null);
   const toastGuardRef = useRef<Set<string>>(new Set());

@@ -43,7 +43,10 @@ function GameSidebar({
       )}
     >
       {/* 게임 헤더 */}
-      <div className="border-b p-4">
+      <Link
+        to={`/games/${game.gameUuid}/overview`}
+        className="block border-b p-4 transition-colors hover:bg-muted/50"
+      >
         {/* 게임 커버 이미지 */}
         <div className="bg-muted mb-3 aspect-video w-full overflow-hidden rounded-lg">
           {game.coverUrl ? (
@@ -65,7 +68,7 @@ function GameSidebar({
         <h2 className="text-foreground truncate text-lg font-semibold">
           {game.gameName}
         </h2>
-      </div>
+      </Link>
 
       {/* 버전 섹션 */}
       <div className="flex items-center justify-between px-4 py-3">

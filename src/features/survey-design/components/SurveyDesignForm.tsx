@@ -82,6 +82,15 @@ function SurveyDesignForm({ className, onComplete }: SurveyDesignFormProps) {
     }
   }, [step, goToStep]);
 
+  // location.state에서 versionUuid가 전달되었으면 폼에 설정
+  useEffect(() => {
+    const navState = location.state as { versionUuid?: string } | undefined;
+    if (navState?.versionUuid && !form.getValues('versionUuid')) {
+      form.setValue('versionUuid', navState.versionUuid);
+      updateFormData({ versionUuid: navState.versionUuid });
+    }
+  }, [location.state, form, updateFormData]);
+
   // 폼 필드 변경 시 즉시 임시 저장
   useEffect(() => {
     updateFormData(watchedData as Partial<SurveyFormData>);
