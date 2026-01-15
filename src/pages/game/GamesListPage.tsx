@@ -48,6 +48,13 @@ export default function GamesListPage() {
     resetForm,
     setFormFromData,
     handleGenreToggle,
+    isAnalyzing,
+    showAnalysisStep,
+    analysisResult,
+    canAnalyze,
+    handleAnalyzeGame,
+    handleElementChange,
+    handleBackToInput,
   } = useGameForm();
 
   // Modal states
@@ -94,7 +101,28 @@ export default function GamesListPage() {
   };
 
   const handleCreate = () => {
+    // 일반 생성 요청 (이전 로직과 동일하지만 분석 결과가 있으면 포함되도록 수정 필요하면 여기서 처리)
+    // 하지만 현재는 onSubmit이 "확인 및 저장"이 아닌 경우에만 불리는 구조가 됨 (isEdit=true일때만)
+    // 혹은 이전 제출 버튼을 누를때.
+    // 여기서는 formData 상태 그대로 보냄.
     createMutation.mutate(formData, {
+      onSuccess: () => {
+        setIsCreateModalOpen(false);
+        resetForm();
+      },
+    });
+  };
+
+  /** AI 분석 결과 포함하여 생성 요청 */
+  const handleAnalysisSuccess = () => {
+    if (!analysisResult) return;
+
+    const dataToSubmit = {
+      ...formData,
+      extractedElements: JSON.stringify(analysisResult.elements),
+    };
+
+    createMutation.mutate(dataToSubmit, {
       onSuccess: () => {
         setIsCreateModalOpen(false);
         resetForm();
@@ -185,6 +213,15 @@ export default function GamesListPage() {
           onSubmit={handleCreate}
           isSubmitting={createMutation.isPending}
           submitLabel="생성"
+          isAnalyzing={isAnalyzing}
+          showAnalysisStep={showAnalysisStep}
+          analysisResult={analysisResult}
+          canAnalyze={canAnalyze}
+          onAnalyzeGame={handleAnalyzeGame}
+          onElementChange={handleElementChange}
+          handleAnalysisConfirm={handleAnalysisSuccess}
+          onBackToInput={handleBackToInput}
+          isEdit={false}
         />
       </div>
     );
@@ -226,6 +263,15 @@ export default function GamesListPage() {
         onSubmit={handleCreate}
         isSubmitting={createMutation.isPending}
         submitLabel="생성"
+        isAnalyzing={isAnalyzing}
+        showAnalysisStep={showAnalysisStep}
+        analysisResult={analysisResult}
+        canAnalyze={canAnalyze}
+        onAnalyzeGame={handleAnalyzeGame}
+        onElementChange={handleElementChange}
+        handleAnalysisConfirm={handleAnalysisSuccess}
+        onBackToInput={handleBackToInput}
+        isEdit={false}
       />
 
       {/* Edit Modal */}
@@ -240,6 +286,14 @@ export default function GamesListPage() {
         onSubmit={handleUpdate}
         isSubmitting={updateMutation.isPending}
         submitLabel="저장"
+        isAnalyzing={false}
+        showAnalysisStep={false}
+        analysisResult={null}
+        canAnalyze={false}
+        onAnalyzeGame={() => {}}
+        onElementChange={() => {}}
+        handleAnalysisConfirm={() => {}}
+        isEdit={true}
       />
 
       {/* Delete Confirmation Modal */}
