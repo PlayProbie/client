@@ -26,10 +26,6 @@ interface StatusWidgetHeaderProps {
   onAction?: () => void;
   /** 추가 액션 라벨 */
   actionLabel?: string;
-  /** 완료 지우기 표시 여부 */
-  showClearCompleted?: boolean;
-  /** 완료 지우기 클릭 */
-  onClearCompleted?: () => void;
   /** 추가 액션 버튼 */
   extraActions?: ReactNode;
 }
@@ -44,8 +40,6 @@ export function StatusWidgetHeader({
   showAction,
   onAction,
   actionLabel,
-  showClearCompleted,
-  onClearCompleted,
   extraActions,
 }: StatusWidgetHeaderProps) {
   return (
@@ -58,18 +52,6 @@ export function StatusWidgetHeader({
       </div>
 
       <div className="flex items-center gap-1">
-        {/* 완료 지우기 */}
-        {showClearCompleted && onClearCompleted && (
-          <Button
-            size="sm"
-            variant="ghost"
-            className="h-6 px-2 text-xs"
-            onClick={onClearCompleted}
-          >
-            완료 지우기
-          </Button>
-        )}
-
         {/* 추가 액션 (e.g. 닫기) */}
         {showAction && onAction && actionLabel && (
           <Button

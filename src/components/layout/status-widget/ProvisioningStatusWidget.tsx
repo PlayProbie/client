@@ -26,11 +26,9 @@ export function ProvisioningStatusWidget() {
     isVisible,
     hasActiveProvisioning,
     activeCount,
-    completedCount,
     toggleMinimize,
     hideWidget,
     removeItem,
-    clearCompleted,
   } = useProvisioningStore(
     useShallow((state) => ({
       items: state.items,
@@ -78,13 +76,9 @@ export function ProvisioningStatusWidget() {
         }
         isMinimized={isMinimized}
         onToggleMinimize={toggleMinimize}
-        // Action (Close/Hide Widget)
-        showAction={true} // 항상 닫기 버튼 표시 (숨기기 기능)
+        showAction={true}
         onAction={hideWidget}
         actionLabel="닫기"
-        // Clear Completed (Optional explicit clear)
-        showClearCompleted={completedCount > 0}
-        onClearCompleted={clearCompleted}
       />
 
       {/* Content (최소화 상태가 아닐 때만) */}
