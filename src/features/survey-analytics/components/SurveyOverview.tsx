@@ -12,6 +12,7 @@ import {
 } from '../utils';
 import { ClusterDemographics } from './ClusterDemographics';
 import { GEQRadarChart } from './GEQRadarChart';
+import { SurveySummaryCard } from './SurveySummaryCard';
 
 type QuestionAnalysisState = {
   [questionId: number]: QuestionAnalysisResult;
@@ -23,6 +24,7 @@ type QuestionAnalysisData = {
   isLoading: boolean;
   isError: boolean;
   totalParticipants?: number;
+  surveySummary?: string;
 };
 
 type SurveyOverviewProps = {
@@ -59,6 +61,11 @@ function SurveyOverview({ summary, questionAnalysis }: SurveyOverviewProps) {
 
   return (
     <div className="space-y-6">
+      {/* AI 종합 평가 카드 */}
+      {!isLoading && questionAnalysis.surveySummary && (
+        <SurveySummaryCard summary={questionAnalysis.surveySummary} />
+      )}
+
       {/* 요약 통계 카드 */}
       <div className="grid grid-cols-3 gap-4">
         <Card>

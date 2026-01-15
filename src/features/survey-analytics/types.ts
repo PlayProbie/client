@@ -32,7 +32,7 @@ export interface ApiSurveySession {
 
 /** [API] 질문-답변 발췌 */
 export interface ApiQuestionAnswerExcerpt {
-  q_type: InterviewLogQType;
+  qtype: InterviewLogQType;
   question_text: string;
   answer_text: string;
 }

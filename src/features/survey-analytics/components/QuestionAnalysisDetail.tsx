@@ -84,23 +84,26 @@ function QuestionAnalysisDetail({ data }: QuestionAnalysisDetailProps) {
       </Card>
 
       {/* 중단: 클러스터 선택 탭 */}
-      <div>
-        <h3 className="mb-3 text-sm font-semibold text-foreground">
-          질문별 응답 요약 (의견 클러스터링)
-        </h3>
-        <ClusterSelector
-          clusters={data.clusters}
-          selectedClusterIndex={safeClusterIndex}
-          onSelectCluster={setSelectedClusterIndex}
-        />
-      </div>
+      <Card>
+        <CardHeader className="pb-3">
+          <h3 className="text-sm font-semibold text-foreground">
+            질문별 응답 요약 (의견 클러스터링)
+          </h3>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <ClusterSelector
+            clusters={data.clusters}
+            selectedClusterIndex={safeClusterIndex}
+            onSelectCluster={setSelectedClusterIndex}
+          />
+        </CardContent>
+      </Card>
 
       {/* 하단: 선택된 클러스터 상세 */}
       {selectedCluster && (
         <>
           <ClusterDetailPanel
             cluster={selectedCluster}
-            clusterIndex={safeClusterIndex}
             profiles={data.answer_profiles}
           />
 

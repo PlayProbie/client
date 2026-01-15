@@ -9,6 +9,7 @@ interface AnalyticsResponse {
   total_questions: number;
   completed_questions: number;
   total_participants: number;
+  survey_summary?: string;
 }
 
 /**
@@ -19,7 +20,7 @@ export async function getQuestionAnalysis(
   surveyUuid: string,
   onMessage: (data: QuestionResponseAnalysisWrapper) => void,
   onError?: (error: Error) => void,
-  onComplete?: (totalParticipants: number) => void
+  onComplete?: (totalParticipants: number, surveySummary?: string) => void
 ): Promise<() => void> {
   try {
     // REST API 호출 (Authorization 헤더는 글로벌 인터셉터가 자동 추가)
@@ -41,7 +42,7 @@ export async function getQuestionAnalysis(
     }
 
     // 모든 상태에서 완료 처리 (IN_PROGRESS는 서버에서 반환하지 않음)
-    onComplete?.(data.total_participants || 0);
+    onComplete?.(data.total_participants || 0, data.survey_summary);
 
     return () => {}; // cleanup (REST는 cleanup 불필요)
   } catch (error) {

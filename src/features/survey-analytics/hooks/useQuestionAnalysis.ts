@@ -28,6 +28,7 @@ export function useQuestionAnalysis({
     error: null as Error | null,
     status: 'idle' as 'idle' | 'loading' | 'complete' | 'error',
     totalParticipants: 0,
+    surveySummary: '' as string,
   });
 
   // ref를 사용해 중복 요청 방지 (React StrictMode 대응)
@@ -66,7 +67,7 @@ export function useQuestionAnalysis({
     isRequestingRef.current = true;
 
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setState({ data: {}, error: null, status: 'loading', totalParticipants: 0 });
+    setState({ data: {}, error: null, status: 'loading', totalParticipants: 0, surveySummary: '' });
 
     let cleanupFn: (() => void) | null = null;
     let isCancelled = false;
@@ -96,8 +97,8 @@ export function useQuestionAnalysis({
         // 에러 시에는 재시도할 수 있도록 requestedSurveyUuidRef 초기화
         requestedSurveyUuidRef.current = null;
       },
-      (totalParticipants: number) => {
-        setState((prev) => ({ ...prev, status: 'complete', totalParticipants }));
+      (totalParticipants: number, surveySummary?: string) => {
+        setState((prev) => ({ ...prev, status: 'complete', totalParticipants, surveySummary: surveySummary || '' }));
         isRequestingRef.current = false;
         // 성공 완료 시에는 requestedSurveyUuidRef 유지 (중복 요청 방지)
       }
@@ -122,6 +123,7 @@ export function useQuestionAnalysis({
     error: state.error,
     isComplete,
     totalParticipants: state.totalParticipants,
+    surveySummary: state.surveySummary,
   };
 }
 

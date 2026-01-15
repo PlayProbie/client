@@ -37,6 +37,7 @@ function SurveyAnalyticsPage() {
     isLoading: isAnalysisLoading,
     isError: isAnalysisError,
     totalParticipants,
+    surveySummary,
   } = useQuestionAnalysis({
     surveyUuid: effectiveSurveyUuid,
     enabled: !!effectiveSurveyUuid,
@@ -51,6 +52,7 @@ function SurveyAnalyticsPage() {
     isLoading: isAnalysisLoading,
     isError: isAnalysisError,
     totalParticipants,
+    surveySummary,
   };
 
   return (
