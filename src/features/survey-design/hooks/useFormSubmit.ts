@@ -64,7 +64,7 @@ class SurveySubmitError extends Error {
  * - 서버 측 트랜잭션/롤백 API가 있을 경우 확장 가능
  */
 export function useFormSubmit(options?: UseFormSubmitOptions) {
-  const { setSurveyUrl } = useSurveyFormStore();
+  const { setSurveyUrl, reset } = useSurveyFormStore();
   const queryClient = useQueryClient();
 
   const { gameUuid } = useParams<{ gameUuid?: string }>();
@@ -172,6 +172,10 @@ export function useFormSubmit(options?: UseFormSubmitOptions) {
         (Array.isArray(previousSurveys) && previousSurveys.length === 0);
 
       queryClient.invalidateQueries({ queryKey: surveyKeys.all });
+
+      // 설문 생성 완료 후 폼 스토어 초기화
+      reset();
+
       options?.onSuccess?.({ surveyUrl, surveyUuid, isFirstSurvey });
     },
     onError: (error: Error) => {

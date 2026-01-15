@@ -20,9 +20,8 @@ const DEFAULT_QUESTION_COUNT = 3;
  * - useQuestionManager를 통해 공통 질문 관리 로직 재사용
  */
 function useQuestionGenerate() {
-  const { formData, updateFormData } = useSurveyFormStore();
+  const { updateFormData } = useSurveyFormStore();
   const { setValue } = useFormContext<SurveyFormData>();
-
 
   // 공통 질문 관리 로직
   const manager = useQuestionManager();
@@ -40,6 +39,7 @@ function useQuestionGenerate() {
     mutationFn: async (
       params: Pick<ApiGenerateAiQuestionsRequest, 'count'>
     ) => {
+      const { formData } = useSurveyFormStore.getState();
       const {
         gameName,
         gameGenre,
@@ -48,6 +48,12 @@ function useQuestionGenerate() {
         themePriorities,
         themeDetails,
       } = formData;
+
+      if (!gameGenre?.length) {
+        throw new Error(
+          '게임 장르 정보가 없습니다. 페이지를 새로고침 해주세요.'
+        );
+      }
 
       // themeDetails에서 themePriorities에 있는 카테고리만 포함
       const cleanedThemeDetails =
@@ -62,7 +68,7 @@ function useQuestionGenerate() {
       return postAiQuestions({
         game_name: gameName || '',
         game_context: gameContext || '',
-        game_genre: gameGenre || [],
+        game_genre: gameGenre,
         survey_name: surveyName || '',
         theme_priorities: themePriorities || [],
         theme_details: cleanedThemeDetails,
@@ -76,6 +82,7 @@ function useQuestionGenerate() {
 
   // AI 질문 생성 API 호출
   const generateQuestions = useCallback(async () => {
+    const { formData } = useSurveyFormStore.getState();
     const { gameName, gameGenre, surveyName, themePriorities } = formData;
 
     // 필수 데이터 확인 (themePriorities가 1개 이상 있어야 함)
@@ -89,7 +96,7 @@ function useQuestionGenerate() {
     }
 
     setIsLocalGenerating(true);
-    
+
     try {
       const response = await generateMutateAsync({
         count: DEFAULT_QUESTION_COUNT,
@@ -114,7 +121,7 @@ function useQuestionGenerate() {
       // onSettled에서 처리하지만 안전장치로 한 번 더
       setIsLocalGenerating(false);
     }
-  }, [formData, generateMutateAsync, updateFormData, manager, setValue]);
+  }, [generateMutateAsync, updateFormData, manager, setValue]);
 
   // 페이지 렌더링 시 질문이 없으면 자동으로 API 호출
   useEffect(() => {
@@ -137,9 +144,12 @@ function useQuestionGenerate() {
       .finally(() => {
         initialGenerateRef.current = false;
       });
-  }, [manager.questions.length, isMutationPending, isLocalGenerating, generateQuestions]);
-
-
+  }, [
+    manager.questions.length,
+    isMutationPending,
+    isLocalGenerating,
+    generateQuestions,
+  ]);
 
   // 질문 재생성
   const handleRegenerate = useCallback(async () => {
@@ -147,6 +157,7 @@ function useQuestionGenerate() {
   }, [generateQuestions]);
 
   const handleAddQuestion = useCallback(async () => {
+    const { formData } = useSurveyFormStore.getState();
     const { gameName, gameGenre, surveyName, themePriorities } = formData;
 
     if (
@@ -172,7 +183,7 @@ function useQuestionGenerate() {
     } finally {
       setIsLocalGenerating(false);
     }
-  }, [formData, generateMutateAsync, manager]);
+  }, [generateMutateAsync, manager]);
 
   return {
     // 공통 상태 (from manager)

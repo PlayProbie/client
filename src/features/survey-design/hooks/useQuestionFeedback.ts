@@ -19,8 +19,6 @@ const RETRY_COUNT = 3;
  * useQuestionFeedback - 질문 피드백 관리
  */
 function useQuestionFeedback() {
-  const { formData } = useSurveyFormStore();
-
   // 질문별 피드백 (메모리에서만 관리 - API 응답 캐시)
   const [feedbackMap, setFeedbackMap] = useState<
     Record<string, QuestionFeedbackItem>
@@ -32,6 +30,7 @@ function useQuestionFeedback() {
   // 피드백 요청 mutation
   const { mutateAsync, isPending } = useMutation({
     mutationFn: async (question: string): Promise<QuestionFeedbackItem> => {
+      const { formData } = useSurveyFormStore.getState();
       const {
         gameName,
         gameGenre,
@@ -41,10 +40,17 @@ function useQuestionFeedback() {
         themeDetails,
       } = formData;
 
+      // gameGenre가 없으면 에러 발생 방지
+      if (!gameGenre?.length) {
+        throw new Error(
+          '게임 장르 정보가 없습니다. 페이지를 새로고침 해주세요.'
+        );
+      }
+
       const response = await postQuestionFeedback({
         game_name: gameName || '',
         game_context: gameContext || '',
-        game_genre: gameGenre || [],
+        game_genre: gameGenre,
         survey_name: surveyName || '',
         theme_priorities: themePriorities || [],
         theme_details: themeDetails,

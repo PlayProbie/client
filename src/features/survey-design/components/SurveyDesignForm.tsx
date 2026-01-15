@@ -36,7 +36,7 @@ function SurveyDesignForm({ className, onComplete }: SurveyDesignFormProps) {
   const { step } = useParams<{ step?: string }>();
   const { toast } = useToast();
 
-  const { currentStep, goToStep, formData, updateFormData, reset } =
+  const { currentStep, goToStep, formData, updateFormData } =
     useSurveyFormStore();
 
   // StrictMode 중복 제출 방지 ref
@@ -87,13 +87,6 @@ function SurveyDesignForm({ className, onComplete }: SurveyDesignFormProps) {
     updateFormData(watchedData as Partial<SurveyFormData>);
   }, [watchedData, updateFormData]);
 
-  // 컴포넌트 언마운트 시 (설문 생성 완료 등) 스토어 리셋
-  useEffect(() => {
-    return () => {
-      reset();
-    };
-  }, [reset]);
-
   /** 공통 경로 생성 함수 (쿼리 파라미터 유지) */
   const getStepPath = (stepNum: number, actor?: 'user' | 'ai') => {
     const actorValue = actor || searchParams.get('actor');
@@ -142,7 +135,9 @@ function SurveyDesignForm({ className, onComplete }: SurveyDesignFormProps) {
   const isLastStep = currentStep === SURVEY_FORM_STEPS.length - 1;
 
   // 질문 생성 방식 선택 상태 (Step 1)
-  const [generationMethod, setGenerationMethod] = useState<'ai' | 'manual' | 'flow' | null>(null);
+  const [generationMethod, setGenerationMethod] = useState<
+    'ai' | 'manual' | 'flow' | null
+  >(null);
 
   const createHandleGenMethodNext = () => {
     const themePriorities = form.getValues('themePriorities');
