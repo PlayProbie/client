@@ -21,6 +21,13 @@ export function ChatMessage({
   ...props
 }: ChatMessageProps) {
   const isAI = message.type === 'ai';
+  // 스트리밍 중인 메시지 감지 (id가 'ai-streaming-'으로 시작)
+  const isStreaming = message.id.startsWith('ai-streaming-');
+
+  // 내용이 없는 AI 메시지는 렌더링하지 않음 (타이핑 인디케이터는 ChatMessageList에서 표시)
+  if (isAI && !message.content) {
+    return null;
+  }
 
   return (
     <div
@@ -59,8 +66,8 @@ export function ChatMessage({
           </p>
         </div>
 
-        {/* AI 메시지 피드백 버튼 */}
-        {isAI && (
+        {/* AI 메시지 피드백 버튼 - 스트리밍 중에는 숨김 */}
+        {isAI && !isStreaming && (
           <ChatFeedback
             messageContent={message.content}
             className="mt-1 ml-auto"
@@ -77,3 +84,4 @@ export function ChatMessage({
     </div>
   );
 }
+
