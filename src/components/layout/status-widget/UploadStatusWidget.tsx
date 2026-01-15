@@ -29,7 +29,6 @@ export function UploadStatusWidget() {
   const toggleMinimize = useUploadStore((state) => state.toggleMinimize);
   const cancelUpload = useUploadStore((state) => state.cancelUpload);
   const removeUpload = useUploadStore((state) => state.removeUpload);
-  const clearCompleted = useUploadStore((state) => state.clearCompleted);
   const startUpload = useUploadStore((state) => state.startUpload);
   const expandToModal = useUploadStore((state) => state.expandToModal);
 
@@ -60,10 +59,6 @@ export function UploadStatusWidget() {
       'uploading_to_s3',
       'completing_upload',
     ].includes(u.state.step)
-  ).length;
-
-  const completedCount = uploads.filter(
-    (u) => u.state.step === 'success' || u.state.step === 'error'
   ).length;
 
   // 재시도 핸들러
@@ -110,8 +105,6 @@ export function UploadStatusWidget() {
         }
         isMinimized={isMinimized}
         onToggleMinimize={toggleMinimize}
-        showClearCompleted={completedCount > 0}
-        onClearCompleted={clearCompleted}
         extraActions={
           hasActiveUploads ? (
             <Button

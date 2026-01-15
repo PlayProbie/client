@@ -1,8 +1,6 @@
-import { useQuery } from '@tanstack/react-query';
 import { Lightbulb, Rocket, Users } from 'lucide-react';
 import { useEffect } from 'react';
 import { type Control, useWatch } from 'react-hook-form';
-import { useParams } from 'react-router-dom';
 
 import { Badge } from '@/components/ui/Badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -16,9 +14,9 @@ import {
 import { Input } from '@/components/ui/Input';
 import { Spinner } from '@/components/ui/loading';
 import { Textarea } from '@/components/ui/Textarea';
-import { getGame } from '@/features/game/api/get-game';
 import { type GameGenre, GameGenreConfig } from '@/features/game/types';
 import { cn } from '@/lib/utils';
+import { useCurrentGameStore } from '@/stores/useCurrentGameStore';
 
 import { useSurveyFormStore } from '../../store/useSurveyFormStore';
 import type { SurveyFormData, TestStage, ThemeCategory } from '../../types';
@@ -78,24 +76,16 @@ const TEST_STAGE_CONFIG = {
 } as const;
 
 function StepBasicInfo({ control }: StepBasicInfoProps) {
-  const { gameUuid } = useParams<{ gameUuid: string }>();
-
   // testStage 값 감시 (테마 선택 표시 여부 결정)
   const testStage = useWatch({ control, name: 'testStage' });
 
-  // 게임 정보 로드
-  const { data: gameData, isLoading: isLoadingGame } = useQuery({
-    queryKey: ['game', gameUuid],
-    queryFn: () => getGame(gameUuid!),
-    enabled: !!gameUuid,
-  });
-
-  const game = gameData;
+  // 게임 정보 가져오기
+  const { currentGame: game, isLoading: isLoadingGame } = useCurrentGameStore();
 
   // store 접근
   const { updateFormData } = useSurveyFormStore();
 
-  // 게임 정보가 로드되면 store에 저장
+  // 게임 정보가 있으면 survey form store에 저장
   useEffect(() => {
     if (game) {
       updateFormData({
