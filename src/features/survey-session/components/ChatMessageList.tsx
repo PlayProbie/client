@@ -3,9 +3,9 @@
  * 스크롤 가능한 메시지 영역
  */
 
+import { Sparkles } from 'lucide-react';
 import { type ComponentProps, useEffect, useRef } from 'react';
 
-import { Spinner } from '@/components/ui/loading';
 import { cn } from '@/lib/utils';
 
 import type { ChatMessageData } from '../types';
@@ -18,11 +18,15 @@ type ChatMessageListProps = ComponentProps<'div'> & {
 
 export function ChatMessageList({
   messages,
-  isLoading,
+  isLoading: _isLoading,
   className,
   ...props
 }: ChatMessageListProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // 마지막 메시지가 사용자 메시지인지 확인 (AI 응답 대기 중)
+  const lastMessage = messages[messages.length - 1];
+  const isWaitingForAI = lastMessage?.type === 'user';
 
   // 새 메시지 시 자동 스크롤
   useEffect(() => {
@@ -44,17 +48,16 @@ export function ChatMessageList({
         />
       ))}
 
-      {/* 로딩 인디케이터 */}
-      {isLoading && (
+      {/* AI 타이핑 인디케이터 - 마지막이 사용자 메시지일 때 표시 */}
+      {isWaitingForAI && (
         <div className="flex justify-start gap-3">
           <div className="bg-primary/10 text-primary flex size-8 shrink-0 items-center justify-center rounded-full">
-            <Spinner size="sm" />
+            <Sparkles className="size-4" />
           </div>
-          <div className="bg-muted flex items-center gap-2 rounded-2xl rounded-tl-none px-4 py-3">
-            <Spinner size="sm" />
-            <span className="text-muted-foreground text-sm">
-              응답 대기 중...
-            </span>
+          <div className="bg-muted flex items-center gap-1 rounded-2xl rounded-tl-none px-4 py-3">
+            <span className="bg-foreground/60 size-2 animate-bounce rounded-full [animation-delay:0ms]" />
+            <span className="bg-foreground/60 size-2 animate-bounce rounded-full [animation-delay:150ms]" />
+            <span className="bg-foreground/60 size-2 animate-bounce rounded-full [animation-delay:300ms]" />
           </div>
         </div>
       )}
@@ -64,3 +67,4 @@ export function ChatMessageList({
     </div>
   );
 }
+

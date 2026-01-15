@@ -13,7 +13,6 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@/components/ui';
 import { PageSpinner } from '@/components/ui';
-
 import {
   BuildsTable,
   BuildUploadModal,

@@ -1,9 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { getVersions } from '../api';
-import type { Version } from '../types';
-
 import { getVersion } from '../api';
+import type { Version } from '../types';
 import { versionKeys } from './keys';
 
 

@@ -11,16 +11,16 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import { useGamesQuery } from '@/features/game-streaming';
-import { GameFormModal, useCreateGameMutation, useGameForm } from '@/features/game';
-import {
-  useVersionsQuery,
-  useCreateVersionMutation,
-  VersionFormModal,
-  type CreateVersionRequest,
-} from '@/features/version';
-import { useWorkspaceMembers, toMember } from '@/features/workspace';
 import { TabValue } from '@/components/layout/types';
+import { GameFormModal, useCreateGameMutation, useGameForm } from '@/features/game';
+import { useGamesQuery } from '@/features/game-streaming';
+import {
+  type CreateVersionRequest,
+  useCreateVersionMutation,
+  useVersionsQuery,
+  VersionFormModal,
+} from '@/features/version';
+import { toMember,useWorkspaceMembers } from '@/features/workspace';
 import { useCurrentWorkspaceStore, useSettingStore } from '@/stores';
 
 import EmptyGamePrompt from './EmptyGamePrompt';
@@ -74,10 +74,9 @@ function DualSidebarLayout({ children }: DualSidebarLayoutProps) {
     enabled: !!selectedGameUuid,
   });
 
-  // 선택된 버전
-  const [selectedVersionUuid, setSelectedVersionUuid] = useState<string | undefined>(
-    routeVersionUuid
-  );
+  // 선택된 버전 - URL에서 직접 가져오거나 로컬 상태 사용
+  const [localVersionUuid, setLocalVersionUuid] = useState<string | undefined>(undefined);
+  const selectedVersionUuid = routeVersionUuid || localVersionUuid;
 
   // 모달 상태
   const [isGameModalOpen, setIsGameModalOpen] = useState(false);
@@ -110,13 +109,6 @@ function DualSidebarLayout({ children }: DualSidebarLayoutProps) {
     }
   }, [currentWorkspace, openSettings, setActiveTab]);
 
-  // URL 변경 시 버전 선택 동기화
-  useEffect(() => {
-    if (routeVersionUuid) {
-      setSelectedVersionUuid(routeVersionUuid);
-    }
-  }, [routeVersionUuid]);
-
   // 핸들러
   const handleGameSelect = useCallback(
     (gameUuid: string) => {
@@ -140,7 +132,7 @@ function DualSidebarLayout({ children }: DualSidebarLayoutProps) {
   }, [createGameMutation, gameFormData, resetGameForm]);
 
   const handleVersionSelect = useCallback((versionUuid: string) => {
-    setSelectedVersionUuid(versionUuid);
+    setLocalVersionUuid(versionUuid);
   }, []);
 
   const handleAddVersion = useCallback(() => {

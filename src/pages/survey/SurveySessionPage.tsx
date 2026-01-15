@@ -40,8 +40,6 @@ function SurveySessionPage() {
   const {
     isReady,
     isComplete,
-    isLoading,
-    isStreaming,
     error,
     messages,
     sendAnswer,
@@ -95,7 +93,7 @@ function SurveySessionPage() {
       {/* 메시지 목록 */}
       <ChatMessageList
         messages={messages}
-        isLoading={isLoading && !isStreaming}
+        isLoading={false}
         className="flex-1"
       />
 

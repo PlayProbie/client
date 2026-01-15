@@ -10,7 +10,7 @@ import { useEffect } from 'react';
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@/components/ui';
 import { Skeleton } from '@/components/ui/loading/Skeleton';
 import { StreamingResourceStatus, useStreamingResource } from '@/features/game-streaming-survey';
-import type { SurveyStatus, SurveyStatusValue } from '@/features/game-streaming-survey/types';
+import type { SurveyStatusValue } from '@/features/game-streaming-survey/types';
 import {
   ProvisioningStatusStep,
   SurveyLifecycleActions,

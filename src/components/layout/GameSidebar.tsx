@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom';
 
 import { Button } from '@/components/ui';
 import { ScrollArea } from '@/components/ui/ScrollArea';
-import { cn } from '@/lib/utils';
 import type { Version } from '@/features/version';
+import { cn } from '@/lib/utils';
 
 interface GameInfo {
   gameUuid: string;

@@ -57,12 +57,16 @@ export function BuildUploadModal({
     version: defaultVersion || '',
   }));
 
-  // Update form data if defaultVersion changes when opening
+  // 모달이 열릴 때 defaultVersion으로 폼 업데이트
+  const prevOpenRef = useRef(open);
   useEffect(() => {
-    if (open && defaultVersion) {
+    if (open && !prevOpenRef.current && defaultVersion) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFormData((prev) => ({ ...prev, version: defaultVersion }));
     }
+    prevOpenRef.current = open;
   }, [open, defaultVersion]);
+
   const [formError, setFormError] = useState<string | null>(null);
   const [uploadId, setUploadId] = useState<string | null>(null);
   const toastGuardRef = useRef<Set<string>>(new Set());

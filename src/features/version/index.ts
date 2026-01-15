@@ -4,15 +4,15 @@
 
 // Types
 export type {
+  ApiCreateVersionRequest,
+  ApiVersion,
+  CreateVersionRequest,
   Version,
   VersionStatus,
-  CreateVersionRequest,
-  ApiVersion,
-  ApiCreateVersionRequest,
 } from './types';
 
 // Transformers
-export { toVersion, toApiCreateVersionRequest } from './types';
+export { toApiCreateVersionRequest,toVersion } from './types';
 
 // API
 export * from './api';

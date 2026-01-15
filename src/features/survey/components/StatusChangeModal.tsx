@@ -33,6 +33,18 @@ const STATUS_CONTENT: Record<
     requiresAck: boolean;
   }
 > = {
+  DRAFT: {
+    title: '설문을 초안으로 변경하시겠습니까?',
+    description: '초안 상태로 변경하면 문항을 수정할 수 있습니다.',
+    confirmLabel: '초안으로 변경',
+    confirmVariant: 'default',
+    checklist: [
+      '설문이 비활성화됩니다.',
+      '문항을 수정할 수 있습니다.',
+      '테스터에게 링크가 공개되지 않습니다.',
+    ],
+    requiresAck: false,
+  },
   ACTIVE: {
     title: '설문을 시작하시겠습니까?',
     description: '설문이 시작되면 문항 수정이 제한됩니다.',

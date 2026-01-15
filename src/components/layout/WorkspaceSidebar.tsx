@@ -1,9 +1,8 @@
 import { Building2, Users } from 'lucide-react';
-import { Link } from 'react-router-dom';
 
 import { ScrollArea } from '@/components/ui/ScrollArea';
-import { cn } from '@/lib/utils';
 import type { Member, Workspace } from '@/features/workspace';
+import { cn } from '@/lib/utils';
 
 interface WorkspaceSidebarProps {
   workspace: Workspace | null;
