@@ -126,8 +126,8 @@ export function useChatSession({
     onDone: (_turnNum) => {
       // 말풍선 마무리 -> 큐에 추가
       enqueueFinalize();
-      // setStreaming(false)는 큐 처리기가 담당하므로 여기선 생략 가능하나, 
-      // 큐 처리 완료 전까지 isStreaming이 true여야 하므로 store의 로직에 맡김
+      // done 이벤트 시점에 로딩 해제 (question 이벤트 없이 스트리밍만 오는 경우 대비)
+      setLoading(false);
     },
     onInterviewComplete: () => {
       enqueueFinalize();
