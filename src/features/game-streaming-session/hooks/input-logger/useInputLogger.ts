@@ -11,14 +11,13 @@
  */
 import { useEffect, useRef } from 'react';
 
-import { useDomInputListeners } from '@/lib/msw/hooks/useDomInputListeners';
-
 import { DEFAULT_BATCH_SIZE } from './constants';
 import type {
   MouseMoveState,
   UseInputLoggerOptions,
   UseInputLoggerReturn,
 } from './types';
+import { useDomInputListeners } from './useDomInputListeners';
 import { useVisibilityListeners } from './useInputEventListeners';
 import { useInputFilters } from './useInputFilters';
 import { useInputLogStore } from './useInputLogStore';
@@ -34,6 +33,7 @@ export function useInputLogger(
     onLogBatch,
     batchSize = DEFAULT_BATCH_SIZE,
     useDomListeners = false,
+    resolveSegmentIds,
   } = options;
 
   // enabled를 ref로 추적 (SDK 필터에서 최신 값 참조)
@@ -57,6 +57,9 @@ export function useInputLogger(
     addLog,
     clearLogs,
     getLogsBySegment,
+    getSegmentIdsWithLogs,
+    clearLogsBySegment,
+    drainLogsBySegment,
     currentSegmentId,
     currentSegmentIdRef,
   } = useInputLogStore({
@@ -77,11 +80,18 @@ export function useInputLogger(
       enabledRef,
       currentSegmentIdRef,
       getMediaTime,
+      resolveSegmentIds,
       addLog,
     });
 
   // Visibility 이벤트 리스너
-  useVisibilityListeners(enabled, currentSegmentIdRef, getMediaTime, addLog);
+  useVisibilityListeners(
+    enabled,
+    currentSegmentIdRef,
+    getMediaTime,
+    resolveSegmentIds,
+    addLog
+  );
 
   // DOM 직접 이벤트 리스너 (Mock 환경용)
   useDomInputListeners({
@@ -89,6 +99,7 @@ export function useInputLogger(
     useDomListeners,
     currentSegmentIdRef,
     getMediaTime,
+    resolveSegmentIds,
     addLog,
     lastMouseMoveRef,
     lastWheelRef,
@@ -99,6 +110,9 @@ export function useInputLogger(
     logCount,
     clearLogs,
     getLogsBySegment,
+    getSegmentIdsWithLogs,
+    clearLogsBySegment,
+    drainLogsBySegment,
     currentSegmentId,
     createKeyboardFilter,
     createMouseFilter,
