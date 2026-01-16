@@ -23,6 +23,8 @@ export interface UseInputLoggerOptions {
    * Mock 스트림 환경에서 테스트할 때 유용
    */
   useDomListeners?: boolean;
+  /** media_time 기준 활성 세그먼트 ID resolver (오버랩 지원) */
+  resolveSegmentIds?: (mediaTimeMs: number) => string[];
 }
 
 export interface UseInputLoggerReturn {
@@ -32,8 +34,14 @@ export interface UseInputLoggerReturn {
   logCount: number;
   /** 로그 초기화 */
   clearLogs: () => void;
+  /** 세그먼트별 로그 초기화 */
+  clearLogsBySegment: (segmentId: string) => void;
   /** 세그먼트별 로그 조회 */
   getLogsBySegment: (segmentId: string) => InputLog[];
+  /** 로그가 있는 세그먼트 ID 목록 */
+  getSegmentIdsWithLogs: () => string[];
+  /** 세그먼트별 로그 가져오고 비우기 */
+  drainLogsBySegment: (segmentId: string) => InputLog[];
   /** 현재 세그먼트 ID */
   currentSegmentId: string;
   /** StreamClient inputFilters용 키보드 필터 */
