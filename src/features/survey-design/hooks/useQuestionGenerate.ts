@@ -2,6 +2,7 @@ import { useMutation } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 
+import { useCurrentGameStore } from '@/stores/useCurrentGameStore';
 import { postAiQuestions } from '../api';
 import { useSurveyFormStore } from '../store/useSurveyFormStore';
 import type {
@@ -22,6 +23,7 @@ const DEFAULT_QUESTION_COUNT = 3;
 function useQuestionGenerate() {
   const { updateFormData } = useSurveyFormStore();
   const { setValue } = useFormContext<SurveyFormData>();
+  const { currentGame } = useCurrentGameStore(); // Fallback용 게임 정보
 
   // 공통 질문 관리 로직
   const manager = useQuestionManager();
@@ -44,16 +46,47 @@ function useQuestionGenerate() {
         gameName,
         gameGenre,
         gameContext,
-        surveyName,
         themePriorities,
         themeDetails,
+        testStage,
+        extractedElements,
       } = formData;
 
-      if (!gameGenre?.length) {
+      // Fallback: formData에 게임 정보가 없으면 global store에서 가져옴
+      let effectiveGameName = gameName;
+      let effectiveGameGenre = gameGenre as any;
+      let effectiveGameContext = gameContext;
+      let effectiveExtractedElements = extractedElements;
+
+      if ((!effectiveGameName || !effectiveGameGenre?.length) && currentGame) {
+        console.log('[AI Questions] Fallback to global game store');
+        effectiveGameName = effectiveGameName || currentGame.gameName;
+        effectiveGameGenre = (effectiveGameGenre?.length ? effectiveGameGenre : currentGame.gameGenre);
+        effectiveGameContext = effectiveGameContext || currentGame.gameContext;
+        
+        // extractedElements도 없으면 파싱 시도
+        if (!effectiveExtractedElements && currentGame.extractedElements) {
+           try {
+             effectiveExtractedElements = JSON.parse(currentGame.extractedElements);
+           } catch {}
+        }
+      }
+
+      // 🔍 DEBUG: 필수 데이터 상태 로깅
+      console.log('[AI Questions] generateQuestions 호출됨', {
+        gameName: effectiveGameName,
+        gameGenre: effectiveGameGenre,
+        testStage,
+        extractedElements: effectiveExtractedElements,
+      });
+
+      if (!effectiveGameGenre?.length || !testStage) {
         throw new Error(
-          '게임 장르 정보가 없습니다. 페이지를 새로고침 해주세요.'
+          '필수 정보(게임 장르, 테스트 단계)가 없습니다. 페이지를 새로고침 해주세요.'
         );
       }
+
+      // themeDetails에서 themePriorities에 있는 카테고리만 포함
 
       // themeDetails에서 themePriorities에 있는 카테고리만 포함
       const cleanedThemeDetails =
@@ -66,10 +99,11 @@ function useQuestionGenerate() {
           : undefined;
 
       return postAiQuestions({
-        game_name: gameName || '',
-        game_context: gameContext || '',
-        game_genre: gameGenre,
-        survey_name: surveyName || '',
+        game_name: effectiveGameName || '',
+        game_context: effectiveGameContext || '',
+        game_genre: effectiveGameGenre!,
+        test_stage: testStage,
+        extracted_elements: effectiveExtractedElements,
         theme_priorities: themePriorities || [],
         theme_details: cleanedThemeDetails,
         count: params.count,
@@ -85,6 +119,14 @@ function useQuestionGenerate() {
     const { formData } = useSurveyFormStore.getState();
     const { gameName, gameGenre, surveyName, themePriorities } = formData;
 
+    // 🔍 DEBUG: 필수 데이터 상태 로깅
+    console.log('[AI Questions] generateQuestions 호출됨', {
+      gameName,
+      gameGenre,
+      surveyName,
+      themePriorities,
+    });
+
     // 필수 데이터 확인 (themePriorities가 1개 이상 있어야 함)
     if (
       !gameName ||
@@ -92,6 +134,12 @@ function useQuestionGenerate() {
       !surveyName ||
       !themePriorities?.length
     ) {
+      console.warn('[AI Questions] ⚠️ 필수 데이터 누락으로 스킵:', {
+        gameName: !gameName ? '❌ 없음' : '✅',
+        gameGenre: !gameGenre?.length ? '❌ 없음' : '✅',
+        surveyName: !surveyName ? '❌ 없음' : '✅',
+        themePriorities: !themePriorities?.length ? '❌ 없음' : '✅',
+      });
       return;
     }
 
@@ -125,20 +173,36 @@ function useQuestionGenerate() {
 
   // 페이지 렌더링 시 질문이 없으면 자동으로 API 호출
   useEffect(() => {
+    // 🔍 DEBUG: useEffect 상태 로깅
+    console.log('[AI Questions] useEffect 실행', {
+      isMutationPending,
+      isLocalGenerating,
+      initialGenerateRef: initialGenerateRef.current,
+      questionsLength: manager.questions.length,
+    });
+
     // 이미 생성 중이거나 초기 생성 진행 중이면 스킵
     if (isMutationPending || isLocalGenerating || initialGenerateRef.current) {
+      console.warn('[AI Questions] ⚠️ 생성 진행 중으로 스킵:', {
+        isMutationPending,
+        isLocalGenerating,
+        initialGenerateRef: initialGenerateRef.current,
+      });
       return;
     }
 
     // 질문이 있으면 스킵
     if (manager.questions.length > 0) {
+      console.warn('[AI Questions] ⚠️ 이미 질문 존재하여 스킵:', manager.questions);
       return;
     }
 
+    console.log('[AI Questions] ✅ API 호출 시작');
     initialGenerateRef.current = true;
 
     generateQuestions()
-      .catch(() => {
+      .catch((error) => {
+        console.error('[AI Questions] ❌ 생성 오류:', error);
         // Error is handled by mutation.error
       })
       .finally(() => {
