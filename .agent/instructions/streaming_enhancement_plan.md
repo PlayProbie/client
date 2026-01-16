@@ -236,6 +236,76 @@ segment_id 전환 시점:
 
 ---
 
+### Phase 4.5. Background Upload Persistence (Post-MVP)
+
+탭이 닫혀도 업로드가 지속되도록 Background Sync 및 Shared Worker를 적용합니다.
+
+#### 브라우저별 지원
+
+| 브라우저    | 탭 닫힘 후 업로드      | 방식                             |
+| ----------- | ---------------------- | -------------------------------- |
+| Chrome/Edge | ✅ 지속                | Service Worker + Background Sync |
+| Safari      | ✅ 지속 (다른 탭 필요) | Shared Worker                    |
+| Firefox     | ✅ 지속 (다른 탭 필요) | Shared Worker                    |
+
+#### 구현 내용
+
+**1. Service Worker (Chrome/Edge)**
+
+- `public/upload-sw.js`: `sync` 이벤트 리스너로 백그라운드 업로드 처리.
+- `pagehide` 이벤트에서 `sync.register('upload-segments')` 호출.
+
+**2. Shared Worker (Safari/Firefox)**
+
+- `workers/upload-shared-worker.ts`: 여러 탭이 공유하는 업로드 워커.
+- 같은 origin의 다른 탭이 열려있으면 업로드 지속.
+
+**3. 업로드 큐 영속화**
+
+- `lib/upload/upload-sync-store.ts`: IndexedDB 기반 pending 업로드 저장.
+- SW/Shared Worker가 IndexedDB에서 목록 조회 후 OPFS에서 Blob 읽어 업로드.
+
+#### 입력 로그 실시간 저장
+
+입력 로그도 탭 종료 시 손실되지 않도록 IndexedDB에 실시간 저장합니다.
+
+**구현**:
+
+- `lib/input-log/input-log-store.idb.ts`: 입력 로그 IndexedDB 저장소.
+- `useInputLogStore.ts`의 `addLog()` 호출 시 메모리 + IndexedDB 동시 저장.
+- 세그먼트 업로드 시 해당 세그먼트의 로그만 추출하여 전송.
+
+**입력 로그 흐름**:
+
+```
+[입력 이벤트 발생]
+      ↓
+useInputLogger.addLog(log)
+      ↓
+메모리 저장 (logsRef) + IndexedDB 저장 (saveInputLog)
+      ↓
+[세그먼트 녹화 완료]
+      ↓
+drainLogsBySegment(segmentId) → 해당 세그먼트의 로그만 추출
+      ↓
+enqueueUploadSegment(meta, blob, logs)
+      ↓
+[업로드] POST /replay/logs (segment_id별 로그)
+```
+
+**시간 기반 필터링**:
+
+- `resolveSegmentIds(mediaTimeMs)`: 현재 media_time에 녹화 중인 세그먼트 ID
+  반환.
+- 로그는 해당 시간에 활성화된 세그먼트에만 귀속됨.
+- 세그먼트 시간 범위(`start_media_time` ~ `end_media_time`)에 맞는 로그만 서버로
+  전송.
+
+**검증**:
+
+- 수동 테스트: Safari에서 두 탭 열어 Shared Worker 동작 확인.
+- 수동 테스트: 탭 강제 종료 후 새 탭에서 IndexedDB 로그 복구 확인.
+
 ### Phase 5. InsightTag UI/재생 (Post-MVP)
 
 - `InsightHandler` (SSE Listener) 구현:

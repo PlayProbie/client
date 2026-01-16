@@ -14,7 +14,7 @@ describe('UploadQueue', () => {
 
     queue.markDone('seg-a');
 
-    const second = queue.getNextReady(0);
+    const second = queue.getNextReady(10);
     expect(second?.key).toBe('seg-b');
   });
 

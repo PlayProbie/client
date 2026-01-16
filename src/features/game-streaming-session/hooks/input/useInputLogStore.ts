@@ -2,10 +2,16 @@
  * 입력 로그 저장소 훅
  *
  * 로그 배열 관리, 추가, 초기화를 담당합니다.
+ * IndexedDB에도 실시간으로 저장하여 탭 종료 시에도 보존합니다.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { DEFAULT_BATCH_SIZE } from '../../constants';
+import {
+  deleteInputLogsBySegment,
+  deleteInputLogsBySession,
+  saveInputLog,
+} from '../../lib/input-log/input-log-store.idb';
 import type { InputLog } from '../../types';
 
 export interface UseInputLogStoreOptions {
@@ -99,6 +105,16 @@ export function useInputLogStore(
         existing.push(normalizedLog);
         logsBySegmentRef.current.set(segmentId, existing);
         storedLogs.push(normalizedLog);
+
+        // IndexedDB에 실시간 저장 (비동기, 에러 무시)
+        saveInputLog(
+          sessionId,
+          segmentId,
+          normalizedLog,
+          normalizedLog.media_time ?? 0
+        ).catch(() => {
+          // IndexedDB 저장 실패 시 무시 (메모리에는 저장됨)
+        });
       });
 
       // 배치 콜백 및 디버깅용 카운트 업데이트
@@ -111,7 +127,7 @@ export function useInputLogStore(
         onLogBatch?.(batch);
       }
     },
-    [batchSize, normalizeSegmentIds, onLogBatch]
+    [batchSize, normalizeSegmentIds, onLogBatch, sessionId]
   );
 
   // 로그 초기화
@@ -120,7 +136,10 @@ export function useInputLogStore(
     totalLogCountRef.current = 0;
     batchBufferRef.current = [];
     setLogCount(0);
-  }, []);
+
+    // IndexedDB에서도 삭제
+    deleteInputLogsBySession(sessionId).catch(() => {});
+  }, [sessionId]);
 
   const clearLogsBySegment = useCallback((segmentId: string) => {
     const logs = logsBySegmentRef.current.get(segmentId);
@@ -132,6 +151,9 @@ export function useInputLogStore(
       totalLogCountRef.current - logs.length
     );
     setLogCount(totalLogCountRef.current);
+
+    // IndexedDB에서도 삭제
+    deleteInputLogsBySegment(segmentId).catch(() => {});
   }, []);
 
   // 로그 복사본 반환

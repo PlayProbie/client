@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev-msw": "cross-env VITE_MSW_ENABLED=true VITE_MOCK_STREAM=true vite",
+    "dev-msw": "cross-env VITE_MSW_ENABLED=true VITE_MOCK_STREAM=true VITE_ENABLE_HIGHLIGHT=true vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",

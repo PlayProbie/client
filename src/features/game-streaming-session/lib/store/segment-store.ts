@@ -61,7 +61,10 @@ class SegmentStoreImpl implements SegmentStore {
       meta: normalizedMeta,
       fileSize: normalizedMeta.file_size ?? blob.size,
       lastAccessedAt: new Date().toISOString(),
-      blob: this.backend === 'indexeddb' || this.backend === 'memory' ? blob : undefined,
+      blob:
+        this.backend === 'indexeddb' || this.backend === 'memory'
+          ? blob
+          : undefined,
     };
 
     if (this.backend === 'opfs' && this.opfsDir) {
@@ -157,7 +160,7 @@ class SegmentStoreImpl implements SegmentStore {
     const blob =
       this.backend === 'opfs'
         ? await this.readOpfsBlob(segmentId)
-        : record.blob ?? null;
+        : (record.blob ?? null);
     if (!blob) return null;
 
     await this.touchRecord(record, blob.size);
@@ -280,7 +283,10 @@ class SegmentStoreImpl implements SegmentStore {
     }
   }
 
-  private async touchRecord(record: SegmentRecord, size: number): Promise<void> {
+  private async touchRecord(
+    record: SegmentRecord,
+    size: number
+  ): Promise<void> {
     record.lastAccessedAt = new Date().toISOString();
     record.fileSize = size;
     if (this.backend === 'memory') {

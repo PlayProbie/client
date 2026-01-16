@@ -78,11 +78,14 @@ graph TD
 
 ### 클라이언트 구성요소 (스레드 분리)
 
-| 모듈              | 스레드     | 역할                                                  |
-| ----------------- | ---------- | ----------------------------------------------------- |
-| `SegmentRecorder` | Main       | `video` → `canvas` 다운스케일 → `blob` 생성           |
-| `SegmentStore`    | **Worker** | 생성된 Blob을 OPFS(Origin Private File System)에 저장 |
-| `UploadWorker`    | **Worker** | 스트리밍 상태(`RTCStats`) 감시 및 백그라운드 업로드   |
+| 모듈                 | 스레드             | 역할                                                      |
+| -------------------- | ------------------ | --------------------------------------------------------- |
+| `SegmentRecorder`    | Main               | `video` → `canvas` 다운스케일 → `blob` 생성               |
+| `SegmentStore`       | **Worker**         | 생성된 Blob을 OPFS(Origin Private File System)에 저장     |
+| `UploadWorker`       | **Worker**         | 스트리밍 상태(`RTCStats`) 감시 및 백그라운드 업로드       |
+| `UploadSW`           | **Service Worker** | 탭 종료 후에도 업로드 지속 (Chrome/Edge, Background Sync) |
+| `UploadSharedWorker` | **Shared Worker**  | 탭 종료 후에도 업로드 지속 (Safari/Firefox, 다른 탭 필요) |
+| `InputLogStore`      | Main + IndexedDB   | 입력 로그 실시간 저장 (탭 종료 시에도 보존)               |
 
 ---
 
