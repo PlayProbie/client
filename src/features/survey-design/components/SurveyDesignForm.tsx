@@ -17,7 +17,7 @@ import { cn } from '@/lib/utils';
 import { useCurrentGameStore } from '@/stores/useCurrentGameStore';
 
 import { type SubmitResult, useFormSubmit } from '../hooks/useFormSubmit';
-import { useSurveyFormStore } from '../store/useSurveyFormStore';
+import { INITIAL_STATE, useSurveyFormStore } from '../store/useSurveyFormStore';
 import { SURVEY_FORM_STEPS, type SurveyFormData } from '../types';
 import {
   StepBasicInfo,
@@ -45,29 +45,38 @@ function SurveyDesignForm({ className, onComplete }: SurveyDesignFormProps) {
   // 게임 정보 가져오기
   const { currentGame, isLoading: isLoadingGame } = useCurrentGameStore();
 
-  // 게임 정보가 있으면 survey form store에 저장
-  useEffect(() => {
-    if (currentGame) {
-      updateFormData({
-        gameName: currentGame.gameName,
-        gameGenre: currentGame.gameGenre as GameGenre[],
-        gameContext: currentGame.gameContext,
-      });
-    }
-  }, [currentGame, updateFormData]);
-
-  // 게임 정보 로딩 상태 확인
-  const hasGameInfo = Boolean(formData.gameName);
-  const isGameInfoLoading = isLoadingGame || (!hasGameInfo && !currentGame);
-
   // StrictMode 중복 제출 방지 ref
   const isSubmittingRef = useRef(false);
 
+  // useForm을 먼저 초기화 (formData는 store의 초기값 사용)
   const form = useForm<SurveyFormData>({
     defaultValues: formData,
   });
 
-  const { control, handleSubmit } = form;
+  const { control, handleSubmit, reset } = form;
+
+  useEffect(() => {
+    if (currentGame) {
+      const data: Partial<SurveyFormData> = {
+        ...INITIAL_STATE.formData,
+        ...{
+          gameName: currentGame.gameName,
+          gameGenre: currentGame.gameGenre as GameGenre[],
+          gameContext: currentGame.gameContext,
+        },
+      };
+
+      // Store 업데이트
+      updateFormData(data);
+
+      // Form 상태 동기화
+      reset(data as SurveyFormData);
+    }
+  }, [currentGame, updateFormData, reset]);
+
+  // 게임 정보 로딩 상태 확인
+  const hasGameInfo = Boolean(formData.gameName);
+  const isGameInfoLoading = isLoadingGame || (!hasGameInfo && !currentGame);
 
   // useWatch로 폼 데이터 구독 (React Compiler 호환)
   const watchedData = useWatch({ control });
