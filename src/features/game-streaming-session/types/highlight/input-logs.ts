@@ -24,8 +24,8 @@ export interface BaseInputLog {
   type: InputEventType;
   /** 영상 기준 시간 (video.currentTime 또는 rVFC) - Core Key, 단위: ms (밀리초 정수) */
   media_time: number;
-  /** 로컬 에포크 타임 (디버깅용), 단위: ms (밀리초 정수) */
-  client_ts: number;
+  /** 로컬 에포크 타임 (Date.now()), 단위: ms (밀리초 정수) */
+  timestamp: number;
   /** 해당 이벤트가 포함된 세그먼트 ID */
   segment_id: string;
   /**

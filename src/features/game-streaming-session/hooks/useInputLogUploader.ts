@@ -7,6 +7,7 @@ export interface UseInputLogUploaderOptions {
   sessionUuid: string | null;
   getSegmentIdsWithLogs: () => string[];
   getLogsBySegment: (segmentId: string) => InputLog[];
+  getVideoUrlBySegment: (segmentId: string) => string | null;
   clearLogsBySegment: (segmentId: string) => void;
   onUploadError?: (error: Error) => void;
 }
@@ -23,6 +24,7 @@ export function useInputLogUploader(
     sessionUuid,
     getSegmentIdsWithLogs,
     getLogsBySegment,
+    getVideoUrlBySegment,
     clearLogsBySegment,
     onUploadError,
   } = options;
@@ -43,11 +45,12 @@ export function useInputLogUploader(
       const logs = getLogsBySegment(segmentId);
       if (logs.length === 0) continue;
 
+      const videoUrl = getVideoUrlBySegment(segmentId);
+      if (!videoUrl) continue; // 영상 URL이 없으면 스킵
+
       try {
-        const result = await postInputLogs(sessionUuid, segmentId, logs);
-        if (result.success) {
-          clearLogsBySegment(segmentId);
-        }
+        await postInputLogs(sessionUuid, segmentId, videoUrl, logs);
+        clearLogsBySegment(segmentId);
       } catch (error: unknown) {
         lastError = error instanceof Error ? error : new Error(String(error));
       }
@@ -60,6 +63,7 @@ export function useInputLogUploader(
     sessionUuid,
     getSegmentIdsWithLogs,
     getLogsBySegment,
+    getVideoUrlBySegment,
     clearLogsBySegment,
     onUploadError,
   ]);
@@ -75,12 +79,15 @@ export function useInputLogUploader(
         const logs = getLogsBySegment(segmentId);
         if (logs.length === 0) return;
 
-        postInputLogs(sessionId, segmentId, logs).catch(() => {
+        const videoUrl = getVideoUrlBySegment(segmentId);
+        if (!videoUrl) return;
+
+        postInputLogs(sessionId, segmentId, videoUrl, logs).catch(() => {
           // 무시 (best-effort)
         });
       });
     },
-    [getSegmentIdsWithLogs, getLogsBySegment]
+    [getSegmentIdsWithLogs, getLogsBySegment, getVideoUrlBySegment]
   );
 
   useEffect(() => {

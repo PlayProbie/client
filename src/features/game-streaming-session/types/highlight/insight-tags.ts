@@ -2,8 +2,8 @@
 // InsightTag Types (분석 결과 스키마)
 // ============================================
 
-/** InsightTag 유형 */
-export type InsightTagType = 'PANIC' | 'IDLE' | 'CHURN';
+/** InsightTag 유형 (PANIC: 당황/급박, IDLE: 멈춤/고민) */
+export type InsightTagType = 'PANIC' | 'IDLE';
 
 /** InsightTag 재생 상태 */
 export type PlaybackStatus =
@@ -64,4 +64,25 @@ export interface InsightTag {
   }[];
   playbackStatus: PlaybackStatus;
   createdAt: string;
+}
+
+// ============================================
+// SSE Event Types (인사이트 관련 이벤트)
+// ============================================
+
+/** [SSE] insight_question 이벤트 데이터 */
+export interface SseInsightQuestionEvent {
+  tag_id: number;
+  insight_type: InsightTagType;
+  video_start_ms: number;
+  video_end_ms: number;
+  question_text: string;
+  turn_num: number;
+  remaining_insights: number;
+}
+
+/** [SSE] insight_complete 이벤트 데이터 */
+export interface SseInsightCompleteEvent {
+  total_insights: number;
+  answered: number;
 }

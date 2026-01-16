@@ -34,7 +34,7 @@ export function buildMouseFilter(
       const log: MouseClickInputLog = {
         type: eventType === 'mousedown' ? 'MOUSE_DOWN' : 'MOUSE_UP',
         media_time: mediaTime,
-        client_ts: now,
+        timestamp: now,
         segment_id: primaryId,
         segment_ids: segmentIds,
         button: event.button,
@@ -59,7 +59,7 @@ export function buildMouseFilter(
         const log: MouseMoveInputLog = {
           type: 'MOUSE_MOVE',
           media_time: mediaTime,
-          client_ts: now,
+          timestamp: now,
           segment_id: primaryId,
           segment_ids: segmentIds,
           x: event.clientX,
@@ -82,7 +82,7 @@ export function buildMouseFilter(
         const log: WheelInputLog = {
           type: 'WHEEL',
           media_time: mediaTime,
-          client_ts: now,
+          timestamp: now,
           segment_id: primaryId,
           segment_ids: segmentIds,
           deltaX: wheelEvent.deltaX,

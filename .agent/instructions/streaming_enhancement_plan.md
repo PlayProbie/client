@@ -107,18 +107,26 @@
 
 ### Phase 0. 계약/스키마 정리 (백엔드 협의 선행)
 
-- 입력 로그 스키마 확정: `media_time` (ms), `client_ts`, `segment_id` 필수.
+- 입력 로그 스키마 확정: `media_time` (ms), `timestamp`, `segment_id` 필수.
 - 업로드 API 계약 (Smart Replay v1):
-  - `POST .../presigned-url`: 30초 단위 세그먼트 등록 및 URL 발급.
+  - `POST /sessions/{sessionId}/replay/presigned-url`: Presigned URL 발급 (201
+    Created).
   - `PUT S3 URL`: 바이너리 업로드.
-  - `POST .../upload-complete`: 업로드 완료 통지.
-  - `POST .../logs`: 입력 로그 배치 전송 (segment_id 매핑).
-- SSE 이벤트 계약: `insight_question` (재생 구간 정보 포함).
+  - `POST /sessions/{sessionId}/replay/upload-complete`: 업로드 완료 통지 (200
+    OK).
+  - `POST /sessions/{sessionId}/replay/logs`: 입력 로그 배치 전송 (202
+    Accepted).
+  - `POST /sessions/{sessionId}/replay/insights/{tagId}/answer`: 인사이트 질문
+    답변.
+- SSE 이벤트 계약:
+  - `insight_question`: 인사이트 질문 (tag_id, insight_type, video_start_ms,
+    video_end_ms 포함).
+  - `insight_complete`: 인사이트 Phase 완료.
 
 **산출물**:
 
 - `src/lib/msw/handlers/highlight.ts` (Mock API)
-- `src/features/game-streaming-session/types/highlight.ts` (스키마 타입)
+- `src/features/game-streaming-session/types/highlight/` (스키마 타입)
 
 ---
 

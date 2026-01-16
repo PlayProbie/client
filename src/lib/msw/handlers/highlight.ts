@@ -4,22 +4,22 @@
  * Phase 0: 업로드/InsightTag API Mock 핸들러
  *
  * 엔드포인트:
- * - POST /sessions/:sessionId/highlight/presigned-url - Presigned URL 발급
- * - POST /sessions/:sessionId/highlight/segments/:segmentId/complete - 세그먼트 업로드 완료
- * - POST /sessions/:sessionId/highlight/logs - 입력 로그 업로드
+ * - POST /sessions/:sessionId/replay/presigned-url - Presigned URL 발급 (201)
+ * - POST /sessions/:sessionId/replay/upload-complete - 업로드 완료 (200)
+ * - POST /sessions/:sessionId/replay/logs - 입력 로그 업로드 (202)
+ * - POST /sessions/:sessionId/replay/insights/:tagId/answer - 인사이트 답변 (200)
  * - GET /sessions/:sessionId/highlight/tags - InsightTag 조회
  */
 import { delay, http, HttpResponse } from 'msw';
 
 import type {
   ApiInputLogsUploadRequest,
-  ApiInputLogsUploadResponse,
+  ApiInsightAnswerRequest,
+  ApiInsightAnswerResponse,
   ApiInsightTag,
   ApiInsightTagsResponse,
   ApiPresignedUrlRequest,
   ApiPresignedUrlResponse,
-  ApiSegmentUploadCompleteRequest,
-  ApiSegmentUploadCompleteResponse,
   SegmentMeta,
 } from '@/features/game-streaming-session/types/highlight';
 
@@ -40,6 +40,9 @@ const mockInputLogs: Record<
   string,
   { segment_id: string; logs_count: number }[]
 > = {};
+
+/** 시퀀스 카운터 */
+const segmentSequence: Record<string, number> = {};
 
 // ----------------------------------------
 // Helper Functions
@@ -128,73 +131,76 @@ function generateMockInsightTags(
 // ----------------------------------------
 
 export const highlightHandlers = [
-  // Presigned URL 발급
+  // Presigned URL 발급 (201 Created)
   http.post(
-    `${MSW_API_BASE_URL}/sessions/:sessionId/highlight/presigned-url`,
+    `${MSW_API_BASE_URL}/sessions/:sessionId/replay/presigned-url`,
     async ({ params, request }) => {
       await delay(200);
       const sessionId = params.sessionId as string;
       const body = (await request.json()) as ApiPresignedUrlRequest;
 
-      if (!body.segment_id || !body.content_type) {
+      if (body.content_type == null) {
         return HttpResponse.json(
-          { message: 'segment_id와 content_type은 필수입니다.', code: 'H001' },
+          { message: 'content_type은 필수입니다.', code: 'H001' },
           { status: 400 }
         );
       }
 
-      // Mock Presigned URL 생성
-      const presignedUrl = `https://mock-s3.example.com/${sessionId}/${body.segment_id}?presigned=true&expires=${Date.now() + 3600000}`;
+      // 시퀀스 카운터 초기화
+      if (segmentSequence[sessionId] == null) {
+        segmentSequence[sessionId] = 0;
+      }
 
-      return HttpResponse.json({
-        success: true,
-        result: {
-          upload_url: presignedUrl,
-          expires_in_seconds: 3600,
-        },
-      } satisfies {
-        success: boolean;
-        result: ApiPresignedUrlResponse['result'];
-      });
+      // 세그먼트 ID 생성
+      const segmentId = generateUUID();
+
+      // Mock Presigned URL 생성
+      const s3Url = `https://dev-playprobie-replay.s3.ap-northeast-2.amazonaws.com/replays/${sessionId}/${segmentId}?presigned=true&expires=${Date.now() + 300000}`;
+
+      segmentSequence[sessionId]++;
+
+      return HttpResponse.json(
+        {
+          result: {
+            segment_id: segmentId,
+            s3_url: s3Url,
+            expires_in: 300,
+          },
+        } satisfies { result: ApiPresignedUrlResponse['result'] },
+        { status: 201 }
+      );
     }
   ),
 
-  // 세그먼트 업로드 완료 알림
+  // 세그먼트 업로드 완료 알림 (200 OK, No Body)
   http.post(
-    `${MSW_API_BASE_URL}/sessions/:sessionId/highlight/segments/:segmentId/complete`,
+    `${MSW_API_BASE_URL}/sessions/:sessionId/replay/upload-complete`,
     async ({ params, request }) => {
       await delay(300);
       const sessionId = params.sessionId as string;
-      const segmentId = params.segmentId as string;
-      const body = (await request.json()) as ApiSegmentUploadCompleteRequest;
+      const body = (await request.json()) as { segment_id: string };
+
+      const segmentId = body.segment_id;
 
       // 세션별 세그먼트 목록 초기화
       if (!mockSegments[sessionId]) {
         mockSegments[sessionId] = [];
       }
 
-      // 기존 세그먼트 찾기
-      const existingIndex = mockSegments[sessionId].findIndex(
-        (s) => s.segment_id === segmentId
-      );
-
+      // 세그먼트 메타 생성 (시간 정보는 mock 데이터)
+      const existingCount = mockSegments[sessionId].length;
       const segmentMeta: SegmentMeta = {
         segment_id: segmentId,
         session_id: sessionId,
-        start_media_time: body.start_media_time,
-        end_media_time: body.end_media_time,
+        start_media_time: existingCount * 30000,
+        end_media_time: (existingCount + 1) * 30000,
         upload_status: 'UPLOADED',
-        overlap_ms: 3000, // 3초 = 3000ms
-        file_size: body.file_size,
+        overlap_ms: 3000,
         created_at: new Date().toISOString(),
         uploaded_at: new Date().toISOString(),
       };
 
-      if (existingIndex >= 0) {
-        mockSegments[sessionId][existingIndex] = segmentMeta;
-      } else {
-        mockSegments[sessionId].push(segmentMeta);
-      }
+      mockSegments[sessionId].push(segmentMeta);
 
       // 업로드 완료 후 InsightTag 재생성 (Mock 분석)
       mockInsightTags[sessionId] = generateMockInsightTags(
@@ -202,22 +208,13 @@ export const highlightHandlers = [
         mockSegments[sessionId]
       );
 
-      return HttpResponse.json({
-        success: true,
-        result: {
-          success: true,
-          segment_id: segmentId,
-        },
-      } satisfies {
-        success: boolean;
-        result: ApiSegmentUploadCompleteResponse['result'];
-      });
+      return new HttpResponse(null, { status: 200 });
     }
   ),
 
-  // 입력 로그 업로드
+  // 입력 로그 업로드 (202 Accepted, No Body)
   http.post(
-    `${MSW_API_BASE_URL}/sessions/:sessionId/highlight/logs`,
+    `${MSW_API_BASE_URL}/sessions/:sessionId/replay/logs`,
     async ({ params, request }) => {
       await delay(200);
       const sessionId = params.sessionId as string;
@@ -240,16 +237,34 @@ export const highlightHandlers = [
         logs_count: body.logs.length,
       });
 
+      return new HttpResponse(null, { status: 202 });
+    }
+  ),
+
+  // 인사이트 질문 답변 (200 OK)
+  http.post(
+    `${MSW_API_BASE_URL}/sessions/:sessionId/replay/insights/:tagId/answer`,
+    async ({ params, request }) => {
+      await delay(200);
+      const tagId = parseInt(params.tagId as string, 10);
+      const body = (await request.json()) as ApiInsightAnswerRequest;
+
+      if (!body.answer_text) {
+        return HttpResponse.json(
+          { message: 'answer_text는 필수입니다.', code: 'H003' },
+          { status: 400 }
+        );
+      }
+
+      // Mock: 마지막 질문인지 랜덤으로 결정
+      const isComplete = Math.random() > 0.5;
+
       return HttpResponse.json({
-        success: true,
         result: {
-          success: true,
-          logs_count: body.logs.length,
+          tag_id: tagId,
+          is_complete: isComplete,
         },
-      } satisfies {
-        success: boolean;
-        result: ApiInputLogsUploadResponse['result'];
-      });
+      } satisfies { result: ApiInsightAnswerResponse['result'] });
     }
   ),
 

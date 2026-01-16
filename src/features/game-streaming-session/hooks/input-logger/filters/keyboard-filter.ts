@@ -15,7 +15,7 @@ export function buildKeyboardFilter(
     const log: KeyboardInputLog = {
       type: event.type === 'keydown' ? 'KEY_DOWN' : 'KEY_UP',
       media_time: mediaTime,
-      client_ts: Date.now(),
+      timestamp: Date.now(),
       segment_id: primaryId,
       segment_ids: segmentIds,
       code: event.code,

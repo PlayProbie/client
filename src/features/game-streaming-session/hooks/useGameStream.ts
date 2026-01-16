@@ -147,10 +147,17 @@ export function useGameStream(
     [createGamepadFilter]
   );
 
+  // 입력 로그 업로드 훅
+  // getVideoUrlBySegment는 Phase 4 (Upload Worker) 구현 시 실제 로직으로 대체 예정
   const { uploadInputLogs, flushLogs } = useInputLogUploader({
     sessionUuid,
     getSegmentIdsWithLogs,
     getLogsBySegment,
+    getVideoUrlBySegment: useCallback(
+      // TODO: Phase 4에서 SegmentStore에서 실제 S3 URL 조회 로직 구현
+      (_segmentId: string) => null,
+      []
+    ),
     clearLogsBySegment,
     onUploadError: (error) => {
       toast({

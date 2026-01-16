@@ -7,51 +7,50 @@ import type { ApiInsightTag } from './insight-tags';
 
 /** [API] Presigned URL 요청 */
 export interface ApiPresignedUrlRequest {
-  session_id: string;
-  segment_id: string;
+  sequence: number;
+  video_start_ms: number;
+  video_end_ms: number;
   content_type: string;
-  file_size: number;
 }
 
-/** [API] Presigned URL 응답 */
+/** [API] Presigned URL 응답 (201 Created) */
 export interface ApiPresignedUrlResponse {
   result: {
-    upload_url: string;
-    expires_in_seconds: number;
+    segment_id: string;
+    s3_url: string;
+    expires_in: number;
   };
 }
 
 /** [API] 세그먼트 업로드 완료 알림 요청 */
 export interface ApiSegmentUploadCompleteRequest {
-  session_id: string;
   segment_id: string;
-  /** 단위: ms (밀리초 정수) */
-  start_media_time: number;
-  /** 단위: ms (밀리초 정수) */
-  end_media_time: number;
-  file_size: number;
 }
 
-/** [API] 세그먼트 업로드 완료 알림 응답 */
-export interface ApiSegmentUploadCompleteResponse {
-  result: {
-    success: boolean;
-    segment_id: string;
-  };
-}
+/** [API] 세그먼트 업로드 완료 알림 응답 (200 OK, No Body) */
+export type ApiSegmentUploadCompleteResponse = void;
 
 /** [API] 입력 로그 업로드 요청 */
 export interface ApiInputLogsUploadRequest {
   session_id: string;
   segment_id: string;
+  video_url: string;
   logs: InputLog[];
 }
 
-/** [API] 입력 로그 업로드 응답 */
-export interface ApiInputLogsUploadResponse {
+/** [API] 입력 로그 업로드 응답 (202 Accepted, No Body) */
+export type ApiInputLogsUploadResponse = void;
+
+/** [API] 인사이트 답변 요청 */
+export interface ApiInsightAnswerRequest {
+  answer_text: string;
+}
+
+/** [API] 인사이트 답변 응답 */
+export interface ApiInsightAnswerResponse {
   result: {
-    success: boolean;
-    logs_count: number;
+    tag_id: number;
+    is_complete: boolean;
   };
 }
 

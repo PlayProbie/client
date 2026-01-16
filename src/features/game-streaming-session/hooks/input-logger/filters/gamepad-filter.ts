@@ -30,7 +30,7 @@ export function buildGamepadFilter(
         const log: GamepadButtonInputLog = {
           type: 'GAMEPAD_BUTTON',
           media_time: mediaTime,
-          client_ts: now,
+          timestamp: now,
           segment_id: primaryId,
           segment_ids: segmentIds,
           gamepadIndex: gamepad.index,
@@ -48,7 +48,7 @@ export function buildGamepadFilter(
         const log: GamepadAxisInputLog = {
           type: 'GAMEPAD_AXIS',
           media_time: mediaTime,
-          client_ts: now,
+          timestamp: now,
           segment_id: primaryId,
           segment_ids: segmentIds,
           gamepadIndex: gamepad.index,

@@ -46,7 +46,7 @@ describe('useInputFilters', () => {
       expect.objectContaining({
         type: 'KEY_DOWN',
         media_time: 1234,
-        client_ts: 1000,
+        timestamp: 1000,
         segment_id: 'seg-1',
         code: 'KeyA',
         key: '',

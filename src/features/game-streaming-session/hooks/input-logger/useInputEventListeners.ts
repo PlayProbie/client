@@ -27,7 +27,7 @@ export function useVisibilityListeners(
       const log: VisibilityInputLog = {
         type: document.hidden ? 'VISIBILITY_HIDDEN' : 'VISIBILITY_VISIBLE',
         media_time: mediaTime,
-        client_ts: Date.now(),
+        timestamp: Date.now(),
         segment_id: primaryId,
         segment_ids: segmentIds,
         // Use empty string fallback for segment_id if null to match types usually
@@ -41,7 +41,7 @@ export function useVisibilityListeners(
       const log: VisibilityInputLog = {
         type: 'BLUR',
         media_time: mediaTime,
-        client_ts: Date.now(),
+        timestamp: Date.now(),
         segment_id: primaryId,
         segment_ids: segmentIds,
       };
@@ -54,7 +54,7 @@ export function useVisibilityListeners(
       const log: VisibilityInputLog = {
         type: 'FOCUS',
         media_time: mediaTime,
-        client_ts: Date.now(),
+        timestamp: Date.now(),
         segment_id: primaryId,
         segment_ids: segmentIds,
       };
@@ -67,7 +67,7 @@ export function useVisibilityListeners(
       const log: VisibilityInputLog = {
         type: 'PAGE_HIDE',
         media_time: mediaTime,
-        client_ts: Date.now(),
+        timestamp: Date.now(),
         segment_id: primaryId,
         segment_ids: segmentIds,
       };

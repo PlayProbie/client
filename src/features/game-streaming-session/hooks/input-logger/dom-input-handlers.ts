@@ -38,7 +38,7 @@ export function createDomInputHandlers(options: DomInputHandlerOptions) {
     const log: KeyboardInputLog = {
       type: 'KEY_DOWN',
       media_time: mediaTime,
-      client_ts: now(),
+      timestamp: now(),
       segment_id: primaryId,
       segment_ids: segmentIds,
       code: event.code,
@@ -53,7 +53,7 @@ export function createDomInputHandlers(options: DomInputHandlerOptions) {
     const log: KeyboardInputLog = {
       type: 'KEY_UP',
       media_time: mediaTime,
-      client_ts: now(),
+      timestamp: now(),
       segment_id: primaryId,
       segment_ids: segmentIds,
       code: event.code,
@@ -68,7 +68,7 @@ export function createDomInputHandlers(options: DomInputHandlerOptions) {
     const log: MouseClickInputLog = {
       type: 'MOUSE_DOWN',
       media_time: mediaTime,
-      client_ts: now(),
+      timestamp: now(),
       segment_id: primaryId,
       segment_ids: segmentIds,
       button: event.button,
@@ -84,7 +84,7 @@ export function createDomInputHandlers(options: DomInputHandlerOptions) {
     const log: MouseClickInputLog = {
       type: 'MOUSE_UP',
       media_time: mediaTime,
-      client_ts: now(),
+      timestamp: now(),
       segment_id: primaryId,
       segment_ids: segmentIds,
       button: event.button,
@@ -111,7 +111,7 @@ export function createDomInputHandlers(options: DomInputHandlerOptions) {
       const log: MouseMoveInputLog = {
         type: 'MOUSE_MOVE',
         media_time: mediaTime,
-        client_ts: currentTime,
+        timestamp: currentTime,
         segment_id: primaryId,
         segment_ids: segmentIds,
         x: event.clientX,
@@ -135,7 +135,7 @@ export function createDomInputHandlers(options: DomInputHandlerOptions) {
       const log: WheelInputLog = {
         type: 'WHEEL',
         media_time: mediaTime,
-        client_ts: currentTime,
+        timestamp: currentTime,
         segment_id: primaryId,
         segment_ids: segmentIds,
         deltaX: event.deltaX,

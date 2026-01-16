@@ -138,107 +138,253 @@ graph TD
 
 ### 📋 개요
 
-유저의 게임 플레이 중 입력 패턴(키보드/마우스)과 **플레이 영상**을 수집하여
-서버로 전송하고, 인터뷰 단계에서 특이 행동(광클, 멍때림 등)이 감지되면 **AI가
-해당 구간을 다시 보여주며 질문**하는 기능을 구현합니다.
+플레이어의 게임 입력 로그를 분석하여 특이 행동(Panic, Idle)을 감지하고, 이에
+대한 질문을 SSE로 스트리밍하는 기능입니다.
 
-### 🔄 전체 흐름 (User Flow)
+---
 
-1. **게임 플레이 중 (Background)**
-   - 30초 단위로 영상을 청킹(Chunking)하여 S3에 업로드.
-   - 유저의 키보드/마우스 입력 로그를 수집하여 주기적으로 서버 전송.
-2. **인터뷰 진행 (Chat UI)**
-   - 기존 고정 질문(Fixed Question) 진행.
-3. **인사이트 질문 (New Phase)**
-   - 고정 질문 완료 후, 서버 분석 결과에 따라 **'인사이트 질문'**이 도착.
-   - 채팅창에 **[🎥 장면 다시보기]** 버튼이 노출됨.
-   - 버튼 클릭 시, 게임 플레이어가 해당 시점(`video_start_ms`)으로 이동하여
-     재생.
+### 📡 REST API 명세
 
-### 📡 API Specification
+#### 1. 입력 로그 전송
 
-#### A. 영상 업로드 (Play Phase)
+게임 플레이 중 입력 로그를 배치로 전송합니다.
 
-**순서:** `Presigned URL 발급` → `S3 Upload (PUT)` → `업로드 완료 알림`
+```
+POST /sessions/{sessionId}/replay/logs
+Content-Type: application/json
+```
 
-**1) Presigned URL 발급 요청**
+**Request Body:**
 
-- **URL:** `POST /sessions/{sessionId}/replay/presigned-url`
-- **Body:**
-  ```json
-  {
-    "sequence": 0, // 세그먼트 순서 (0부터 시작)
-    "video_start_ms": 0, // 해당 청크의 시작 시간 (video.currentTime 기준)
-    "video_end_ms": 30000, // 해당 청크의 종료 시간
-    "content_type": "video/webm"
-  }
-  ```
-- **Response:**
-  ```json
-  {
-    "segment_id": "seg_a1b2...",
-    "s3_url": "https://s3.amazonaws.com/...",
+```json
+{
+  "session_id": "550e8400-e29b-41d4-a716-446655440000",
+  "segment_id": "seg_abc123",
+  "video_url": "https://s3.ap-northeast-2.amazonaws.com/...",
+  "logs": [
+    {
+      "type": "KEY_DOWN",
+      "media_time": 1500,
+      "timestamp": 1705395600000,
+      "code": "Space",
+      "key": " "
+    },
+    {
+      "type": "MOUSE_DOWN",
+      "media_time": 2000,
+      "timestamp": 1705395600500,
+      "button": 0,
+      "x": 450,
+      "y": 320
+    }
+  ]
+}
+```
+
+**Response:** `202 Accepted` (No Body)
+
+---
+
+#### 2. Presigned URL 발급
+
+영상 세그먼트 업로드를 위한 S3 Presigned URL을 발급받습니다.
+
+```
+POST /sessions/{sessionId}/replay/presigned-url
+Content-Type: application/json
+```
+
+**Request Body:**
+
+```json
+{
+  "sequence": 0,
+  "video_start_ms": 0,
+  "video_end_ms": 30000,
+  "content_type": "video/webm"
+}
+```
+
+**Response:** `201 Created`
+
+```json
+{
+  "result": {
+    "segment_id": "550e8400-e29b-41d4-a716-446655440001",
+    "s3_url": "https://dev-playprobie-replay.s3.ap-northeast-2.amazonaws.com/replays/...",
     "expires_in": 300
   }
-  ```
+}
+```
 
-**2) 업로드 완료 알림**
+> ⚠️ s3_url은 PUT 전용입니다. 영상 업로드 시 PUT 요청을 사용하세요.
 
-- **URL:** `POST /sessions/{sessionId}/replay/upload-complete`
-- **Body:**
-  ```json
-  {
-    "segment_id": "seg_a1b2..."
+---
+
+#### 3. 업로드 완료 알림
+
+S3 업로드 완료 후 서버에 알립니다.
+
+```
+POST /sessions/{sessionId}/replay/upload-complete
+Content-Type: application/json
+```
+
+**Request Body:**
+
+```json
+{
+  "segment_id": "550e8400-e29b-41d4-a716-446655440001"
+}
+```
+
+**Response:** `200 OK` (No Body)
+
+---
+
+#### 4. 인사이트 질문 답변
+
+SSE로 수신한 인사이트 질문에 대한 답변을 전송합니다.
+
+```
+POST /sessions/{sessionId}/replay/insights/{tagId}/answer
+Content-Type: application/json
+```
+
+**Request Body:**
+
+```json
+{
+  "answer_text": "네, 그 부분에서 어떤 버튼을 눌러야 할지 몰라서 당황했어요."
+}
+```
+
+**Response:** `200 OK`
+
+```json
+{
+  "result": {
+    "tag_id": 123,
+    "is_complete": false
   }
-  ```
+}
+```
 
-#### B. 입력 로그 전송
+| 필드          | 타입    | 설명                                                 |
+| ------------- | ------- | ---------------------------------------------------- |
+| `tag_id`      | Long    | 답변한 질문 ID                                       |
+| `is_complete` | Boolean | `true`: 모든 인사이트 질문 완료 / `false`: 추가 질문 |
 
-**URL:** `POST /sessions/{sessionId}/replay/logs`
+> 📌 다음 질문은 SSE `insight_question` 이벤트로 전송됩니다.
 
-- **Body:**
-  ```json
-  {
-    "session_id": "sess_8829",
-    "segment_id": "seg_a1b2",
-    "s3_url": "...", // (선택) 매핑 검증용
-    "logs": [
-      {
-        "type": "KEY_DOWN", // KEY_DOWN, KEY_UP, MOUSE_DOWN 등
-        "media_time": 120125, // [중요] video.currentTime (ms 단위)
-        "client_ts": 1736942000, // Date.now()
-        "code": "Space",
-        "key": " "
-      }
-    ]
-  }
-  ```
+---
 
-#### C. 인터뷰 및 재생 (Interview Phase)
+### 📺 SSE 이벤트 명세
 
-**1) SSE 이벤트: `insight_question`**
+기존 SSE 연결(`/sessions/{sessionId}/sse`)을 통해 인사이트 관련 이벤트가
+전송됩니다.
 
-- **Data:**
-  ```json
-  {
-    "insight_type": "PANIC", // PANIC(광클), IDLE(멍때림), CHURN(이탈)
-    "video_start_ms": 45200, // [Seek Point] 재생 시작 지점
-    "video_end_ms": 48500, // 재생 종료 지점 (UI 표시용)
-    "question_text": "45초 구간에서 버튼을 빠르게 누르셨는데, 당황하셨나요?",
-    "turn_num": 1,
-    "remaining_insights": 1
-  }
-  ```
+#### 1. `insight_question` - 인사이트 질문
 
-**2) 답변 전송**
+```json
+{
+  "tag_id": 123,
+  "insight_type": "PANIC",
+  "video_start_ms": 45000,
+  "video_end_ms": 48000,
+  "question_text": "영상의 45초~48초 구간에서 버튼을 빠르게 여러 번 누르셨는데, 혹시 당황하셨거나 조작이 어려우셨나요?",
+  "turn_num": 1,
+  "remaining_insights": 1
+}
+```
 
-- **URL:** `POST /interview/{sessionUuid}/messages`
-- **Body:**
-  ```json
-  {
-    "q_type": "INSIGHT",
-    "insight_type": "PANIC",
-    "turn_num": 1,
-    "answer_text": "네, 너무 어려웠어요."
-  }
-  ```
+| 필드                 | 타입    | 설명                           |
+| -------------------- | ------- | ------------------------------ |
+| `tag_id`             | Long    | **답변 API 호출 시 필요한 ID** |
+| `insight_type`       | Enum    | `PANIC` / `IDLE`               |
+| `video_start_ms`     | Long    | 영상 구간 시작 (ms)            |
+| `video_end_ms`       | Long    | 영상 구간 끝 (ms)              |
+| `question_text`      | String  | 질문 텍스트                    |
+| `turn_num`           | Integer | 현재 질문 번호 (1부터 시작)    |
+| `remaining_insights` | Integer | 남은 질문 수                   |
+
+#### 2. `insight_complete` - 인사이트 Phase 완료
+
+```json
+{
+  "total_insights": 2,
+  "answered": 2
+}
+```
+
+| 필드             | 타입    | 설명                    |
+| ---------------- | ------- | ----------------------- |
+| `total_insights` | Integer | 전체 인사이트 수        |
+| `answered`       | Integer | 답변 완료된 인사이트 수 |
+
+---
+
+### 🎬 연동 시나리오
+
+#### 시나리오 1: 게임 플레이 중 로그 수집
+
+```mermaid
+sequenceDiagram
+    participant FE as Frontend
+    participant BE as Backend
+    participant S3 as AWS S3
+
+    Note over FE: 게임 플레이 시작
+
+    loop 매 5초마다
+        FE->>BE: POST /replay/presigned-url
+        BE-->>FE: { segment_id, s3_url }
+        FE->>S3: PUT s3_url (영상 데이터)
+        FE->>BE: POST /replay/upload-complete
+        FE->>BE: POST /replay/logs (입력 로그 배치)
+        BE-->>FE: 202 Accepted
+    end
+```
+
+#### 시나리오 2: 인사이트 질문 Phase
+
+```mermaid
+sequenceDiagram
+    participant FE as Frontend
+    participant BE as Backend
+
+    Note over FE,BE: 고정 질문 완료 후
+
+    BE->>FE: SSE: insight_question (tag_id: 123)
+    Note over FE: UI에 영상 구간 표시 + 질문 렌더링
+
+    FE->>BE: POST /insights/123/answer
+    BE-->>FE: { tag_id: 123, is_complete: false }
+    BE->>FE: SSE: insight_question (tag_id: 456)
+
+    FE->>BE: POST /insights/456/answer
+    BE-->>FE: { tag_id: 456, is_complete: true }
+    BE->>FE: SSE: insight_complete
+
+    Note over FE: 인터뷰 종료 화면으로 이동
+```
+
+---
+
+### ⚠️ 주의 사항
+
+1. **SSE 연결 유지**: 인사이트 질문은 SSE로만 전송되므로 연결 유지 필수
+2. **tag_id 보관**: 답변 API 호출 시 SSE로 수신한 `tag_id` 필요
+3. **is_complete 확인**: REST 응답의 `is_complete`가 `true`여도
+   `insight_complete` SSE 이벤트를 대기
+4. **영상 구간**: `video_start_ms` ~ `video_end_ms` 구간을 UI에서 하이라이트
+   권장
+
+---
+
+### 📊 InsightType 설명
+
+| Type    | 설명             | 감지 조건                      |
+| ------- | ---------------- | ------------------------------ |
+| `PANIC` | 당황/급박한 상황 | 0.5초 내 동일 키 5회 이상 연타 |
+| `IDLE`  | 멈춤/고민 상황   | 10초 이상 입력 없음            |

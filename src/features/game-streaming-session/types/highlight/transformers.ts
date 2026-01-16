@@ -44,11 +44,13 @@ export function toInsightTag(api: ApiInsightTag): InsightTag {
 
 /** ApiPresignedUrlResponse → PresignedUrl (간소화) */
 export function toPresignedUrl(api: ApiPresignedUrlResponse['result']): {
-  uploadUrl: string;
-  expiresInSeconds: number;
+  segmentId: string;
+  s3Url: string;
+  expiresIn: number;
 } {
   return {
-    uploadUrl: api.upload_url,
-    expiresInSeconds: api.expires_in_seconds,
+    segmentId: api.segment_id,
+    s3Url: api.s3_url,
+    expiresIn: api.expires_in,
   };
 }
