@@ -9,9 +9,12 @@ import {
 
 import { Button } from '@/components/ui';
 import { Form } from '@/components/ui/form';
+import { PageSpinner } from '@/components/ui/loading';
 import { Step } from '@/components/ui/Step';
+import type { GameGenre } from '@/features/game';
 import { useToast } from '@/hooks/useToast';
 import { cn } from '@/lib/utils';
+import { useCurrentGameStore } from '@/stores/useCurrentGameStore';
 
 import { type SubmitResult, useFormSubmit } from '../hooks/useFormSubmit';
 import { useSurveyFormStore } from '../store/useSurveyFormStore';
@@ -38,6 +41,24 @@ function SurveyDesignForm({ className, onComplete }: SurveyDesignFormProps) {
 
   const { currentStep, goToStep, formData, updateFormData } =
     useSurveyFormStore();
+
+  // 게임 정보 가져오기
+  const { currentGame, isLoading: isLoadingGame } = useCurrentGameStore();
+
+  // 게임 정보가 있으면 survey form store에 저장
+  useEffect(() => {
+    if (currentGame) {
+      updateFormData({
+        gameName: currentGame.gameName,
+        gameGenre: currentGame.gameGenre as GameGenre[],
+        gameContext: currentGame.gameContext,
+      });
+    }
+  }, [currentGame, updateFormData]);
+
+  // 게임 정보 로딩 상태 확인
+  const hasGameInfo = Boolean(formData.gameName);
+  const isGameInfoLoading = isLoadingGame || (!hasGameInfo && !currentGame);
 
   // StrictMode 중복 제출 방지 ref
   const isSubmittingRef = useRef(false);
@@ -188,6 +209,11 @@ function SurveyDesignForm({ className, onComplete }: SurveyDesignFormProps) {
     themePriorities.length <= 3;
   const canManualNext =
     generationMethod === 'manual' && themePriorities.length >= 1;
+
+  // 게임 정보 로딩 중일 때 로딩 표시
+  if (isGameInfoLoading) {
+    return <PageSpinner message="게임 정보를 불러오는 중..." />;
+  }
 
   return (
     <div className={cn('flex flex-col gap-8', className)}>

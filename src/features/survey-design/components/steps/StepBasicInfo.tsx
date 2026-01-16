@@ -1,5 +1,4 @@
 import { Lightbulb, Rocket, Users } from 'lucide-react';
-import { useEffect } from 'react';
 import { type Control, useWatch } from 'react-hook-form';
 
 import { Badge } from '@/components/ui/Badge';
@@ -12,11 +11,9 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/Input';
-import { Spinner } from '@/components/ui/loading';
 import { Textarea } from '@/components/ui/Textarea';
-import { type GameGenre, GameGenreConfig } from '@/features/game/types';
+import { GameGenreConfig } from '@/features/game/types';
 import { cn } from '@/lib/utils';
-import { useCurrentGameStore } from '@/stores/useCurrentGameStore';
 
 import { useSurveyFormStore } from '../../store/useSurveyFormStore';
 import type { SurveyFormData, TestStage, ThemeCategory } from '../../types';
@@ -79,22 +76,8 @@ function StepBasicInfo({ control }: StepBasicInfoProps) {
   // testStage 값 감시 (테마 선택 표시 여부 결정)
   const testStage = useWatch({ control, name: 'testStage' });
 
-  // 게임 정보 가져오기
-  const { currentGame: game, isLoading: isLoadingGame } = useCurrentGameStore();
-
   // store 접근
-  const { updateFormData } = useSurveyFormStore();
-
-  // 게임 정보가 있으면 survey form store에 저장
-  useEffect(() => {
-    if (game) {
-      updateFormData({
-        gameName: game.gameName,
-        gameGenre: game.gameGenre as GameGenre[],
-        gameContext: game.gameContext,
-      });
-    }
-  }, [game, updateFormData]);
+  const { formData } = useSurveyFormStore();
 
   const getGenreLabels = (genres: string[]) => {
     return genres.map((code) => {
@@ -132,42 +115,27 @@ function StepBasicInfo({ control }: StepBasicInfoProps) {
           <CardTitle className="text-base">게임 정보</CardTitle>
         </CardHeader>
         <CardContent>
-          {isLoadingGame ? (
-            <div className="flex items-center gap-2">
-              <Spinner size="sm" />
-              <span className="text-muted-foreground">
-                게임 정보 로딩 중...
-              </span>
+          <div className="space-y-2">
+            <div>
+              <span className="text-muted-foreground text-sm">게임 이름: </span>
+              <span className="font-medium">{formData.gameName}</span>
             </div>
-          ) : game ? (
-            <div className="space-y-2">
-              <div>
-                <span className="text-muted-foreground text-sm">
-                  게임 이름:{' '}
-                </span>
-                <span className="font-medium">{game.gameName}</span>
-              </div>
-              <div className="flex flex-wrap gap-1">
-                {getGenreLabels(game.gameGenre).map((label) => (
-                  <Badge
-                    key={label}
-                    variant="secondary"
-                  >
-                    {label}
-                  </Badge>
-                ))}
-              </div>
-              {game.gameContext && (
-                <p className="text-muted-foreground text-sm">
-                  {game.gameContext}
-                </p>
-              )}
+            <div className="flex flex-wrap gap-1">
+              {getGenreLabels(formData.gameGenre ?? []).map((label) => (
+                <Badge
+                  key={label}
+                  variant="secondary"
+                >
+                  {label}
+                </Badge>
+              ))}
             </div>
-          ) : (
-            <p className="text-destructive">
-              게임을 선택해주세요. 게임 목록에서 설문 생성을 시작하세요.
-            </p>
-          )}
+            {formData.gameContext && (
+              <p className="text-muted-foreground text-sm">
+                {formData.gameContext}
+              </p>
+            )}
+          </div>
         </CardContent>
       </Card>
 
