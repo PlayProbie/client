@@ -76,14 +76,16 @@ export function GameFormModal({
 
 
         {showAnalysisStep && analysisResult ? (
-          <GameElementAnalysisStep
-            elements={analysisResult}
-            onElementChange={onElementChange}
-            onReanalyze={onAnalyzeGame}
-            onConfirm={handleAnalysisConfirm}
-            isSubmitting={isSubmitting}
-            onBack={onBackToInput}
-          />
+          <div className="max-h-[60vh] overflow-y-auto">
+            <GameElementAnalysisStep
+              elements={analysisResult}
+              onElementChange={onElementChange}
+              onReanalyze={onAnalyzeGame}
+              onConfirm={handleAnalysisConfirm}
+              isSubmitting={isSubmitting}
+              onBack={onBackToInput}
+            />
+          </div>
         ) : (
           <>
             <div className="grid gap-8 py-4">
