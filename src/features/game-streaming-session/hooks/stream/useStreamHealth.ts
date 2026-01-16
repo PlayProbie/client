@@ -3,8 +3,9 @@ import { useEffect, useRef, useState } from 'react';
 export type StreamHealthState = 'HEALTHY' | 'DEGRADED' | 'UNSTABLE';
 
 export interface StreamHealthMetrics {
-  packetLoss: number; // percentage (0-100)
-  rtt: number; // ms
+  packetLoss: number | null; // percentage (0-100)
+  rtt: number | null; // ms
+  availableIncomingBitrate: number | null; // bps
 }
 
 export interface UseStreamHealthOptions {
@@ -29,16 +30,18 @@ export interface UseStreamHealthReturn {
 interface PartialStreamHealthMetrics {
   packetLoss: number | null;
   rtt: number | null;
+  availableIncomingBitrate: number | null;
 }
 
 function readStreamHealthMetrics(
   stats: RTCStatsReport | null
 ): PartialStreamHealthMetrics {
   if (!stats) {
-    return { packetLoss: null, rtt: null };
+    return { packetLoss: null, rtt: null, availableIncomingBitrate: null };
   }
 
   let currentRtt: number | null = null;
+  let availableIncomingBitrate: number | null = null;
   let packetsLost = 0;
   let packetsReceived = 0;
   let hasPacketStats = false;
@@ -48,6 +51,15 @@ function readStreamHealthMetrics(
       if (typeof report.currentRoundTripTime === 'number') {
         const rttMs = report.currentRoundTripTime * 1000;
         currentRtt = currentRtt == null ? rttMs : Math.max(currentRtt, rttMs);
+      }
+      if (typeof report.availableIncomingBitrate === 'number') {
+        availableIncomingBitrate =
+          availableIncomingBitrate == null
+            ? report.availableIncomingBitrate
+            : Math.min(
+                availableIncomingBitrate,
+                report.availableIncomingBitrate
+              );
       }
     }
 
@@ -67,6 +79,7 @@ function readStreamHealthMetrics(
   return {
     packetLoss,
     rtt: currentRtt,
+    availableIncomingBitrate,
   };
 }
 
@@ -81,6 +94,19 @@ function mergeMetric(
     return primary;
   }
   return Math.max(primary, secondary);
+}
+
+function mergeAvailableIncomingBitrate(
+  primary: number | null,
+  secondary: number | null
+): number | null {
+  if (primary == null) {
+    return secondary ?? null;
+  }
+  if (secondary == null) {
+    return primary;
+  }
+  return Math.min(primary, secondary);
 }
 
 /**
@@ -124,8 +150,9 @@ export function useStreamHealth({
 }: UseStreamHealthOptions): UseStreamHealthReturn {
   const [health, setHealth] = useState<StreamHealthState>('HEALTHY');
   const [metrics, setMetrics] = useState<StreamHealthMetrics>({
-    packetLoss: 0,
-    rtt: 0,
+    packetLoss: null,
+    rtt: null,
+    availableIncomingBitrate: null,
   });
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -150,6 +177,21 @@ export function useStreamHealth({
         inputMetrics.packetLoss
       );
       const mergedRtt = mergeMetric(videoMetrics.rtt, inputMetrics.rtt);
+      const mergedAvailableIncomingBitrate = mergeAvailableIncomingBitrate(
+        videoMetrics.availableIncomingBitrate,
+        inputMetrics.availableIncomingBitrate
+      );
+
+      const nextMetrics = {
+        packetLoss:
+          mergedPacketLoss == null ? null : Number(mergedPacketLoss.toFixed(2)),
+        rtt: mergedRtt == null ? null : Math.round(mergedRtt),
+        availableIncomingBitrate:
+          mergedAvailableIncomingBitrate == null
+            ? null
+            : Math.round(mergedAvailableIncomingBitrate),
+      };
+      setMetrics(nextMetrics);
 
       if (mergedPacketLoss == null || mergedRtt == null) {
         setHealth((prev) => {
@@ -160,13 +202,6 @@ export function useStreamHealth({
         });
         return;
       }
-
-      // 메트릭 업데이트
-      const nextMetrics = {
-        packetLoss: Number(mergedPacketLoss.toFixed(2)),
-        rtt: Math.round(mergedRtt),
-      };
-      setMetrics(nextMetrics);
 
       // 상태 판정
       const newHealth = evaluateStreamHealth(

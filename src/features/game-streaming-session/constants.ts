@@ -37,3 +37,16 @@ export const GAMEPAD_AXIS_THRESHOLD = 0.1;
 
 /** 기본 배치 크기 */
 export const DEFAULT_BATCH_SIZE = 100;
+
+// ----------------------------------------
+// Upload Throttle Constants
+// ----------------------------------------
+
+/** 업로드 대역폭 비율 (availableIncomingBitrate의 1%) */
+export const UPLOAD_RATE_RATIO = 0.01;
+
+/** 업로드 대역폭 상한 (bps) */
+export const UPLOAD_RATE_CAP_BPS = 128_000;
+
+/** 업로드 대역폭 fallback (bps) */
+export const UPLOAD_RATE_FALLBACK_BPS = 64_000;

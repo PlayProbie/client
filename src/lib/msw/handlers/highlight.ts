@@ -131,6 +131,15 @@ function generateMockInsightTags(
 // ----------------------------------------
 
 export const highlightHandlers = [
+  // S3 업로드 (PUT)
+  http.put(
+    'https://dev-playprobie-replay.s3.ap-northeast-2.amazonaws.com/replays/:path*',
+    async () => {
+      await delay(150);
+      return new HttpResponse(null, { status: 200 });
+    }
+  ),
+
   // Presigned URL 발급 (201 Created)
   http.post(
     `${MSW_API_BASE_URL}/sessions/:sessionId/replay/presigned-url`,

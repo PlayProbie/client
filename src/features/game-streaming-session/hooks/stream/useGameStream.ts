@@ -4,12 +4,19 @@
  * AWS GameLift Streams Web SDK를 사용한 WebRTC 스트리밍 연결을 관리합니다.
  * useInputLogger 통합으로 입력 로그 수집 및 업로드 지원.
  */
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useToast } from '@/hooks/useToast';
 
+import {
+  UPLOAD_RATE_CAP_BPS,
+  UPLOAD_RATE_FALLBACK_BPS,
+  UPLOAD_RATE_RATIO,
+} from '../../constants';
+import type { InputLog, SegmentMeta } from '../../types';
 import { useInputLogger } from '../input/useInputLogger';
 import { useInputLogUploader } from '../input/useInputLogUploader';
+import { useUploadWorker } from '../upload/useUploadWorker';
 import type {
   UseGameStreamOptions,
   UseGameStreamReturn,
@@ -58,7 +65,7 @@ export function useGameStream(
     enabled: segmentRecordingEnabled = highlightEnabled,
     maxStorageBytes: segmentRecordingMaxStorageBytes,
     timesliceMs: segmentRecordingTimesliceMs,
-    onSegmentStored,
+    onSegmentStored: onSegmentStoredCallback,
     onError: onSegmentError,
   } = segmentRecording;
 
@@ -69,6 +76,18 @@ export function useGameStream(
     import.meta.env.DEV && import.meta.env.VITE_MOCK_STREAM === 'true';
 
   const [isGameReady, setIsGameReady] = useState(false);
+  const [uploadSessionId, setUploadSessionId] = useState<string | null>(null);
+  const handleConnected = useCallback(
+    (uuid: string) => {
+      setUploadSessionId(uuid);
+      onConnected?.(uuid);
+    },
+    [onConnected]
+  );
+  const handleDisconnected = useCallback(() => {
+    onDisconnected?.();
+  }, [onDisconnected]);
+
   const {
     videoRef,
     audioRef,
@@ -80,8 +99,8 @@ export function useGameStream(
     disconnect: disconnectStream,
   } = useStreamConnection({
     surveyUuid,
-    onConnected,
-    onDisconnected,
+    onConnected: handleConnected,
+    onDisconnected: handleDisconnected,
     onError,
   });
 
@@ -102,13 +121,75 @@ export function useGameStream(
     getInputRTCStats,
   });
 
+  const uploadWorkerEnabled = highlightEnabled && segmentRecordingEnabled;
+  const uploadRateBps = useMemo(() => {
+    if (!isConnected) {
+      return null;
+    }
+    if (streamHealth.health === 'UNSTABLE') {
+      return 0;
+    }
+    const availableIncomingBitrate =
+      streamHealth.metrics.availableIncomingBitrate;
+    if (
+      typeof availableIncomingBitrate === 'number' &&
+      Number.isFinite(availableIncomingBitrate) &&
+      availableIncomingBitrate > 0
+    ) {
+      const computedRate = Math.floor(
+        availableIncomingBitrate * UPLOAD_RATE_RATIO
+      );
+      return Math.min(UPLOAD_RATE_CAP_BPS, Math.max(0, computedRate));
+    }
+    return UPLOAD_RATE_FALLBACK_BPS;
+  }, [
+    isConnected,
+    streamHealth.health,
+    streamHealth.metrics.availableIncomingBitrate,
+  ]);
+  const { enqueueSegment: enqueueUploadSegment, flush: flushUploadWorker } =
+    useUploadWorker({
+      enabled: uploadWorkerEnabled,
+      sessionId: uploadSessionId,
+      streamHealth: streamHealth.health,
+      uploadRateBps,
+      streamingActive: isConnected,
+      onError: (error) => {
+        toast({
+          title: '[UploadWorker] 업로드 처리 실패',
+          variant: 'destructive',
+          description: error.message,
+        });
+      },
+      onSegmentFailed: (segmentId) => {
+        toast({
+          title: '[UploadWorker] 세그먼트 업로드 실패',
+          variant: 'destructive',
+          description: `segmentId=${segmentId}`,
+        });
+      },
+    });
+
+  const drainLogsBySegmentRef = useRef<(segmentId: string) => InputLog[]>(() => []);
+
+  const handleSegmentStored = useCallback(
+    (meta: SegmentMeta, blob?: Blob) => {
+      onSegmentStoredCallback?.(meta, blob);
+
+      if (!uploadWorkerEnabled || !blob) return;
+      const logs = drainLogsBySegmentRef.current(meta.segment_id);
+      enqueueUploadSegment(meta, blob, logs);
+    },
+    [onSegmentStoredCallback, uploadWorkerEnabled, enqueueUploadSegment]
+  );
+
   const segmentRecorder = useSegmentRecorder({
     videoRef,
     sessionId: segmentRecordingEnabled ? sessionUuid : null,
     enabled: segmentRecordingEnabled && isConnected && isGameReady,
     maxStorageBytes: segmentRecordingMaxStorageBytes,
     timesliceMs: segmentRecordingTimesliceMs,
-    onSegmentStored,
+    onSegmentStored: handleSegmentStored,
     onError: onSegmentError,
   });
 
@@ -120,6 +201,7 @@ export function useGameStream(
     getLogsBySegment,
     getSegmentIdsWithLogs,
     clearLogsBySegment,
+    drainLogsBySegment,
     createKeyboardFilter,
     createMouseFilter,
     createGamepadFilter,
@@ -134,6 +216,10 @@ export function useGameStream(
       ? segmentRecorder.getActiveSegmentIds
       : undefined,
   });
+
+  useEffect(() => {
+    drainLogsBySegmentRef.current = drainLogsBySegment;
+  }, [drainLogsBySegment]);
 
   // 입력 필터 생성 (memoized)
   const keyboardFilter = useCallback(
@@ -170,6 +256,14 @@ export function useGameStream(
     },
   });
 
+  const flushUploadQueue = useCallback(() => {
+    if (uploadWorkerEnabled) {
+      flushUploadWorker();
+      return Promise.resolve();
+    }
+    return uploadInputLogs();
+  }, [uploadWorkerEnabled, flushUploadWorker, uploadInputLogs]);
+
   const connect = useCallback(() => {
     return connectStream({
       inputFilters: inputLoggingEnabled
@@ -189,11 +283,22 @@ export function useGameStream(
   ]);
 
   const disconnect = useCallback(() => {
-    flushLogs(sessionUuid);
+    if (uploadWorkerEnabled) {
+      flushUploadWorker();
+    } else {
+      flushLogs(sessionUuid);
+    }
     disconnectStream();
     setIsGameReady(false);
     clearLogs();
-  }, [flushLogs, sessionUuid, disconnectStream, clearLogs]);
+  }, [
+    uploadWorkerEnabled,
+    flushUploadWorker,
+    flushLogs,
+    sessionUuid,
+    disconnectStream,
+    clearLogs,
+  ]);
 
   return {
     videoRef,
@@ -205,7 +310,7 @@ export function useGameStream(
     sessionUuid,
     connect,
     disconnect,
-    uploadInputLogs,
+    uploadInputLogs: flushUploadQueue,
     streamHealth,
   };
 }

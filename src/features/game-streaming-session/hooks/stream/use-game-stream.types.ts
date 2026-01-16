@@ -18,7 +18,7 @@ export interface SegmentRecordingOptions {
   enabled?: boolean;
   maxStorageBytes?: number;
   timesliceMs?: number;
-  onSegmentStored?: (meta: SegmentMeta) => void;
+  onSegmentStored?: (meta: SegmentMeta, blob?: Blob) => void;
   onError?: (error: Error) => void;
 }
 

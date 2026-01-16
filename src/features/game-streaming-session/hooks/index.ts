@@ -12,3 +12,4 @@ export { useGameStream } from './stream/useGameStream';
 export { useSegmentRecorder } from './stream/useSegmentRecorder';
 export { useStreamHealth } from './stream/useStreamHealth';
 export { useFullscreen } from './ui/useFullscreen';
+export { useUploadWorker } from './upload/useUploadWorker';

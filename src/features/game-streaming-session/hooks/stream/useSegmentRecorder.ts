@@ -15,7 +15,7 @@ export interface UseSegmentRecorderOptions {
   enabled: boolean;
   maxStorageBytes?: number;
   timesliceMs?: number;
-  onSegmentStored?: (meta: SegmentMeta) => void;
+  onSegmentStored?: (meta: SegmentMeta, blob?: Blob) => void;
   onError?: (error: Error) => void;
 }
 
@@ -109,7 +109,7 @@ export function useSegmentRecorder(
             } else {
               await store.saveSegment(segment.meta, segment.blob);
             }
-            onSegmentStored?.(segment.meta);
+            onSegmentStored?.(segment.meta, segment.blob);
           } catch (error) {
             const err =
               error instanceof Error ? error : new Error(String(error));
