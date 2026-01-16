@@ -5,7 +5,7 @@
  */
 
 import { API_BASE_URL } from '../constants';
-import type { ApiInputLogsUploadRequest, InputLog } from '../types/highlight';
+import type { ApiInputLogsUploadRequest, InputLog } from '../types';
 
 /**
  * 입력 로그를 서버에 업로드

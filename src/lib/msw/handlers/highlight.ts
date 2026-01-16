@@ -21,7 +21,7 @@ import type {
   ApiPresignedUrlRequest,
   ApiPresignedUrlResponse,
   SegmentMeta,
-} from '@/features/game-streaming-session/types/highlight';
+} from '@/features/game-streaming-session/types';
 
 import { MSW_API_BASE_URL } from '../../constants';
 

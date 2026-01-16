@@ -18,3 +18,22 @@ export const ERROR_MESSAGES: Record<string, string> = {
   T003: 'GameLift 서비스 오류',
   T004: '현재 접속 가능한 세션이 꽉 찼습니다.',
 };
+
+// ----------------------------------------
+// Input Logger Constants
+// ----------------------------------------
+
+/** 마우스 이동 샘플링 간격 (ms) - 15Hz */
+export const MOUSE_MOVE_SAMPLE_INTERVAL = 66;
+
+/** 마우스 이동 임계값 (px) */
+export const MOUSE_MOVE_THRESHOLD = 5;
+
+/** 휠 샘플링 간격 (ms) - 30Hz */
+export const WHEEL_SAMPLE_INTERVAL = 33;
+
+/** 게임패드 축 변화량 임계값 */
+export const GAMEPAD_AXIS_THRESHOLD = 0.1;
+
+/** 기본 배치 크기 */
+export const DEFAULT_BATCH_SIZE = 100;
