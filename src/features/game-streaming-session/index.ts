@@ -29,9 +29,12 @@ export * from './components';
 // Hooks
 export {
   sessionKeys,
+  useFullscreen,
   useGameStream,
+  useInputLogger,
   useSessionInfo,
   useSessionStatus,
+  useSessionTimer,
   useSignal,
   useTerminateSession,
 } from './hooks';
