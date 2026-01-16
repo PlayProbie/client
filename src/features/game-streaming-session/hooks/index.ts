@@ -9,4 +9,5 @@ export { sessionKeys, useSessionInfo } from './useSession';
 export { useSessionStatus } from './useSessionStatus';
 export { useSessionTimer } from './useSessionTimer';
 export { useSignal } from './useSignal';
+export { useStreamHealth } from './useStreamHealth';
 export { useTerminateSession } from './useTerminateSession';

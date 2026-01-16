@@ -39,7 +39,21 @@ export function useMediaTime(options: UseMediaTimeOptions): UseMediaTimeReturn {
 
     // rVFC 지원 여부 확인
     if (typeof element.requestVideoFrameCallback !== 'function') {
-      return;
+      // rVFC 미지원 시 currentTime 폴링 (16ms)
+      let intervalId: number | null = null;
+
+      const updateMediaTime = () => {
+        mediaTimeRef.current = Math.round(element.currentTime * 1000);
+      };
+
+      updateMediaTime();
+      intervalId = window.setInterval(updateMediaTime, 16);
+
+      return () => {
+        if (intervalId !== null) {
+          clearInterval(intervalId);
+        }
+      };
     }
 
     let rafId: number | null = null;

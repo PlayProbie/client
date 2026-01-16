@@ -12,6 +12,11 @@ import { postInputLogs, postSignal } from '../api';
 import { createStreamClient, type StreamClient } from '../lib';
 import type { InputLog } from '../types/highlight';
 import { useInputLogger } from './input-logger';
+import {
+  useStreamHealth,
+  type UseStreamHealthOptions,
+  type UseStreamHealthReturn,
+} from './useStreamHealth';
 
 /** 입력 로깅 옵션 */
 export interface InputLoggingOptions {
@@ -35,6 +40,11 @@ export interface UseGameStreamOptions {
   onError?: (error: Error) => void;
   /** 입력 로깅 옵션 (Phase 1) */
   inputLogging?: InputLoggingOptions;
+  /** 스트림 상태 모니터링 옵션 (Phase 2) */
+  streamHealth?: Omit<
+    UseStreamHealthOptions,
+    'getVideoRTCStats' | 'getInputRTCStats'
+  >;
 }
 
 /** useGameStream 반환 타입 */
@@ -60,6 +70,8 @@ export interface UseGameStreamReturn {
 
   /** 입력 로그 수동 업로드 */
   uploadInputLogs: () => Promise<void>;
+  /** 스트림 상태 모니터링 정보 */
+  streamHealth: UseStreamHealthReturn;
 }
 
 /**
@@ -74,6 +86,7 @@ export function useGameStream(
     onDisconnected,
     onError,
     inputLogging = {},
+    streamHealth: streamHealthOptions = {},
   } = options;
 
   const {
@@ -81,6 +94,12 @@ export function useGameStream(
     batchSize = 50,
     onLogBatch,
   } = inputLogging;
+
+  const {
+    enabled: streamHealthEnabled = true,
+    intervalMs: streamHealthIntervalMs,
+    onStatusChange: onStreamHealthChange,
+  } = streamHealthOptions;
 
   const { toast } = useToast();
 
@@ -96,6 +115,23 @@ export function useGameStream(
   const [isConnected, setIsConnected] = useState(false);
   const [isGameReady, setIsGameReady] = useState(false);
   const [sessionUuid, setSessionUuid] = useState<string | null>(null);
+
+  const getVideoRTCStats = useCallback(
+    () => clientRef.current?.getVideoRTCStats() ?? Promise.resolve(null),
+    []
+  );
+  const getInputRTCStats = useCallback(
+    () => clientRef.current?.getInputRTCStats() ?? Promise.resolve(null),
+    []
+  );
+
+  const streamHealth = useStreamHealth({
+    enabled: streamHealthEnabled && isConnected,
+    intervalMs: streamHealthIntervalMs,
+    onStatusChange: onStreamHealthChange,
+    getVideoRTCStats,
+    getInputRTCStats,
+  });
 
   // 입력 로그 수집 훅
   // 로딩 화면이 끝난 후(isGameReady=true)부터 입력 로깅 시작
@@ -283,5 +319,6 @@ export function useGameStream(
     connect,
     disconnect,
     uploadInputLogs,
+    streamHealth,
   };
 }
