@@ -196,7 +196,7 @@ export function GameFormModal({
                     : submitLabel
                   : isAnalyzing
                   ? '분석 중...'
-                  : '✨ AI 분석하기'}
+                  : '다음'}
               </Button>
             </DialogFooter>
           </>
