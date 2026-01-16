@@ -71,7 +71,8 @@ function generateMockInsightTags(
   // Mock: 첫 번째 세그먼트에서 PANIC 태그 생성
   const firstSegment = uploadedSegments[0];
   if (firstSegment) {
-    const panicTime = firstSegment.start_media_time + 10;
+    // 시간 단위: ms (밀리초 정수)
+    const panicTime = firstSegment.start_media_time + 10000; // +10초
     tags.push({
       insight_tag_id: `tag_${generateUUID().slice(0, 8)}`,
       session_id: sessionId,
@@ -79,12 +80,12 @@ function generateMockInsightTags(
       score: 0.92,
       description: 'Space Bar 연타 감지 (6회/sec)',
       media_time_start: panicTime,
-      media_time_end: panicTime + 10,
+      media_time_end: panicTime + 10000, // +10초
       clips: [
         {
           segment_id: firstSegment.segment_id,
-          offset_start: 10,
-          offset_end: 20,
+          offset_start: 10000, // 10초
+          offset_end: 20000, // 20초
           video_url: `https://mock-s3.example.com/${sessionId}/${firstSegment.segment_id}.webm`,
         },
       ],
@@ -96,7 +97,8 @@ function generateMockInsightTags(
   // Mock: 두 번째 세그먼트에서 IDLE 태그 생성
   if (uploadedSegments.length >= 2) {
     const secondSegment = uploadedSegments[1];
-    const idleTime = secondSegment.start_media_time + 5;
+    // 시간 단위: ms (밀리초 정수)
+    const idleTime = secondSegment.start_media_time + 5000; // +5초
     tags.push({
       insight_tag_id: `tag_${generateUUID().slice(0, 8)}`,
       session_id: sessionId,
@@ -104,12 +106,12 @@ function generateMockInsightTags(
       score: 0.88,
       description: '15초 동안 입력 없음',
       media_time_start: idleTime,
-      media_time_end: idleTime + 15,
+      media_time_end: idleTime + 15000, // +15초
       clips: [
         {
           segment_id: secondSegment.segment_id,
-          offset_start: 5,
-          offset_end: 20,
+          offset_start: 5000, // 5초
+          offset_end: 20000, // 20초
           video_url: `https://mock-s3.example.com/${sessionId}/${secondSegment.segment_id}.webm`,
         },
       ],
@@ -182,7 +184,7 @@ export const highlightHandlers = [
         start_media_time: body.start_media_time,
         end_media_time: body.end_media_time,
         upload_status: 'UPLOADED',
-        overlap_sec: 3,
+        overlap_ms: 3000, // 3초 = 3000ms
         file_size: body.file_size,
         created_at: new Date().toISOString(),
         uploaded_at: new Date().toISOString(),

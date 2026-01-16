@@ -20,6 +20,7 @@
 
 ### 동기화 정확도
 
+- 입력 로그의 시간은 **밀리초(ms) 정수**로 기록한다 (소수점 미사용).
 - 입력 로그는 `media_time` 기준으로 정렬되어야 한다. `requestVideoFrameCallback`
   미지원 환경에서는 `video.currentTime` 기반으로 동기화 오차가 발생할 수 있다.
 - 세그먼트 경계(20~30초)에서 로그와 영상이 어긋나지 않도록 `segment_id` 전환
@@ -107,9 +108,9 @@
 ### Phase 0. 계약/스키마 정리 (백엔드 협의 선행)
 
 - 입력 로그 스키마 확정: 최소 필드(`type`, `media_time`, `client_ts`,
-  `segment_id`).
+  `segment_id`). **모든 시간 필드는 밀리초(ms) 정수**.
 - 세그먼트 메타 스키마 확정: `start_media_time`, `end_media_time`,
-  `upload_status`.
+  `upload_status`. **시간 필드는 밀리초(ms) 정수**.
 - 업로드/InsightTag API 계약 확정 및 Mock 핸들러 추가.
 
 **산출물**:
@@ -128,6 +129,7 @@
   - 키보드/마우스/게임패드 이벤트 샘플링 및 정규화.
   - `pagehide`, `visibilitychange`, `blur` 이벤트 수집.
   - `media_time` 산출: `requestVideoFrameCallback` 우선, 없으면 `currentTime`.
+    **ms 정수로 변환** (`Math.round(mediaTime * 1000)`).
   - **마우스 샘플링**: 15Hz + 5px 변화량 필터링 적용.
 
 **검증**:

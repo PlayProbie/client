@@ -32,9 +32,9 @@ export type InputEventType =
 export interface BaseInputLog {
   /** 입력 이벤트 타입 */
   type: InputEventType;
-  /** 영상 기준 시간 (video.currentTime 또는 rVFC) - Core Key */
+  /** 영상 기준 시간 (video.currentTime 또는 rVFC) - Core Key, 단위: ms (밀리초 정수) */
   media_time: number;
-  /** 로컬 에포크 타임 (디버깅용) */
+  /** 로컬 에포크 타임 (디버깅용), 단위: ms (밀리초 정수) */
   client_ts: number;
   /** 해당 이벤트가 포함된 세그먼트 ID */
   segment_id: string;
@@ -71,13 +71,15 @@ export interface MouseMoveInputLog extends BaseInputLog {
   sampled?: boolean;
 }
 
-/** 휠 입력 로그 */
+/** 휠 입력 로그 (샘플링 적용) */
 export interface WheelInputLog extends BaseInputLog {
   type: 'WHEEL';
   /** 수평 스크롤량 */
   deltaX: number;
   /** 수직 스크롤량 */
   deltaY: number;
+  /** 샘플링된 이벤트 여부 */
+  sampled?: boolean;
 }
 
 /** 게임패드 버튼 입력 로그 */
@@ -141,14 +143,14 @@ export interface SegmentMeta {
   segment_id: string;
   /** 세션 ID */
   session_id: string;
-  /** 코어 구간 시작 시간 (영상 내 절대 시간, 30초 고정) */
+  /** 코어 구간 시작 시간 (영상 내 절대 시간), 단위: ms (밀리초 정수) */
   start_media_time: number;
-  /** 코어 구간 종료 시간 (영상 내 절대 시간, 30초 고정) */
+  /** 코어 구간 종료 시간 (영상 내 절대 시간), 단위: ms (밀리초 정수) */
   end_media_time: number;
   /** 업로드 상태 */
   upload_status: SegmentUploadStatus;
-  /** 오버랩 시간 (양쪽 3초씩, 총 36초 녹화) */
-  overlap_sec: number;
+  /** 오버랩 시간 (양쪽 3000ms씩, 총 36000ms 녹화), 단위: ms (밀리초 정수) */
+  overlap_ms: number;
   /** 세그먼트 파일 크기 (bytes) */
   file_size?: number;
   /** 생성 시간 */
@@ -161,10 +163,13 @@ export interface SegmentMeta {
 export interface ClientSegmentMeta {
   segmentId: string;
   sessionId: string;
+  /** 단위: ms (밀리초 정수) */
   startMediaTime: number;
+  /** 단위: ms (밀리초 정수) */
   endMediaTime: number;
   uploadStatus: SegmentUploadStatus;
-  overlapSec: number;
+  /** 단위: ms (밀리초 정수) */
+  overlapMs: number;
   fileSize?: number;
   createdAt: string;
   uploadedAt?: string;
@@ -190,9 +195,9 @@ export type PlaybackStatus =
 export interface ClipInfo {
   /** 세그먼트 ID */
   segment_id: string;
-  /** 파일 시작점으로부터의 오프셋 (시작) */
+  /** 파일 시작점으로부터의 오프셋 (시작), 단위: ms (밀리초 정수) */
   offset_start: number;
-  /** 파일 시작점으로부터의 오프셋 (종료) */
+  /** 파일 시작점으로부터의 오프셋 (종료), 단위: ms (밀리초 정수) */
   offset_end: number;
   /** S3 업로드 완료 시 영상 URL */
   video_url?: string;
@@ -205,9 +210,9 @@ export interface ApiInsightTag {
   tag_type: InsightTagType;
   score: number;
   description: string;
-  /** 분석된 발생 시간 (영상 기준) - 시작 */
+  /** 분석된 발생 시간 (영상 기준) - 시작, 단위: ms (밀리초 정수) */
   media_time_start: number;
-  /** 분석된 발생 시간 (영상 기준) - 종료 */
+  /** 분석된 발생 시간 (영상 기준) - 종료, 단위: ms (밀리초 정수) */
   media_time_end: number;
   /** 재생을 위한 세그먼트 매핑 정보 */
   clips: ClipInfo[];
@@ -224,11 +229,15 @@ export interface InsightTag {
   tagType: InsightTagType;
   score: number;
   description: string;
+  /** 단위: ms (밀리초 정수) */
   mediaTimeStart: number;
+  /** 단위: ms (밀리초 정수) */
   mediaTimeEnd: number;
   clips: {
     segmentId: string;
+    /** 단위: ms (밀리초 정수) */
     offsetStart: number;
+    /** 단위: ms (밀리초 정수) */
     offsetEnd: number;
     videoUrl?: string;
   }[];
@@ -260,7 +269,9 @@ export interface ApiPresignedUrlResponse {
 export interface ApiSegmentUploadCompleteRequest {
   session_id: string;
   segment_id: string;
+  /** 단위: ms (밀리초 정수) */
   start_media_time: number;
+  /** 단위: ms (밀리초 정수) */
   end_media_time: number;
   file_size: number;
 }
@@ -308,7 +319,7 @@ export function toClientSegmentMeta(api: SegmentMeta): ClientSegmentMeta {
     startMediaTime: api.start_media_time,
     endMediaTime: api.end_media_time,
     uploadStatus: api.upload_status,
-    overlapSec: api.overlap_sec,
+    overlapMs: api.overlap_ms,
     fileSize: api.file_size,
     createdAt: api.created_at,
     uploadedAt: api.uploaded_at,

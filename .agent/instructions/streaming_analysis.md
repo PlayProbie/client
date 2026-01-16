@@ -100,16 +100,16 @@ graph TD
 ┌─────────────────────────────────────────────────────────────┐
 │          Chunk (Core: 30s, Total Recording: 36s)            │
 ├─────────────────────────────────────────────────────────────┤
-│ Chunk Meta: { segment_id: "uuid", range: [0.0, 30.0] }      │
+│ Chunk Meta: { segment_id: "uuid", range: [0, 30000] } (ms)  │
 ├─────────────────────────────────────────────────────────────┤
 │ Segment (Video Blob)                                        │
 │  - 360p, WebM/MP4                                           │
 │  - Overlap: 3s on BOTH sides (양쪽 오버랩)                   │
 │  - 실제 녹화: [-3s ~ +33s] 범위 (36초)                       │
 ├─────────────────────────────────────────────────────────────┤
-│ Input Logs (Array)                                          │
-│  - { type: "KEY_DOWN", media_time: 12.34, code: "Space" }   │
-│  - { type: "MOUSE_MOVE", media_time: 12.35, x: 100, y: 200 }│
+│ Input Logs (Array)  ※ 시간 단위: ms (밀리초, 정수)          │
+│  - { type: "KEY_DOWN", media_time: 12340, code: "Space" }   │
+│  - { type: "MOUSE_MOVE", media_time: 12350, x: 100, y: 200 }│
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -117,16 +117,18 @@ graph TD
 
 **1) 이벤트 로그 필드**
 
-- `media_time`: 영상 기준 시간 (`video.currentTime` 또는 rVFC). **(Core Key)**
-- `client_ts`: 로컬 에포크 타임 (디버깅용).
+- `media_time`: 영상 기준 시간, **밀리초(ms) 정수**. **(Core Key)**
+  - `video.currentTime * 1000` 또는 rVFC `mediaTime * 1000`.
+- `client_ts`: 로컬 에포크 타임, **밀리초(ms) 정수** (디버깅용).
 - `segment_id`: 해당 이벤트가 포함된 세그먼트 ID.
 
 **2) 세그먼트 메타데이터**
 
-- `start_media_time` / `end_media_time`: 영상 내 절대 시간 범위 (코어 30초).
+- `start_media_time` / `end_media_time`: 영상 내 절대 시간 범위, **밀리초(ms)
+  정수**.
 - `upload_status`: `LOCAL_ONLY` → `UPLOADING` → `UPLOADED`.
-- `overlap_sec`: **3초 (양쪽 오버랩)**. 총 녹화 시간 = 코어 30초 + 오버랩 6초 =
-  36초.
+- `overlap_ms`: **3000ms (양쪽 오버랩)**. 총 녹화 시간 = 코어 30000ms + 오버랩
+  6000ms = 36000ms.
 
 ---
 
@@ -155,16 +157,16 @@ graph TD
   "score": 0.95,
   "description": "Space Bar 연타 감지 (8회/sec)",
 
-  // 분석된 발생 시간 (영상 기준)
-  "media_time_start": 120.5,
-  "media_time_end": 130.5,
+  // 분석된 발생 시간 (영상 기준, 밀리초)
+  "media_time_start": 120500,
+  "media_time_end": 130500,
 
   // 재생을 위한 세그먼트 매핑 정보 (서버가 계산해서 내려줌)
   "clips": [
     {
       "segment_id": "seg_a1b2", // 120초~150초를 담고 있는 파일
-      "offset_start": 0.5, // 파일 시작점으로부터 0.5초 지점
-      "offset_end": 10.5, // 파일 시작점으로부터 10.5초 지점
+      "offset_start": 500, // 파일 시작점으로부터 500ms 지점
+      "offset_end": 10500, // 파일 시작점으로부터 10500ms 지점
       "video_url": "https://s3.../seg_a1b2.webm" // (업로드 완료 시)
     }
   ],
