@@ -27,7 +27,7 @@ const getToday = () => new Date().toISOString().split('T')[0];
 /** 최대 스텝 인덱스 (0부터 시작) */
 const MAX_STEP_INDEX = SURVEY_FORM_STEPS.length - 1;
 
-const INITIAL_STATE = {
+export const INITIAL_STATE = {
   currentStep: 0,
   formData: {
     startedAt: getToday(),
