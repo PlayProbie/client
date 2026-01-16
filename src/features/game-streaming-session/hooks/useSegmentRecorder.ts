@@ -5,6 +5,7 @@ import {
   createSegmentStore,
   type SegmentStore,
   type SegmentStoreBackend,
+  type SegmentWriter,
 } from '../lib/segment-store/index';
 import type { SegmentMeta } from '../types/highlight';
 
@@ -13,6 +14,7 @@ export interface UseSegmentRecorderOptions {
   sessionId: string | null;
   enabled: boolean;
   maxStorageBytes?: number;
+  timesliceMs?: number;
   onSegmentStored?: (meta: SegmentMeta) => void;
   onError?: (error: Error) => void;
 }
@@ -31,6 +33,7 @@ export function useSegmentRecorder(
     sessionId,
     enabled,
     maxStorageBytes,
+    timesliceMs,
     onSegmentStored,
     onError,
   } = options;
@@ -67,12 +70,51 @@ export function useSegmentRecorder(
       storeRef.current = store;
       setBackend(store.backend);
 
+      const writers = new Map<string, SegmentWriter>();
+
       const recorder = new SegmentRecorder({
         videoElement,
         sessionId,
+        timesliceMs,
+        onSegmentStart: async (segment) => {
+          if (store.backend !== 'opfs') return;
+
+          try {
+            const writer = await store.openSegmentWriter(segment.segmentId);
+            if (writer) {
+              writers.set(segment.segmentId, writer);
+            }
+          } catch (error) {
+            const err =
+              error instanceof Error ? error : new Error(String(error));
+            onError?.(err);
+          }
+        },
+        onSegmentChunk: (segmentId, chunk) => {
+          const writer = writers.get(segmentId);
+          if (!writer) return;
+          void writer.write(chunk).catch((error) => {
+            const err =
+              error instanceof Error ? error : new Error(String(error));
+            onError?.(err);
+          });
+        },
         onSegmentReady: async (segment) => {
-          await store.saveSegment(segment.meta, segment.blob);
-          onSegmentStored?.(segment.meta);
+          const writer = writers.get(segment.segmentId);
+          try {
+            if (writer) {
+              await writer.close();
+              await store.saveSegmentMeta(segment.meta, writer.getSize());
+              writers.delete(segment.segmentId);
+            } else {
+              await store.saveSegment(segment.meta, segment.blob);
+            }
+            onSegmentStored?.(segment.meta);
+          } catch (error) {
+            const err =
+              error instanceof Error ? error : new Error(String(error));
+            onError?.(err);
+          }
         },
         onError: (error) => {
           onError?.(error);
@@ -98,7 +140,15 @@ export function useSegmentRecorder(
       storeRef.current = null;
       setIsRecording(false);
     };
-  }, [enabled, sessionId, videoRef, maxStorageBytes, onSegmentStored, onError]);
+  }, [
+    enabled,
+    sessionId,
+    videoRef,
+    maxStorageBytes,
+    timesliceMs,
+    onSegmentStored,
+    onError,
+  ]);
 
   return {
     isRecording,

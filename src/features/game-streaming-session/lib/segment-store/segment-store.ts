@@ -20,6 +20,7 @@ import type {
   SegmentStore,
   SegmentStoreBackend,
   SegmentStoreOptions,
+  SegmentWriter,
 } from './types';
 
 class SegmentStoreImpl implements SegmentStore {
@@ -81,6 +82,70 @@ class SegmentStoreImpl implements SegmentStore {
       throw new Error('SegmentStore DB가 초기화되지 않았습니다.');
     }
     await putRecord(this.db, record);
+  }
+
+  async saveSegmentMeta(meta: SegmentMeta, fileSize: number): Promise<void> {
+    if (this.backend === 'memory' || this.backend === 'indexeddb') {
+      throw new Error('saveSegmentMeta는 OPFS backend에서만 사용 가능합니다.');
+    }
+
+    if (!this.db) {
+      throw new Error('SegmentStore DB가 초기화되지 않았습니다.');
+    }
+
+    const normalizedMeta =
+      meta.file_size == null ? { ...meta, file_size: fileSize } : meta;
+
+    await this.evictIfNeeded(fileSize);
+
+    const segmentId = normalizedMeta.segment_id;
+    const record: SegmentRecord = {
+      key: toKey(this.sessionId, segmentId),
+      sessionId: this.sessionId,
+      segmentId,
+      meta: normalizedMeta,
+      fileSize: normalizedMeta.file_size ?? fileSize,
+      lastAccessedAt: new Date().toISOString(),
+    };
+
+    await putRecord(this.db, record);
+  }
+
+  async openSegmentWriter(segmentId: string): Promise<SegmentWriter | null> {
+    if (this.backend !== 'opfs' || !this.opfsDir) {
+      return null;
+    }
+
+    const fileHandle = await this.opfsDir.getFileHandle(segmentId, {
+      create: true,
+    });
+    const writable = await fileHandle.createWritable();
+    let closed = false;
+    let fileSize = 0;
+    let writeQueue = Promise.resolve();
+
+    const write = async (chunk: Blob) => {
+      if (closed) return;
+      writeQueue = writeQueue.then(async () => {
+        await writable.write(chunk);
+        fileSize += chunk.size;
+      });
+      return writeQueue;
+    };
+
+    const close = async () => {
+      if (closed) return;
+      closed = true;
+      await writeQueue;
+      await writable.close();
+    };
+
+    return {
+      segmentId,
+      write,
+      close,
+      getSize: () => fileSize,
+    };
   }
 
   async getSegment(

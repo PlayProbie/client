@@ -57,6 +57,7 @@ export function useGameStream(
   const {
     enabled: segmentRecordingEnabled = highlightEnabled,
     maxStorageBytes: segmentRecordingMaxStorageBytes,
+    timesliceMs: segmentRecordingTimesliceMs,
     onSegmentStored,
     onError: onSegmentError,
   } = segmentRecording;
@@ -106,6 +107,7 @@ export function useGameStream(
     sessionId: segmentRecordingEnabled ? sessionUuid : null,
     enabled: segmentRecordingEnabled && isConnected && isGameReady,
     maxStorageBytes: segmentRecordingMaxStorageBytes,
+    timesliceMs: segmentRecordingTimesliceMs,
     onSegmentStored,
     onError: onSegmentError,
   });

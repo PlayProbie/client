@@ -17,6 +17,7 @@ export interface InputLoggingOptions {
 export interface SegmentRecordingOptions {
   enabled?: boolean;
   maxStorageBytes?: number;
+  timesliceMs?: number;
   onSegmentStored?: (meta: SegmentMeta) => void;
   onError?: (error: Error) => void;
 }

@@ -8,8 +8,10 @@ export interface SegmentRecorderOptions {
   overlapMs?: number;
   targetHeight?: number;
   frameRate?: number;
+  timesliceMs?: number;
   onSegmentReady: (segment: RecordedSegment) => void | Promise<void>;
   onSegmentStart?: (segment: SegmentTiming) => void;
+  onSegmentChunk?: (segmentId: string, chunk: Blob) => void | Promise<void>;
   onError?: (error: Error) => void;
   onUnsupported?: (reason: string) => void;
 }

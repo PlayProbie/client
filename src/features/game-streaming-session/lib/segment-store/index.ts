@@ -3,4 +3,5 @@ export type {
   SegmentStore,
   SegmentStoreBackend,
   SegmentStoreOptions,
+  SegmentWriter,
 } from './types';

@@ -9,6 +9,7 @@ import {
   DEFAULT_OVERLAP_MS,
   DEFAULT_SEGMENT_DURATION_MS,
   DEFAULT_TARGET_HEIGHT,
+  DEFAULT_TIMESLICE_MS,
 } from './constants';
 import {
   createSegmentMeta,
@@ -25,12 +26,20 @@ export class SegmentRecorder {
   private readonly options: Required<
     Omit<
       SegmentRecorderOptions,
-      'onSegmentReady' | 'onSegmentStart' | 'onError' | 'onUnsupported'
+      | 'onSegmentReady'
+      | 'onSegmentStart'
+      | 'onSegmentChunk'
+      | 'onError'
+      | 'onUnsupported'
     >
   > &
     Pick<
       SegmentRecorderOptions,
-      'onSegmentReady' | 'onSegmentStart' | 'onError' | 'onUnsupported'
+      | 'onSegmentReady'
+      | 'onSegmentStart'
+      | 'onSegmentChunk'
+      | 'onError'
+      | 'onUnsupported'
     >;
   private readonly mimeType: string | null;
   private readonly canvas: HTMLCanvasElement | null;
@@ -51,6 +60,7 @@ export class SegmentRecorder {
       overlapMs: options.overlapMs ?? DEFAULT_OVERLAP_MS,
       targetHeight: options.targetHeight ?? DEFAULT_TARGET_HEIGHT,
       frameRate: options.frameRate ?? DEFAULT_FRAME_RATE,
+      timesliceMs: options.timesliceMs ?? DEFAULT_TIMESLICE_MS,
       ...options,
     };
 
@@ -232,6 +242,15 @@ export class SegmentRecorder {
     recorder.ondataavailable = (event) => {
       if (event.data && event.data.size > 0) {
         chunks.push(event.data);
+        if (this.options.onSegmentChunk) {
+          void Promise.resolve(
+            this.options.onSegmentChunk(segmentId, event.data)
+          ).catch((error) => {
+            const err =
+              error instanceof Error ? error : new Error(String(error));
+            this.options.onError?.(err);
+          });
+        }
       }
     };
 
@@ -262,7 +281,12 @@ export class SegmentRecorder {
       });
     };
 
-    recorder.start();
+    const timeslice = this.options.timesliceMs;
+    if (typeof timeslice === 'number' && timeslice > 0) {
+      recorder.start(timeslice);
+    } else {
+      recorder.start();
+    }
     this.activeRecorders.set(segmentId, recorder);
 
     const stopTimer = window.setTimeout(() => {
