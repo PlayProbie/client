@@ -132,78 +132,113 @@ graph TD
 
 ---
 
-## 5. 분석 및 결과물 (InsightTag)
+## 5. Server Developer Agreement (Smart Replay & Insight)
 
-서버는 업로드된 로그와 세그먼트를 분석하여 **InsightTag**를 생성합니다. UI는
-이를 통해 하이라이트 구간을 즉시 재생할 수 있습니다.
+서버 개발자와 합의된 기능 연동 가이드입니다.
 
-### 감지 룰 (Trigger)
+### 📋 개요
 
-| Tag Type  | 조건 (Trigger)                                  | 하이라이트 범위                       |
-| --------- | ----------------------------------------------- | ------------------------------------- |
-| **PANIC** | 1초 내 동일 입력 5회 이상                       | 전후 5초 (총 10초)                    |
-| **IDLE**  | 10초 이상 입력 없음                             | 마지막 입력 -2초 ~ 재입력 (최대 30초) |
-| **CHURN** | 윈도우 포커스 이탈 (`blur`, `visibilitychange`) | 이탈 직전 10초                        |
+유저의 게임 플레이 중 입력 패턴(키보드/마우스)과 **플레이 영상**을 수집하여
+서버로 전송하고, 인터뷰 단계에서 특이 행동(광클, 멍때림 등)이 감지되면 **AI가
+해당 구간을 다시 보여주며 질문**하는 기능을 구현합니다.
 
-### InsightTag 스키마 (Result)
+### 🔄 전체 흐름 (User Flow)
 
-분석 결과는 JSON 형태로 저장되며, 클라이언트는 `clips` 배열을 통해 즉시 재생을
-수행합니다.
+1. **게임 플레이 중 (Background)**
+   - 30초 단위로 영상을 청킹(Chunking)하여 S3에 업로드.
+   - 유저의 키보드/마우스 입력 로그를 수집하여 주기적으로 서버 전송.
+2. **인터뷰 진행 (Chat UI)**
+   - 기존 고정 질문(Fixed Question) 진행.
+3. **인사이트 질문 (New Phase)**
+   - 고정 질문 완료 후, 서버 분석 결과에 따라 **'인사이트 질문'**이 도착.
+   - 채팅창에 **[🎥 장면 다시보기]** 버튼이 노출됨.
+   - 버튼 클릭 시, 게임 플레이어가 해당 시점(`video_start_ms`)으로 이동하여
+     재생.
 
-```json
-{
-  "session_id": "sess_8829",
-  "tag_type": "PANIC",
-  "score": 0.95,
-  "description": "Space Bar 연타 감지 (8회/sec)",
+### 📡 API Specification
 
-  // 분석된 발생 시간 (영상 기준, 밀리초)
-  "media_time_start": 120500,
-  "media_time_end": 130500,
+#### A. 영상 업로드 (Play Phase)
 
-  // 재생을 위한 세그먼트 매핑 정보 (서버가 계산해서 내려줌)
-  "clips": [
-    {
-      "segment_id": "seg_a1b2", // 120초~150초를 담고 있는 파일
-      "offset_start": 500, // 파일 시작점으로부터 500ms 지점
-      "offset_end": 10500, // 파일 시작점으로부터 10500ms 지점
-      "video_url": "https://s3.../seg_a1b2.webm" // (업로드 완료 시)
-    }
-  ],
+**순서:** `Presigned URL 발급` → `S3 Upload (PUT)` → `업로드 완료 알림`
 
-  // 재생 가능 상태
-  "playback_status": "READY_LOCAL" // or READY_CLOUD, UPLOADING, UNAVAILABLE
-}
-```
+**1) Presigned URL 발급 요청**
 
----
+- **URL:** `POST /sessions/{sessionId}/replay/presigned-url`
+- **Body:**
+  ```json
+  {
+    "sequence": 0, // 세그먼트 순서 (0부터 시작)
+    "video_start_ms": 0, // 해당 청크의 시작 시간 (video.currentTime 기준)
+    "video_end_ms": 30000, // 해당 청크의 종료 시간
+    "content_type": "video/webm"
+  }
+  ```
+- **Response:**
+  ```json
+  {
+    "segment_id": "seg_a1b2...",
+    "s3_url": "https://s3.amazonaws.com/...",
+    "expires_in": 300
+  }
+  ```
 
-## 6. Opportunistic Upload 전략
+**2) 업로드 완료 알림**
 
-스트리밍 품질 보호를 위해 무조건적인 실시간 업로드를 지양합니다.
+- **URL:** `POST /sessions/{sessionId}/replay/upload-complete`
+- **Body:**
+  ```json
+  {
+    "segment_id": "seg_a1b2..."
+  }
+  ```
 
-### 상태 판단 (SDK 활용)
+#### B. 입력 로그 전송
 
-GameLift Streams Web SDK의 API를 사용하여 네트워크 상태를 객관적으로 판단합니다.
+**URL:** `POST /sessions/{sessionId}/replay/logs`
 
-```typescript
-const stats = await gameLiftClient.getVideoRTCStats();
-// Packet Loss > 5% 또는 RTT > 200ms 면 업로드 일시 중단
-if (isNetworkUnstable(stats)) {
-  uploadWorker.pause();
-} else {
-  uploadWorker.resume();
-}
-```
+- **Body:**
+  ```json
+  {
+    "session_id": "sess_8829",
+    "segment_id": "seg_a1b2",
+    "s3_url": "...", // (선택) 매핑 검증용
+    "logs": [
+      {
+        "type": "KEY_DOWN", // KEY_DOWN, KEY_UP, MOUSE_DOWN 등
+        "media_time": 120125, // [중요] video.currentTime (ms 단위)
+        "client_ts": 1736942000, // Date.now()
+        "code": "Space",
+        "key": " "
+      }
+    ]
+  }
+  ```
 
----
+#### C. 인터뷰 및 재생 (Interview Phase)
 
-## 7. 구현 로드맵
+**1) SSE 이벤트: `insight_question`**
 
-1.  **Phase 1 (녹화 & 저장)**: Canvas 캡처, MediaRecorder 구현, IndexedDB/OPFS
-    저장 로직.
-2.  **Phase 2 (업로드)**: Upload Worker, S3 Presigned URL 연동, Backoff/Resume
-    로직.
-3.  **Phase 3 (분석)**: 서버 로그 분석 파이프라인, InsightTag 생성 로직.
-4.  **Phase 4 (재생)**: Virtual Highlight Player (Local Blob 우선 재생 → S3 URL
-    Fallback).
+- **Data:**
+  ```json
+  {
+    "insight_type": "PANIC", // PANIC(광클), IDLE(멍때림), CHURN(이탈)
+    "video_start_ms": 45200, // [Seek Point] 재생 시작 지점
+    "video_end_ms": 48500, // 재생 종료 지점 (UI 표시용)
+    "question_text": "45초 구간에서 버튼을 빠르게 누르셨는데, 당황하셨나요?",
+    "turn_num": 1,
+    "remaining_insights": 1
+  }
+  ```
+
+**2) 답변 전송**
+
+- **URL:** `POST /interview/{sessionUuid}/messages`
+- **Body:**
+  ```json
+  {
+    "q_type": "INSIGHT",
+    "insight_type": "PANIC",
+    "turn_num": 1,
+    "answer_text": "네, 너무 어려웠어요."
+  }
+  ```

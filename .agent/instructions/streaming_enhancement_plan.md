@@ -3,9 +3,9 @@
 ## 목적
 
 - 현재 스트리밍 구현(`gamelift_streaming_implementation.md`)에
-  `streaming_analysis.md`의 Virtual Highlight 설계를 반영한다.
-- 입력 로그/영상 세그먼트/InsightTag를 동기화하여 재생 가능한 하이라이트를
-  제공한다.
+  `streaming_analysis.md`의 **Smart Replay & Insight** 설계를 반영한다.
+- 입력 로그/영상 세그먼트를 동기화하여 업로드하고, 서버의 분석 결과(Insight)를
+  바탕으로 **가상 하이라이트 재생**을 제공한다.
 
 ---
 
@@ -107,11 +107,13 @@
 
 ### Phase 0. 계약/스키마 정리 (백엔드 협의 선행)
 
-- 입력 로그 스키마 확정: 최소 필드(`type`, `media_time`, `client_ts`,
-  `segment_id`). **모든 시간 필드는 밀리초(ms) 정수**.
-- 세그먼트 메타 스키마 확정: `start_media_time`, `end_media_time`,
-  `upload_status`. **시간 필드는 밀리초(ms) 정수**.
-- 업로드/InsightTag API 계약 확정 및 Mock 핸들러 추가.
+- 입력 로그 스키마 확정: `media_time` (ms), `client_ts`, `segment_id` 필수.
+- 업로드 API 계약 (Smart Replay v1):
+  - `POST .../presigned-url`: 30초 단위 세그먼트 등록 및 URL 발급.
+  - `PUT S3 URL`: 바이너리 업로드.
+  - `POST .../upload-complete`: 업로드 완료 통지.
+  - `POST .../logs`: 입력 로그 배치 전송 (segment_id 매핑).
+- SSE 이벤트 계약: `insight_question` (재생 구간 정보 포함).
 
 **산출물**:
 
@@ -207,9 +209,12 @@ segment_id 전환 시점:
 ### Phase 4. 업로드 워커 (Post-MVP)
 
 - `UploadWorker` 구현(Web Worker):
-  - 세그먼트/로그 큐 관리, presigned 업로드, 재시도/백오프.
-  - 네트워크 상태 변화에 따른 pause/resume.
-  - 업로드 상태(`LOCAL_ONLY → UPLOADING → UPLOADED`) 동기화.
+  - **Presigned URL 발급 요청** (`POST .../presigned-url`):
+    - `sequence`, `video_start_ms`, `video_end_ms` 전송.
+  - **S3 Upload**: 받은 URL로 `PUT` 요청.
+  - **완료 알림** (`POST .../upload-complete`): `segment_id` 전송.
+  - **로그 전송** (`POST .../logs`): `segment_id`에 해당하는 로그 배치 전송.
+  - 상태 보존: 네트워크 오류 시 큐에 보존 후 재시도 (Exponential Backoff).
 
 **재시도 정책**:
 
@@ -225,10 +230,14 @@ segment_id 전환 시점:
 
 ### Phase 5. InsightTag UI/재생 (Post-MVP)
 
-- InsightTag 조회 훅/컴포넌트 추가.
-- `Highlight Panel` UI 구성 및 재생 기능 추가:
-  - 로컬 Blob 우선 재생, 없으면 S3 URL 재생.
-  - 세그먼트 오프셋을 적용한 클립 재생.
+- `InsightHandler` (SSE Listener) 구현:
+  - `insight_question` 이벤트 수신 시 Chat UI에 질문 및 **[장면 다시보기]** 버튼
+    노출.
+- `ReplayOverlay` 컴포넌트 구현:
+  - 버튼 클릭 시 `video_start_ms`로 Seek.
+  - 로컬 Blob(최근 30초) 우선 탐색, 없으면 S3 URL 스트리밍.
+- 답변 전송 API 연동 (`POST .../messages`):
+  - `q_type: "INSIGHT"` 및 `insight_type` 포함 전송.
 
 **검증**:
 

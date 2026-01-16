@@ -5,6 +5,7 @@
 export { useInputLogger } from './input-logger';
 export { useFullscreen } from './useFullscreen';
 export { useGameStream } from './useGameStream';
+export { useSegmentRecorder } from './useSegmentRecorder';
 export { sessionKeys, useSessionInfo } from './useSession';
 export { useSessionStatus } from './useSessionStatus';
 export { useSessionTimer } from './useSessionTimer';
