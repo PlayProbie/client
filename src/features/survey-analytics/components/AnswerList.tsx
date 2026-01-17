@@ -135,9 +135,6 @@ function AnswerList({ answers, title = '필터링된 원문 리스트' }: Answer
                       {getSentimentLabel(answer.sentiment)}
                     </Badge>
                   )}
-                  <span className="text-xs text-muted-foreground">
-                    방금 전
-                  </span>
                 </div>
               </div>
 

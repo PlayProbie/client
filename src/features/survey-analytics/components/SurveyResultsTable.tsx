@@ -17,6 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/Table';
+import { GameGenreConfig } from '@/features/game';
 import { getSessionStatusClassName, getSessionStatusLabel, type SurveySessionStatus } from '@/features/survey-session';
 
 import type { SurveyResultListItem } from '../types';
@@ -25,6 +26,29 @@ import { TablePagination } from './TablePagination';
 
 type SurveyResultsTableProps = {
   data: SurveyResultListItem[];
+};
+
+// 나이대 변환 맵
+const AGE_GROUP_LABELS: Record<string, string> = {
+  '10s': '10대',
+  '20s': '20대',
+  '30s': '30대',
+  '40s': '40대',
+  '50s': '50대 이상',
+};
+
+// 장르 value -> label 변환 함수
+const getGenreLabel = (genre: string): string => {
+  const config = Object.values(GameGenreConfig).find((g) => g.value === genre);
+  return config?.label ?? genre;
+};
+
+// 선호장르 문자열을 한글로 변환 (콤마 구분 문자열 지원)
+const formatPreferGenre = (value: string): string => {
+  return value
+    .split(/,\s*/)
+    .map((genre) => getGenreLabel(genre.trim()))
+    .join(', ');
 };
 
 // 컬럼별 너비 설정
@@ -91,7 +115,9 @@ function SurveyResultsTable({ data }: SurveyResultsTableProps) {
         cell: (info) => {
           const value = info.getValue<string | null>();
           if (!value) return '-';
-          return value === 'M' ? '남성' : value === 'F' ? '여성' : value;
+          if (value === 'M' || value === 'MALE') return '남성';
+          if (value === 'F' || value === 'FEMALE') return '여성';
+          return value;
         },
       },
       {
@@ -101,7 +127,7 @@ function SurveyResultsTable({ data }: SurveyResultsTableProps) {
         cell: (info) => {
           const value = info.getValue<string | null>();
           if (!value) return '-';
-          return <span className="line-clamp-1">{value}</span>;
+          return <span className="line-clamp-1">{formatPreferGenre(value)}</span>;
         },
       },
       {
@@ -111,7 +137,7 @@ function SurveyResultsTable({ data }: SurveyResultsTableProps) {
         cell: (info) => {
           const value = info.getValue<string | null>();
           if (!value) return '-';
-          return value;
+          return AGE_GROUP_LABELS[value] ?? value;
         },
       },
       {

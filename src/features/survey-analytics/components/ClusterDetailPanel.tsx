@@ -80,10 +80,10 @@ function ClusterDetailPanel({ cluster, profiles }: ClusterDetailPanelProps) {
               <div className="flex flex-wrap gap-2">
                 {cluster.keywords && cluster.keywords.length > 0 ? (
                   cluster.keywords.map((keyword) => (
-                    <Badge 
-                      key={keyword} 
-                      variant="secondary" 
-                      className="px-3 py-1 text-xs"
+                    <Badge
+                      key={keyword}
+                      variant="secondary"
+                      className="rounded-md bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary hover:bg-primary/20"
                     >
                       #{keyword}
                     </Badge>
