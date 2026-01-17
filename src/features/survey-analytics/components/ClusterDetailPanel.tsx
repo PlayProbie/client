@@ -1,7 +1,13 @@
 import { BarChart3, MessageCircle, Tag } from 'lucide-react';
 
 import { Badge } from '@/components/ui/Badge';
-import { Card, CardContent, CardDescription,CardHeader, CardTitle } from '@/components/ui/Card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/Card';
 
 import type { AnswerProfile, ClusterInfo } from '../types';
 import { getSentimentColorClass } from '../utils';
@@ -18,25 +24,25 @@ type ClusterDetailPanelProps = {
  * 이미지의 세그먼트 분석 (Who), 원인 태그 (Why), 감정 강도 (Intensity) 영역
  */
 function ClusterDetailPanel({ cluster, profiles }: ClusterDetailPanelProps) {
-
-
   return (
     <Card>
       <CardHeader className="border-b">
         <div className="flex items-start justify-between gap-4">
-          <div className="flex-1 min-w-0">
-            <CardTitle className="text-lg break-words leading-snug">
+          <div className="min-w-0 flex-1">
+            <CardTitle className="text-lg leading-snug break-words">
               {cluster.summary}
             </CardTitle>
             <CardDescription>
               {cluster.count}명 응답 ({cluster.percentage}%)
             </CardDescription>
           </div>
-          <div className="text-right shrink-0">
-            <div className={`text-3xl font-bold ${getSentimentColorClass(cluster.satisfaction)}`}>
+          <div className="shrink-0 text-right">
+            <div
+              className={`text-3xl font-bold ${getSentimentColorClass(cluster.satisfaction)}`}
+            >
               {cluster.satisfaction}
             </div>
-            <p className="text-xs text-muted-foreground">만족도</p>
+            <p className="text-muted-foreground text-xs">만족도</p>
           </div>
         </div>
       </CardHeader>
@@ -46,70 +52,75 @@ function ClusterDetailPanel({ cluster, profiles }: ClusterDetailPanelProps) {
           {/* 왼쪽: 세그먼트 분석 (Who) & 원인 태그 (Why) */}
           <div className="space-y-4">
             {/* 유저 반응 */}
-            <div className="rounded-lg border bg-card p-4">
+            <div className="bg-card rounded-lg border p-4">
               <div className="mb-3 flex items-center gap-2">
-                <div className="rounded-md bg-primary/10 p-1.5">
-                  <MessageCircle className="h-4 w-4 text-primary" />
+                <div className="bg-primary/10 rounded-md p-1.5">
+                  <MessageCircle className="text-primary h-4 w-4" />
                 </div>
-                <h4 className="font-semibold text-foreground">유저 반응</h4>
+                <h4 className="text-foreground font-semibold">유저 반응</h4>
               </div>
-              
+
               <div className="space-y-3">
-                <div className="flex items-center justify-between rounded-md bg-primary/5 px-3 py-2">
-                  <span className="text-sm font-medium text-foreground">
-                    주요 감정: <span className="text-primary">{cluster.emotion_type}</span>
+                <div className="bg-primary/5 flex items-center justify-between rounded-md px-3 py-2">
+                  <span className="text-foreground text-sm font-medium">
+                    주요 감정:{' '}
+                    <span className="text-primary">{cluster.emotion_type}</span>
                   </span>
-                  <span className="text-xs text-muted-foreground">{cluster.percentage}%</span>
+                  <span className="text-muted-foreground text-xs">
+                    {cluster.percentage}%
+                  </span>
                 </div>
-                
-                <p className="text-sm text-muted-foreground">
+
+                <p className="text-muted-foreground text-sm">
                   {cluster.emotion_detail}
                 </p>
               </div>
             </div>
 
             {/* 핵심 키워드 */}
-            <div className="rounded-lg border bg-card p-4">
+            <div className="bg-card rounded-lg border p-4">
               <div className="mb-3 flex items-center gap-2">
-                <div className="rounded-md bg-accent/50 p-1.5">
-                  <Tag className="h-4 w-4 text-accent-foreground" />
+                <div className="bg-accent/50 rounded-md p-1.5">
+                  <Tag className="text-accent-foreground h-4 w-4" />
                 </div>
-                <h4 className="font-semibold text-foreground">핵심 키워드</h4>
+                <h4 className="text-foreground font-semibold">핵심 키워드</h4>
               </div>
-              
+
               <div className="flex flex-wrap gap-2">
                 {cluster.keywords && cluster.keywords.length > 0 ? (
                   cluster.keywords.map((keyword) => (
                     <Badge
                       key={keyword}
                       variant="secondary"
-                      className="rounded-md bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary hover:bg-primary/20"
+                      className="bg-primary/10 text-primary hover:bg-primary/20 rounded-md px-2.5 py-0.5 text-xs font-medium"
                     >
                       #{keyword}
                     </Badge>
                   ))
                 ) : (
-                  <p className="text-sm text-muted-foreground">키워드 정보 없음</p>
+                  <p className="text-muted-foreground text-sm">
+                    키워드 정보 없음
+                  </p>
                 )}
               </div>
             </div>
 
             {/* 감정 강도 (Intensity) - Top 3 */}
-            <div className="rounded-lg border bg-card p-4">
+            <div className="bg-card rounded-lg border p-4">
               <div className="mb-3 flex items-center gap-2">
-                <div className="rounded-md bg-warning/20 p-1.5">
-                  <BarChart3 className="h-4 w-4 text-warning" />
+                <div className="bg-warning/20 rounded-md p-1.5">
+                  <BarChart3 className="text-warning h-4 w-4" />
                 </div>
-                <h4 className="font-semibold text-foreground">
+                <h4 className="text-foreground font-semibold">
                   감정 강도 (Top 3)
                 </h4>
               </div>
 
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">만족도</span>
+                  <span className="text-muted-foreground text-sm">만족도</span>
                   <div className="flex items-center gap-2">
-                    <div className="h-2 w-32 overflow-hidden rounded-full bg-muted">
+                    <div className="bg-muted h-2 w-32 overflow-hidden rounded-full">
                       <div
                         className={`h-full transition-all ${getSentimentColorClass(cluster.satisfaction, 'bg')}`}
                         style={{ width: `${cluster.satisfaction}%` }}
@@ -142,19 +153,19 @@ function ClusterDetailPanel({ cluster, profiles }: ClusterDetailPanelProps) {
                     .map((item) => (
                       <div
                         key={item.label}
-                        className="flex justify-between rounded-md bg-muted/50 px-3 py-2 text-xs"
+                        className="bg-muted/50 flex justify-between rounded-md px-3 py-2 text-xs"
                       >
                         <span className="text-muted-foreground">
                           {item.label}
                         </span>
                         <div className="flex items-center gap-2">
-                          <div className="h-1.5 w-16 overflow-hidden rounded-full bg-muted-foreground/20">
+                          <div className="bg-muted-foreground/20 h-1.5 w-16 overflow-hidden rounded-full">
                             <div
-                              className="h-full bg-foreground/70"
+                              className="bg-foreground/70 h-full"
                               style={{ width: `${item.score}%` }}
                             />
                           </div>
-                          <span className="w-6 text-right font-semibold text-foreground">
+                          <span className="text-foreground w-6 text-right font-semibold">
                             {item.score}
                           </span>
                         </div>
@@ -165,22 +176,22 @@ function ClusterDetailPanel({ cluster, profiles }: ClusterDetailPanelProps) {
             </div>
           </div>
 
-
-
           {/* 오른쪽: GEQ 레이더 차트 & 데모그래픽 */}
           <div className="space-y-6">
-            <div className="rounded-lg border bg-card p-4">
+            <div className="bg-card rounded-lg border p-4">
               <div className="mb-2">
-                <h4 className="font-semibold text-foreground">유저 감정 분석</h4>
+                <h4 className="text-foreground font-semibold">
+                  유저 감정 분석
+                </h4>
               </div>
-              
+
               <div className="flex items-center justify-center">
                 <GEQRadarChart scores={cluster.geq_scores} />
               </div>
             </div>
 
             {/* 인구통계 정보 */}
-            <ClusterDemographics 
+            <ClusterDemographics
               answerIds={cluster.answer_ids}
               profiles={profiles}
             />

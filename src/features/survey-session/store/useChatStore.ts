@@ -392,8 +392,6 @@ export const useChatStore = create<ChatState>((set, get) => ({
         );
 
         if (!hasStreaming) {
-
-
           set((s) => {
             const lastMsg = s.messages[s.messages.length - 1];
             const currentTurnNum = payload?.turnNum ?? s.currentTurnNum;

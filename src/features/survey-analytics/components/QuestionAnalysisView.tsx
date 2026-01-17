@@ -32,8 +32,18 @@ import { InsufficientDataWarning } from './InsufficientDataWarning';
  * - 왼쪽: 질문 목록
  * - 오른쪽: 선택한 질문의 상세 분석
  */
-function QuestionAnalysisView({ questionAnalysis, isFiltered = false }: QuestionAnalysisViewProps) {
-  const { data, questionIds, isLoading, isError, insufficientData, isComputing } = questionAnalysis;
+function QuestionAnalysisView({
+  questionAnalysis,
+  isFiltered = false,
+}: QuestionAnalysisViewProps) {
+  const {
+    data,
+    questionIds,
+    isLoading,
+    isError,
+    insufficientData,
+    isComputing,
+  } = questionAnalysis;
 
   const [selectedQuestionId, setSelectedQuestionId] = useState<number | null>(
     null
@@ -48,14 +58,12 @@ function QuestionAnalysisView({ questionAnalysis, isFiltered = false }: Question
     : null;
 
   if (isLoading) {
-    return (
-      <PageSpinner message="AI 분석 결과를 불러오는 중..." />
-    );
+    return <PageSpinner message="AI 분석 결과를 불러오는 중..." />;
   }
 
   if (isError) {
     return (
-      <div className="py-12 text-center text-destructive">
+      <div className="text-destructive py-12 text-center">
         AI 분석 결과를 불러오는 중 오류가 발생했습니다.
       </div>
     );
@@ -63,21 +71,17 @@ function QuestionAnalysisView({ questionAnalysis, isFiltered = false }: Question
 
   // AI 계산 중이고 캐시된 데이터가 없으면 로딩 표시
   if (isComputing && questionIds.length === 0) {
-    return (
-      <PageSpinner message="AI가 분석 중입니다..." />
-    );
+    return <PageSpinner message="AI가 분석 중입니다..." />;
   }
 
   // 데이터 부족 경고 표시 (문제 5번 해결)
   if (insufficientData) {
-    return (
-      <InsufficientDataWarning isFiltered={isFiltered} />
-    );
+    return <InsufficientDataWarning isFiltered={isFiltered} />;
   }
 
   if (questionIds.length === 0) {
     return (
-      <div className="py-12 text-center text-muted-foreground">
+      <div className="text-muted-foreground py-12 text-center">
         분석할 질문이 없습니다.
       </div>
     );
@@ -98,12 +102,24 @@ function QuestionAnalysisView({ questionAnalysis, isFiltered = false }: Question
         {selectedQuestion ? (
           <QuestionAnalysisDetail data={selectedQuestion} />
         ) : (
-          <div className="flex h-96 items-center justify-center rounded-lg border-2 border-dashed border-border bg-muted">
+          <div className="border-border bg-muted flex h-96 items-center justify-center rounded-lg border-2 border-dashed">
             <div className="text-center">
-              <svg className="mx-auto h-12 w-12 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              <svg
+                className="text-muted-foreground mx-auto h-12 w-12"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                />
               </svg>
-              <p className="mt-2 text-sm text-muted-foreground">왼쪽에서 질문을 선택해주세요</p>
+              <p className="text-muted-foreground mt-2 text-sm">
+                왼쪽에서 질문을 선택해주세요
+              </p>
             </div>
           </div>
         )}
@@ -113,4 +129,3 @@ function QuestionAnalysisView({ questionAnalysis, isFiltered = false }: Question
 }
 
 export { QuestionAnalysisView };
-

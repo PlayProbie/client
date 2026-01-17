@@ -55,7 +55,7 @@ function useQuestionSelection() {
   const setSelectedQuestions = useCallback(
     (indices: Set<number>) => {
       const indicesArray = Array.from(indices);
-      
+
       updateFormData({ selectedQuestionIndices: indicesArray });
       setValue('selectedQuestionIndices', indicesArray, {
         shouldDirty: true,

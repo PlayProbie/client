@@ -11,7 +11,6 @@ function useQuestionUserGenerate() {
   // 공통 질문 관리 로직
   const manager = useQuestionManager();
 
-
   // 새 질문 입력 상태
   const [newQuestion, setNewQuestion] = useState('');
 

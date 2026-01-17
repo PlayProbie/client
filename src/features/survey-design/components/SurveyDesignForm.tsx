@@ -11,7 +11,7 @@ import { Button } from '@/components/ui';
 import { Form } from '@/components/ui/form';
 import { PageSpinner } from '@/components/ui/loading';
 import { Step } from '@/components/ui/Step';
-import { type GameGenre,useGameDetailQuery } from '@/features/game';
+import { type GameGenre, useGameDetailQuery } from '@/features/game';
 import { useToast } from '@/hooks/useToast';
 import { cn } from '@/lib/utils';
 import { useCurrentGameStore } from '@/stores/useCurrentGameStore';
@@ -101,9 +101,7 @@ function SurveyDesignForm({ className, onComplete }: SurveyDesignFormProps) {
   // 게임 정보 로딩 상태 확인
   const hasGameInfo = Boolean(formData.gameName);
   const isGameInfoLoading =
-    isLoadingStore ||
-    isFetchingGame ||
-    (!hasGameInfo && !currentGame);
+    isLoadingStore || isFetchingGame || (!hasGameInfo && !currentGame);
 
   // useWatch로 폼 데이터 구독 (React Compiler 호환)
   const watchedData = useWatch({ control });

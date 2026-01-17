@@ -142,7 +142,8 @@ export interface CreateSurveyResponse {
 }
 
 /** [API] POST /surveys/ai-questions Request */
-export interface ApiGenerateAiQuestionsRequest { //추가할 데이터: 핵심요소, 테스트단계
+export interface ApiGenerateAiQuestionsRequest {
+  //추가할 데이터: 핵심요소, 테스트단계
   game_name: string;
   game_context: string;
   game_genre: GameGenre[];
