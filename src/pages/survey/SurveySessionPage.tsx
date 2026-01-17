@@ -4,7 +4,7 @@
  */
 
 import { useEffect, useState } from 'react';
-import { useLocation, useParams } from 'react-router-dom';
+import { useLocation, useParams, useSearchParams } from 'react-router-dom';
 
 import { Button } from '@/components/ui';
 import { Spinner } from '@/components/ui/loading';
@@ -24,11 +24,12 @@ function SurveySessionPage() {
     sessionUuid: string;
   }>();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
 
   // 완료 모달 상태
   const [showCompleteModal, setShowCompleteModal] = useState(false);
 
-  // SurveySessionStartPage에서 전달받은 state
+  // SurveySessionStartPage에서 전달받은 state 또는 query param
   const state = location.state as {
     surveyUuid?: string;
     sessionUuid?: string;
@@ -36,16 +37,12 @@ function SurveySessionPage() {
 
   // sessionUuid는 문자열로 사용
   const sessionUuid = sessionUuidParam || '';
+  // surveyUuid는 state 또는 query param에서 가져옴
+  const surveyUuid = state?.surveyUuid || searchParams.get('surveyUuid') || '';
 
-  const {
-    isReady,
-    isComplete,
-    error,
-    messages,
-    sendAnswer,
-  } = useChatSession({
+  const { isReady, isComplete, error, messages, sendAnswer } = useChatSession({
     sessionUuid,
-    surveyUuid: state?.surveyUuid,
+    surveyUuid,
   });
 
   // 완료 시 3초 후 모달 표시
@@ -94,6 +91,7 @@ function SurveySessionPage() {
       <ChatMessageList
         messages={messages}
         isLoading={false}
+        sessionId={sessionUuid}
         className="flex-1"
       />
 

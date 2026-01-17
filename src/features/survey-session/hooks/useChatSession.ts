@@ -6,7 +6,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { sendMessage } from '../api';
+import { postInsightAnswer, sendMessage } from '../api';
 import { useChatStore } from '../store/useChatStore';
 import type {
   ApiSendMessageRequest,
@@ -30,6 +30,7 @@ export function useChatSession({
     messages,
     currentTurnNum,
     currentFixedQId,
+    currentInsightTagId,
     isLoading,
     isStreaming,
     isComplete,
@@ -37,6 +38,7 @@ export function useChatSession({
     addUserMessage,
     enqueueReaction,
     enqueueQuestion,
+    enqueueInsightQuestion,
     enqueueStreamToken,
     enqueueFinalize,
     setLoading,
@@ -46,6 +48,7 @@ export function useChatSession({
     setError,
     setCurrentTurnNum,
     setCurrentFixedQId,
+    setCurrentInsightTagId,
     reset,
   } = useChatStore();
 
@@ -58,7 +61,7 @@ export function useChatSession({
       // 새 질문 도착: 큐에 질문 말풍선 및 텍스트 추가
       // (이전 말풍선은 이미 enqueueFinalize로 닫혔거나 자동 처리됨)
 
-      // GREETING은 이미 greeting_continue로 처리되었으므로 스킵 가능하나, 
+      // GREETING은 이미 greeting_continue로 처리되었으므로 스킵 가능하나,
       // 만약 onQuestion이 먼저 오거나 별도로 오는 경우를 대비해 처리해도 무방.
       // 하지만 기존 로직에서 GREETING은 setIsReady(true)만 하고 리턴했음.
       if (data.qType === 'GREETING') {
@@ -133,6 +136,37 @@ export function useChatSession({
       enqueueFinalize();
       setComplete(true);
       setStreaming(false);
+
+      // 인터뷰 완료 시 로컬 세그먼트 정리
+      (async () => {
+        try {
+          const { createSegmentStore } =
+            await import('@/features/game-streaming-session/lib/store/segment-store');
+          const store = await createSegmentStore({ sessionId: sessionUuid });
+          await store.clear();
+        } catch {
+          // 세그먼트 정리 실패는 무시
+        }
+      })();
+    },
+    onInsightQuestion: (data) => {
+      // 인사이트 질문 도착: 큐에 인사이트 말풍선 추가 (재생 버튼 포함)
+      setCurrentTurnNum(data.turnNum);
+      setCurrentInsightTagId(data.tagId); // 인사이트 답변 시 사용
+      enqueueInsightQuestion(
+        data.questionText,
+        data.turnNum,
+        data.tagId,
+        data.insightType,
+        data.videoStartMs,
+        data.videoEndMs
+      );
+      setIsReady(true);
+      setLoading(false);
+    },
+    onInsightComplete: (/* data */) => {
+      // 인사이트 Phase 완료
+      // 인터뷰 종료와 별개로, 후속 SSE 이벤트로 인터뷰 종료될 예정
     },
     onError: (err) => {
       setError(err);
@@ -207,12 +241,23 @@ export function useChatSession({
       );
       const questionText = currentQuestion?.content ?? '';
 
-      // ⭐ 스토어의 최신 currentFixedQId 직접 사용
-      const fixedQId = currentFixedQId;
-      // OPENING/GREETING 등 fixedQId가 null인 경우는 서버에서 처리
-
       // 낙관적 업데이트: UI에 먼저 표시
       addUserMessage(answerText, currentTurnNum);
+
+      // 인사이트 질문인 경우 별도 API 사용
+      if (currentInsightTagId !== null) {
+        await postInsightAnswer(
+          { sessionUuid, tagId: currentInsightTagId },
+          { answerText }
+        );
+        // 인사이트 답변 완료 후 tagId 초기화
+        setCurrentInsightTagId(null);
+        return;
+      }
+
+      // ⭐ 일반 질문: 스토어의 최신 currentFixedQId 직접 사용
+      const fixedQId = currentFixedQId;
+      // OPENING/GREETING 등 fixedQId가 null인 경우는 서버에서 처리
 
       // 서버에 전송 (useMutation 사용)
       await sendMessageAsync({
@@ -225,12 +270,15 @@ export function useChatSession({
       // SSE 연결은 유지됨 - 서버에서 다음 질문을 전송
     },
     [
+      sessionUuid,
       currentTurnNum,
       currentFixedQId,
+      currentInsightTagId,
       messages,
       isLoading,
       isComplete,
       addUserMessage,
+      setCurrentInsightTagId,
       sendMessageAsync,
     ]
   );
