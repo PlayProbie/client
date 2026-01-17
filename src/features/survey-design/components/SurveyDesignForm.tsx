@@ -274,7 +274,11 @@ function SurveyDesignForm({ className, onComplete }: SurveyDesignFormProps) {
               ) : (
                 <Button
                   type="button"
-                  disabled={isPending}
+                  disabled={
+                    isPending ||
+                    (currentStep === 2 &&
+                      !!form.formState.errors.selectedQuestionIndices)
+                  }
                   onClick={() => createHandleNext()()}
                 >
                   {isPending ? '생성 중...' : isLastStep ? '설문 생성' : '다음'}

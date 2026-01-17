@@ -2,7 +2,9 @@ import { useMutation } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 
+import type { GameGenre } from '@/features/game';
 import { useCurrentGameStore } from '@/stores/useCurrentGameStore';
+
 import { postAiQuestions } from '../api';
 import { useSurveyFormStore } from '../store/useSurveyFormStore';
 import type {
@@ -54,21 +56,25 @@ function useQuestionGenerate() {
 
       // Fallback: formData에 게임 정보가 없으면 global store에서 가져옴
       let effectiveGameName = gameName;
-      let effectiveGameGenre = gameGenre as any;
+      let effectiveGameGenre: GameGenre[] | undefined = gameGenre;
       let effectiveGameContext = gameContext;
       let effectiveExtractedElements = extractedElements;
 
       if ((!effectiveGameName || !effectiveGameGenre?.length) && currentGame) {
         console.log('[AI Questions] Fallback to global game store');
         effectiveGameName = effectiveGameName || currentGame.gameName;
-        effectiveGameGenre = (effectiveGameGenre?.length ? effectiveGameGenre : currentGame.gameGenre);
+        effectiveGameGenre = effectiveGameGenre?.length
+          ? effectiveGameGenre
+          : (currentGame.gameGenre as GameGenre[]);
         effectiveGameContext = effectiveGameContext || currentGame.gameContext;
-        
+
         // extractedElements도 없으면 파싱 시도
         if (!effectiveExtractedElements && currentGame.extractedElements) {
-           try {
-             effectiveExtractedElements = JSON.parse(currentGame.extractedElements);
-           } catch {}
+          try {
+            effectiveExtractedElements = JSON.parse(currentGame.extractedElements);
+          } catch {
+            // ignore JSON parse error
+          }
         }
       }
 
@@ -210,7 +216,7 @@ function useQuestionGenerate() {
         initialGenerateRef.current = false;
       });
   }, [
-    manager.questions.length,
+    manager.questions,
     isMutationPending,
     isLocalGenerating,
     generateQuestions,
@@ -290,7 +296,8 @@ function useQuestionGenerate() {
 
     // 공통 핸들러 (from manager)
     handleToggle: manager.handleToggle,
-    handleSelectAll: manager.handleSelectAll,
+    selectAll: manager.selectAll,
+    deselectAll: manager.deselectAll,
     handleRequestFeedback: manager.handleRequestFeedback,
     handleSuggestionClick: manager.handleSuggestionClick,
 
