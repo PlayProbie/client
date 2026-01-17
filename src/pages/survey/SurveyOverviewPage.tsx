@@ -1,0 +1,241 @@
+import { useEffect, useState } from 'react';
+import { useOutletContext } from 'react-router-dom';
+
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/Card';
+import { InlineAlert } from '@/components/ui/InlineAlert';
+import { Skeleton } from '@/components/ui/loading/Skeleton';
+import { SURVEY_STATUS_CONFIG } from '@/config/navigation';
+import {
+  StreamingResourceStatus,
+  useStreamingResource,
+  useUpdateSurveyStatus,
+} from '@/features/game-streaming-survey';
+import type { SurveyStatusValue } from '@/features/game-streaming-survey/types';
+import { StatusChangeModal, type SurveyShellContext } from '@/features/survey';
+import {
+  ProvisioningStatusStep,
+  SurveyLifecycleActions,
+  SurveyStatusStep,
+} from '@/features/survey/components/overview';
+import { DistributionCard } from '@/features/survey/components/overview/DistributionCard';
+import {
+  getSurveyPlayUrl,
+  getSurveySessionUrl,
+} from '@/features/survey/utils/url';
+import { useToast } from '@/hooks/useToast';
+import {
+  mapToProvisioningStatus,
+  useProvisioningStore,
+} from '@/stores/useProvisioningStore';
+
+export default function SurveyOverviewPage() {
+  const { survey, isLoading, isError, refetch, surveyUuid } =
+    useOutletContext<SurveyShellContext>();
+  const items = useProvisioningStore((state) => state.items);
+  const restoreItem = useProvisioningStore((state) => state.restoreItem);
+  const { toast } = useToast();
+  const [nextStatus, setNextStatus] = useState<SurveyStatusValue | null>(null);
+
+  const resolvedSurveyUuid = survey?.surveyUuid ?? surveyUuid ?? '';
+  const relatedItems = items.filter(
+    (item) => item.surveyUuid === resolvedSurveyUuid
+  );
+
+  // 스토어에 해당 survey의 아이템이 없을 때만 API 조회
+  const shouldFetchResource =
+    !!resolvedSurveyUuid && relatedItems.length === 0 && !isLoading;
+  const { data: streamingResource } = useStreamingResource(
+    resolvedSurveyUuid,
+    shouldFetchResource
+  );
+
+  // API 응답으로 스토어 복원
+  useEffect(() => {
+    if (!streamingResource || !resolvedSurveyUuid) return;
+    // TERMINATED 상태는 복원하지 않음
+    if (streamingResource.status === StreamingResourceStatus.TERMINATED) return;
+
+    const mappedStatus = mapToProvisioningStatus(streamingResource.status);
+    restoreItem({
+      surveyUuid: resolvedSurveyUuid,
+      status: mappedStatus,
+    });
+  }, [streamingResource, resolvedSurveyUuid, restoreItem]);
+
+  const surveySessionUrl = resolvedSurveyUuid
+    ? getSurveySessionUrl(resolvedSurveyUuid)
+    : '';
+
+  const surveyPlayUrl = resolvedSurveyUuid
+    ? getSurveyPlayUrl(resolvedSurveyUuid)
+    : '';
+
+  const { mutate: updateStatus, isPending } =
+    useUpdateSurveyStatus(resolvedSurveyUuid);
+
+  const statusConfig = survey ? SURVEY_STATUS_CONFIG[survey.status] : null;
+
+  const handleModalOpenChange = (open: boolean) => {
+    if (!open && !isPending) {
+      setNextStatus(null);
+    }
+  };
+
+  const handleConfirmStatusChange = () => {
+    if (!nextStatus || !resolvedSurveyUuid) return;
+
+    updateStatus(
+      { status: nextStatus },
+      {
+        onSuccess: () => {
+          toast({
+            variant: 'success',
+            title: '설문 상태 변경 완료',
+            description:
+              nextStatus === 'ACTIVE'
+                ? '설문이 시작되었습니다.'
+                : '설문이 종료되었습니다.',
+          });
+          setNextStatus(null);
+        },
+        onError: (error) => {
+          toast({
+            variant: 'destructive',
+            title: '설문 상태 변경 실패',
+            description: error.message,
+          });
+        },
+      }
+    );
+  };
+
+  if (isError) {
+    return (
+      <InlineAlert
+        variant="error"
+        title="설문 로딩 실패"
+        actions={
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => refetch()}
+          >
+            다시 시도
+          </Button>
+        }
+      >
+        설문 정보를 불러오지 못했습니다.
+      </InlineAlert>
+    );
+  }
+
+  // If not loading and no survey, show error
+  if (!isLoading && (!survey || !statusConfig)) {
+    return (
+      <InlineAlert
+        variant="error"
+        title="설문을 찾을 수 없습니다."
+      >
+        다시 확인해 주세요.
+      </InlineAlert>
+    );
+  }
+
+  const showSkeleton = isLoading;
+
+  return (
+    <div className="space-y-6">
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Left Column: Survey Management */}
+        <Card className="flex h-full flex-col overflow-hidden border-none shadow-md">
+          <div className="bg-muted/30 border-b p-6 pb-4">
+            <h3 className="font-semibold tracking-tight">설문 상태 및 관리</h3>
+            <p className="text-muted-foreground mt-1 text-sm">
+              설문의 생명 주기 관리 및 상태 변경
+            </p>
+          </div>
+          <div className="flex flex-1 flex-col justify-between space-y-6 p-6">
+            {showSkeleton ? (
+              <div className="space-y-4">
+                <Skeleton className="h-10 w-full rounded-full" />
+                <div className="flex gap-2">
+                  <Skeleton className="h-9 flex-1" />
+                  <Skeleton className="h-9 w-20" />
+                </div>
+              </div>
+            ) : (
+              survey && (
+                <>
+                  <SurveyStatusStep status={survey.status} />
+                  <div className="px-4">
+                    <SurveyLifecycleActions
+                      status={survey.status}
+                      isPending={isPending}
+                      canExecute={!!resolvedSurveyUuid}
+                      onSetStatus={setNextStatus}
+                    />
+                  </div>
+                </>
+              )
+            )}
+          </div>
+        </Card>
+
+        {/* Right Column: Provisioning Status */}
+        <Card className="flex h-full flex-col overflow-hidden border-none shadow-md">
+          <div className="bg-muted/30 border-b p-6 pb-4">
+            <h3 className="font-semibold tracking-tight">프로비저닝 상태</h3>
+            <p className="text-muted-foreground mt-1 text-sm">
+              게임 스트리밍 리소스 프로비저닝 현황
+            </p>
+          </div>
+          <div className="flex flex-1 flex-col p-6">
+            {showSkeleton ? (
+              <div className="space-y-4">
+                <Skeleton className="h-16 w-full" />
+                <Skeleton className="h-16 w-full" />
+              </div>
+            ) : (
+              <ProvisioningStatusStep relatedItems={relatedItems} />
+            )}
+          </div>
+        </Card>
+
+        {/* Card 3: Survey Session Only Link */}
+        <DistributionCard
+          title="인터뷰 링크"
+          description="for 설문"
+          url={surveySessionUrl}
+          isLoading={showSkeleton}
+          enabled={survey?.status === 'ACTIVE'}
+        />
+
+        {/* Card 4: Game Play & Survey Link */}
+        <DistributionCard
+          title="게임 플레이 링크"
+          description="for 설문 & 게임"
+          url={surveyPlayUrl}
+          isLoading={showSkeleton}
+          enabled={
+            survey?.status === 'ACTIVE' &&
+            relatedItems &&
+            relatedItems.length > 0 &&
+            (relatedItems[relatedItems.length - 1].status === 'READY' ||
+              relatedItems[relatedItems.length - 1].status === 'ACTIVE')
+          }
+        />
+      </div>
+
+      {nextStatus && (
+        <StatusChangeModal
+          open={!!nextStatus}
+          onOpenChange={handleModalOpenChange}
+          nextStatus={nextStatus}
+          isPending={isPending}
+          onConfirm={handleConfirmStatusChange}
+        />
+      )}
+    </div>
+  );
+}

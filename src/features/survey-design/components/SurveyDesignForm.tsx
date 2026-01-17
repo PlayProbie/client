@@ -1,0 +1,292 @@
+import { useEffect, useRef, useState } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
+import {
+  useLocation,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from 'react-router-dom';
+
+import { Button } from '@/components/ui';
+import { Form } from '@/components/ui/form';
+import { PageSpinner } from '@/components/ui/loading';
+import { Step } from '@/components/ui/Step';
+import type { GameGenre } from '@/features/game';
+import { useToast } from '@/hooks/useToast';
+import { cn } from '@/lib/utils';
+import { useCurrentGameStore } from '@/stores/useCurrentGameStore';
+
+import { type SubmitResult, useFormSubmit } from '../hooks/useFormSubmit';
+import { INITIAL_STATE, useSurveyFormStore } from '../store/useSurveyFormStore';
+import { SURVEY_FORM_STEPS, type SurveyFormData } from '../types';
+import {
+  StepBasicInfo,
+  StepConfirm,
+  StepMethodSelection,
+  StepQuestionAIGenerate,
+  StepQuestionUserGenerate,
+} from './steps';
+
+type SurveyDesignFormProps = {
+  className?: string;
+  onComplete?: (result: SubmitResult) => void;
+};
+
+function SurveyDesignForm({ className, onComplete }: SurveyDesignFormProps) {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { step } = useParams<{ step?: string }>();
+  const { toast } = useToast();
+
+  const { currentStep, goToStep, formData, updateFormData } =
+    useSurveyFormStore();
+
+  // 게임 정보 가져오기
+  const { currentGame, isLoading: isLoadingGame } = useCurrentGameStore();
+
+  // StrictMode 중복 제출 방지 ref
+  const isSubmittingRef = useRef(false);
+
+  // useForm을 먼저 초기화 (formData는 store의 초기값 사용)
+  const form = useForm<SurveyFormData>({
+    defaultValues: formData,
+  });
+
+  const { control, handleSubmit, reset } = form;
+
+  useEffect(() => {
+    if (currentGame) {
+      const data: Partial<SurveyFormData> = {
+        ...INITIAL_STATE.formData,
+        ...{
+          gameName: currentGame.gameName,
+          gameGenre: currentGame.gameGenre as GameGenre[],
+          gameContext: currentGame.gameContext,
+        },
+      };
+
+      // Store 업데이트
+      updateFormData(data);
+
+      // Form 상태 동기화
+      reset(data as SurveyFormData);
+    }
+  }, [currentGame, updateFormData, reset]);
+
+  // 게임 정보 로딩 상태 확인
+  const hasGameInfo = Boolean(formData.gameName);
+  const isGameInfoLoading = isLoadingGame || (!hasGameInfo && !currentGame);
+
+  // useWatch로 폼 데이터 구독 (React Compiler 호환)
+  const watchedData = useWatch({ control });
+
+  // 설문 생성 API 호출 훅
+  const { mutate: submitSurvey, isPending } = useFormSubmit({
+    onSuccess: (result) => {
+      isSubmittingRef.current = false;
+      onComplete?.(result);
+    },
+    onError: () => {
+      isSubmittingRef.current = false;
+      toast({
+        variant: 'destructive',
+        title: '설문 생성 실패',
+        description: '설문 생성에 실패했습니다. 다시 시도해주세요.',
+      });
+    },
+  });
+
+  // URL에서 step 파라미터가 변경되면 store 동기화
+  const pathWithoutStep = location.pathname.replace(/\/step-\d+$/, '');
+
+  useEffect(() => {
+    if (step) {
+      const stepMatch = step.match(/^step-(\d+)$/);
+      if (stepMatch) {
+        const stepNum = parseInt(stepMatch[1], 10);
+        if (stepNum >= 0 && stepNum < SURVEY_FORM_STEPS.length) {
+          goToStep(stepNum);
+        }
+      }
+    }
+  }, [step, goToStep]);
+
+  // 폼 필드 변경 시 즉시 임시 저장
+  useEffect(() => {
+    updateFormData(watchedData as Partial<SurveyFormData>);
+  }, [watchedData, updateFormData]);
+
+  /** 공통 경로 생성 함수 (쿼리 파라미터 유지) */
+  const getStepPath = (stepNum: number, actor?: 'user' | 'ai') => {
+    const actorValue = actor || searchParams.get('actor');
+    let nextPath = `${pathWithoutStep}/step-${stepNum}`;
+    if (actorValue) {
+      nextPath += `?actor=${actorValue}`;
+    }
+    return nextPath;
+  };
+
+  const createHandleNext = (actor?: 'user' | 'ai') =>
+    handleSubmit((data) => {
+      updateFormData(data);
+
+      // 최종 확인 단계 (Step 3)에서 설문 생성 버튼 클릭 시 API 호출
+      if (currentStep === SURVEY_FORM_STEPS.length - 1) {
+        // StrictMode 중복 제출 방지
+        if (isSubmittingRef.current || isPending) return;
+        isSubmittingRef.current = true;
+        submitSurvey(formData);
+        return;
+      }
+
+      // '직접 질문 생성' 선택 시 questions 초기화
+      if (actor === 'user') {
+        updateFormData({ questions: [], selectedQuestionIndices: [] });
+        form.setValue('questions', []);
+        form.setValue('selectedQuestionIndices', []);
+      }
+
+      // 다음 단계로 이동
+      navigate(getStepPath(currentStep + 1, actor));
+    });
+
+  const handlePrev = () => {
+    if (currentStep > 0) {
+      navigate(getStepPath(currentStep - 1));
+    }
+  };
+
+  const handleStepClick = (index: number) => {
+    navigate(getStepPath(index));
+  };
+
+  const stepLabels = SURVEY_FORM_STEPS.map((s) => s.label);
+  const isLastStep = currentStep === SURVEY_FORM_STEPS.length - 1;
+
+  // 질문 생성 방식 선택 상태 (Step 1)
+  const [generationMethod, setGenerationMethod] = useState<
+    'ai' | 'manual' | 'flow' | null
+  >(null);
+
+  const createHandleGenMethodNext = () => {
+    const themePriorities = form.getValues('themePriorities');
+
+    if (generationMethod === 'ai') {
+      if (!themePriorities || themePriorities.length === 0) return;
+      updateFormData({ questions: [], selectedQuestionIndices: [] });
+      navigate(getStepPath(2, 'ai'));
+    } else if (generationMethod === 'manual') {
+      if (!themePriorities || themePriorities.length === 0) return;
+      updateFormData({ questions: [], selectedQuestionIndices: [] });
+      navigate(getStepPath(2, 'user'));
+    }
+  };
+
+  /** 현재 Step에 해당하는 컴포넌트 렌더링 */
+  const renderStepContent = () => {
+    const isUserGenerate = searchParams.get('actor') === 'user';
+
+    switch (currentStep) {
+      case 0:
+        return <StepBasicInfo control={control} />;
+      case 1:
+        return (
+          <StepMethodSelection
+            selectedMethod={generationMethod}
+            onSelectMethod={setGenerationMethod}
+          />
+        );
+      case 2:
+        return isUserGenerate ? (
+          <StepQuestionUserGenerate />
+        ) : (
+          <StepQuestionAIGenerate />
+        );
+      case 3:
+        return <StepConfirm />;
+      default:
+        return null;
+    }
+  };
+
+  // Step 1 버튼 활성화 조건
+  const themePriorities = useWatch({ control, name: 'themePriorities' }) || [];
+  const canAIGenerate =
+    generationMethod === 'ai' &&
+    themePriorities.length >= 1 &&
+    themePriorities.length <= 3;
+  const canManualNext =
+    generationMethod === 'manual' && themePriorities.length >= 1;
+
+  // 게임 정보 로딩 중일 때 로딩 표시
+  if (isGameInfoLoading) {
+    return <PageSpinner message="게임 정보를 불러오는 중..." />;
+  }
+
+  return (
+    <div className={cn('flex flex-col gap-8', className)}>
+      {/* Step Indicator */}
+      <Step
+        steps={stepLabels}
+        currentStep={currentStep}
+        onStepClick={handleStepClick}
+      />
+
+      {/* Form Content */}
+      <Form {...form}>
+        <form
+          className="flex flex-col gap-6"
+          onSubmit={(e) => e.preventDefault()}
+        >
+          <div className="min-h-[300px]">{renderStepContent()}</div>
+
+          {/* Navigation Buttons */}
+          <div className="border-border flex justify-between border-t pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handlePrev}
+              disabled={currentStep === 0}
+            >
+              이전
+            </Button>
+            <div className="flex gap-2">
+              {currentStep === 1 ? (
+                // Step 1: 생성 방식 선택 시 별도 로직
+                generationMethod === 'ai' ? (
+                  <Button
+                    type="button"
+                    onClick={createHandleGenMethodNext}
+                    disabled={!canAIGenerate}
+                  >
+                    AI 질문 생성
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    onClick={createHandleGenMethodNext}
+                    disabled={!canManualNext} // Manual 선택 안되면 버튼 안보임(null) or disabled
+                  >
+                    다음
+                  </Button>
+                )
+              ) : (
+                <Button
+                  type="button"
+                  disabled={isPending}
+                  onClick={() => createHandleNext()()}
+                >
+                  {isPending ? '생성 중...' : isLastStep ? '설문 생성' : '다음'}
+                </Button>
+              )}
+            </div>
+          </div>
+        </form>
+      </Form>
+    </div>
+  );
+}
+
+export { SurveyDesignForm };
+export type { SurveyDesignFormProps };

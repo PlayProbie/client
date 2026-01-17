@@ -1,0 +1,37 @@
+import { API_BASE_URL } from '@/constants/api';
+
+import type {
+  GetSurveyResultsSummaryParams,
+  GetSurveyResultsSummaryResponse,
+} from '../types';
+
+/**
+ * GET /surveys/results/{survey_uuid} - 설문별 응답 요약
+ */
+export async function getSurveyResultsSummary(
+  params: GetSurveyResultsSummaryParams
+): Promise<GetSurveyResultsSummaryResponse> {
+  const searchParams = new URLSearchParams();
+  if (params.status) {
+    searchParams.set('status', params.status);
+  }
+
+  const url = `${API_BASE_URL}/surveys/results/${params.surveyUuid}${
+    searchParams.toString() ? `?${searchParams.toString()}` : ''
+  }`;
+
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to get survey results summary');
+  }
+
+  return response.json();
+}
+

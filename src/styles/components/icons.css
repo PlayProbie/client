@@ -1,0 +1,52 @@
+/**
+ * Icon Styles: "The Blueprint Line"
+ * Line-based icons with 2px stroke, round caps
+ * Primary Library: Lucide Icons
+ */
+
+@layer components {
+  /* Icon base styles - Line-based with 2px stroke */
+  .icon {
+    @apply inline-flex shrink-0 stroke-2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* Icon sizes */
+  .icon-sm {
+    @apply size-4; /* 16px */
+  }
+
+  .icon-md {
+    @apply size-5; /* 20px */
+  }
+
+  .icon-lg {
+    @apply size-6; /* 24px */
+  }
+
+  /* Icon colors - inherits from parent by default */
+  .icon-primary {
+    @apply text-primary;
+  }
+
+  .icon-muted {
+    @apply text-muted-foreground;
+  }
+
+  .icon-accent {
+    @apply text-accent;
+  }
+
+  .icon-success {
+    @apply text-success;
+  }
+
+  .icon-destructive {
+    @apply text-destructive;
+  }
+
+  .icon-warning {
+    @apply text-warning;
+  }
+}

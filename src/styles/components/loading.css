@@ -1,0 +1,48 @@
+/**
+ * Loading Component Styles
+ * Skeleton and Spinner animation utilities
+ * Uses design system tokens for consistent appearance
+ */
+
+@layer components {
+  /* Skeleton base - uses muted background with pulse animation */
+  .skeleton {
+    @apply bg-muted animate-pulse rounded-md;
+  }
+
+  /* Skeleton with shimmer effect for enhanced visual feedback */
+  .skeleton-shimmer {
+    @apply bg-muted relative overflow-hidden;
+  }
+
+  .skeleton-shimmer::after {
+    content: '';
+    @apply absolute inset-0;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      oklch(1 0 0 / 10%),
+      transparent
+    );
+    animation: shimmer 2s infinite;
+  }
+
+  @keyframes shimmer {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  /* Spinner base */
+  .spinner {
+    @apply animate-spin rounded-full border-current border-t-transparent;
+  }
+
+  /* Page loading overlay */
+  .page-loading {
+    @apply flex h-screen w-full flex-col items-center justify-center gap-4;
+  }
+}

@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  pull_request:
+    branches: ['main', 'develop']
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout source code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🔍 Run Lint
+        run: npm run lint
+
+      - name: 🔨 Run Build
+        run: npm run build
+        env:
+          VITE_API_BASE_URL:
+            ${{ secrets.VITE_API_BASE_URL || 'http://localhost:8080' }}
+          VITE_CLIENT_BASE_URL:
+            ${{ secrets.VITE_CLIENT_BASE_URL || 'http://localhost:5173' }}

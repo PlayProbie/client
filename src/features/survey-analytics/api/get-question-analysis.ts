@@ -1,0 +1,53 @@
+import { API_BASE_URL } from '@/constants/api';
+
+import type { QuestionResponseAnalysisWrapper } from '../types';
+
+/** Analytics 응답 타입 */
+interface AnalyticsResponse {
+  analyses: QuestionResponseAnalysisWrapper[];
+  status: 'COMPLETED' | 'NO_DATA' | 'INSUFFICIENT_DATA';
+  total_questions: number;
+  completed_questions: number;
+  total_participants: number;
+}
+
+/**
+ * GET /api/analytics/{surveyUuid} - 설문 질문별 AI 분석 결과
+ * SSE에서 REST API로 전환됨
+ */
+export async function getQuestionAnalysis(
+  surveyUuid: string,
+  onMessage: (data: QuestionResponseAnalysisWrapper) => void,
+  onError?: (error: Error) => void,
+  onComplete?: (totalParticipants: number) => void
+): Promise<() => void> {
+  try {
+    // REST API 호출 (Authorization 헤더는 글로벌 인터셉터가 자동 추가)
+    const url = import.meta.env.DEV
+      ? `/api/analytics/${surveyUuid}`
+      : `${API_BASE_URL}/analytics/${surveyUuid}`;
+
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data: AnalyticsResponse = await response.json();
+
+    // 분석 결과 순차 콜백 호출 (기존 인터페이스 호환)
+    for (const item of data.analyses) {
+      onMessage(item);
+    }
+
+    // 모든 상태에서 완료 처리 (IN_PROGRESS는 서버에서 반환하지 않음)
+    onComplete?.(data.total_participants || 0);
+
+    return () => {}; // cleanup (REST는 cleanup 불필요)
+  } catch (error) {
+    onError?.(
+      error instanceof Error ? error : new Error('Failed to fetch analytics')
+    );
+    return () => {};
+  }
+}
