@@ -1,5 +1,5 @@
 import { RotateCcw } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -26,8 +26,6 @@ export function GameElementAnalysisStep({
   onConfirm,
   isSubmitting,
 }: GameElementAnalysisStepProps) {
-  const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
-
   const {
     elements: currentElements,
     requiredFields,
@@ -51,22 +49,12 @@ export function GameElementAnalysisStep({
     return !missingStillEmpty && !requiredEmpty;
   }, [currentElements, missingRequired, requiredFields]);
 
-  // 저장 버튼 클릭 핸들러: 필수 항목 미입력 시 경고 표시
-  const handleConfirmClick = () => {
-    if (!canConfirm) {
-      setHasAttemptedSubmit(true);
-      return;
-    }
-    onConfirm();
-  };
-
   const renderField = (key: string, isRequired: boolean) => {
     const label = ELEMENT_LABELS[key] || key;
     const value = currentElements[key] || '';
     const isMissing = missingRequired.includes(key);
     const isEmpty = !value.trim();
-    // 제출 시도 후에만 경고 표시
-    const showWarning = hasAttemptedSubmit && isRequired && (isMissing || isEmpty);
+    const showWarning = isRequired && (isMissing || isEmpty);
 
     return (
       <div
@@ -90,7 +78,7 @@ export function GameElementAnalysisStep({
         {showWarning && (
           <p className="text-destructive text-sm font-medium">
             {isMissing
-              ? '⚠️ 필수 항목입니다.'
+              ? '⚠️ AI가 감지하지 못했습니다. 직접 입력해주세요.'
               : '필수 항목입니다.'}
           </p>
         )}
@@ -161,8 +149,8 @@ export function GameElementAnalysisStep({
         </div>
         <div className="flex-1" /> {/* Spacer */}
         <Button
-          onClick={handleConfirmClick}
-          disabled={isSubmitting}
+          onClick={onConfirm}
+          disabled={!canConfirm || isSubmitting}
           className="min-w-[120px]"
         >
           {isSubmitting ? '저장 중...' : '확인 및 저장'}

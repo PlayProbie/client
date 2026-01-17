@@ -76,16 +76,14 @@ export function GameFormModal({
 
 
         {showAnalysisStep && analysisResult ? (
-          <div className="max-h-[60vh] overflow-y-auto">
-            <GameElementAnalysisStep
-              elements={analysisResult}
-              onElementChange={onElementChange}
-              onReanalyze={onAnalyzeGame}
-              onConfirm={handleAnalysisConfirm}
-              isSubmitting={isSubmitting}
-              onBack={onBackToInput}
-            />
-          </div>
+          <GameElementAnalysisStep
+            elements={analysisResult}
+            onElementChange={onElementChange}
+            onReanalyze={onAnalyzeGame}
+            onConfirm={handleAnalysisConfirm}
+            isSubmitting={isSubmitting}
+            onBack={onBackToInput}
+          />
         ) : (
           <>
             <div className="grid gap-8 py-4">
@@ -196,7 +194,7 @@ export function GameFormModal({
                     : submitLabel
                   : isAnalyzing
                   ? '분석 중...'
-                  : '다음'}
+                  : '✨ AI 분석하기'}
               </Button>
             </DialogFooter>
           </>
