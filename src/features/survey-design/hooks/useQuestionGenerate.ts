@@ -13,7 +13,7 @@ import type {
 import { useQuestionManager } from './useQuestionManager';
 
 /** 기본 AI 질문 생성 개수 */
-const DEFAULT_QUESTION_COUNT = 3;
+const DEFAULT_QUESTION_COUNT = 10;
 
 /**
  * AI 질문 생성 및 관리 훅
@@ -39,7 +39,7 @@ function useQuestionGenerate() {
     error: generateError,
   } = useMutation({
     mutationFn: async (
-      params: Pick<ApiGenerateAiQuestionsRequest, 'count'>
+      params: Pick<ApiGenerateAiQuestionsRequest, 'count' | 'shuffle'>
     ) => {
       const { formData } = useSurveyFormStore.getState();
       const {
@@ -78,6 +78,7 @@ function useQuestionGenerate() {
         gameGenre: effectiveGameGenre,
         testStage,
         extractedElements: effectiveExtractedElements,
+        shuffle: params.shuffle,
       });
 
       if (!effectiveGameGenre?.length || !testStage) {
@@ -85,8 +86,6 @@ function useQuestionGenerate() {
           '필수 정보(게임 장르, 테스트 단계)가 없습니다. 페이지를 새로고침 해주세요.'
         );
       }
-
-      // themeDetails에서 themePriorities에 있는 카테고리만 포함
 
       // themeDetails에서 themePriorities에 있는 카테고리만 포함
       const cleanedThemeDetails =
@@ -103,10 +102,10 @@ function useQuestionGenerate() {
         game_context: effectiveGameContext || '',
         game_genre: effectiveGameGenre!,
         test_stage: testStage,
-        extracted_elements: effectiveExtractedElements,
         theme_priorities: themePriorities || [],
         theme_details: cleanedThemeDetails,
         count: params.count,
+        shuffle: params.shuffle,
       });
     },
     onSettled: () => {
@@ -146,8 +145,10 @@ function useQuestionGenerate() {
     setIsLocalGenerating(true);
 
     try {
+      // 초기 질문 생성은 shuffle: false (Best Match)
       const response = await generateMutateAsync({
         count: DEFAULT_QUESTION_COUNT,
+        shuffle: false,
       });
 
       const generatedQuestions = response.result;
@@ -217,8 +218,28 @@ function useQuestionGenerate() {
 
   // 질문 재생성
   const handleRegenerate = useCallback(async () => {
-    await generateQuestions();
-  }, [generateQuestions]);
+    // 재생성 시에는 shuffle: true (Varied Suggestions)
+    setIsLocalGenerating(true);
+    try {
+      const response = await generateMutateAsync({
+        count: DEFAULT_QUESTION_COUNT,
+        shuffle: true,
+      });
+
+      const generatedQuestions = response.result;
+      const selectedIndices = generatedQuestions.map((_, i) => i);
+
+      updateFormData({
+        questions: generatedQuestions,
+        selectedQuestionIndices: selectedIndices,
+      });
+      setValue('questions', generatedQuestions);
+      setValue('selectedQuestionIndices', selectedIndices);
+      manager.setFeedbackMap({});
+    } finally {
+      setIsLocalGenerating(false);
+    }
+  }, [generateMutateAsync, updateFormData, setValue, manager]);
 
   const handleAddQuestion = useCallback(async () => {
     const { formData } = useSurveyFormStore.getState();
@@ -235,7 +256,8 @@ function useQuestionGenerate() {
 
     setIsLocalGenerating(true);
     try {
-      const response = await generateMutateAsync({ count: 1 });
+      // 추가 생성 시 shuffle: true
+      const response = await generateMutateAsync({ count: 1, shuffle: true });
 
       const newQuestion = response.result[0];
       if (!newQuestion) return;

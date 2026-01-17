@@ -147,12 +147,12 @@ export interface ApiGenerateAiQuestionsRequest { //추가할 데이터: 핵심�
   game_context: string;
   game_genre: GameGenre[];
   test_stage: TestStage;
-  extracted_elements?: Record<string, string | null>;
   /** 테마 대분류 우선순위 (1~3개, 순서대로) */
   theme_priorities: ThemeCategory[];
   /** 테마 소분류 (대분류별 선택된 세부 테마, 선택사항) */
   theme_details?: Partial<Record<ThemeCategory, ThemeDetail[]>>;
   count: number;
+  shuffle?: boolean;
 }
 
 /** [API] POST /surveys/ai-questions Response */
