@@ -106,14 +106,16 @@ function AnswerList({ answers, title = '필터링된 원문 리스트' }: Answer
           const FixedContent = (
             <div className={`relative w-full rounded-lg border p-4 text-left transition-colors ${hasTail ? 'group-hover:bg-muted/50' : 'bg-muted/10'}`}>
               <div className="mb-2 flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <span className={`px-2 py-0.5 text-xs font-semibold rounded ${
-                    firstPair.type === 'FIXED' 
-                      ? 'bg-primary/10 text-primary' 
-                      : 'bg-accent/10 text-accent-foreground'
-                  }`}>
-                    {firstPair.type === 'FIXED' ? '고정 질문' : '꼬리 질문'}
-                  </span>
+                <div className="flex flex-wrap items-center gap-2">
+                  {answer.tags && answer.tags.length > 0 ? (
+                    answer.tags.map((tag) => (
+                      <Badge key={tag} variant="secondary" className="text-xs">
+                        {tag}
+                      </Badge>
+                    ))
+                  ) : (
+                    <span className="text-xs text-muted-foreground">프로필 정보 없음</span>
+                  )}
                   {hasTail && (
                     <span className="text-xs text-muted-foreground flex items-center gap-0.5">
                       <MessageSquareText className="h-3 w-3" />
@@ -122,7 +124,7 @@ function AnswerList({ answers, title = '필터링된 원문 리스트' }: Answer
                   )}
                 </div>
                 {answer.sentiment && (
-                  <Badge 
+                  <Badge
                     variant="outline"
                     className={`shrink-0 ${getSentimentStyle(answer.sentiment)}`}
                   >
@@ -130,7 +132,7 @@ function AnswerList({ answers, title = '필터링된 원문 리스트' }: Answer
                   </Badge>
                 )}
               </div>
-              
+
               <div className="space-y-1">
                 <p className="text-xs font-medium text-muted-foreground">
                   {firstPair.question}
@@ -139,16 +141,6 @@ function AnswerList({ answers, title = '필터링된 원문 리스트' }: Answer
                   {firstPair.answer}
                 </p>
               </div>
-
-              {answer.tags && answer.tags.length > 0 && (
-                <div className="mt-3 flex flex-wrap gap-1">
-                  {answer.tags.map((tag) => (
-                    <Badge key={tag} variant="secondary" className="text-xs">
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-              )}
             </div>
           );
 

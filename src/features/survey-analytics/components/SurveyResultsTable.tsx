@@ -33,7 +33,10 @@ const COLUMN_WIDTHS = {
   surveyName: 'w-[180px]',
   status: 'w-[80px]',
   endedAt: 'w-[160px]',
-  firstQuestion: 'w-auto',
+  gender: 'w-[80px]',
+  preferGenre: 'w-[140px]',
+  ageGroup: 'w-[80px]',
+  actions: 'w-[60px]',
 } as const;
 
 /**
@@ -82,6 +85,36 @@ function SurveyResultsTable({ data }: SurveyResultsTableProps) {
         },
       },
       {
+        accessorKey: 'gender',
+        header: '성별',
+        size: 80,
+        cell: (info) => {
+          const value = info.getValue<string | null>();
+          if (!value) return '-';
+          return value === 'M' ? '남성' : value === 'F' ? '여성' : value;
+        },
+      },
+      {
+        accessorKey: 'preferGenre',
+        header: '선호장르',
+        size: 140,
+        cell: (info) => {
+          const value = info.getValue<string | null>();
+          if (!value) return '-';
+          return <span className="line-clamp-1">{value}</span>;
+        },
+      },
+      {
+        accessorKey: 'ageGroup',
+        header: '나이',
+        size: 80,
+        cell: (info) => {
+          const value = info.getValue<string | null>();
+          if (!value) return '-';
+          return value;
+        },
+      },
+      {
         accessorKey: 'endedAt',
         header: '설문 일시',
         size: 160,
@@ -92,25 +125,20 @@ function SurveyResultsTable({ data }: SurveyResultsTableProps) {
         },
       },
       {
-        accessorKey: 'firstQuestion',
-        header: '첫 질문',
+        id: 'actions',
+        header: '',
+        size: 60,
         cell: (info) => {
           const row = info.row.original;
           return (
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-muted-foreground line-clamp-1 flex-1">
-                {info.getValue<string>()}
-              </span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => handleOpenDetail(row)}
-                className="shrink-0"
-              >
-                <Eye className="size-4" />
-                <span className="sr-only">상세보기</span>
-              </Button>
-            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleOpenDetail(row)}
+            >
+              <Eye className="size-4" />
+              <span className="sr-only">상세보기</span>
+            </Button>
           );
         },
       },

@@ -4,11 +4,11 @@ import { useParams } from 'react-router-dom';
 import { Spinner } from '@/components/ui/loading';
 import {
   AnalysisFilterBar,
+  type AnalysisFilters,
   QuestionAnalysisTabs,
   QuestionAnalysisView,
   SurveyOverview,
   SurveyResultsTable,
-  type AnalysisFilters,
   type Tab,
   useAnalyticsSubscription,
   useQuestionAnalysis,
@@ -45,6 +45,8 @@ function SurveyAnalyticsPage() {
     isError: isFilteredError,
     totalParticipants: filteredTotalParticipants,
     surveySummary: filteredSummaryText,
+    insufficientData,
+    isComputing: isFilteredComputing,
   } = useQuestionAnalysis({
     surveyUuid: effectiveSurveyUuid,
     filters,
@@ -60,16 +62,29 @@ function SurveyAnalyticsPage() {
     isError: isUnfilteredError,
     totalParticipants: unfilteredTotalParticipants,
     surveySummary: unfilteredSurveySummary,
+    isComputing: isUnfilteredComputing,
+    insufficientData: unfilteredInsufficientData,
   } = useQuestionAnalysis({
     surveyUuid: effectiveSurveyUuid,
     filters: undefined, // 필터 없음
     enabled: !!effectiveSurveyUuid,
   });
 
-  // SSE 구독 및 업데이트 시 리패치 트리거 (둘 다 갱신)
+  // 필터가 적용되어 있는지 확인
+  const hasActiveFilters =
+    filters.gender !== null ||
+    filters.ageGroup !== null ||
+    filters.preferGenre !== null;
+
+  // SSE 구독 및 업데이트 시 리패치 트리거
+  // 필터가 적용된 상태면 filtered만, 아니면 unfiltered도 함께 refetch
   useAnalyticsSubscription(effectiveSurveyUuid, () => {
     refetchFiltered();
-    refetchUnfiltered();
+    // 필터가 없는 경우에만 unfiltered도 refetch
+    // (필터 분석 완료 SSE는 필터 데이터와 관련 없음)
+    if (!hasActiveFilters) {
+      refetchUnfiltered();
+    }
   });
 
   // 필터 데이터 객체
@@ -80,6 +95,8 @@ function SurveyAnalyticsPage() {
     isError: isFilteredError,
     totalParticipants: filteredTotalParticipants,
     surveySummary: filteredSummaryText,
+    insufficientData,
+    isComputing: isFilteredComputing,
   };
 
   // 원본 데이터 객체 (설문 개요용)
@@ -90,6 +107,7 @@ function SurveyAnalyticsPage() {
     isError: isUnfilteredError,
     totalParticipants: unfilteredTotalParticipants,
     surveySummary: unfilteredSurveySummary,
+    insufficientData: unfilteredInsufficientData,
   };
 
   // 전체 로딩 상태 (기본 설문 정보 로딩 포함)
@@ -137,6 +155,7 @@ function SurveyAnalyticsPage() {
             <SurveyOverview
               summary={summary}
               questionAnalysis={unfilteredQuestionAnalysis}
+              isFiltered={false}
             />
           )}
 
@@ -144,6 +163,7 @@ function SurveyAnalyticsPage() {
           {activeTab === 'questions' && Boolean(surveyUuid) && (
             <QuestionAnalysisView
               questionAnalysis={filteredQuestionAnalysis}
+              isFiltered={hasActiveFilters}
             />
           )}
 

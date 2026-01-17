@@ -1,5 +1,7 @@
+import { Filter, RotateCcw } from 'lucide-react';
 import { useState } from 'react';
 
+import { Button } from '@/components/ui/button';
 import {
   Select,
   SelectContent,
@@ -7,8 +9,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/Select';
-import { Button } from '@/components/ui/button';
-import { Filter, RotateCcw } from 'lucide-react';
 
 import type { AnalysisFilters } from '../types';
 
@@ -24,22 +24,22 @@ const GENDER_OPTIONS = [
 ];
 
 const AGE_GROUP_OPTIONS = [
-  { value: '10대', label: '10대' },
-  { value: '20대', label: '20대' },
-  { value: '30대', label: '30대' },
-  { value: '40대', label: '40대' },
-  { value: '50대 이상', label: '50대 이상' },
+  { value: '10s', label: '10대' },
+  { value: '20s', label: '20대' },
+  { value: '30s', label: '30대' },
+  { value: '40s', label: '40대' },
+  { value: '50s', label: '50대 이상' },
 ];
 
 const GENRE_OPTIONS = [
   { value: 'RPG', label: 'RPG' },
   { value: 'FPS', label: 'FPS' },
-  { value: '액션', label: '액션' },
-  { value: '어드벤처', label: '어드벤처' },
-  { value: '시뮬레이션', label: '시뮬레이션' },
-  { value: '스포츠', label: '스포츠' },
-  { value: '퍼즐', label: '퍼즐' },
-  { value: '전략', label: '전략' },
+  { value: 'ACTION', label: '액션' },
+  { value: 'ADVENTURE', label: '어드벤처' },
+  { value: 'SIMULATION', label: '시뮬레이션' },
+  { value: 'SPORTS', label: '스포츠' },
+  { value: 'PUZZLE', label: '퍼즐' },
+  { value: 'STRATEGY', label: '전략' },
 ];
 
 /**

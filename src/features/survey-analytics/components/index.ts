@@ -1,10 +1,10 @@
+export { AnalysisFilterBar } from './AnalysisFilterBar';
 export type { AnswerListItem } from './AnswerList';
 export { AnswerList } from './AnswerList';
 export { ClusterDetailPanel } from './ClusterDetailPanel';
 export { ClusterSelector } from './ClusterSelector';
 export { GEQRadarChart } from './GEQRadarChart';
 export { QuestionAnalysisDetail } from './QuestionAnalysisDetail';
-export { AnalysisFilterBar } from './AnalysisFilterBar';
 export type { Tab } from './QuestionAnalysisTabs';
 export { QuestionAnalysisTabs } from './QuestionAnalysisTabs';
 export { QuestionAnalysisView } from './QuestionAnalysisView';

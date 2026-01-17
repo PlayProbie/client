@@ -51,7 +51,9 @@ export interface ApiSurveyResultsSummary {
 
 /** [API] 전체 응답 리스트 아이템 */
 export interface ApiSurveyResultListItem extends ApiSurveySession {
-  first_question: string;
+  gender: string | null;
+  age_group: string | null;
+  prefer_genre: string | null;
 }
 
 /** [API] 전체 응답 리스트 데이터 */
@@ -216,7 +218,9 @@ export interface SurveyResultsSummary {
 
 /** [Client] 전체 응답 리스트 아이템 */
 export interface SurveyResultListItem extends SurveySession {
-  firstQuestion: string;
+  gender: string | null;
+  ageGroup: string | null;
+  preferGenre: string | null;
 }
 
 /** [Client] 전체 응답 리스트 데이터 */

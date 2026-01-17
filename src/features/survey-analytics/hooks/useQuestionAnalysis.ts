@@ -32,11 +32,15 @@ export function useQuestionAnalysis({
     status: 'idle' as 'idle' | 'loading' | 'complete' | 'error',
     totalParticipants: 0,
     surveySummary: '' as string,
+    insufficientData: false,
+    isComputing: false, // AI가 계산 중인지 여부
   });
 
   // ref를 사용해 중복 요청 방지 (React StrictMode 대응)
   const requestedSurveyUuidRef = useRef<string | null>(null);
   const lastFilterKeyRef = useRef<string>('{}');
+  // 요청 시점의 필터 키 저장 (응답 수신 시 비교용)
+  const requestFilterKeyRef = useRef<string>('{}');
   const isRequestingRef = useRef(false);
 
   // Derived state (계산된 값)
@@ -44,13 +48,17 @@ export function useQuestionAnalysis({
   const isError = state.status === 'error';
   const isComplete = state.status === 'complete';
 
-  // Refetch control
-  const [refetchCount, setRefetchCount] = useState(0);
+  // Refetch control - 단일 refetch만 허용
+  const [refetchTrigger, setRefetchTrigger] = useState(0);
 
   const refetch = () => {
+    // 이미 요청 중이면 무시 (중복 refetch 방지)
+    if (isRequestingRef.current) {
+      return;
+    }
     // Reset requesting ref to allow new request
     requestedSurveyUuidRef.current = null;
-    setRefetchCount((c) => c + 1);
+    setRefetchTrigger((c) => c + 1);
   };
 
   useEffect(() => {
@@ -61,16 +69,20 @@ export function useQuestionAnalysis({
     // 필터 직렬화하여 비교 (변경 감지용)
     const currentFilterKey = JSON.stringify(filters ?? {});
 
-    // 이미 요청 중이면 스킵
+    // 이미 요청 중이면 스킵 (동일 필터+surveyUuid로 진행 중인 요청)
     if (isRequestingRef.current) {
       return;
     }
 
-    // 같은 surveyUuid로 완료된 요청이 있으면 스킵
-    // 단, refetchCount가 변경되거나 필터가 변경되면 재요청 허용
+    // 같은 surveyUuid+필터로 완료된 요청이 있으면 스킵
+    // 조건:
+    // 1. requestedSurveyUuidRef가 null이 아님 (이미 한 번 요청 완료)
+    // 2. 같은 surveyUuid
+    // 3. 같은 필터
+    // refetchTrigger가 변경되면 위 조건과 관계없이 재요청
     if (
+      requestedSurveyUuidRef.current !== null &&
       surveyUuid === requestedSurveyUuidRef.current &&
-      refetchCount === 0 &&
       currentFilterKey === lastFilterKeyRef.current
     ) {
       return;
@@ -78,10 +90,11 @@ export function useQuestionAnalysis({
 
     requestedSurveyUuidRef.current = surveyUuid;
     lastFilterKeyRef.current = currentFilterKey;
+    requestFilterKeyRef.current = currentFilterKey;
     isRequestingRef.current = true;
 
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setState({ data: {}, error: null, status: 'loading', totalParticipants: 0, surveySummary: '' });
+    setState({ data: {}, error: null, status: 'loading', totalParticipants: 0, surveySummary: '', insufficientData: false, isComputing: false });
 
     let cleanupFn: (() => void) | null = null;
     let isCancelled = false;
@@ -89,16 +102,20 @@ export function useQuestionAnalysis({
     getQuestionAnalysis(
       surveyUuid,
       filters,
-      (wrapper: QuestionResponseAnalysisWrapper) => {
+      (item: QuestionResponseAnalysisWrapper) => {
+        if (isCancelled) return;
+        // 필터가 변경되었으면 무시 (중요!)
+        if (requestFilterKeyRef.current !== currentFilterKey) {
+          return;
+        }
+        // 질문별 분석 결과를 받을 때마다 상태 업데이트
         try {
-          const parsed: QuestionAnalysisResult = JSON.parse(
-            wrapper.result_json
-          );
+          const parsed: QuestionAnalysisResult = JSON.parse(item.result_json);
           setState((prev) => ({
             ...prev,
             data: {
               ...prev.data,
-              [wrapper.fixed_question_id]: parsed,
+              [item.fixed_question_id]: parsed,
             },
           }));
         } catch {
@@ -112,8 +129,20 @@ export function useQuestionAnalysis({
         // 에러 시에는 재시도할 수 있도록 requestedSurveyUuidRef 초기화
         requestedSurveyUuidRef.current = null;
       },
-      (totalParticipants: number, surveySummary?: string) => {
-        setState((prev) => ({ ...prev, status: 'complete', totalParticipants, surveySummary: surveySummary || '' }));
+      (totalParticipants: number, surveySummary?: string, insufficientData?: boolean, isComputing?: boolean) => {
+        // 필터가 변경되었으면 무시 (문제 4번 해결)
+        if (requestFilterKeyRef.current !== currentFilterKey) {
+          isRequestingRef.current = false;
+          return;
+        }
+        setState((prev) => ({ 
+          ...prev, 
+          status: 'complete', 
+          totalParticipants, 
+          surveySummary: surveySummary || '',
+          insufficientData: insufficientData || false,
+          isComputing: isComputing || false, // AI 계산 중인지 여부
+        }));
         isRequestingRef.current = false;
         // 성공 완료 시에는 requestedSurveyUuidRef 유지 (중복 요청 방지)
       }
@@ -125,12 +154,13 @@ export function useQuestionAnalysis({
       isCancelled = true;
       cleanupFn?.();
       isRequestingRef.current = false;
-      // 언마운트 시에는 requestedSurveyUuidRef는 유지 (리마운트 시 중복 요청 방지)
+      // 언마운트 시 ref 초기화 (StrictMode에서 두 번째 마운트 시 재요청 허용)
+      requestedSurveyUuidRef.current = null;
     };
   }, [
     surveyUuid,
     enabled,
-    refetchCount,
+    refetchTrigger,
     filters?.gender,
     filters?.ageGroup,
     filters?.preferGenre,
@@ -146,6 +176,8 @@ export function useQuestionAnalysis({
     isComplete,
     totalParticipants: state.totalParticipants,
     surveySummary: state.surveySummary,
+    insufficientData: state.insufficientData,
+    isComputing: state.isComputing, // AI 계산 중 여부
   };
 }
 
