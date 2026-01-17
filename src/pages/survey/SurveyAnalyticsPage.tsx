@@ -62,7 +62,7 @@ function SurveyAnalyticsPage() {
     isError: isUnfilteredError,
     totalParticipants: unfilteredTotalParticipants,
     surveySummary: unfilteredSurveySummary,
-    isComputing: isUnfilteredComputing,
+    isComputing: _isUnfilteredComputing,
     insufficientData: unfilteredInsufficientData,
   } = useQuestionAnalysis({
     surveyUuid: effectiveSurveyUuid,
