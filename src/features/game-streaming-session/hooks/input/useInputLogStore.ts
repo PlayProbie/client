@@ -9,7 +9,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { DEFAULT_BATCH_SIZE } from '../../constants';
 import {
   deleteInputLogsBySegment,
-  deleteInputLogsBySession,
   saveInputLog,
 } from '../../lib/input-log/input-log-store.idb';
 import type { InputLog } from '../../types';
@@ -130,16 +129,13 @@ export function useInputLogStore(
     [batchSize, normalizeSegmentIds, onLogBatch, sessionId]
   );
 
-  // 로그 초기화
+  // 메모리 로그 초기화 (IndexedDB는 인터뷰 완료 시 별도 정리)
   const clearLogs = useCallback(() => {
     logsBySegmentRef.current.clear();
     totalLogCountRef.current = 0;
     batchBufferRef.current = [];
     setLogCount(0);
-
-    // IndexedDB에서도 삭제
-    deleteInputLogsBySession(sessionId).catch(() => {});
-  }, [sessionId]);
+  }, []);
 
   const clearLogsBySegment = useCallback((segmentId: string) => {
     const logs = logsBySegmentRef.current.get(segmentId);

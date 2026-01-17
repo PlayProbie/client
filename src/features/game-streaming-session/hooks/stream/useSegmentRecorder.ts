@@ -23,6 +23,7 @@ export interface UseSegmentRecorderReturn {
   isRecording: boolean;
   backend: SegmentStoreBackend | null;
   getActiveSegmentIds: (mediaTimeMs: number) => string[];
+  clearSession: () => Promise<void>;
 }
 
 export function useSegmentRecorder(
@@ -46,6 +47,12 @@ export function useSegmentRecorder(
 
   const getActiveSegmentIds = useCallback((mediaTimeMs: number) => {
     return recorderRef.current?.getActiveSegmentIds(mediaTimeMs) ?? [];
+  }, []);
+
+  const clearSession = useCallback(async () => {
+    if (storeRef.current) {
+      await storeRef.current.clear();
+    }
   }, []);
 
   useEffect(() => {
@@ -154,5 +161,6 @@ export function useSegmentRecorder(
     isRecording,
     backend,
     getActiveSegmentIds,
+    clearSession,
   };
 }

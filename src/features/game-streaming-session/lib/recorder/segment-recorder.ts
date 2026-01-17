@@ -20,7 +20,10 @@ import {
   waitForVideoMetadata,
 } from './segment-recorder.support';
 import { computeSegmentTiming } from './segment-recorder.timing';
-import type { SegmentRecorderOptions, SegmentTiming } from './segment-recorder.types';
+import type {
+  SegmentRecorderOptions,
+  SegmentTiming,
+} from './segment-recorder.types';
 
 export class SegmentRecorder {
   private readonly options: Required<
@@ -56,7 +59,8 @@ export class SegmentRecorder {
   constructor(options: SegmentRecorderOptions) {
     this.options = {
       enabled: options.enabled ?? true,
-      segmentDurationMs: options.segmentDurationMs ?? DEFAULT_SEGMENT_DURATION_MS,
+      segmentDurationMs:
+        options.segmentDurationMs ?? DEFAULT_SEGMENT_DURATION_MS,
       overlapMs: options.overlapMs ?? DEFAULT_OVERLAP_MS,
       targetHeight: options.targetHeight ?? DEFAULT_TARGET_HEIGHT,
       frameRate: options.frameRate ?? DEFAULT_FRAME_RATE,
@@ -96,10 +100,10 @@ export class SegmentRecorder {
     try {
       await waitForVideoMetadata(this.options.videoElement);
       this.setupCanvas();
-      this.startDrawing();
-      this.isRecording = true;
+      this.isRecording = true; // MUST be set before startDrawing()
       this.segmentIndex = 0;
       this.segmentTimings.length = 0;
+      this.startDrawing();
       this.startSegment();
     } catch (error) {
       this.options.onError?.(
@@ -170,15 +174,7 @@ export class SegmentRecorder {
         this.canvas.width,
         this.canvas.height
       );
-      if (
-        typeof this.options.videoElement.requestVideoFrameCallback === 'function'
-      ) {
-        this.drawHandle = this.options.videoElement.requestVideoFrameCallback(
-          () => drawFrame()
-        );
-      } else {
-        this.drawHandle = window.requestAnimationFrame(drawFrame);
-      }
+      this.drawHandle = window.requestAnimationFrame(drawFrame);
     };
 
     drawFrame();
@@ -255,7 +251,9 @@ export class SegmentRecorder {
     };
 
     recorder.onerror = () => {
-      this.options.onError?.(new Error('세그먼트 녹화 중 오류가 발생했습니다.'));
+      this.options.onError?.(
+        new Error('세그먼트 녹화 중 오류가 발생했습니다.')
+      );
     };
 
     recorder.onstop = () => {

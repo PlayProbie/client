@@ -9,8 +9,9 @@ const SYNC_TAG = 'upload-segments';
 const DB_NAME = 'upload-sync-store';
 const DB_VERSION = 1;
 const STORE_NAME = 'pending-uploads';
-// 환경 변수는 빌드 시점에 주입됩니다
-const API_BASE_URL = '%VITE_API_BASE_URL%';
+
+const searchParams = new URL(location.href).searchParams;
+const API_BASE_URL = searchParams.get('apiUrl') ?? 'http://localhost:8080';
 
 // Service Worker 설치
 self.addEventListener('install', () => {

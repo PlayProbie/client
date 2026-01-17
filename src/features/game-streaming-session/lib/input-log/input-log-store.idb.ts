@@ -75,8 +75,14 @@ export async function saveInputLog(
 
     const request = store.put(record);
 
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve();
+    request.onerror = () => {
+      // eslint-disable-next-line no-console
+      console.error('[input-log-store] put error:', request.error);
+      reject(request.error);
+    };
+    request.onsuccess = () => {
+      resolve();
+    };
   });
 }
 

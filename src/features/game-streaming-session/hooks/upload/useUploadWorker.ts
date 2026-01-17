@@ -44,14 +44,16 @@ function supportsSharedWorker(): boolean {
 }
 
 // Service Worker 등록
-async function registerServiceWorker(): Promise<ServiceWorkerRegistration | null> {
+async function registerServiceWorker(
+  apiUrl: string
+): Promise<ServiceWorkerRegistration | null> {
   if (!('serviceWorker' in navigator)) {
     return null;
   }
 
   try {
-    const registration =
-      await navigator.serviceWorker.register('/upload-sw.js');
+    const swPath = `/upload-sw.js?apiUrl=${encodeURIComponent(apiUrl)}`;
+    const registration = await navigator.serviceWorker.register(swPath);
     return registration;
   } catch {
     return null;
@@ -112,7 +114,8 @@ export function useUploadWorker({
     if (!enabled) return;
 
     // Service Worker 등록 (Chrome/Edge Background Sync)
-    registerServiceWorker().then((registration) => {
+    const apiUrl = import.meta.env.VITE_API_BASE_URL;
+    registerServiceWorker(apiUrl).then((registration) => {
       swRegistrationRef.current = registration;
     });
 

@@ -60,7 +60,8 @@ export function useGameStream(
     onStatusChange: onStreamHealthChange,
   } = streamHealthOptions;
 
-  const highlightEnabled = import.meta.env.VITE_ENABLE_HIGHLIGHT === 'true';
+  const highlightEnabled = true;
+  // const highlightEnabled = import.meta.env.VITE_ENABLE_HIGHLIGHT === 'true';
   const {
     enabled: segmentRecordingEnabled = highlightEnabled,
     maxStorageBytes: segmentRecordingMaxStorageBytes,
@@ -170,7 +171,9 @@ export function useGameStream(
       },
     });
 
-  const drainLogsBySegmentRef = useRef<(segmentId: string) => InputLog[]>(() => []);
+  const drainLogsBySegmentRef = useRef<(segmentId: string) => InputLog[]>(
+    () => []
+  );
 
   const handleSegmentStored = useCallback(
     (meta: SegmentMeta, blob?: Blob) => {
@@ -221,18 +224,30 @@ export function useGameStream(
     drainLogsBySegmentRef.current = drainLogsBySegment;
   }, [drainLogsBySegment]);
 
-  // 입력 필터 생성 (memoized)
+  // 입력 필터 Ref 업데이트 (Stale Closure 방지)
+  const createKeyboardFilterRef = useRef(createKeyboardFilter);
+  const createMouseFilterRef = useRef(createMouseFilter);
+  const createGamepadFilterRef = useRef(createGamepadFilter);
+
+  useEffect(() => {
+    createKeyboardFilterRef.current = createKeyboardFilter;
+    createMouseFilterRef.current = createMouseFilter;
+    createGamepadFilterRef.current = createGamepadFilter;
+  }, [createKeyboardFilter, createMouseFilter, createGamepadFilter]);
+
+  // 입력 필터 생성 (Stable Handler)
+  // StreamClient에 전달되는 함수는 불변성을 유지하되, 내부에서 최신 Ref를 참조
   const keyboardFilter = useCallback(
-    (event: KeyboardEvent) => createKeyboardFilter()(event),
-    [createKeyboardFilter]
+    (event: KeyboardEvent) => createKeyboardFilterRef.current()(event),
+    []
   );
   const mouseFilter = useCallback(
-    (event: MouseEvent) => createMouseFilter()(event),
-    [createMouseFilter]
+    (event: MouseEvent) => createMouseFilterRef.current()(event),
+    []
   );
   const gamepadFilter = useCallback(
-    (gamepad: Gamepad) => createGamepadFilter()(gamepad),
-    [createGamepadFilter]
+    (gamepad: Gamepad) => createGamepadFilterRef.current()(gamepad),
+    []
   );
 
   // 입력 로그 업로드 훅
@@ -291,6 +306,7 @@ export function useGameStream(
     disconnectStream();
     setIsGameReady(false);
     clearLogs();
+    // 세그먼트 정리는 인터뷰 완료 시 useChatSession에서 수행
   }, [
     uploadWorkerEnabled,
     flushUploadWorker,
