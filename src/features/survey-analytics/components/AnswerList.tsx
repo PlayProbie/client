@@ -89,13 +89,12 @@ function AnswerList({ answers, title = '필터링된 원문 리스트' }: Answer
     <Card>
       <CardHeader className="flex-row items-center justify-between space-y-0 pb-4">
         <div className="flex items-center gap-2">
-          <MessageSquareText className="h-5 w-5 text-muted-foreground" />
-          <CardTitle className="text-base">{title}</CardTitle>
+          <MessageSquareText className="h-5 w-5 text-primary" />
+          <CardTitle className="text-base font-semibold">{title}</CardTitle>
         </div>
-        <span className="text-xs text-muted-foreground">총 {answers.length}개</span>
       </CardHeader>
-      
-      <CardContent className="space-y-4">
+
+      <CardContent className="space-y-3">
         {answers.map((answer, index) => {
           const qaPairs = parseQAPairs(answer.text);
           const firstPair = qaPairs[0];
@@ -104,40 +103,49 @@ function AnswerList({ answers, title = '필터링된 원문 리스트' }: Answer
           const itemId = `answer-${answer.id || index}`;
 
           const FixedContent = (
-            <div className={`relative w-full rounded-lg border p-4 text-left transition-colors ${hasTail ? 'group-hover:bg-muted/50' : 'bg-muted/10'}`}>
-              <div className="mb-2 flex items-center justify-between gap-2">
+            <div className={`relative w-full rounded-lg border border-border bg-surface p-5 text-left transition-all hover:shadow-md ${hasTail ? 'group-hover:border-primary/30' : ''}`}>
+              <div className="mb-3 flex items-center justify-between gap-3">
                 <div className="flex flex-wrap items-center gap-2">
                   {answer.tags && answer.tags.length > 0 ? (
                     answer.tags.map((tag) => (
-                      <Badge key={tag} variant="secondary" className="text-xs">
+                      <Badge
+                        key={tag}
+                        variant="secondary"
+                        className="rounded-md bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary hover:bg-primary/20"
+                      >
                         {tag}
                       </Badge>
                     ))
                   ) : (
                     <span className="text-xs text-muted-foreground">프로필 정보 없음</span>
                   )}
+                </div>
+                <div className="flex items-center gap-2">
                   {hasTail && (
-                    <span className="text-xs text-muted-foreground flex items-center gap-0.5">
-                      <MessageSquareText className="h-3 w-3" />
-                      꼬리질문 {tailPairs.length}개
+                    <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <MessageSquareText className="h-3.5 w-3.5" />
+                      {tailPairs.length}
                     </span>
                   )}
+                  {answer.sentiment && (
+                    <Badge
+                      variant="outline"
+                      className={`shrink-0 ${getSentimentStyle(answer.sentiment)}`}
+                    >
+                      {getSentimentLabel(answer.sentiment)}
+                    </Badge>
+                  )}
+                  <span className="text-xs text-muted-foreground">
+                    방금 전
+                  </span>
                 </div>
-                {answer.sentiment && (
-                  <Badge
-                    variant="outline"
-                    className={`shrink-0 ${getSentimentStyle(answer.sentiment)}`}
-                  >
-                    {getSentimentLabel(answer.sentiment)}
-                  </Badge>
-                )}
               </div>
 
-              <div className="space-y-1">
-                <p className="text-xs font-medium text-muted-foreground">
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-muted-foreground leading-relaxed">
                   {firstPair.question}
                 </p>
-                <p className="text-sm leading-relaxed text-foreground font-medium">
+                <p className="text-sm leading-relaxed text-foreground font-normal">
                   {firstPair.answer}
                 </p>
               </div>
@@ -153,10 +161,10 @@ function AnswerList({ answers, title = '필터링된 원문 리스트' }: Answer
           }
 
           return (
-            <Accordion 
-              key={itemId} 
-              type="single" 
-              collapsible 
+            <Accordion
+              key={itemId}
+              type="single"
+              collapsible
               className="w-full"
             >
               <AccordionItem value={itemId} className="border-none">
@@ -164,19 +172,19 @@ function AnswerList({ answers, title = '필터링된 원문 리스트' }: Answer
                   {FixedContent}
                 </AccordionTrigger>
                 <AccordionContent>
-                  <div className="mt-2 ml-4 space-y-3 border-l-2 border-muted pl-4">
+                  <div className="mt-3 ml-6 space-y-3 border-l-2 border-primary/20 pl-4">
                     {tailPairs.map((pair, idx) => (
-                      <div 
-                        key={idx} 
-                        className="rounded-lg border bg-muted/30 p-3"
+                      <div
+                        key={idx}
+                        className="rounded-lg border border-border bg-surface/50 p-4"
                       >
                         <div className="mb-2 flex items-center gap-2">
-                          <span className="bg-accent/10 text-accent-foreground rounded px-2 py-0.5 text-xs font-semibold">
+                          <span className="rounded-md bg-accent/10 px-2 py-1 text-xs font-medium text-accent">
                             꼬리 질문
                           </span>
                         </div>
-                        <div className="space-y-1">
-                          <p className="text-xs font-medium text-muted-foreground">
+                        <div className="space-y-2">
+                          <p className="text-xs font-medium text-muted-foreground leading-relaxed">
                             {pair.question}
                           </p>
                           <p className="text-sm leading-relaxed text-foreground">

@@ -18,27 +18,64 @@ const getGenderLabel = (gender: string): string => {
     F: '여성',
     MALE: '남성',
     FEMALE: '여성',
+    MAN: '남성',
+    WOMAN: '여성',
   };
   return map[gender.toUpperCase()] ?? gender;
 };
 
 // 연령대 한글 변환
 const getAgeGroupLabel = (ageGroup: string): string => {
+  const normalized = ageGroup.toLowerCase().trim();
   const map: Record<string, string> = {
     '10s': '10대',
     '20s': '20대',
     '30s': '30대',
     '40s': '40대',
     '50s': '50대',
+    '60s': '60대',
     '60+': '60대 이상',
+    'teens': '10대',
+    'twenties': '20대',
+    'thirties': '30대',
+    'forties': '40대',
+    'fifties': '50대',
+    'sixties': '60대',
   };
-  return map[ageGroup] ?? ageGroup;
+  return map[normalized] ?? ageGroup;
 };
 
 // 장르 한글 변환
 const getGenreLabel = (genre: string): string => {
-  const config = GameGenreConfig[genre as keyof typeof GameGenreConfig];
-  return config?.label ?? genre;
+  // 대소문자 구분 없이 매핑
+  const genreUpper = genre.toUpperCase().trim();
+
+  // GameGenreConfig에서 찾기
+  const config = GameGenreConfig[genreUpper as keyof typeof GameGenreConfig];
+  if (config) {
+    return config.label;
+  }
+
+  // 추가 매핑 (소문자나 다른 형식으로 올 경우 대비)
+  const fallbackMap: Record<string, string> = {
+    'ACTION': '액션',
+    'ADVENTURE': '어드벤처',
+    'SIMULATION': '시뮬레이션',
+    'PUZZLE': '퍼즐',
+    'STRATEGY': '전략',
+    'RPG': 'RPG',
+    'ARCADE': '아케이드',
+    'HORROR': '호러',
+    'SHOOTER': '슈팅',
+    'VISUAL_NOVEL': '비주얼 노벨',
+    'ROGUELIKE': '로그라이크',
+    'SPORTS': '스포츠',
+    'RHYTHM': '리듬',
+    'FIGHTING': '대전',
+    'CASUAL': '캐주얼',
+  };
+
+  return fallbackMap[genreUpper] ?? genre;
 };
 
 type QuestionAnalysisDetailProps = {
