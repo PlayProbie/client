@@ -10,7 +10,6 @@ import { GEQRadarChart } from './GEQRadarChart';
 
 type ClusterDetailPanelProps = {
   readonly cluster: ClusterInfo;
-  readonly clusterIndex: number;
   readonly profiles?: Record<string, AnswerProfile>;
 };
 
@@ -18,7 +17,7 @@ type ClusterDetailPanelProps = {
  * 클러스터 상세 패널
  * 이미지의 세그먼트 분석 (Who), 원인 태그 (Why), 감정 강도 (Intensity) 영역
  */
-function ClusterDetailPanel({ cluster, clusterIndex, profiles }: ClusterDetailPanelProps) {
+function ClusterDetailPanel({ cluster, profiles }: ClusterDetailPanelProps) {
 
 
   return (
@@ -27,7 +26,7 @@ function ClusterDetailPanel({ cluster, clusterIndex, profiles }: ClusterDetailPa
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
             <CardTitle className="text-lg break-words leading-snug">
-              클러스터 {clusterIndex + 1}: {cluster.summary}
+              {cluster.summary}
             </CardTitle>
             <CardDescription>
               {cluster.count}명 응답 ({cluster.percentage}%)
@@ -81,10 +80,10 @@ function ClusterDetailPanel({ cluster, clusterIndex, profiles }: ClusterDetailPa
               <div className="flex flex-wrap gap-2">
                 {cluster.keywords && cluster.keywords.length > 0 ? (
                   cluster.keywords.map((keyword) => (
-                    <Badge 
-                      key={keyword} 
-                      variant="secondary" 
-                      className="px-3 py-1 text-xs"
+                    <Badge
+                      key={keyword}
+                      variant="secondary"
+                      className="rounded-md bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary hover:bg-primary/20"
                     >
                       #{keyword}
                     </Badge>
