@@ -25,6 +25,9 @@ const generateMockSessionItems = (count: number): ApiSurveyResultListItem[] => {
     '초반 난이도가 적절하다고 느끼셨나요?',
     '탈출 포인트까지의 긴장감은 어땠나요?',
   ];
+  const genders = ['M', 'F', null];
+  const ageGroups = ['10s', '20s', '30s', '40s', null];
+  const genres = ['RPG', 'FPS', 'Strategy', 'Simulation', 'Action', 'Casual', null];
 
   return Array.from({ length: count }, (_, i) => ({
     session_uuid: `session-uuid-${1000 + i}`,
@@ -35,6 +38,9 @@ const generateMockSessionItems = (count: number): ApiSurveyResultListItem[] => {
     status: statuses[i % statuses.length],
     first_question: questions[i % questions.length],
     ended_at: toKSTISOString(new Date(Date.now() - i * 3600000)),
+    gender: genders[i % genders.length],
+    age_group: ageGroups[i % ageGroups.length],
+    prefer_genre: genres[i % genres.length],
   }));
 };
 
