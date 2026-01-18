@@ -4,9 +4,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
 
-import { getSessionStatus } from '../api';
-import { HEARTBEAT_INTERVAL } from '../constants';
-import type { SessionStatus } from '../types';
+import { getSessionStatus } from '../../api';
+import { HEARTBEAT_INTERVAL } from '../../constants';
+import type { SessionStatus } from '../../types';
 import { sessionKeys } from './useSession';
 
 /** useSessionStatus 옵션 */

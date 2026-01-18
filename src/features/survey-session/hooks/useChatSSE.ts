@@ -14,6 +14,8 @@ import { API_BASE_URL } from '@/constants/api';
 import type {
   ApiSSEContinueEventData,
   ApiSSEGenerateTailCompleteEventData,
+  ApiSSEInsightCompleteEventData,
+  ApiSSEInsightQuestionEventData,
   ApiSSEQuestionEventData,
   ApiSSEReactionEventData,
   UseChatSSEOptions,
@@ -22,6 +24,8 @@ import type {
 import {
   toSSEContinueEventData,
   toSSEGenerateTailCompleteEventData,
+  toSSEInsightCompleteEventData,
+  toSSEInsightQuestionEventData,
   toSSEQuestionEventData,
   toSSEReactionEventData,
 } from '../types';
@@ -37,6 +41,8 @@ export function useChatSSE({
   onStart,
   onDone,
   onInterviewComplete,
+  onInsightQuestion,
+  onInsightComplete,
   onError,
   onOpen,
   onDisconnect,
@@ -54,11 +60,12 @@ export function useChatSSE({
   const onStartRef = useRef(onStart);
   const onDoneRef = useRef(onDone);
   const onInterviewCompleteRef = useRef(onInterviewComplete);
+  const onInsightQuestionRef = useRef(onInsightQuestion);
+  const onInsightCompleteRef = useRef(onInsightComplete);
   const onErrorRef = useRef(onError);
   const onOpenRef = useRef(onOpen);
   const onDisconnectRef = useRef(onDisconnect);
 
-  // Keep refs up to date
   useEffect(() => {
     onConnectRef.current = onConnect;
     onQuestionRef.current = onQuestion;
@@ -69,6 +76,8 @@ export function useChatSSE({
     onStartRef.current = onStart;
     onDoneRef.current = onDone;
     onInterviewCompleteRef.current = onInterviewComplete;
+    onInsightQuestionRef.current = onInsightQuestion;
+    onInsightCompleteRef.current = onInsightComplete;
     onErrorRef.current = onError;
     onOpenRef.current = onOpen;
     onDisconnectRef.current = onDisconnect;
@@ -82,6 +91,8 @@ export function useChatSSE({
     onStart,
     onDone,
     onInterviewComplete,
+    onInsightQuestion,
+    onInsightComplete,
     onError,
     onOpen,
     onDisconnect,
@@ -193,6 +204,28 @@ export function useChatSSE({
     eventSource.addEventListener('interview_complete', () => {
       disconnect();
       onInterviewCompleteRef.current?.();
+    });
+
+    // insight_question 이벤트 핸들러
+    eventSource.addEventListener('insight_question', (event) => {
+      try {
+        const apiData: ApiSSEInsightQuestionEventData = JSON.parse(event.data);
+        const data = toSSEInsightQuestionEventData(apiData);
+        onInsightQuestionRef.current?.(data);
+      } catch {
+        // JSON 파싱 실패 무시
+      }
+    });
+
+    // insight_complete 이벤트 핸들러
+    eventSource.addEventListener('insight_complete', (event) => {
+      try {
+        const apiData: ApiSSEInsightCompleteEventData = JSON.parse(event.data);
+        const data = toSSEInsightCompleteEventData(apiData);
+        onInsightCompleteRef.current?.(data);
+      } catch {
+        // JSON 파싱 실패 무시
+      }
     });
 
     // error 이벤트 핸들러

@@ -26,7 +26,11 @@ export type InterviewLogQType =
   | 'OPENING'
   | 'CLOSING'
   | 'GREETING'
-  | 'REACTION';
+  | 'REACTION'
+  | 'INSIGHT';
+
+/** InsightTag 유형 (PANIC: 당황/급박, IDLE: 멈춤/고민) */
+export type InsightType = 'PANIC' | 'IDLE';
 
 /** 테스터 프로필 데이터 */
 export interface TesterProfile {
@@ -128,6 +132,23 @@ export interface ApiSSEErrorEventData {
   message: string;
 }
 
+/** [API] SSE insight_question 이벤트 데이터 */
+export interface ApiSSEInsightQuestionEventData {
+  tag_id: number;
+  insight_type: InsightType;
+  video_start_ms: number;
+  video_end_ms: number;
+  question_text: string;
+  turn_num: number;
+  remaining_insights: number;
+}
+
+/** [API] SSE insight_complete 이벤트 데이터 */
+export interface ApiSSEInsightCompleteEventData {
+  total_insights: number;
+  answered: number;
+}
+
 /** [API] SSE 이벤트 (유니온 타입) */
 export type ApiSSEEvent =
   | { event: 'connect'; data: ApiSSEConnectEventData }
@@ -136,7 +157,12 @@ export type ApiSSEEvent =
   | { event: 'start'; data: ApiSSEStartEventData }
   | { event: 'done'; data: ApiSSEDoneEventData }
   | { event: 'interview_complete'; data: ApiSSEInterviewCompleteEventData }
-  | { event: 'generate_tail_complete'; data: ApiSSEGenerateTailCompleteEventData }
+  | {
+      event: 'generate_tail_complete';
+      data: ApiSSEGenerateTailCompleteEventData;
+    }
+  | { event: 'insight_question'; data: ApiSSEInsightQuestionEventData }
+  | { event: 'insight_complete'; data: ApiSSEInsightCompleteEventData }
   | { event: 'error'; data: ApiSSEErrorEventData };
 
 /** [API] 응답자 대답 전송 요청 바디 */
@@ -214,6 +240,31 @@ export interface SSEGenerateTailCompleteEventData {
   totalQuestions: number;
 }
 
+/** [Client] SSE InsightQuestion 이벤트 데이터 */
+export interface SSEInsightQuestionEventData {
+  tagId: number;
+  insightType: InsightType;
+  videoStartMs: number;
+  videoEndMs: number;
+  questionText: string;
+  turnNum: number;
+  remainingInsights: number;
+}
+
+/** [Client] SSE InsightComplete 이벤트 데이터 */
+export interface SSEInsightCompleteEventData {
+  totalInsights: number;
+  answered: number;
+}
+
+/** [Client] 인사이트 질문 첨부 데이터 (재생 버튼용) */
+export interface InsightQuestionData {
+  tagId: number;
+  insightType: InsightType;
+  videoStartMs: number;
+  videoEndMs: number;
+}
+
 /** [Client] 채팅 메시지 데이터 (클라이언트 상태) */
 export interface ChatMessageData {
   id: string;
@@ -225,6 +276,8 @@ export interface ChatMessageData {
   order?: number;
   totalQuestions?: number;
   timestamp: Date;
+  /** 인사이트 질문일 경우 재생 버튼용 데이터 */
+  insightQuestion?: InsightQuestionData;
 }
 
 // ----------------------------------------
@@ -267,6 +320,8 @@ export interface UseChatSSEOptions {
   onStart?: () => void;
   onDone?: (turnNum: number) => void;
   onInterviewComplete?: () => void;
+  onInsightQuestion?: (data: SSEInsightQuestionEventData) => void;
+  onInsightComplete?: (data: SSEInsightCompleteEventData) => void;
   onError?: (error: string) => void;
   onOpen?: () => void;
   onDisconnect?: () => void;
@@ -347,5 +402,30 @@ export function toSSEGenerateTailCompleteEventData(
     fixedQId: api.fixed_q_id,
     order: api.order,
     totalQuestions: api.total_questions,
+  };
+}
+
+/** API SSE InsightQuestion 이벤트 -> 클라이언트 변환 */
+export function toSSEInsightQuestionEventData(
+  api: ApiSSEInsightQuestionEventData
+): SSEInsightQuestionEventData {
+  return {
+    tagId: api.tag_id,
+    insightType: api.insight_type,
+    videoStartMs: api.video_start_ms,
+    videoEndMs: api.video_end_ms,
+    questionText: api.question_text,
+    turnNum: api.turn_num,
+    remainingInsights: api.remaining_insights,
+  };
+}
+
+/** API SSE InsightComplete 이벤트 -> 클라이언트 변환 */
+export function toSSEInsightCompleteEventData(
+  api: ApiSSEInsightCompleteEventData
+): SSEInsightCompleteEventData {
+  return {
+    totalInsights: api.total_insights,
+    answered: api.answered,
   };
 }

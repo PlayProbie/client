@@ -7,6 +7,8 @@ import { create } from 'zustand';
 
 import type {
   ChatMessageData,
+  InsightQuestionData,
+  InsightType,
   InterviewLogQType,
   SurveySessionStatus,
 } from '../types';
@@ -28,6 +30,7 @@ interface QueueItem {
     order?: number;
     totalQuestions?: number;
     duration?: number; // WAIT 시간 (ms)
+    insightQuestion?: InsightQuestionData; // 인사이트 질문 데이터
   };
 }
 
@@ -43,6 +46,8 @@ interface ChatState {
   messages: ChatMessageData[];
   currentTurnNum: number;
   currentFixedQId: number | null;
+  /** 현재 인사이트 질문의 tag_id (인사이트 답변 시 사용) */
+  currentInsightTagId: number | null;
 
   // UI state
   isLoading: boolean;
@@ -83,6 +88,14 @@ interface ChatState {
     order?: number,
     totalQuestions?: number
   ) => void;
+  enqueueInsightQuestion: (
+    text: string,
+    turnNum: number,
+    tagId: number,
+    insightType: InsightType,
+    videoStartMs: number,
+    videoEndMs: number
+  ) => void;
   enqueueFinalize: () => void;
 
   // Queue Processing (Internal use mostly)
@@ -97,6 +110,7 @@ interface ChatState {
   setCurrentTurnNum: (turnNum: number) => void;
   incrementTurnNum: () => void;
   setCurrentFixedQId: (fixedQId: number | null) => void;
+  setCurrentInsightTagId: (tagId: number | null) => void;
   reset: () => void;
 }
 
@@ -108,6 +122,7 @@ const initialState = {
   messages: [],
   currentTurnNum: 0,
   currentFixedQId: null,
+  currentInsightTagId: null,
   isLoading: false,
   isConnecting: false,
   isStreaming: false,
@@ -174,14 +189,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   },
 
   /** Question (Full Text): 말풍선 시작 -> 전체 텍스트 타이핑 */
-  enqueueQuestion: (
-    text,
-    turnNum,
-    fixedQId,
-    qType,
-    order,
-    totalQuestions
-  ) => {
+  enqueueQuestion: (text, turnNum, fixedQId, qType, order, totalQuestions) => {
     const { processQueue } = get();
     set((state) => ({
       streamQueue: [
@@ -191,6 +199,42 @@ export const useChatStore = create<ChatState>((set, get) => ({
           payload: { turnNum, qType, fixedQId, order, totalQuestions },
         },
         { type: 'TYPE_TEXT', payload: { text } },
+      ],
+    }));
+    processQueue();
+  },
+
+  /** InsightQuestion: 인사이트 질문 말풍선 (재생 버튼 포함) */
+  enqueueInsightQuestion: (
+    text,
+    turnNum,
+    tagId,
+    insightType,
+    videoStartMs,
+    videoEndMs
+  ) => {
+    const { processQueue } = get();
+    const insightQuestion: InsightQuestionData = {
+      tagId,
+      insightType,
+      videoStartMs,
+      videoEndMs,
+    };
+    set((state) => ({
+      streamQueue: [
+        ...state.streamQueue,
+        {
+          type: 'START_BUBBLE',
+          payload: {
+            turnNum,
+            qType: 'INSIGHT',
+            fixedQId: null,
+            insightQuestion,
+          },
+        },
+        { type: 'TYPE_TEXT', payload: { text } },
+        // insight_question은 단발 이벤트이므로 done 없이 직접 FINALIZE
+        { type: 'FINALIZE_BUBBLE' },
       ],
     }));
     processQueue();
@@ -287,6 +331,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
                 order: payload?.order,
                 totalQuestions: payload?.totalQuestions,
                 timestamp: new Date(),
+                insightQuestion: payload?.insightQuestion,
               },
             ],
             streamingContent: '',
@@ -416,5 +461,6 @@ export const useChatStore = create<ChatState>((set, get) => ({
   incrementTurnNum: () =>
     set((state) => ({ currentTurnNum: state.currentTurnNum + 1 })),
   setCurrentFixedQId: (fixedQId) => set({ currentFixedQId: fixedQId }),
+  setCurrentInsightTagId: (tagId) => set({ currentInsightTagId: tagId }),
   reset: () => set(initialState),
 }));

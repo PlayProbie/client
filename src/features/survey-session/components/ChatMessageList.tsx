@@ -14,11 +14,14 @@ import { ChatMessage } from './ChatMessage';
 type ChatMessageListProps = ComponentProps<'div'> & {
   messages: ChatMessageData[];
   isLoading?: boolean;
+  /** 세션 ID (ReplayOverlay용) */
+  sessionId?: string;
 };
 
 export function ChatMessageList({
   messages,
   isLoading: _isLoading,
+  sessionId,
   className,
   ...props
 }: ChatMessageListProps) {
@@ -45,6 +48,7 @@ export function ChatMessageList({
         <ChatMessage
           key={message.id}
           message={message}
+          sessionId={sessionId}
         />
       ))}
 
@@ -67,4 +71,3 @@ export function ChatMessageList({
     </div>
   );
 }
-

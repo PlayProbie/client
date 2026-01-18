@@ -3,8 +3,8 @@
  */
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { postTerminate } from '../api';
-import type { TerminateRequest, TerminateResponse } from '../types';
+import { postTerminate } from '../../api';
+import type { TerminateRequest, TerminateResponse } from '../../types';
 import { sessionKeys } from './useSession';
 
 /** 세션 종료 훅 */

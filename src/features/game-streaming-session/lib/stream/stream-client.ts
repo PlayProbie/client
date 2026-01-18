@@ -35,6 +35,14 @@ export interface StreamClientConfig {
   onServerDisconnect?: (reason: string) => void;
   /** 에러 콜백 */
   onError?: (error: Error) => void;
+  /** 애플리케이션 메시지 수신 콜백 */
+  onApplicationMessage?: (message: Uint8Array) => void;
+  /** 입력 필터 설정 (입력 로그 수집용) */
+  inputFilters?: {
+    keyboardFilter?: (event: KeyboardEvent) => boolean;
+    mouseFilter?: (event: MouseEvent) => boolean;
+    gamepadFilter?: (gamepad: Gamepad) => boolean;
+  };
 }
 
 /** WebRTC 스트림 클라이언트 인터페이스 */
@@ -51,6 +59,12 @@ export interface StreamClient {
   attachInput(): void;
   /** 입력 비활성화 */
   detachInput(): void;
+  /** 비디오 트랙 RTC 통계 조회 */
+  getVideoRTCStats(): Promise<RTCStatsReport | null>;
+  /** 입력 데이터 채널 RTC 통계 조회 */
+  getInputRTCStats(): Promise<RTCStatsReport | null>;
+  /** 애플리케이션 메시지 전송 */
+  sendApplicationMessage(message: Uint8Array): boolean;
 }
 
 /**
@@ -81,6 +95,8 @@ export function createStreamClient(
     onConnectionStateChange,
     onServerDisconnect,
     onError,
+    onApplicationMessage,
+    inputFilters,
   } = config;
 
   let gameLiftClient: GameLiftStreamsType | null = null;
@@ -113,6 +129,7 @@ export function createStreamClient(
     channelError: (error: Error) => {
       onError?.(error instanceof Error ? error : new Error(String(error)));
     },
+    applicationMessage: onApplicationMessage,
   };
 
   // GameLift Streams 클라이언트 생성
@@ -126,6 +143,10 @@ export function createStreamClient(
       autoGamepad: true,
       setCursor: true,
       autoPointerLock: 'fullscreen',
+      // 입력 필터 연결 (입력 로그 수집용)
+      keyboardFilter: inputFilters?.keyboardFilter,
+      mouseFilter: inputFilters?.mouseFilter,
+      gamepadFilter: inputFilters?.gamepadFilter,
     },
     streamConfiguration: {
       enableAudio: true,
@@ -177,6 +198,29 @@ export function createStreamClient(
 
     detachInput(): void {
       gameLiftClient?.detachInput();
+    },
+
+    async getVideoRTCStats(): Promise<RTCStatsReport | null> {
+      if (!gameLiftClient) return null;
+      try {
+        return await gameLiftClient.getVideoRTCStats();
+      } catch {
+        return null;
+      }
+    },
+
+    async getInputRTCStats(): Promise<RTCStatsReport | null> {
+      if (!gameLiftClient) return null;
+      try {
+        return await gameLiftClient.getInputRTCStats();
+      } catch {
+        return null;
+      }
+    },
+
+    sendApplicationMessage(message: Uint8Array): boolean {
+      if (!gameLiftClient) return false;
+      return gameLiftClient.sendApplicationMessage(message);
     },
   };
 }
@@ -237,6 +281,21 @@ function createMockStreamClient(
 
     detachInput(): void {
       // Mock: no-op
+    },
+
+    async getVideoRTCStats(): Promise<RTCStatsReport | null> {
+      // Mock: 빈 RTCStatsReport 반환
+      return null;
+    },
+
+    async getInputRTCStats(): Promise<RTCStatsReport | null> {
+      // Mock: 빈 RTCStatsReport 반환
+      return null;
+    },
+
+    sendApplicationMessage(_message: Uint8Array): boolean {
+      // Mock: 항상 성공
+      return true;
     },
   };
 }

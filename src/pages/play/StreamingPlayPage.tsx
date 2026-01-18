@@ -4,7 +4,7 @@
  * 테스터가 게임을 스트리밍으로 플레이하는 페이지입니다.
  * 밝은 테마의 게임 스트리밍 UI를 제공합니다.
  */
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,7 @@ import {
   StreamFooter,
   StreamHeader,
   StreamPlayer,
+  useFullscreen,
   useGameStream,
   useSessionInfo,
   useSessionStatus,
@@ -52,34 +53,16 @@ export default function StreamingPlayPage() {
   // 수동 종료 여부 (버튼 클릭 또는 타임아웃)
   const isManuallyTerminated = useRef(false);
 
-  // 전체화면 전환 함수 (vendor-prefixed APIs 지원)
-  const requestFullscreen = useCallback(() => {
-    // Loading Screen(body 자식)을 포함하기 위해 documentElement를 전체화면 대상으로 설정
-    const element = document.documentElement;
-    if (!element) return;
-
-    // Vendor-prefixed fullscreen API 타입
-    type FullscreenElement = HTMLElement & {
-      webkitRequestFullscreen?: () => Promise<void>;
-      msRequestFullscreen?: () => Promise<void>;
-    };
-
-    const el = element as FullscreenElement;
-
-    if (el.requestFullscreen) {
-      el.requestFullscreen().catch((err) => {
-        toast({
-          variant: 'warning',
-          title: '전체 화면 전환 실패',
-          description: err,
-        });
+  // 전체화면 훅
+  const { requestFullscreen } = useFullscreen({
+    onError: (err) => {
+      toast({
+        variant: 'warning',
+        title: '전체 화면 전환 실패',
+        description: String(err),
       });
-    } else if (el.webkitRequestFullscreen) {
-      el.webkitRequestFullscreen();
-    } else if (el.msRequestFullscreen) {
-      el.msRequestFullscreen();
-    }
-  }, [toast]);
+    },
+  });
 
   // 세션 정보 조회
   const {
@@ -96,6 +79,7 @@ export default function StreamingPlayPage() {
     isConnecting,
     isConnected,
     sessionUuid,
+    setGameReady,
     connect,
     disconnect,
   } = useGameStream({
@@ -107,6 +91,9 @@ export default function StreamingPlayPage() {
       if (window.GameLiftLoadingScreen) {
         window.GameLiftLoadingScreen.hide();
       }
+
+      // 게임 준비 완료 → 입력 로깅 시작
+      setGameReady(true);
 
       toast({
         variant: 'success',

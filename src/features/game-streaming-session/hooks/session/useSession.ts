@@ -3,8 +3,8 @@
  */
 import { useQuery } from '@tanstack/react-query';
 
-import { getSession } from '../api';
-import type { SessionInfo } from '../types';
+import { getSession } from '../../api';
+import type { SessionInfo } from '../../types';
 
 /** Query Key Factory */
 export const sessionKeys = {
