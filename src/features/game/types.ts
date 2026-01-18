@@ -111,6 +111,7 @@ export interface ApiGame {
   game_name: string;
   game_genre: string[];
   game_context: string;
+  extracted_elements?: string; // JSON string
   created_at: string;
   updated_at: string;
 }
@@ -159,6 +160,7 @@ export interface Game {
   gameName: string;
   gameGenre: string[];
   gameContext: string;
+  extractedElements?: string; // JSON string
   createdAt: string;
   updatedAt: string;
 }
@@ -198,6 +200,7 @@ export function toGame(api: ApiGame): Game {
     gameName: api.game_name,
     gameGenre: api.game_genre,
     gameContext: api.game_context,
+    extractedElements: api.extracted_elements,
     createdAt: api.created_at,
     updatedAt: api.updated_at,
   };

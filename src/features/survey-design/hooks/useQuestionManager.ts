@@ -104,7 +104,8 @@ function useQuestionManager() {
 
     // Selection 핸들러
     handleToggle: selection.handleToggle,
-    handleSelectAll: selection.handleSelectAll,
+    selectAll: selection.selectAll,
+    deselectAll: selection.deselectAll,
     addQuestionAtFront: selection.addQuestionAtFront,
     removeQuestion: removeQuestionWithFeedback,
 
