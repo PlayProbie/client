@@ -33,9 +33,7 @@ self.addEventListener('sync', (event) => {
 // 메시지 수신 (클라이언트에서 직접 업로드 요청)
 self.addEventListener('message', (event) => {
   if (event.data?.type === 'PROCESS_UPLOADS') {
-    processUploadQueue().catch(() => {
-      // 에러는 무시 (백그라운드 처리)
-    });
+    event.waitUntil(processUploadQueue());
   }
 });
 
@@ -85,6 +83,18 @@ async function removePendingUpload(segmentId) {
     request.onerror = () => reject(request.error);
     request.onsuccess = () => resolve();
   });
+}
+
+async function scheduleSyncRetry() {
+  if (!self.registration || !('sync' in self.registration)) {
+    return;
+  }
+
+  try {
+    await self.registration.sync.register(SYNC_TAG);
+  } catch {
+    // sync 재등록 실패는 무시
+  }
 }
 
 // OPFS에서 Blob 읽기
@@ -252,15 +262,22 @@ async function processUploadQueue() {
       return;
     }
 
+    let lastError = null;
+
     // 순차적으로 업로드 (병렬 업로드는 서버 부하 고려)
     for (const task of pendingUploads) {
       try {
         await uploadSegment(task);
-      } catch {
-        // 개별 실패는 무시하고 다음 세그먼트 처리
+      } catch (error) {
+        lastError = error;
       }
     }
+
+    if (lastError) {
+      throw lastError;
+    }
   } catch (error) {
+    await scheduleSyncRetry();
     throw error; // sync 이벤트가 재시도하도록 에러 전파
   } finally {
   }

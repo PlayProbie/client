@@ -104,10 +104,31 @@ export function useUploadWorker({
   const sharedWorkerRef = useRef<SharedWorker | null>(null);
   const sequenceRef = useRef(0);
   const swRegistrationRef = useRef<ServiceWorkerRegistration | null>(null);
+  const streamHealthRef = useRef(streamHealth);
 
   useEffect(() => {
     sequenceRef.current = 0;
   }, [sessionId]);
+
+  useEffect(() => {
+    streamHealthRef.current = streamHealth;
+  }, [streamHealth]);
+
+  const releaseUploadThrottle = useCallback(() => {
+    const worker = workerRef.current;
+    if (!worker) return;
+
+    const message: UploadWorkerCommand = {
+      type: 'set-network-status',
+      payload: {
+        status: streamHealthRef.current,
+        rateBps: null,
+        streamingActive: false,
+      },
+    };
+
+    worker.postMessage(message);
+  }, []);
 
   // Service Worker 및 Shared Worker 등록
   useEffect(() => {
@@ -164,6 +185,7 @@ export function useUploadWorker({
     if (!enabled || !sessionId) return;
 
     const handlePageHide = () => {
+      releaseUploadThrottle();
       triggerSharedOrServiceWorkerUpload(sharedWorkerRef.current);
     };
 
@@ -171,7 +193,7 @@ export function useUploadWorker({
     return () => {
       window.removeEventListener('pagehide', handlePageHide);
     };
-  }, [enabled, sessionId]);
+  }, [enabled, sessionId, releaseUploadThrottle]);
 
   useEffect(() => {
     if (!enabled || !sessionId) {
@@ -227,6 +249,15 @@ export function useUploadWorker({
       workerRef.current = null;
     };
   }, [enabled, sessionId, onError, onSegmentFailed, onSegmentUploaded]);
+
+  useEffect(() => {
+    if (!enabled || !sessionId) return;
+
+    return () => {
+      releaseUploadThrottle();
+      triggerSharedOrServiceWorkerUpload(sharedWorkerRef.current);
+    };
+  }, [enabled, sessionId, releaseUploadThrottle]);
 
   useEffect(() => {
     const worker = workerRef.current;
