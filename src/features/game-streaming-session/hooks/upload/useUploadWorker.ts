@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef } from 'react';
 
+import { API_BASE_URL } from '@/constants/api';
+
 import {
   addPendingUpload,
   removePendingUpload,
@@ -135,7 +137,7 @@ export function useUploadWorker({
     if (!enabled) return;
 
     // Service Worker 등록 (Chrome/Edge Background Sync)
-    const apiUrl = import.meta.env.VITE_API_BASE_URL;
+    const apiUrl = API_BASE_URL;
     registerServiceWorker(apiUrl).then((registration) => {
       swRegistrationRef.current = registration;
     });

@@ -11,7 +11,7 @@ const DB_VERSION = 1;
 const STORE_NAME = 'pending-uploads';
 
 const searchParams = new URL(location.href).searchParams;
-const API_BASE_URL = searchParams.get('apiUrl') ?? 'http://localhost:8080';
+const API_BASE_URL = searchParams.get('apiUrl') || 'http://localhost:8080';
 
 // Service Worker 설치
 self.addEventListener('install', () => {
