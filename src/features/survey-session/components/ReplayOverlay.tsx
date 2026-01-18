@@ -33,8 +33,6 @@ export function ReplayOverlay({
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  /** 세그먼트 시작 시간 (video_start_ms 오프셋 계산용) */
-  const [segmentStartMs, setSegmentStartMs] = useState(0);
 
   // 세그먼트 스토어에서 해당 시간대 세그먼트 조회
   const loadSegment = useCallback(async () => {
@@ -42,48 +40,81 @@ export function ReplayOverlay({
     setError(null);
 
     try {
-      // 동적 import로 segment-store 로드
+      // 동적 import
       const { createSegmentStore } =
         await import('@/features/game-streaming-session/lib/store/segment-store');
-      const { findSegmentByMediaTime } =
+      const { findSegmentsByTimeRange } =
         await import('@/features/game-streaming-session/lib/store/segment-store.utils');
+      const { stitchVideoBlobs } = await import('../lib/video-utils');
+      // eslint-disable-next-line @typescript-eslint/consistent-type-imports
+      type VideoSource = import('../lib/video-utils').VideoSource;
 
       const store = await createSegmentStore({ sessionId });
       const segments = await store.listSegments();
 
-      // 해당 시간대 세그먼트 찾기
-      const segment = findSegmentByMediaTime(
+      // 범위 내 모든 세그먼트 찾기
+      const targetSegments = findSegmentsByTimeRange(
         segments,
-        insightQuestion.videoStartMs
+        insightQuestion.videoStartMs,
+        insightQuestion.videoEndMs
       );
 
-      if (!segment) {
+      if (targetSegments.length === 0) {
         setError('해당 구간의 영상을 찾을 수 없습니다.');
         setIsLoading(false);
         return;
       }
 
-      // Blob 조회
-      const result = await store.getSegment(segment.segment_id);
-      if (!result) {
-        setError('영상을 재생할 수 없습니다.');
+      const sources: VideoSource[] = [];
+
+      for (const seg of targetSegments) {
+        // Blob 조회
+        const result = await store.getSegment(seg.segment_id);
+        if (!result) continue;
+
+        // 세그먼트 실제 시작 시간 (오버랩 포함)
+        const segStart =
+          seg.start_media_time === 0
+            ? 0
+            : seg.start_media_time - seg.overlap_ms;
+        const segEnd = seg.end_media_time + seg.overlap_ms;
+
+        // 요청된 구간과의 교집합 계산
+        const overlapStart = Math.max(insightQuestion.videoStartMs, segStart);
+        const overlapEnd = Math.min(insightQuestion.videoEndMs, segEnd);
+
+        if (overlapEnd > overlapStart) {
+          sources.push({
+            blob: result.blob,
+            startOffset: overlapStart - segStart,
+            endOffset: overlapEnd - segStart,
+          });
+        }
+      }
+
+      if (sources.length === 0) {
+        setError('영상 구간 정보를 불러올 수 없습니다.');
         setIsLoading(false);
         return;
       }
 
-      // 세그먼트 시작 시간 저장 (오프셋 계산용)
-      // 실제 녹화 시작 = start_media_time - overlap_ms
-      setSegmentStartMs(segment.start_media_time - segment.overlap_ms);
-
-      // Blob URL 생성
-      const url = URL.createObjectURL(result.blob);
-      setBlobUrl(url);
-      setIsLoading(false);
-    } catch {
+      // 스티칭 (하나여도 재인코딩을 통해 클립 생성)
+      try {
+        const stitchedBlob = await stitchVideoBlobs(sources);
+        const url = URL.createObjectURL(stitchedBlob);
+        setBlobUrl(url);
+      } catch (err) {
+        console.error('Stitch generation failed:', err);
+        setError('영상 구간 병합에 실패했습니다.');
+      } finally {
+        setIsLoading(false);
+      }
+    } catch (err) {
+      console.error('Segment load failed:', err);
       setError('영상을 재생할 수 없습니다.');
       setIsLoading(false);
     }
-  }, [sessionId, insightQuestion.videoStartMs]);
+  }, [sessionId, insightQuestion]);
 
   useEffect(() => {
     loadSegment();
@@ -109,22 +140,6 @@ export function ReplayOverlay({
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [onClose]);
-
-  // 비디오 시작 시간 계산 (세그먼트 내 오프셋)
-  const handleVideoLoaded = useCallback(
-    (video: HTMLVideoElement) => {
-      // video_start_ms 기준으로 세그먼트 내 오프셋 계산
-      // 오프셋 = (video_start_ms - 세그먼트 실제 시작 시간) / 1000 (초 단위)
-      const offsetMs = insightQuestion.videoStartMs - segmentStartMs;
-      const offsetSec = Math.max(0, offsetMs / 1000);
-
-      video.currentTime = offsetSec;
-      video.play().catch(() => {
-        // 자동 재생 실패 시 무시
-      });
-    },
-    [insightQuestion.videoStartMs, segmentStartMs]
-  );
 
   return (
     <div
@@ -156,11 +171,14 @@ export function ReplayOverlay({
 
         {/* 로딩 상태 */}
         {isLoading && (
-          <div className="absolute inset-0 flex items-center justify-center">
+          <div className="bg-background/50 absolute inset-0 z-20 flex flex-col items-center justify-center gap-4">
             <Skeleton
               className={cn('rounded-none')}
               style={{ width: VIDEO_WIDTH, height: VIDEO_HEIGHT }}
             />
+            <div className="text-muted-foreground absolute animate-pulse text-sm font-medium">
+              영상을 로딩하고 있습니다...
+            </div>
           </div>
         )}
 
@@ -189,9 +207,7 @@ export function ReplayOverlay({
             controls
             autoPlay
             playsInline
-            ref={(ref) => {
-              if (ref) handleVideoLoaded(ref);
-            }}
+            loop
             style={{ width: VIDEO_WIDTH, height: VIDEO_HEIGHT }}
           />
         )}

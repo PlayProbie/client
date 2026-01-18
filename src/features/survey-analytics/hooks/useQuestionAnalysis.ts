@@ -94,7 +94,15 @@ export function useQuestionAnalysis({
     isRequestingRef.current = true;
 
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setState({ data: {}, error: null, status: 'loading', totalParticipants: 0, surveySummary: '', insufficientData: false, isComputing: false });
+    setState({
+      data: {},
+      error: null,
+      status: 'loading',
+      totalParticipants: 0,
+      surveySummary: '',
+      insufficientData: false,
+      isComputing: false,
+    });
 
     let cleanupFn: (() => void) | null = null;
     let isCancelled = false;
@@ -129,16 +137,21 @@ export function useQuestionAnalysis({
         // 에러 시에는 재시도할 수 있도록 requestedSurveyUuidRef 초기화
         requestedSurveyUuidRef.current = null;
       },
-      (totalParticipants: number, surveySummary?: string, insufficientData?: boolean, isComputing?: boolean) => {
+      (
+        totalParticipants: number,
+        surveySummary?: string,
+        insufficientData?: boolean,
+        isComputing?: boolean
+      ) => {
         // 필터가 변경되었으면 무시 (문제 4번 해결)
         if (requestFilterKeyRef.current !== currentFilterKey) {
           isRequestingRef.current = false;
           return;
         }
-        setState((prev) => ({ 
-          ...prev, 
-          status: 'complete', 
-          totalParticipants, 
+        setState((prev) => ({
+          ...prev,
+          status: 'complete',
+          totalParticipants,
           surveySummary: surveySummary || '',
           insufficientData: insufficientData || false,
           isComputing: isComputing || false, // AI 계산 중인지 여부
@@ -164,6 +177,7 @@ export function useQuestionAnalysis({
     filters?.gender,
     filters?.ageGroup,
     filters?.preferGenre,
+    filters,
   ]);
 
   return {
@@ -180,5 +194,3 @@ export function useQuestionAnalysis({
     isComputing: state.isComputing, // AI 계산 중 여부
   };
 }
-
-

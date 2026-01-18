@@ -135,7 +135,63 @@ graph TD
 
 ---
 
-## 5. Server Developer Agreement (Smart Replay & Insight)
+## 5. FE 기술적 챌린지 구현 상세 (현행 코드 기준)
+
+> 아래 내용은 실제 구현 코드를 기준으로 정리합니다.
+
+### 5.1 GLS 스트리밍 영향 최소화 업로드 (Opportunistic + Throttling)
+
+- **업로드 파이프라인**: `SegmentRecorder` → `SegmentStore` →
+  `useUploadWorker(Web Worker)` → `POST presigned-url` → `S3 PUT` →
+  `POST upload-complete` → `POST logs`.
+- **스트림 상태 게이팅**: `useStreamHealth`가 video/input `RTCStats`를 병합해
+  `packetLoss`/`RTT`를 평가하며, 지표 누락도 **UNSTABLE**로 간주해 업로드 중단.
+- **업로드 속도 계산**:
+  - `availableIncomingBitrate * 1%` (`UPLOAD_RATE_RATIO=0.01`)
+  - 상한 `128kbps` (`UPLOAD_RATE_CAP_BPS`)
+  - 지표 미수신 시 `64kbps` fallback (`UPLOAD_RATE_FALLBACK_BPS`)
+  - `UNSTABLE` 전환 시 **0bps**로 강제
+- **토큰 버킷 쓰로틀**: Worker에서 `Blob.stream()`을 `ReadableStream`으로 감싸
+  bytes/sec를 제한. `UNSTABLE` 전환 시 `AbortController`로 업로드 즉시 중단.
+- **큐/재시도**: 단일 업로드(직렬) + 지수 백오프(1s → 2s → 4s, 최대 3회).
+- **백그라운드 지속**:
+  - pending 업로드는 IndexedDB(`upload-sync-store`)에 `pending/processing`으로 저장.
+  - `pagehide` 시 Service Worker(Chrome/Edge) 또는 Shared Worker(Safari/Firefox)가
+    OPFS에서 Blob을 읽어 업로드를 이어감.
+- **스트리밍 종료 후 처리**: `streamingActive=false`로 전환 시
+  **업로드 제한을 해제**하여 잔여 세그먼트를 후처리.
+
+### 5.2 저장 영상 + 키보드/마우스 로그 동기화
+
+- **media_time 기준 통일**:
+  - `requestVideoFrameCallback`(rVFC) 우선 사용.
+  - 미지원 시 `video.currentTime`을 **16ms 폴링**하여 근사.
+  - 모든 시간은 `Math.round(x * 1000)`으로 **ms 정수**로 고정.
+- **세그먼트 타이밍(오버랩)**:
+  - 코어 30s + 오버랩 3s.
+  - **첫 세그먼트만 앞 오버랩 없이 33s**(0~33s), 이후 세그먼트는 36s 기록.
+  - 다음 세그먼트 시작은 **첫 세그먼트 27s 이후**, 그다음은 30s 간격.
+  - `getActiveSegmentIds(mediaTimeMs)`는 **recordStart~recordEnd(오버랩 포함)** 기준.
+- **세그먼트 ID 매핑**:
+  - `createSegmentInfoResolver`가 활성 세그먼트 중 **가장 최신 ID를 primary**로 선택.
+  - 오버랩 구간은 `segment_ids` 배열로 **다중 귀속**.
+  - 세그먼트 녹화 비활성 시 `seg_${sessionId}_${Date.now()}`로 fallback.
+- **입력 로그 스키마/샘플링**:
+  - 키보드: `code`만 기록하고 `key`는 **빈 문자열**로 저장(민감정보 보호).
+  - 마우스 이동: **15Hz + 5px 이동 임계값** 샘플링.
+  - 휠: **30Hz 샘플링**, 게임패드: 축 변화량 **0.1 임계값**.
+  - `BLUR/FOCUS/VISIBILITY/PAGE_HIDE` 이벤트 포함.
+- **저장/복제 정책**:
+  - 메모리 Map + IndexedDB(`input-log-store`)에 **실시간 이중 저장**.
+  - 오버랩 구간 로그는 `segment_ids` 기준으로 **세그먼트별 복제 저장**.
+  - 세그먼트 저장 시 `drainLogsBySegment`로 해당 구간 로그를 묶어 업로드 큐에 전달.
+- **리플레이 오프셋 보정**:
+  - `ReplayOverlay`는 `segment.start_media_time - overlap_ms`를 기준점으로 잡아
+    `video_start_ms`/`video_end_ms`를 **세그먼트 내부 오프셋으로 변환**해 반복 재생.
+
+---
+
+## 6. Server Developer Agreement (Smart Replay & Insight)
 
 서버 개발자와 합의된 기능 연동 가이드입니다.
 

@@ -237,14 +237,20 @@ async function performUpload(task: UploadTask): Promise<{
   s3Url: string;
 }> {
   if (!task.remoteSegmentId || !task.s3Url) {
-    const presigned = await postPresignedUrl(task.sessionId, {
-      sequence: task.sequence,
-      video_start_ms: task.segment.start_media_time,
-      video_end_ms: task.segment.end_media_time,
-      content_type: task.contentType,
-    });
-    task.remoteSegmentId = presigned.segmentId;
-    task.s3Url = presigned.s3Url;
+    // 2. Presigned URL 요청
+
+    const { segmentId: backendSegmentId, s3Url } = await postPresignedUrl(
+      task.sessionId,
+      {
+        sequence: task.sequence,
+        video_start_ms: task.segment.start_media_time,
+        video_end_ms: task.segment.end_media_time,
+        content_type: task.contentType,
+      }
+    );
+
+    task.remoteSegmentId = backendSegmentId;
+    task.s3Url = s3Url;
   }
 
   if (!task.s3Uploaded && task.s3Url) {
@@ -256,6 +262,7 @@ async function performUpload(task: UploadTask): Promise<{
         task.blob,
         activeAbortController.signal
       );
+
       task.s3Uploaded = true;
     } finally {
       activeAbortController = null;
@@ -264,6 +271,7 @@ async function performUpload(task: UploadTask): Promise<{
 
   if (!task.completeNotified && task.remoteSegmentId) {
     await postUploadComplete(task.sessionId, task.remoteSegmentId);
+
     task.completeNotified = true;
   }
 
@@ -279,6 +287,9 @@ async function performUpload(task: UploadTask): Promise<{
     task.logsUploaded = true;
     task.logs = [];
   }
+
+  // 6. 로컬 저장소 정리 (성공 시) (processQueue에서 처리하므로 메시지만 전송해도 되지만, 리턴값이 필요함)
+  postMessage({ type: 'UPLOAD_SUCCESS', segmentId: task.segment.segment_id });
 
   return {
     remoteSegmentId: task.remoteSegmentId ?? task.segment.segment_id,

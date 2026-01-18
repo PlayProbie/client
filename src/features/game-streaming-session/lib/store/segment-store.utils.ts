@@ -27,13 +27,34 @@ export function findSegmentByMediaTime(
 
   // 해당 시간을 포함하는 세그먼트 찾기
   // 오버랩 고려: 실제 녹화 범위는 [start - overlap, end + overlap]
+  // 후보 세그먼트들을 수집
+  const candidates: SegmentMeta[] = [];
+
   for (const segment of sorted) {
-    const actualStart = segment.start_media_time - segment.overlap_ms;
+    // 첫 세그먼트(0)는 앞 오버랩 없음
+    const actualStart =
+      segment.start_media_time === 0
+        ? 0
+        : segment.start_media_time - segment.overlap_ms;
     const actualEnd = segment.end_media_time + segment.overlap_ms;
 
     if (mediaTimeMs >= actualStart && mediaTimeMs <= actualEnd) {
-      return segment;
+      candidates.push(segment);
     }
+  }
+
+  if (candidates.length === 0) {
+    // 정확한 범위 내 세그먼트가 없으면 가장 가까운 세그먼트 반환 로직으로 이동
+  } else {
+    // 1. Core Range (start ~ end) 내에 있는 세그먼트 우선
+    const coreMatch = candidates.find(
+      (seg) =>
+        mediaTimeMs >= seg.start_media_time && mediaTimeMs < seg.end_media_time
+    );
+    if (coreMatch) return coreMatch;
+
+    // 2. 없으면 첫 번째 후보 (Overlap 구간)
+    return candidates[0];
   }
 
   // 정확한 범위 내 세그먼트가 없으면 가장 가까운 세그먼트 반환

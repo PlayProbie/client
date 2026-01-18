@@ -66,7 +66,8 @@ async function getPendingUploads() {
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE_NAME, 'readonly');
     const store = tx.objectStore(STORE_NAME);
-    const request = store.getAll();
+    const index = store.index('createdAt');
+    const request = index.getAll();
 
     request.onerror = () => reject(request.error);
     request.onsuccess = () => resolve(request.result);
@@ -101,54 +102,69 @@ async function readBlobFromOPFS(sessionId, segmentId) {
 
 // Presigned URL 발급
 async function getPresignedUrl(sessionId, payload) {
-  const response = await fetch(
-    `${API_BASE_URL}/sessions/${sessionId}/replay/presigned-url`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/sessions/${sessionId}/replay/presigned-url`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Presigned URL 발급 실패: ${response.status}`);
     }
-  );
 
-  if (!response.ok) {
-    throw new Error(`Presigned URL 발급 실패: ${response.status}`);
+    const data = await response.json();
+    const result = data.result || data.data;
+    return {
+      segmentId: result.segment_id,
+      s3Url: result.s3_url,
+      expiresIn: result.expires_in,
+    };
+  } catch (error) {
+    console.error(`[SW] Presigned URL 에러:`, error);
+    throw error;
   }
-
-  const data = await response.json();
-  const result = data.result || data.data;
-  return {
-    segmentId: result.segment_id,
-    s3Url: result.s3_url,
-    expiresIn: result.expires_in,
-  };
 }
 
 // S3 업로드
 async function uploadToS3(s3Url, blob, contentType) {
-  const response = await fetch(s3Url, {
-    method: 'PUT',
-    headers: { 'Content-Type': contentType },
-    body: blob,
-  });
+  try {
+    const response = await fetch(s3Url, {
+      method: 'PUT',
+      headers: { 'Content-Type': contentType },
+      body: blob,
+    });
 
-  if (!response.ok) {
-    throw new Error(`S3 업로드 실패: ${response.status}`);
+    if (!response.ok) {
+      throw new Error(`S3 업로드 실패: ${response.status}`);
+    }
+  } catch (error) {
+    console.error(`[SW] S3 업로드 에러:`, error);
+    throw error;
   }
 }
 
 // 업로드 완료 알림
 async function notifyUploadComplete(sessionId, segmentId) {
-  const response = await fetch(
-    `${API_BASE_URL}/sessions/${sessionId}/replay/upload-complete`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ segment_id: segmentId }),
-    }
-  );
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/sessions/${sessionId}/replay/upload-complete`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ segment_id: segmentId }),
+      }
+    );
 
-  if (!response.ok) {
-    throw new Error(`업로드 완료 알림 실패: ${response.status}`);
+    if (!response.ok) {
+      throw new Error(`업로드 완료 알림 실패: ${response.status}`);
+    }
+  } catch (error) {
+    console.error(`[SW] 업로드 완료 알림 에러:`, error);
+    throw error;
   }
 }
 
@@ -156,22 +172,27 @@ async function notifyUploadComplete(sessionId, segmentId) {
 async function uploadInputLogs(sessionId, segmentId, s3Url, logs) {
   if (!logs || logs.length === 0) return;
 
-  const response = await fetch(
-    `${API_BASE_URL}/sessions/${sessionId}/replay/logs`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        session_id: sessionId,
-        segment_id: segmentId,
-        video_url: s3Url,
-        logs,
-      }),
-    }
-  );
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/sessions/${sessionId}/replay/logs`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: sessionId,
+          segment_id: segmentId,
+          video_url: s3Url,
+          logs,
+        }),
+      }
+    );
 
-  if (!response.ok) {
-    throw new Error(`로그 업로드 실패: ${response.status}`);
+    if (!response.ok) {
+      throw new Error(`로그 업로드 실패: ${response.status}`);
+    }
+  } catch (error) {
+    console.error(`[SW] 입력 로그 전송 에러:`, error);
+    throw error;
   }
 }
 
@@ -241,5 +262,6 @@ async function processUploadQueue() {
     }
   } catch (error) {
     throw error; // sync 이벤트가 재시도하도록 에러 전파
+  } finally {
   }
 }

@@ -25,6 +25,10 @@
   미지원 환경에서는 `video.currentTime` 기반으로 동기화 오차가 발생할 수 있다.
 - 세그먼트 경계(20~30초)에서 로그와 영상이 어긋나지 않도록 `segment_id` 전환
   시점 기준을 명확히 정의한다.
+- **[현행 구현]** `getActiveSegmentIds(mediaTimeMs)`는 **recordStart~recordEnd**
+  (오버랩 포함) 기준으로 활성 세그먼트를 계산한다.
+- **[현행 구현]** 첫 세그먼트는 **앞 오버랩 없이 33s**, 이후 세그먼트는 36s로
+  기록된다. 다음 세그먼트 시작은 **첫 구간 27s 이후**, 그다음은 30s 간격.
 
 #### media_time 획득 전략
 
@@ -42,6 +46,12 @@
   업로드 비용이 급증한다.
 - 세그먼트 저장소(OPFS/IndexedDB) 사용 시 브라우저 저장 용량/eviction 위험이
   있다. `navigator.storage.persist()` 요청 및 정리 정책이 필요하다.
+- **[현행 구현]** `SegmentRecorder`는 360p/30fps로 캡처하고,
+  `MediaRecorder` **timeslice=1000ms**로 청크를 생성한다.
+- **[현행 구현]** 코덱은 `vp9 → vp8 → webm → mp4` 순으로 지원 여부를 검사한다.
+- **[현행 구현]** OPFS 저장 시 청크를 `SegmentWriter`로 스트리밍 기록하고,
+  메타데이터는 IndexedDB에 저장해 LRU eviction을 수행한다.
+- **[현행 구현]** 기본 저장 한도는 `quota * 0.5`이며, fallback은 **500MB**.
 
 #### 마우스 이벤트 샘플링 정책
 
@@ -60,12 +70,24 @@
   `RTCStatsReport` 파싱 실패 시 업로드를 보수적으로 중단하는 전략이 필요하다.
 - 업로드는 스트리밍 품질 저하를 유발할 수 있으므로 백오프/재시도/일시중지 규칙을
   명시한다.
+- **[현행 구현]** `useStreamHealth`는 **video + input** 통계를 병합하고,
+  지표 누락 시 `UNSTABLE`로 판정한다.
+- **[현행 구현]** 업로드 속도는
+  `availableIncomingBitrate * 1%`로 계산하고 **128kbps 상한**,
+  **64kbps fallback**을 적용한다.
+- **[현행 구현]** Web Worker에서 토큰 버킷으로 업로드를 쓰로틀하고,
+  `UNSTABLE` 전환 시 `AbortController`로 **진행 중 업로드를 중단**한다.
+- **[현행 구현]** 스트리밍 종료 후(`streamingActive=false`)에는
+  업로드 제한을 해제해 잔여 세그먼트를 후처리한다.
 
 ### 데이터/보안
 
 - 키보드 입력 로그는 민감 데이터가 될 수 있다. 텍스트 입력/챗 입력 구간은 로그
   제외 또는 코드/키만 기록하는 정책이 필요하다.
 - `applicationMessage` 채널은 크기 제한/스키마 검증/예외 처리 필요.
+- **[현행 구현]** 키보드는 `code`만 기록하고 `key`는 빈 문자열로 저장한다.
+- **[현행 구현]** 오버랩 구간은 `segment_ids`에 다중 귀속하며,
+  입력 로그는 메모리 + IndexedDB에 동시 저장한다.
 
 ---
 
@@ -83,23 +105,33 @@
 
 ## 코드 수정 범위
 
-### 기존 파일 수정
+### 기존 파일 수정 (현행)
 
-| 파일                                                         | 수정 내용                                          |
-| ------------------------------------------------------------ | -------------------------------------------------- |
-| `src/features/game-streaming-session/lib/stream-client.ts`   | `inputConfiguration` 필터 연결, RTC 통계 래퍼 추가 |
-| `src/features/game-streaming-session/hooks/useGameStream.ts` | 입력 로거/상태 모니터 훅 통합                      |
+| 파일                                                             | 수정 내용                                          |
+| ---------------------------------------------------------------- | -------------------------------------------------- |
+| `src/features/game-streaming-session/lib/stream/stream-client.ts` | `inputConfiguration` 필터 연결, RTC 통계 래퍼 추가 |
+| `src/features/game-streaming-session/hooks/stream/useGameStream.ts` | 입력/세그먼트/업로드/상태 모니터 통합              |
+| `src/features/survey-session/components/ReplayOverlay.tsx`        | 로컬 세그먼트 리플레이 오버레이                     |
 
-### 신규 파일 생성
+### 신규 파일/모듈 (현행 핵심)
 
-| 파일                                                                | 역할                                 |
-| ------------------------------------------------------------------- | ------------------------------------ |
-| `src/features/game-streaming-session/hooks/useInputLogger.ts`       | 입력 이벤트 수집 및 샘플링           |
-| `src/features/game-streaming-session/hooks/useStreamHealth.ts`      | RTC 통계 기반 네트워크 상태 모니터링 |
-| `src/features/game-streaming-session/lib/segment-recorder.ts`       | Canvas 기반 360p 세그먼트 녹화       |
-| `src/features/game-streaming-session/lib/segment-store.ts`          | OPFS/IndexedDB 세그먼트 저장소       |
-| `src/features/game-streaming-session/workers/upload.worker.ts`      | 백그라운드 업로드 워커               |
-| `src/features/game-streaming-session/components/HighlightPanel.tsx` | InsightTag 목록 및 클립 재생 UI      |
+| 파일                                                                 | 역할                                |
+| -------------------------------------------------------------------- | ----------------------------------- |
+| `src/features/game-streaming-session/hooks/input/useInputLogger.ts`  | 입력 이벤트 수집/샘플링 통합        |
+| `src/features/game-streaming-session/hooks/input/useMediaTime.ts`    | rVFC 기반 media_time 추적           |
+| `src/features/game-streaming-session/hooks/input/useInputFilters.ts` | SDK 입력 필터 팩토리                |
+| `src/features/game-streaming-session/hooks/input/useInputLogStore.ts` | 메모리 + IDB 로그 저장소            |
+| `src/features/game-streaming-session/hooks/stream/useStreamHealth.ts` | RTC 통계 기반 네트워크 상태 모니터  |
+| `src/features/game-streaming-session/hooks/stream/useSegmentRecorder.ts` | 세그먼트 녹화 + 저장소 연동         |
+| `src/features/game-streaming-session/lib/recorder/segment-recorder.ts` | Canvas/MediaRecorder 세그먼트 녹화 |
+| `src/features/game-streaming-session/lib/store/segment-store.ts`     | OPFS/IndexedDB 세그먼트 저장소      |
+| `src/features/game-streaming-session/lib/upload/upload-queue.ts`     | 업로드 큐/백오프                    |
+| `src/features/game-streaming-session/lib/upload/upload-sync-store.ts` | pending 업로드 IndexedDB           |
+| `src/features/game-streaming-session/hooks/upload/useUploadWorker.ts` | 업로드 워커 브리지                 |
+| `src/features/game-streaming-session/workers/upload.worker.ts`       | 업로드 큐/쓰로틀 처리               |
+| `src/features/game-streaming-session/workers/upload-shared-worker.ts` | Shared Worker 업로드               |
+| `public/upload-sw.js`                                                | Service Worker Background Sync      |
+| `src/lib/msw/handlers/highlight.ts`                                  | 업로드/인사이트 Mock API           |
 
 ---
 
@@ -126,7 +158,7 @@
 **산출물**:
 
 - `src/lib/msw/handlers/highlight.ts` (Mock API)
-- `src/features/game-streaming-session/types/highlight/` (스키마 타입)
+- `src/features/game-streaming-session/types.ts` (스키마 타입)
 
 ---
 
@@ -141,6 +173,8 @@
   - `media_time` 산출: `requestVideoFrameCallback` 우선, 없으면 `currentTime`.
     **ms 정수로 변환** (`Math.round(mediaTime * 1000)`).
   - **마우스 샘플링**: 15Hz + 5px 변화량 필터링 적용.
+  - **키보드 보안**: `code`만 기록하고 `key`는 빈 문자열로 저장.
+  - **Mock 스트림**: SDK 필터 미동작 환경은 DOM 리스너로 폴백.
 
 **검증**:
 
@@ -174,11 +208,13 @@
 ### Phase 3. 세그먼트 녹화/저장 (Post-MVP)
 
 - `SegmentRecorder` 구현:
-  - `video` → `canvas(360p)` → `MediaRecorder`.
-  - **30초 고정 청크**, **양쪽 3초 오버랩** (총 36초 녹화).
-  - 코덱 지원 확인 및 실패 시 기능 비활성.
+  - `video` → `canvas(360p, 30fps)` → `MediaRecorder(timeslice=1000ms)`.
+  - **코어 30초 + 오버랩 3초**, 첫 세그먼트는 앞 오버랩 없이 **33초**,
+    이후 세그먼트는 **36초** 녹화.
+  - 코덱 지원(`vp9 → vp8 → webm → mp4`) 확인 및 실패 시 기능 비활성.
 - `SegmentStore` 구현:
-  - OPFS 우선, 미지원 시 IndexedDB 폴백.
+  - OPFS 우선, 미지원 시 IndexedDB 폴백(최후에 memory).
+  - OPFS는 **청크 스트리밍 기록 + 메타 IndexedDB** 조합.
   - 저장 용량 체크 및 LRU 기반 삭제 정책.
 
 #### 세그먼트 경계 전환 로직 (양쪽 오버랩)
@@ -186,23 +222,24 @@
 ```
 Timeline:     0s ────────────── 30s ────────────── 60s ────────────── 90s
               │                  │                  │
-Segment A:  [-3s ═══════════════ 33s]              │
+Segment A:   [0s ═══════════════ 33s]               │
               │    (Core: 0~30s)  │                  │
               │                  │                  │
-Segment B:  │                [27s ═══════════════ 63s]
+Segment B:               [27s ═══════════════ 63s]
               │                  │    (Core: 30~60s) │
               │                  │                  │
-Segment C:                       │                [57s ═══════════════ 93s]
+Segment C:                          [57s ═══════════════ 93s]
                                                       (Core: 60~90s)
 
 세그먼트 구조:
 - 코어 구간: 30초 (예: 0~30s, 30~60s)
-- 앞쪽 오버랩: -3초 (이전 세그먼트와 중복)
+- 앞쪽 오버랩: **첫 세그먼트 제외** -3초 (이전 세그먼트와 중복)
 - 뒤쪽 오버랩: +3초 (다음 세그먼트와 중복)
-- 총 녹화 시간: 36초
+- 총 녹화 시간: 첫 세그먼트 33초 / 이후 36초
 
 segment_id 전환 시점:
-- 새 세그먼트 녹화 시작 시 UUID 생성 (코어 구간 시작 -3초 전).
+- 새 세그먼트 녹화 시작 시 UUID 생성 (첫 세그먼트는 코어 시작 시점,
+  이후 세그먼트는 코어 시작 -3초 전).
 - 오버랩 구간(27s~33s)의 로그는 **양쪽 세그먼트 모두에 귀속**.
   → 로그에 `segment_ids: ["A", "B"]` 배열로 기록.
 ```
@@ -223,6 +260,7 @@ segment_id 전환 시점:
   - **완료 알림** (`POST .../upload-complete`): `segment_id` 전송.
   - **로그 전송** (`POST .../logs`): `segment_id`에 해당하는 로그 배치 전송.
   - 상태 보존: 네트워크 오류 시 큐에 보존 후 재시도 (Exponential Backoff).
+  - **쓰로틀링**: Web Worker에서 token bucket으로 업로드 속도 제한.
 
 **재시도 정책**:
 
@@ -264,6 +302,7 @@ segment_id 전환 시점:
 
 - `lib/upload/upload-sync-store.ts`: IndexedDB 기반 pending 업로드 저장.
 - SW/Shared Worker가 IndexedDB에서 목록 조회 후 OPFS에서 Blob 읽어 업로드.
+- `pending/processing` 상태를 사용해 Web/Shared/Service Worker 중복 처리 방지.
 
 #### 입력 로그 실시간 저장
 
@@ -312,10 +351,10 @@ enqueueUploadSegment(meta, blob, logs)
   - `insight_question` 이벤트 수신 시 Chat UI에 질문 및 **[장면 다시보기]** 버튼
     노출.
 - `ReplayOverlay` 컴포넌트 구현:
-  - 버튼 클릭 시 `video_start_ms`로 Seek.
-  - 로컬 Blob(최근 30초) 우선 탐색, 없으면 S3 URL 스트리밍.
-- 답변 전송 API 연동 (`POST .../messages`):
-  - `q_type: "INSIGHT"` 및 `insight_type` 포함 전송.
+  - 버튼 클릭 시 `video_start_ms` 기준으로 **세그먼트 내 오프셋 재생**.
+  - **[현행 구현]** 로컬 OPFS/IndexedDB Blob만 재생하며,
+    S3 URL 스트리밍은 TODO.
+- 답변 전송 API 연동 (`POST /sessions/{sessionId}/replay/insights/{tagId}/answer`).
 
 **검증**:
 
@@ -348,6 +387,8 @@ enqueueUploadSegment(meta, blob, logs)
 
 1. **Feature Flag**: `VITE_ENABLE_HIGHLIGHT=true` 환경변수로 기능 활성화.
    - `false`일 경우 모든 훅/컴포넌트가 no-op 반환.
+   - **[현행 구현]** `useGameStream`에서 `highlightEnabled`가 `true`로 고정되어
+     있어 환경변수 토글은 TODO 상태.
 2. **Graceful Degradation**: 브라우저 기능 미지원 시 자동 비활성화.
    - `MediaRecorder` 미지원 → 녹화 비활성.
    - OPFS/IndexedDB 미사용 가능 → 저장 비활성.
