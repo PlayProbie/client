@@ -153,6 +153,8 @@ export interface ApiGenerateAiQuestionsRequest { //추가할 데이터: 핵심�
   theme_details?: Partial<Record<ThemeCategory, ThemeDetail[]>>;
   count: number;
   shuffle?: boolean;
+  extracted_elements?: Record<string, string>;
+  game_uuid?: string;
 }
 
 /** [API] POST /surveys/ai-questions Response */

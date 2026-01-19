@@ -60,19 +60,39 @@ function useQuestionGenerate() {
       let effectiveGameContext = gameContext;
       let effectiveExtractedElements = extractedElements;
 
-      if ((!effectiveGameName || !effectiveGameGenre?.length) && currentGame) {
-        effectiveGameName = effectiveGameName || currentGame.gameName;
-        effectiveGameGenre = effectiveGameGenre?.length
-          ? effectiveGameGenre
-          : (currentGame.gameGenre as GameGenre[]);
-        effectiveGameContext = effectiveGameContext || currentGame.gameContext;
+      let effectiveGameUuid: string | undefined = undefined;
 
-        // extractedElements도 없으면 파싱 시도
-        if (!effectiveExtractedElements && currentGame.extractedElements) {
-          try {
-            effectiveExtractedElements = JSON.parse(currentGame.extractedElements);
-          } catch {
-            // ignore JSON parse error
+      if (currentGame) {
+        // 필수 정보가 없으면 currentGame에서 가져옴
+        const isMissingBasicInfo =
+          !effectiveGameName || !effectiveGameGenre?.length;
+
+        if (isMissingBasicInfo) {
+          effectiveGameName = effectiveGameName || currentGame.gameName;
+          effectiveGameGenre = effectiveGameGenre?.length
+            ? effectiveGameGenre
+            : (currentGame.gameGenre as GameGenre[]);
+          effectiveGameContext =
+            effectiveGameContext || currentGame.gameContext;
+        }
+
+        // 게임 이름이 같으면 동일 게임으로 간주하여 UUID/extractedElements 사용
+        if (effectiveGameName === currentGame.gameName) {
+          effectiveGameUuid = currentGame.gameUuid;
+
+          // extractedElements가 없으면 파싱 시도
+          if (
+            (!effectiveExtractedElements ||
+              Object.keys(effectiveExtractedElements).length === 0) &&
+            currentGame.extractedElements
+          ) {
+            try {
+              effectiveExtractedElements = JSON.parse(
+                currentGame.extractedElements
+              );
+            } catch {
+              // ignore JSON parse error
+            }
           }
         }
       }
@@ -93,6 +113,15 @@ function useQuestionGenerate() {
             )
           : undefined;
 
+      // null 값 제거한 extractedElements
+      const cleanedExtractedElements = effectiveExtractedElements
+        ? (Object.fromEntries(
+            Object.entries(effectiveExtractedElements).filter(
+              ([_, v]) => v != null
+            )
+          ) as Record<string, string>)
+        : undefined;
+
       return postAiQuestions({
         game_name: effectiveGameName || '',
         game_context: effectiveGameContext || '',
@@ -102,6 +131,8 @@ function useQuestionGenerate() {
         theme_details: cleanedThemeDetails,
         count: params.count,
         shuffle: params.shuffle,
+        extracted_elements: cleanedExtractedElements,
+        game_uuid: effectiveGameUuid,
       });
     },
     onSettled: () => {
@@ -264,6 +295,7 @@ function useQuestionGenerate() {
     // AI 전용 핸들러
     handleRegenerate,
     handleAddQuestion,
+    handleRemoveQuestion: manager.removeQuestion,
   };
 }
 
