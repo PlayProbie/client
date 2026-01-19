@@ -9,6 +9,9 @@ const SYNC_TAG = 'upload-segments';
 const DB_NAME = 'upload-sync-store';
 const DB_VERSION = 1;
 const STORE_NAME = 'pending-uploads';
+const SEGMENT_DB_NAME = 'segment-store';
+const SEGMENT_DB_VERSION = 1;
+const SEGMENT_STORE_NAME = 'segments';
 
 const searchParams = new URL(location.href).searchParams;
 const API_BASE_URL = searchParams.get('apiUrl') || 'http://localhost:8080';
@@ -55,6 +58,34 @@ function openDB() {
         store.createIndex('createdAt', 'createdAt', { unique: false });
       }
     };
+  });
+}
+
+function openSegmentDb() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(SEGMENT_DB_NAME, SEGMENT_DB_VERSION);
+
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve(request.result);
+
+    request.onupgradeneeded = (event) => {
+      const db = event.target.result;
+      if (!db.objectStoreNames.contains(SEGMENT_STORE_NAME)) {
+        const store = db.createObjectStore(SEGMENT_STORE_NAME, {
+          keyPath: 'key',
+        });
+        store.createIndex('sessionId', 'sessionId', { unique: false });
+        store.createIndex('lastAccessedAt', 'lastAccessedAt', { unique: false });
+      }
+    };
+  });
+}
+
+function runIdbRequest(request) {
+  return new Promise((resolve, reject) => {
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () =>
+      reject(request.error || new Error('IndexedDB 요청 실패'));
   });
 }
 
@@ -108,6 +139,25 @@ async function readBlobFromOPFS(sessionId, segmentId) {
   } catch {
     return null;
   }
+}
+
+async function readBlobFromIndexedDb(sessionId, segmentId) {
+  try {
+    const db = await openSegmentDb();
+    const key = `${sessionId}:${segmentId}`;
+    const tx = db.transaction(SEGMENT_STORE_NAME, 'readonly');
+    const store = tx.objectStore(SEGMENT_STORE_NAME);
+    const record = await runIdbRequest(store.get(key));
+    return record && record.blob ? record.blob : null;
+  } catch {
+    return null;
+  }
+}
+
+async function readSegmentBlob(sessionId, segmentId) {
+  const opfsBlob = await readBlobFromOPFS(sessionId, segmentId);
+  if (opfsBlob) return opfsBlob;
+  return readBlobFromIndexedDb(sessionId, segmentId);
 }
 
 // Presigned URL 발급
@@ -219,7 +269,7 @@ async function uploadSegment(task) {
   } = task;
 
   // 1. OPFS에서 Blob 읽기
-  const blob = await readBlobFromOPFS(sessionId, segmentId);
+  const blob = await readSegmentBlob(sessionId, segmentId);
   if (!blob) {
     await removePendingUpload(segmentId);
     return;

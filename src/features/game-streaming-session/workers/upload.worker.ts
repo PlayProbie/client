@@ -62,18 +62,26 @@ class UploadRateLimiter {
     if (!this.rateBytesPerSecond) return;
     if (bytes <= 0) return;
 
-    this.refill();
-    while (this.tokens < bytes) {
+    let remaining = bytes;
+    const capacity = this.capacity > 0 ? this.capacity : this.rateBytesPerSecond;
+
+    while (remaining > 0) {
       if (signal?.aborted) {
         throw new DOMException('Aborted', 'AbortError');
       }
-      const deficit = bytes - this.tokens;
-      const waitMs = Math.ceil((deficit / this.rateBytesPerSecond) * 1000);
-      await sleep(waitMs, signal);
-      this.refill();
-    }
 
-    this.tokens -= bytes;
+      this.refill();
+      const target = Math.min(remaining, capacity);
+      if (this.tokens < target) {
+        const deficit = target - this.tokens;
+        const waitMs = Math.ceil((deficit / this.rateBytesPerSecond) * 1000);
+        await sleep(waitMs, signal);
+        continue;
+      }
+
+      this.tokens -= target;
+      remaining -= target;
+    }
   }
 }
 

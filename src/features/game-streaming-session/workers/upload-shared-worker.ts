@@ -16,6 +16,9 @@ let isProcessing = false;
 const DB_NAME = 'upload-sync-store';
 const DB_VERSION = 1;
 const STORE_NAME = 'pending-uploads';
+const SEGMENT_DB_NAME = 'segment-store';
+const SEGMENT_DB_VERSION = 1;
+const SEGMENT_STORE_NAME = 'segments';
 // 환경 변수는 빌드 시점에 Vite가 주입합니다
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL as string;
 
@@ -87,6 +90,34 @@ function openDB(): Promise<IDBDatabase> {
   });
 }
 
+function openSegmentDb(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(SEGMENT_DB_NAME, SEGMENT_DB_VERSION);
+
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve(request.result);
+
+    request.onupgradeneeded = (event) => {
+      const db = (event.target as IDBOpenDBRequest).result;
+      if (!db.objectStoreNames.contains(SEGMENT_STORE_NAME)) {
+        const store = db.createObjectStore(SEGMENT_STORE_NAME, {
+          keyPath: 'key',
+        });
+        store.createIndex('sessionId', 'sessionId', { unique: false });
+        store.createIndex('lastAccessedAt', 'lastAccessedAt', { unique: false });
+      }
+    };
+  });
+}
+
+function runIdbRequest<T>(request: IDBRequest<T>): Promise<T> {
+  return new Promise((resolve, reject) => {
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () =>
+      reject(request.error ?? new Error('IndexedDB 요청 실패'));
+  });
+}
+
 // Pending 업로드 목록 조회
 async function getPendingUploads(): Promise<PendingUpload[]> {
   const db = await openDB();
@@ -127,6 +158,33 @@ async function readBlobFromOPFS(
   } catch {
     return null;
   }
+}
+
+async function readBlobFromIndexedDb(
+  sessionId: string,
+  segmentId: string
+): Promise<Blob | null> {
+  try {
+    const db = await openSegmentDb();
+    const key = `${sessionId}:${segmentId}`;
+    const tx = db.transaction(SEGMENT_STORE_NAME, 'readonly');
+    const store = tx.objectStore(SEGMENT_STORE_NAME);
+    const record = await runIdbRequest<{ blob?: Blob } | undefined>(
+      store.get(key)
+    );
+    return record?.blob ?? null;
+  } catch {
+    return null;
+  }
+}
+
+async function readSegmentBlob(
+  sessionId: string,
+  segmentId: string
+): Promise<Blob | null> {
+  const opfsBlob = await readBlobFromOPFS(sessionId, segmentId);
+  if (opfsBlob) return opfsBlob;
+  return readBlobFromIndexedDb(sessionId, segmentId);
 }
 
 // Presigned URL 발급
@@ -249,7 +307,7 @@ async function uploadSegment(task: PendingUpload): Promise<void> {
   } = task;
 
   // 1. OPFS에서 Blob 읽기
-  const blob = await readBlobFromOPFS(sessionId, segmentId);
+  const blob = await readSegmentBlob(sessionId, segmentId);
   if (!blob) {
     await removePendingUpload(segmentId);
     return;

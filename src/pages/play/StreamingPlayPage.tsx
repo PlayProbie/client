@@ -4,7 +4,7 @@
  * 테스터가 게임을 스트리밍으로 플레이하는 페이지입니다.
  * 밝은 테마의 게임 스트리밍 UI를 제공합니다.
  */
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
@@ -161,14 +161,6 @@ export default function StreamingPlayPage() {
     return () => clearInterval(timer);
   }, [isConnected]);
 
-  // 시간 만료 시 자동 종료
-  useEffect(() => {
-    if (remainingTime === 0 && isConnected) {
-      handleDisconnect();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [remainingTime, isConnected]);
-
   // 연결 시작 핸들러 (수동 재시도용)
   const handleConnect = async () => {
     if (!surveyUuid || isConnecting || isConnected) return;
@@ -185,7 +177,7 @@ export default function StreamingPlayPage() {
   };
 
   // 연결 종료 핸들러
-  const handleDisconnect = () => {
+  const handleDisconnect = useCallback(() => {
     if (!surveyUuid || !sessionUuid) return;
 
     // 수동 종료 플래그 설정
@@ -230,7 +222,21 @@ export default function StreamingPlayPage() {
         },
       }
     );
-  };
+  }, [
+    surveyUuid,
+    sessionUuid,
+    signalMutation,
+    terminateMutation,
+    disconnect,
+    toast,
+  ]);
+
+  // 시간 만료 시 자동 종료
+  useEffect(() => {
+    if (remainingTime === 0 && isConnected) {
+      handleDisconnect();
+    }
+  }, [remainingTime, isConnected, handleDisconnect]);
 
   // 에러 상태 처리
   if (!surveyUuid) {
