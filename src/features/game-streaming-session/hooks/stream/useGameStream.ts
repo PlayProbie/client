@@ -32,22 +32,25 @@ export type {
   UseGameStreamReturn,
 } from './use-game-stream.types';
 
+const highlightEnabled = true;
+// const highlightEnabled = import.meta.env.VITE_ENABLE_HIGHLIGHT === 'true';
+
+// Mock 스트림 사용 여부
+const useMockStream =
+  import.meta.env.DEV && import.meta.env.VITE_MOCK_STREAM === 'true';
+
 /**
  * WebRTC 스트리밍 연결
  */
-export function useGameStream(
-  options: UseGameStreamOptions
-): UseGameStreamReturn {
-  const {
-    surveyUuid,
-    onConnected,
-    onDisconnected,
-    onError,
-    inputLogging = {},
-    streamHealth: streamHealthOptions = {},
-    segmentRecording = {},
-  } = options;
-
+export function useGameStream({
+  surveyUuid,
+  onConnected,
+  onDisconnected,
+  onError,
+  inputLogging = {},
+  streamHealth: streamHealthOptions = {},
+  segmentRecording = {},
+}: UseGameStreamOptions): UseGameStreamReturn {
   const {
     enabled: inputLoggingEnabled = true,
     batchSize = 50,
@@ -60,8 +63,6 @@ export function useGameStream(
     onStatusChange: onStreamHealthChange,
   } = streamHealthOptions;
 
-  const highlightEnabled = true;
-  // const highlightEnabled = import.meta.env.VITE_ENABLE_HIGHLIGHT === 'true';
   const {
     enabled: segmentRecordingEnabled = highlightEnabled,
     maxStorageBytes: segmentRecordingMaxStorageBytes,
@@ -71,10 +72,6 @@ export function useGameStream(
   } = segmentRecording;
 
   const { toast } = useToast();
-
-  // Mock 스트림 사용 여부
-  const useMockStream =
-    import.meta.env.DEV && import.meta.env.VITE_MOCK_STREAM === 'true';
 
   const [isGameReady, setIsGameReady] = useState(false);
   const [uploadSessionId, setUploadSessionId] = useState<string | null>(null);
@@ -127,11 +124,14 @@ export function useGameStream(
     if (!isConnected) {
       return null;
     }
+
     if (streamHealth.health === 'UNSTABLE') {
       return 0;
     }
+
     const availableIncomingBitrate =
       streamHealth.metrics.availableIncomingBitrate;
+
     if (
       typeof availableIncomingBitrate === 'number' &&
       Number.isFinite(availableIncomingBitrate) &&
@@ -148,6 +148,7 @@ export function useGameStream(
     streamHealth.health,
     streamHealth.metrics.availableIncomingBitrate,
   ]);
+
   const { enqueueSegment: enqueueUploadSegment, flush: flushUploadWorker } =
     useUploadWorker({
       enabled: uploadWorkerEnabled,

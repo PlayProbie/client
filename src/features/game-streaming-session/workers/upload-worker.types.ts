@@ -32,6 +32,13 @@ export type UploadWorkerCommand =
 
 export type UploadWorkerEvent =
   | {
+      type: 'segment-processing';
+      payload: {
+        localSegmentId: string;
+        startedAt: string;
+      };
+    }
+  | {
       type: 'segment-uploaded';
       payload: {
         localSegmentId: string;

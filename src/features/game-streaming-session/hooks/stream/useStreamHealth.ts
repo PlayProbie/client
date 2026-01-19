@@ -63,10 +63,36 @@ function readStreamHealthMetrics(
       }
     }
 
-    if (report.type === 'inbound-rtp' && report.kind === 'video') {
-      packetsLost += report.packetsLost || 0;
-      packetsReceived += report.packetsReceived || 0;
-      hasPacketStats = true;
+    if (report.type === 'inbound-rtp') {
+      const mediaType =
+        (report as { kind?: string; mediaType?: string }).kind ??
+        (report as { mediaType?: string }).mediaType;
+      const shouldInclude = mediaType ? mediaType === 'video' : true;
+      if (shouldInclude) {
+        packetsLost += report.packetsLost || 0;
+        packetsReceived += report.packetsReceived || 0;
+        hasPacketStats = true;
+      }
+    }
+
+    if (report.type === 'remote-inbound-rtp') {
+      const mediaType =
+        (report as { kind?: string; mediaType?: string }).kind ??
+        (report as { mediaType?: string }).mediaType;
+      const shouldInclude = mediaType ? mediaType === 'video' : true;
+      if (shouldInclude) {
+        const packetsLostValue =
+          typeof report.packetsLost === 'number' ? report.packetsLost : 0;
+        const packetsReceivedValue =
+          typeof report.packetsReceived === 'number' ? report.packetsReceived : 0;
+        packetsLost += packetsLostValue;
+        packetsReceived += packetsReceivedValue;
+        hasPacketStats = true;
+      }
+      if (typeof report.roundTripTime === 'number') {
+        const rttMs = report.roundTripTime * 1000;
+        currentRtt = currentRtt == null ? rttMs : Math.max(currentRtt, rttMs);
+      }
     }
   });
 
