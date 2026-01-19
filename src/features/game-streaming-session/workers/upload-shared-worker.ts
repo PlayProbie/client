@@ -19,6 +19,8 @@ const STORE_NAME = 'pending-uploads';
 const SEGMENT_DB_NAME = 'segment-store';
 const SEGMENT_DB_VERSION = 1;
 const SEGMENT_STORE_NAME = 'segments';
+const PROCESSING_STALE_MS = 10 * 60 * 1000;
+const PROCESSING_OWNER = 'shared-worker';
 // 환경 변수는 빌드 시점에 Vite가 주입합니다
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL as string;
 
@@ -118,6 +120,92 @@ function runIdbRequest<T>(request: IDBRequest<T>): Promise<T> {
   });
 }
 
+function normalizePendingUpload(upload: PendingUpload): PendingUpload {
+  return {
+    ...upload,
+    status: upload.status ?? 'pending',
+    processingOwner: upload.processingOwner ?? null,
+    processingStartedAt: upload.processingStartedAt ?? null,
+    updatedAt: upload.updatedAt ?? upload.createdAt,
+  };
+}
+
+function isProcessingStale(upload: PendingUpload): boolean {
+  if (upload.status !== 'processing') return false;
+  if (!upload.processingStartedAt) return true;
+  const startedAtMs = new Date(upload.processingStartedAt).getTime();
+  return Date.now() - startedAtMs > PROCESSING_STALE_MS;
+}
+
+async function claimPendingUpload(
+  segmentId: string
+): Promise<PendingUpload | null> {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    let claimed: PendingUpload | null = null;
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    const store = tx.objectStore(STORE_NAME);
+    const request = store.get(segmentId);
+
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => {
+      const record = request.result as PendingUpload | undefined;
+      if (!record) {
+        return;
+      }
+
+      const normalized = normalizePendingUpload(record);
+      if (normalized.status === 'processing' && !isProcessingStale(normalized)) {
+        return;
+      }
+
+      const updated: PendingUpload = {
+        ...normalized,
+        status: 'processing',
+        processingOwner: PROCESSING_OWNER,
+        processingStartedAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      claimed = updated;
+      store.put(updated);
+    };
+
+    tx.oncomplete = () => resolve(claimed);
+    tx.onerror = () => reject(tx.error);
+    tx.onabort = () => reject(tx.error);
+  });
+}
+
+async function markPendingUploadPending(segmentId: string): Promise<void> {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    const store = tx.objectStore(STORE_NAME);
+    const request = store.get(segmentId);
+
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => {
+      const record = request.result as PendingUpload | undefined;
+      if (!record) {
+        return;
+      }
+      const normalized = normalizePendingUpload(record);
+      const updated: PendingUpload = {
+        ...normalized,
+        status: 'pending',
+        processingOwner: null,
+        processingStartedAt: null,
+        updatedAt: new Date().toISOString(),
+      };
+      store.put(updated);
+    };
+
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+    tx.onabort = () => reject(tx.error);
+  });
+}
+
 // Pending 업로드 목록 조회
 async function getPendingUploads(): Promise<PendingUpload[]> {
   const db = await openDB();
@@ -127,7 +215,10 @@ async function getPendingUploads(): Promise<PendingUpload[]> {
     const request = store.getAll();
 
     request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve(request.result);
+    request.onsuccess = () =>
+      resolve(
+        (request.result as PendingUpload[]).map(normalizePendingUpload)
+      );
   });
 }
 
@@ -292,6 +383,10 @@ interface PendingUpload {
   contentType: string;
   logs: unknown[];
   createdAt: string;
+  status?: 'pending' | 'processing';
+  processingOwner?: string | null;
+  processingStartedAt?: string | null;
+  updatedAt?: string;
 }
 
 // 단일 세그먼트 업로드
@@ -368,13 +463,18 @@ async function processUploadQueue(): Promise<void> {
 
     // 순차적으로 업로드
     for (const task of pendingUploads) {
+      const claimed = await claimPendingUpload(task.segmentId);
+      if (!claimed) {
+        continue;
+      }
       try {
-        await uploadSegment(task);
+        await uploadSegment(claimed);
       } catch (error) {
+        await markPendingUploadPending(claimed.segmentId);
         broadcast({
           type: 'SEGMENT_FAILED',
           payload: {
-            localSegmentId: task.segmentId,
+            localSegmentId: claimed.segmentId,
             reason: error instanceof Error ? error.message : String(error),
           },
         });

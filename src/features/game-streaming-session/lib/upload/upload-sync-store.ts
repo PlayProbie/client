@@ -9,6 +9,9 @@ const DB_NAME = 'upload-sync-store';
 const DB_VERSION = 1;
 const STORE_NAME = 'pending-uploads';
 
+export type PendingUploadStatus = 'pending' | 'processing';
+export type PendingUploadOwner = 'main' | 'shared' | 'sw';
+
 export interface PendingUpload {
   segmentId: string;
   sessionId: string;
@@ -18,9 +21,30 @@ export interface PendingUpload {
   contentType: string;
   logs: unknown[];
   createdAt: string;
+  status: PendingUploadStatus;
+  processingOwner?: PendingUploadOwner | null;
+  processingStartedAt?: string | null;
+  updatedAt?: string;
 }
 
 let dbInstance: IDBDatabase | null = null;
+
+type PendingUploadRecord = PendingUpload & {
+  status?: PendingUploadStatus;
+  processingOwner?: PendingUploadOwner | null;
+  processingStartedAt?: string | null;
+  updatedAt?: string;
+};
+
+function normalizePendingUpload(upload: PendingUploadRecord): PendingUpload {
+  return {
+    ...upload,
+    status: upload.status ?? 'pending',
+    processingOwner: upload.processingOwner ?? null,
+    processingStartedAt: upload.processingStartedAt ?? null,
+    updatedAt: upload.updatedAt ?? upload.createdAt,
+  };
+}
 
 function openDB(): Promise<IDBDatabase> {
   if (dbInstance) {
@@ -54,14 +78,76 @@ function openDB(): Promise<IDBDatabase> {
  */
 export async function addPendingUpload(upload: PendingUpload): Promise<void> {
   const db = await openDB();
+  const normalized = normalizePendingUpload(upload);
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE_NAME, 'readwrite');
     const store = tx.objectStore(STORE_NAME);
-    const request = store.put(upload);
+    const request = store.put(normalized);
 
     request.onerror = () => reject(request.error);
     request.onsuccess = () => resolve();
   });
+}
+
+function updatePendingUpload(
+  segmentId: string,
+  updater: (current: PendingUpload) => PendingUpload
+): Promise<void> {
+  return openDB().then(
+    (db) =>
+      new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        const store = tx.objectStore(STORE_NAME);
+        const request = store.get(segmentId);
+
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+          const record = request.result as PendingUploadRecord | undefined;
+          if (!record) {
+            return;
+          }
+          const normalized = normalizePendingUpload(record);
+          const updated = updater(normalized);
+          store.put(updated);
+        };
+
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+        tx.onabort = () => reject(tx.error);
+      })
+  );
+}
+
+/**
+ * Pending 업로드 상태를 processing으로 변경
+ */
+export async function markPendingUploadProcessing(
+  segmentId: string,
+  owner: PendingUploadOwner,
+  startedAt: string = new Date().toISOString()
+): Promise<void> {
+  await updatePendingUpload(segmentId, (current) => ({
+    ...current,
+    status: 'processing',
+    processingOwner: owner,
+    processingStartedAt: startedAt,
+    updatedAt: new Date().toISOString(),
+  }));
+}
+
+/**
+ * Pending 업로드 상태를 pending으로 복구
+ */
+export async function markPendingUploadPending(
+  segmentId: string
+): Promise<void> {
+  await updatePendingUpload(segmentId, (current) => ({
+    ...current,
+    status: 'pending',
+    processingOwner: null,
+    processingStartedAt: null,
+    updatedAt: new Date().toISOString(),
+  }));
 }
 
 /**
@@ -90,7 +176,10 @@ export async function getPendingUploads(): Promise<PendingUpload[]> {
     const request = store.getAll();
 
     request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve(request.result);
+    request.onsuccess = () =>
+      resolve(
+        (request.result as PendingUploadRecord[]).map(normalizePendingUpload)
+      );
   });
 }
 
@@ -108,7 +197,10 @@ export async function getPendingUploadsBySession(
     const request = index.getAll(sessionId);
 
     request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve(request.result);
+    request.onsuccess = () =>
+      resolve(
+        (request.result as PendingUploadRecord[]).map(normalizePendingUpload)
+      );
   });
 }
 

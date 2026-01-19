@@ -319,6 +319,13 @@ async function processQueue(): Promise<void> {
 
   processing = true;
   queue.markInFlight(nextItem.key);
+  postEvent({
+    type: 'segment-processing',
+    payload: {
+      localSegmentId: nextItem.key,
+      startedAt: new Date().toISOString(),
+    },
+  });
 
   try {
     const result = await performUpload(nextItem.payload);

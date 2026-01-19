@@ -35,7 +35,11 @@ export function StreamCompletionDialog({
       open={open}
       onOpenChange={onOpenChange}
     >
-      <DialogContent showCloseButton={false}>
+      <DialogContent
+        showCloseButton={false}
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle>게임 플레이가 종료되었습니다</DialogTitle>
           <DialogDescription>

@@ -4,6 +4,8 @@ import { API_BASE_URL } from '@/constants/api';
 
 import {
   addPendingUpload,
+  markPendingUploadPending,
+  markPendingUploadProcessing,
   removePendingUpload,
 } from '../../lib/upload/upload-sync-store';
 import type { InputLog, SegmentMeta } from '../../types';
@@ -224,7 +226,15 @@ export function useUploadWorker({
             message.payload.s3Url
           );
           break;
+        case 'segment-processing':
+          markPendingUploadProcessing(
+            message.payload.localSegmentId,
+            'main',
+            message.payload.startedAt
+          ).catch(() => {});
+          break;
         case 'segment-failed':
+          markPendingUploadPending(message.payload.localSegmentId).catch(() => {});
           onSegmentFailed?.(
             message.payload.localSegmentId,
             message.payload.reason
@@ -300,6 +310,10 @@ export function useUploadWorker({
         contentType: resolvedContentType,
         logs,
         createdAt: new Date().toISOString(),
+        status: 'pending',
+        processingOwner: null,
+        processingStartedAt: null,
+        updatedAt: new Date().toISOString(),
       }).catch(() => {});
 
       const payload: UploadWorkerSegmentPayload = {

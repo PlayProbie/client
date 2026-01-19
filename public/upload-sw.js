@@ -12,6 +12,8 @@ const STORE_NAME = 'pending-uploads';
 const SEGMENT_DB_NAME = 'segment-store';
 const SEGMENT_DB_VERSION = 1;
 const SEGMENT_STORE_NAME = 'segments';
+const PROCESSING_STALE_MS = 10 * 60 * 1000;
+const PROCESSING_OWNER = 'service-worker';
 
 const searchParams = new URL(location.href).searchParams;
 const API_BASE_URL = searchParams.get('apiUrl') || 'http://localhost:8080';
@@ -89,6 +91,88 @@ function runIdbRequest(request) {
   });
 }
 
+function normalizePendingUpload(upload) {
+  return {
+    ...upload,
+    status: upload.status || 'pending',
+    processingOwner: upload.processingOwner || null,
+    processingStartedAt: upload.processingStartedAt || null,
+    updatedAt: upload.updatedAt || upload.createdAt,
+  };
+}
+
+function isProcessingStale(upload) {
+  if (upload.status !== 'processing') return false;
+  if (!upload.processingStartedAt) return true;
+  const startedAtMs = new Date(upload.processingStartedAt).getTime();
+  return Date.now() - startedAtMs > PROCESSING_STALE_MS;
+}
+
+async function claimPendingUpload(segmentId) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    let claimed = null;
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    const store = tx.objectStore(STORE_NAME);
+    const request = store.get(segmentId);
+
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => {
+      const record = request.result;
+      if (!record) {
+        return;
+      }
+      const normalized = normalizePendingUpload(record);
+      if (normalized.status === 'processing' && !isProcessingStale(normalized)) {
+        return;
+      }
+      const updated = {
+        ...normalized,
+        status: 'processing',
+        processingOwner: PROCESSING_OWNER,
+        processingStartedAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      claimed = updated;
+      store.put(updated);
+    };
+
+    tx.oncomplete = () => resolve(claimed);
+    tx.onerror = () => reject(tx.error);
+    tx.onabort = () => reject(tx.error);
+  });
+}
+
+async function markPendingUploadPending(segmentId) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    const store = tx.objectStore(STORE_NAME);
+    const request = store.get(segmentId);
+
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => {
+      const record = request.result;
+      if (!record) {
+        return;
+      }
+      const normalized = normalizePendingUpload(record);
+      const updated = {
+        ...normalized,
+        status: 'pending',
+        processingOwner: null,
+        processingStartedAt: null,
+        updatedAt: new Date().toISOString(),
+      };
+      store.put(updated);
+    };
+
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+    tx.onabort = () => reject(tx.error);
+  });
+}
+
 // Pending 업로드 목록 조회
 async function getPendingUploads() {
   const db = await openDB();
@@ -99,7 +183,8 @@ async function getPendingUploads() {
     const request = index.getAll();
 
     request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve(request.result);
+    request.onsuccess = () =>
+      resolve(request.result.map(normalizePendingUpload));
   });
 }
 
@@ -316,9 +401,14 @@ async function processUploadQueue() {
 
     // 순차적으로 업로드 (병렬 업로드는 서버 부하 고려)
     for (const task of pendingUploads) {
+      const claimed = await claimPendingUpload(task.segmentId);
+      if (!claimed) {
+        continue;
+      }
       try {
-        await uploadSegment(task);
+        await uploadSegment(claimed);
       } catch (error) {
+        await markPendingUploadPending(claimed.segmentId);
         lastError = error;
       }
     }
