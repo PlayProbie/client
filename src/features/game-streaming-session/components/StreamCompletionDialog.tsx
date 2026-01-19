@@ -27,7 +27,7 @@ export function StreamCompletionDialog({
     // SurveySessionPage 경로는 /surveys/session/sessions/:sessionUuid
     // surveyUuid는 state로 전달해야 하지만, window.location.href로는 state 전달 불가
     // 따라서 query param으로 전달
-    window.location.href = `${baseUrl}/surveys/session/sessions/${sessionUuid}?surveyUuid=${surveyUuid}`;
+    window.location.href = `${baseUrl}/surveys/session/${surveyUuid}?sessionUuid=${sessionUuid}`;
   };
 
   return (
