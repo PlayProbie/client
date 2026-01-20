@@ -24,6 +24,12 @@ export type UploadWorkerCommand =
       };
     }
   | {
+      type: 'set-auth-token';
+      payload: {
+        token: string;
+      };
+    }
+  | {
       type: 'flush';
     }
   | {

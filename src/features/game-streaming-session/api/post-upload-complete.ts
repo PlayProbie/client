@@ -8,19 +8,25 @@ import type { ApiSegmentUploadCompleteRequest } from '../types';
 
 export async function postUploadComplete(
   sessionId: string,
-  segmentId: string
+  segmentId: string,
+  authToken?: string
 ): Promise<void> {
   const requestBody: ApiSegmentUploadCompleteRequest = {
     segment_id: segmentId,
   };
 
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  if (authToken) {
+    headers['Authorization'] = `Bearer ${authToken}`;
+  }
+
   const response = await fetch(
     `${API_BASE_URL}/sessions/${sessionId}/replay/upload-complete`,
     {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify(requestBody),
     }
   );
