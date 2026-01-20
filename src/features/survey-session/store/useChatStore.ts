@@ -392,10 +392,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
         );
 
         if (!hasStreaming) {
-          console.log('[Store] No active streaming bubble. Creating/Resuming...', {
-            payload,
-            currentTurnNum: payload?.turnNum ?? get().currentTurnNum,
-          });
+
 
           set((s) => {
             const lastMsg = s.messages[s.messages.length - 1];
@@ -406,7 +403,6 @@ export const useChatStore = create<ChatState>((set, get) => ({
               lastMsg.type === 'ai' &&
               lastMsg.turnNum === currentTurnNum
             ) {
-              console.log('[Store] Resuming bubble:', lastMsg.id);
               // 기존 메시지를 스트리밍 상태로 전환 (ID 변경)
               const newMessages = [...s.messages];
               newMessages[newMessages.length - 1] = {
@@ -421,7 +417,6 @@ export const useChatStore = create<ChatState>((set, get) => ({
               };
             }
 
-            console.log('[Store] Creating NEW bubble for turn:', currentTurnNum);
             // 진짜 새로운 버블 생성
             return {
               messages: [

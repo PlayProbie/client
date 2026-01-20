@@ -18,9 +18,9 @@ import type {
   ApiSSEInsightQuestionEventData,
   ApiSSEQuestionEventData,
   ApiSSEReactionEventData,
+  ApiSSERetryRequestEventData,
   UseChatSSEOptions,
   UseChatSSEReturn,
-  ApiSSERetryRequestEventData,
 } from '../types';
 import {
   toSSEContinueEventData,

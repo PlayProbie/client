@@ -152,8 +152,7 @@ export function useChatSession({
       // 리액션 -> 큐에 추가 (말풍선 -> 타이핑 -> 대기)
       enqueueReaction(data.reactionText, data.turnNum);
     },
-    onGenerateTailComplete: (data) => {
-      console.log('꼬리질문 수신(완료):', data);
+    onGenerateTailComplete: (_data) => {
       enqueueFinalize();
     },
     onStart: () => {
