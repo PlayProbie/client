@@ -322,24 +322,30 @@ async function notifyUploadComplete(sessionId, segmentId) {
 async function uploadInputLogs(sessionId, segmentId, s3Url, logs) {
   if (!logs || logs.length === 0) return;
 
+  const requestBody = {
+    session_id: sessionId,
+    segment_id: segmentId,
+    video_url: s3Url,
+    logs,
+  };
+
+  console.log(`[SW] 입력 로그 전송 시작: ${logs.length}개`);
+
   try {
     const response = await fetch(
       `${API_BASE_URL}/sessions/${sessionId}/replay/logs`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          session_id: sessionId,
-          segment_id: segmentId,
-          video_url: s3Url,
-          logs,
-        }),
+        body: JSON.stringify(requestBody),
       }
     );
 
     if (!response.ok) {
       throw new Error(`로그 업로드 실패: ${response.status}`);
     }
+
+    console.log(`[SW] 입력 로그 전송 성공: ${logs.length}개`);
   } catch (error) {
     console.error(`[SW] 입력 로그 전송 에러:`, error);
     throw error;
@@ -379,14 +385,23 @@ async function uploadSegment(task) {
   // 4. 업로드 완료 알림
   await notifyUploadComplete(sessionId, presigned.segmentId);
 
-  // 5. 입력 로그 전송
+  // 5. 입력 로그 전송 (실패해도 세그먼트 업로드는 성공으로 처리)
   if (logs && logs.length > 0) {
-    await uploadInputLogs(
-      sessionId,
-      presigned.segmentId,
-      presigned.s3Url,
-      logs
-    );
+    try {
+      await uploadInputLogs(
+        sessionId,
+        presigned.segmentId,
+        presigned.s3Url,
+        logs
+      );
+    } catch (logError) {
+      console.error(
+        `[SW] 입력 로그 업로드 실패 (세그먼트는 성공):`,
+        presigned.segmentId,
+        logError
+      );
+      // 입력 로그 실패는 세그먼트 업로드를 실패시키지 않음
+    }
   }
 
   // 6. 큐에서 제거

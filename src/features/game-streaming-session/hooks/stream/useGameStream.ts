@@ -15,7 +15,6 @@ import {
 } from '../../constants';
 import type { InputLog, SegmentMeta } from '../../types';
 import { useInputLogger } from '../input/useInputLogger';
-import { useInputLogUploader } from '../input/useInputLogUploader';
 import { useUploadWorker } from '../upload/useUploadWorker';
 import type {
   UseGameStreamOptions,
@@ -202,9 +201,6 @@ export function useGameStream({
   // Mock 환경에서는 SDK 필터가 작동하지 않으므로 DOM 리스너 직접 사용
   const {
     clearLogs,
-    getLogsBySegment,
-    getSegmentIdsWithLogs,
-    clearLogsBySegment,
     drainLogsBySegment,
     createKeyboardFilter,
     createMouseFilter,
@@ -251,34 +247,16 @@ export function useGameStream({
     []
   );
 
-  // 입력 로그 업로드 훅
-  // getVideoUrlBySegment는 Phase 4 (Upload Worker) 구현 시 실제 로직으로 대체 예정
-  const { uploadInputLogs, flushLogs } = useInputLogUploader({
-    sessionUuid,
-    getSegmentIdsWithLogs,
-    getLogsBySegment,
-    getVideoUrlBySegment: useCallback(
-      // TODO: Phase 4에서 SegmentStore에서 실제 S3 URL 조회 로직 구현
-      (_segmentId: string) => null,
-      []
-    ),
-    clearLogsBySegment,
-    onUploadError: (error) => {
-      toast({
-        title: '[useGameStream] 입력 로그 업로드 실패:',
-        variant: 'destructive',
-        description: error.message,
-      });
-    },
-  });
+  const flushUploadQueue = useCallback(async () => {
+    // 마지막 세그먼트가 완료되기를 기다림
+    await segmentRecorder.finalizeRecording();
 
-  const flushUploadQueue = useCallback(() => {
     if (uploadWorkerEnabled) {
       flushUploadWorker();
-      return Promise.resolve();
+      return;
     }
-    return uploadInputLogs();
-  }, [uploadWorkerEnabled, flushUploadWorker, uploadInputLogs]);
+    return;
+  }, [segmentRecorder, uploadWorkerEnabled, flushUploadWorker]);
 
   const connect = useCallback(() => {
     return connectStream({
@@ -298,21 +276,24 @@ export function useGameStream({
     gamepadFilter,
   ]);
 
-  const disconnect = useCallback(() => {
+  const disconnect = useCallback(async () => {
+    // 1. 마지막 세그먼트 완료 대기
+    await segmentRecorder.finalizeRecording();
+
+    // 2. 업로드 큐 플러시
     if (uploadWorkerEnabled) {
       flushUploadWorker();
-    } else {
-      flushLogs(sessionUuid);
     }
+
+    // 3. 정리
     disconnectStream();
     setIsGameReady(false);
     clearLogs();
     // 세그먼트 정리는 인터뷰 완료 시 useChatSession에서 수행
   }, [
+    segmentRecorder,
     uploadWorkerEnabled,
     flushUploadWorker,
-    flushLogs,
-    sessionUuid,
     disconnectStream,
     clearLogs,
   ]);

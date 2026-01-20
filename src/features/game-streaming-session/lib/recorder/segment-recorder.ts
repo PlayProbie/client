@@ -55,6 +55,10 @@ export class SegmentRecorder {
   private readonly activeRecorders = new Map<string, MediaRecorder>();
   private readonly activeStopTimers = new Map<string, number>();
   private readonly segmentTimings: SegmentTiming[] = [];
+  private readonly pendingSegments = new Map<
+    string,
+    { resolve: () => void; reject: (error: Error) => void }
+  >();
 
   constructor(options: SegmentRecorderOptions) {
     this.options = {
@@ -134,6 +138,45 @@ export class SegmentRecorder {
       }
     });
     this.activeRecorders.clear();
+  }
+
+  /**
+   * 현재 활성화된 모든 레코더를 즉시 stop하고,
+   * 모든 onSegmentReady 콜백이 완료될 때까지 기다립니다.
+   * 게임 종료 시 마지막 세그먼트가 유실되지 않도록 사용합니다.
+   */
+  async finalize(): Promise<void> {
+    if (!this.isRecording) return;
+
+    this.isRecording = false;
+    this.stopDrawing();
+
+    // 다음 세그먼트 타이머 취소
+    if (this.nextSegmentTimer) {
+      clearTimeout(this.nextSegmentTimer);
+      this.nextSegmentTimer = null;
+    }
+
+    // 예약된 stop 타이머 취소 (수동으로 stop 호출)
+    this.activeStopTimers.forEach((timerId) => clearTimeout(timerId));
+    this.activeStopTimers.clear();
+
+    // 활성 레코더가 없으면 바로 반환
+    if (this.activeRecorders.size === 0) return;
+
+    // 모든 활성 레코더 stop 및 완료 대기
+    const promises: Promise<void>[] = [];
+    this.activeRecorders.forEach((recorder, segmentId) => {
+      if (recorder.state !== 'inactive') {
+        const promise = new Promise<void>((resolve, reject) => {
+          this.pendingSegments.set(segmentId, { resolve, reject });
+        });
+        promises.push(promise);
+        recorder.stop();
+      }
+    });
+
+    await Promise.all(promises);
   }
 
   getActiveSegmentIds(mediaTimeMs: number): string[] {
@@ -270,13 +313,28 @@ export class SegmentRecorder {
       this.activeRecorders.delete(segmentId);
       this.activeStopTimers.delete(segmentId);
 
-      void this.options.onSegmentReady({
-        segmentId,
-        blob,
-        mimeType,
-        meta,
-        timing,
-      });
+      // onSegmentReady 완료 후 pending promise resolve
+      const pending = this.pendingSegments.get(segmentId);
+      Promise.resolve(
+        this.options.onSegmentReady({
+          segmentId,
+          blob,
+          mimeType,
+          meta,
+          timing,
+        })
+      )
+        .then(() => {
+          pending?.resolve();
+        })
+        .catch((error) => {
+          pending?.reject(
+            error instanceof Error ? error : new Error(String(error))
+          );
+        })
+        .finally(() => {
+          this.pendingSegments.delete(segmentId);
+        });
     };
 
     const timeslice = this.options.timesliceMs;

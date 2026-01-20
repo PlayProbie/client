@@ -18,6 +18,7 @@ export function createSegmentInfoResolver(
     const primaryId =
       filtered.length > 0 ? filtered[filtered.length - 1] : fallbackId;
     const segmentIds = filtered.length > 1 ? filtered : undefined;
+
     return { primaryId, segmentIds };
   };
 }
