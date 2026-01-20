@@ -81,7 +81,7 @@ function getSharedWorker(): SharedWorker | null {
   try {
     const sharedWorker = new SharedWorker(
       new URL('../../workers/upload-shared-worker.ts', import.meta.url),
-      { type: 'module', name: 'upload-shared-worker' }
+      { name: 'upload-shared-worker' }
     );
 
     sharedWorker.port.onmessage = (event) => {
