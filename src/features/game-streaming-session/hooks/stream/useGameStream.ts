@@ -6,8 +6,6 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useToast } from '@/hooks/useToast';
-
 import {
   UPLOAD_RATE_CAP_BPS,
   UPLOAD_RATE_FALLBACK_BPS,
@@ -69,8 +67,6 @@ export function useGameStream({
     onSegmentStored: onSegmentStoredCallback,
     onError: onSegmentError,
   } = segmentRecording;
-
-  const { toast } = useToast();
 
   const [isGameReady, setIsGameReady] = useState(false);
   const [uploadSessionId, setUploadSessionId] = useState<string | null>(null);
@@ -156,17 +152,12 @@ export function useGameStream({
       uploadRateBps,
       streamingActive: isConnected,
       onError: (error) => {
-        toast({
-          title: '[UploadWorker] 업로드 처리 실패',
-          variant: 'destructive',
-          description: error.message,
-        });
+        console.error('[UploadWorker] Upload processing failed:', error);
       },
-      onSegmentFailed: (segmentId) => {
-        toast({
-          title: '[UploadWorker] 세그먼트 업로드 실패',
-          variant: 'destructive',
-          description: `segmentId=${segmentId}`,
+      onSegmentFailed: (segmentId, reason) => {
+        console.error('[UploadWorker] Segment upload failed:', {
+          segmentId,
+          reason,
         });
       },
     });
