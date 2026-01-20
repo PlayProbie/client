@@ -81,7 +81,7 @@ function getSharedWorker(): SharedWorker | null {
   try {
     const sharedWorker = new SharedWorker(
       new URL('../../workers/upload-shared-worker.ts', import.meta.url),
-      { name: 'upload-shared-worker' }
+      { type: 'module', name: 'upload-shared-worker' }
     );
 
     sharedWorker.port.onmessage = (event) => {
@@ -296,17 +296,29 @@ export function useUploadWorker({
   }, [enabled, sessionId, releaseUploadThrottle]);
 
   useEffect(() => {
+    console.log('[useUploadWorker] useEffect triggered', {
+      enabled,
+      sessionId,
+    });
+
     if (!enabled || !sessionId) {
+      console.log('[useUploadWorker] Skipping - disabled or no sessionId');
       workerRef.current?.terminate();
       workerRef.current = null;
       return;
     }
 
-    console.log('[useUploadWorker] Creating Worker', { enabled, sessionId });
-    const worker = new Worker(
-      new URL('../../workers/upload.worker.ts', import.meta.url)
-    );
-    console.log('[useUploadWorker] Worker created successfully');
+    let worker: Worker;
+    try {
+      console.log('[useUploadWorker] Creating Worker...');
+      worker = new Worker(
+        new URL('../../workers/upload.worker.ts', import.meta.url)
+      );
+      console.log('[useUploadWorker] Worker created successfully');
+    } catch (error) {
+      console.error('[useUploadWorker] Failed to create Worker:', error);
+      return;
+    }
 
     workerRef.current = worker;
 
