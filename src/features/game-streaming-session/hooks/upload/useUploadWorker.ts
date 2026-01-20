@@ -182,6 +182,23 @@ export function useUploadWorker({
   const swRegistrationRef = useRef<ServiceWorkerRegistration | null>(null);
   const streamHealthRef = useRef(streamHealth);
 
+  // 콜백을 Ref로 래핑하여 Worker useEffect 의존성에서 제거
+  const onErrorRef = useRef(onError);
+  const onSegmentUploadedRef = useRef(onSegmentUploaded);
+  const onSegmentFailedRef = useRef(onSegmentFailed);
+
+  useEffect(() => {
+    onErrorRef.current = onError;
+  }, [onError]);
+
+  useEffect(() => {
+    onSegmentUploadedRef.current = onSegmentUploaded;
+  }, [onSegmentUploaded]);
+
+  useEffect(() => {
+    onSegmentFailedRef.current = onSegmentFailed;
+  }, [onSegmentFailed]);
+
   useEffect(() => {
     sequenceRef.current = 0;
   }, [sessionId]);
@@ -309,7 +326,7 @@ export function useUploadWorker({
         case 'segment-uploaded':
           // 업로드 성공 시 IndexedDB에서 제거
           removePendingUpload(message.payload.localSegmentId).catch(() => {});
-          onSegmentUploaded?.(
+          onSegmentUploadedRef.current?.(
             message.payload.localSegmentId,
             message.payload.remoteSegmentId,
             message.payload.s3Url
@@ -326,14 +343,14 @@ export function useUploadWorker({
           markPendingUploadPending(message.payload.localSegmentId).catch(
             () => {}
           );
-          onSegmentFailed?.(
+          onSegmentFailedRef.current?.(
             message.payload.localSegmentId,
             message.payload.reason
           );
-          onError?.(new Error(message.payload.reason));
+          onErrorRef.current?.(new Error(message.payload.reason));
           break;
         case 'error':
-          onError?.(new Error(message.payload.message));
+          onErrorRef.current?.(new Error(message.payload.message));
           break;
         default:
           break;
@@ -343,7 +360,7 @@ export function useUploadWorker({
     worker.addEventListener('message', handleMessage);
 
     worker.addEventListener('error', (event) => {
-      onError?.(new Error(event.message));
+      onErrorRef.current?.(new Error(event.message));
     });
 
     return () => {
@@ -351,7 +368,7 @@ export function useUploadWorker({
       worker.terminate();
       workerRef.current = null;
     };
-  }, [enabled, sessionId, onError, onSegmentFailed, onSegmentUploaded]);
+  }, [enabled, sessionId]);
 
   useEffect(() => {
     if (!enabled || !sessionId) return;
