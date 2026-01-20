@@ -298,7 +298,7 @@ async function getPresignedUrl(sessionId, payload) {
       `${API_BASE_URL}/sessions/${sessionId}/replay/presigned-url`,
       {
         method: 'POST',
-        headers: getApiHeaders(),
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       }
     );
@@ -345,7 +345,7 @@ async function notifyUploadComplete(sessionId, segmentId) {
       `${API_BASE_URL}/sessions/${sessionId}/replay/upload-complete`,
       {
         method: 'POST',
-        headers: getApiHeaders(),
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ segment_id: segmentId }),
       }
     );
@@ -377,7 +377,7 @@ async function uploadInputLogs(sessionId, segmentId, s3Url, logs) {
       `${API_BASE_URL}/sessions/${sessionId}/replay/logs`,
       {
         method: 'POST',
-        headers: getApiHeaders(),
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestBody),
       }
     );
