@@ -81,7 +81,7 @@ function getSharedWorker(): SharedWorker | null {
   try {
     const sharedWorker = new SharedWorker(
       new URL('../../workers/upload-shared-worker.ts', import.meta.url),
-      { type: 'module', name: 'upload-shared-worker' }
+      { name: 'upload-shared-worker' }
     );
 
     sharedWorker.port.onmessage = (event) => {
@@ -302,25 +302,36 @@ export function useUploadWorker({
       return;
     }
 
+    console.log('[useUploadWorker] Creating Worker', { enabled, sessionId });
     const worker = new Worker(
-      new URL('../../workers/upload.worker.ts', import.meta.url),
-      { type: 'module' }
+      new URL('../../workers/upload.worker.ts', import.meta.url)
     );
+    console.log('[useUploadWorker] Worker created successfully');
 
     workerRef.current = worker;
 
     // Worker에 인증 토큰 전달
     const token = localStorage.getItem('accessToken');
+    console.log(
+      '[useUploadWorker] Token from localStorage:',
+      token ? 'exists' : 'null'
+    );
     if (token) {
       const tokenMessage: UploadWorkerCommand = {
         type: 'set-auth-token',
         payload: { token },
       };
       worker.postMessage(tokenMessage);
+      console.log('[useUploadWorker] Sent auth token to Worker');
     }
 
     const handleMessage = (event: MessageEvent<UploadWorkerEvent>) => {
       const message = event.data;
+      console.log(
+        '[useUploadWorker] Received message from Worker:',
+        message.type,
+        message
+      );
 
       switch (message.type) {
         case 'segment-uploaded':
@@ -360,10 +371,16 @@ export function useUploadWorker({
     worker.addEventListener('message', handleMessage);
 
     worker.addEventListener('error', (event) => {
+      console.error(
+        '[useUploadWorker] Worker error event:',
+        event.message,
+        event
+      );
       onErrorRef.current?.(new Error(event.message));
     });
 
     return () => {
+      console.log('[useUploadWorker] Terminating Worker');
       worker.removeEventListener('message', handleMessage);
       worker.terminate();
       workerRef.current = null;
