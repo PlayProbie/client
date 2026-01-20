@@ -11,7 +11,7 @@ import { Button } from '@/components/ui';
 import { Form } from '@/components/ui/form';
 import { PageSpinner } from '@/components/ui/loading';
 import { Step } from '@/components/ui/Step';
-import type { GameGenre } from '@/features/game';
+import { type GameGenre,useGameDetailQuery } from '@/features/game';
 import { useToast } from '@/hooks/useToast';
 import { cn } from '@/lib/utils';
 import { useCurrentGameStore } from '@/stores/useCurrentGameStore';
@@ -36,14 +36,27 @@ function SurveyDesignForm({ className, onComplete }: SurveyDesignFormProps) {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { step } = useParams<{ step?: string }>();
+  const { gameUuid, step } = useParams<{ gameUuid: string; step?: string }>();
   const { toast } = useToast();
 
   const { currentStep, goToStep, formData, updateFormData } =
     useSurveyFormStore();
 
   // 게임 정보 가져오기
-  const { currentGame, isLoading: isLoadingGame } = useCurrentGameStore();
+  // 1. Store 확인
+  const {
+    currentGame,
+    setCurrentGame,
+    isLoading: isLoadingStore,
+  } = useCurrentGameStore();
+
+  // 2. Store에 없으면 Fetch
+  const { data: fetchedGame, isLoading: isFetchingGame } = useGameDetailQuery(
+    gameUuid || '',
+    {
+      enabled: !!gameUuid,
+    }
+  );
 
   // StrictMode 중복 제출 방지 ref
   const isSubmittingRef = useRef(false);
@@ -54,6 +67,17 @@ function SurveyDesignForm({ className, onComplete }: SurveyDesignFormProps) {
   });
 
   const { control, handleSubmit, reset } = form;
+
+  // 게임 정보 동기화 (Store <-> Fetch)
+  useEffect(() => {
+    // 1. Fetch된 게임 정보가 있고, 현재 Store가 비어있거나 다른 게임이라면 Store 업데이트
+    if (
+      fetchedGame &&
+      (!currentGame || currentGame.gameUuid !== fetchedGame.gameUuid)
+    ) {
+      setCurrentGame(fetchedGame);
+    }
+  }, [fetchedGame, currentGame, setCurrentGame]);
 
   useEffect(() => {
     if (currentGame) {
@@ -76,7 +100,10 @@ function SurveyDesignForm({ className, onComplete }: SurveyDesignFormProps) {
 
   // 게임 정보 로딩 상태 확인
   const hasGameInfo = Boolean(formData.gameName);
-  const isGameInfoLoading = isLoadingGame || (!hasGameInfo && !currentGame);
+  const isGameInfoLoading =
+    isLoadingStore ||
+    isFetchingGame ||
+    (!hasGameInfo && !currentGame);
 
   // useWatch로 폼 데이터 구독 (React Compiler 호환)
   const watchedData = useWatch({ control });
