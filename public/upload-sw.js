@@ -17,6 +17,26 @@ const PROCESSING_OWNER = 'service-worker';
 
 const searchParams = new URL(location.href).searchParams;
 const API_BASE_URL = searchParams.get('apiUrl') || 'http://localhost:8080';
+let authToken = '';
+
+// 클라이언트에서 토큰 업데이트 수신 (postMessage로 안전하게 전달)
+self.addEventListener('message', (event) => {
+  if (event.data?.type === 'UPDATE_TOKEN' && event.data.token) {
+    authToken = event.data.token;
+  }
+  if (event.data?.type === 'PROCESS_UPLOADS') {
+    event.waitUntil(processUploadQueue());
+  }
+});
+
+// API 요청용 헤더 생성 (Authorization 포함)
+function getApiHeaders(contentType = 'application/json') {
+  const headers = { 'Content-Type': contentType };
+  if (authToken) {
+    headers['Authorization'] = `Bearer ${authToken}`;
+  }
+  return headers;
+}
 
 // Service Worker 설치
 self.addEventListener('install', () => {
@@ -31,13 +51,6 @@ self.addEventListener('activate', (event) => {
 // Background Sync 이벤트
 self.addEventListener('sync', (event) => {
   if (event.tag === SYNC_TAG) {
-    event.waitUntil(processUploadQueue());
-  }
-});
-
-// 메시지 수신 (클라이언트에서 직접 업로드 요청)
-self.addEventListener('message', (event) => {
-  if (event.data?.type === 'PROCESS_UPLOADS') {
     event.waitUntil(processUploadQueue());
   }
 });
@@ -257,7 +270,7 @@ async function getPresignedUrl(sessionId, payload) {
       `${API_BASE_URL}/sessions/${sessionId}/replay/presigned-url`,
       {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getApiHeaders(),
         body: JSON.stringify(payload),
       }
     );
@@ -304,7 +317,7 @@ async function notifyUploadComplete(sessionId, segmentId) {
       `${API_BASE_URL}/sessions/${sessionId}/replay/upload-complete`,
       {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getApiHeaders(),
         body: JSON.stringify({ segment_id: segmentId }),
       }
     );
@@ -336,7 +349,7 @@ async function uploadInputLogs(sessionId, segmentId, s3Url, logs) {
       `${API_BASE_URL}/sessions/${sessionId}/replay/logs`,
       {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getApiHeaders(),
         body: JSON.stringify(requestBody),
       }
     );

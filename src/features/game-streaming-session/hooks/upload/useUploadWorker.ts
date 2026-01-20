@@ -52,9 +52,7 @@ type SharedWorkerMessage = {
   };
 };
 
-const sharedWorkerListeners = new Set<
-  (message: SharedWorkerMessage) => void
->();
+const sharedWorkerListeners = new Set<(message: SharedWorkerMessage) => void>();
 let sharedWorkerInstance: SharedWorker | null = null;
 
 function notifySharedWorkerListeners(message: SharedWorkerMessage): void {
@@ -122,6 +120,15 @@ async function registerServiceWorker(
   } catch {
     return null;
   }
+}
+
+// Service Worker에 토큰 전송 (postMessage로 안전하게 전달)
+function sendTokenToServiceWorker(token: string | null): void {
+  if (!token || !navigator.serviceWorker?.controller) return;
+  navigator.serviceWorker.controller.postMessage({
+    type: 'UPDATE_TOKEN',
+    token,
+  });
 }
 
 // Background Sync 트리거
@@ -205,8 +212,18 @@ export function useUploadWorker({
 
     // Service Worker 등록 (Chrome/Edge Background Sync)
     const apiUrl = API_BASE_URL;
+    const token = localStorage.getItem('accessToken');
     registerServiceWorker(apiUrl).then((registration) => {
       swRegistrationRef.current = registration;
+      // SW 활성화 후 토큰 전송
+      if (registration?.active) {
+        sendTokenToServiceWorker(token);
+      } else {
+        // SW가 아직 활성화되지 않은 경우, ready 이벤트 대기
+        navigator.serviceWorker.ready.then(() => {
+          sendTokenToServiceWorker(token);
+        });
+      }
     });
 
     const sharedWorker = getSharedWorker();
