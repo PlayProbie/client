@@ -392,26 +392,54 @@ export const useChatStore = create<ChatState>((set, get) => ({
         );
 
         if (!hasStreaming) {
-          // 버블 생성 후 다시 시도 (큐는 유지)
-          set((s) => ({
-            messages: [
-              ...s.messages,
-              {
-                id: `ai-streaming-${payload?.turnNum ?? s.currentTurnNum}`,
-                type: 'ai',
-                content: '',
-                turnNum: payload?.turnNum ?? s.currentTurnNum,
-                qType: payload?.qType,
-                fixedQId: payload?.fixedQId,
-                order: payload?.order,
-                totalQuestions: payload?.totalQuestions,
-                timestamp: new Date(),
-              },
-            ],
-            isStreaming: true,
-          }));
-          // 생성 직후 다시 processNext 호출하면 이 분기점 통과함
-          requestAnimationFrame(processNext);
+
+
+          set((s) => {
+            const lastMsg = s.messages[s.messages.length - 1];
+            const currentTurnNum = payload?.turnNum ?? s.currentTurnNum;
+
+            if (
+              lastMsg &&
+              lastMsg.type === 'ai' &&
+              lastMsg.turnNum === currentTurnNum
+            ) {
+              // 기존 메시지를 스트리밍 상태로 전환 (ID 변경)
+              const newMessages = [...s.messages];
+              newMessages[newMessages.length - 1] = {
+                ...lastMsg,
+                id: `ai-streaming-${currentTurnNum}`, // streaming ID로 변경하여 hasStreaming 감지되게 함
+              };
+              return {
+                messages: newMessages,
+                isStreaming: true,
+                // 스트리밍 재개 시 streamingContent 복구
+                streamingContent: lastMsg.content,
+              };
+            }
+
+            // 진짜 새로운 버블 생성
+            return {
+              messages: [
+                ...s.messages,
+                {
+                  id: `ai-streaming-${currentTurnNum}`,
+                  type: 'ai',
+                  content: '',
+                  turnNum: currentTurnNum,
+                  qType: payload?.qType,
+                  fixedQId: payload?.fixedQId,
+                  order: payload?.order,
+                  totalQuestions: payload?.totalQuestions,
+                  timestamp: new Date(),
+                },
+              ],
+              isStreaming: true,
+            };
+          });
+
+          // 상태 업데이트 후 다시 시도 (큐는 유지)
+          // requestAnimationFrame 대신 setTimeout 사용 (상태 업데이트 보장)
+          setTimeout(processNext, 0);
           return;
         }
 

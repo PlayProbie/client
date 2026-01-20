@@ -27,6 +27,7 @@ export type InterviewLogQType =
   | 'CLOSING'
   | 'GREETING'
   | 'REACTION'
+  | 'RETRY'
   | 'INSIGHT';
 
 /** InsightTag 유형 (PANIC: 당황/급박, IDLE: 멈춤/고민) */
@@ -91,10 +92,17 @@ export interface ApiSSEQuestionEventData {
 /** [API] SSE continue 이벤트 데이터 (스트리밍) */
 export interface ApiSSEContinueEventData {
   fixed_q_id: number | null;
-  question_text: string; // 부분 텍스트
+  question_text?: string; // 부분 텍스트 (legacy)
+  content?: string; // 부분 텍스트 (new standard)
   turn_num: number;
   order: number;
   total_questions: number;
+}
+
+/** [API] SSE retry_request 이벤트 데이터 */
+export interface ApiSSERetryRequestEventData {
+  message: string;
+  followup_type: string;
 }
 
 /** [API] SSE start 이벤트 데이터 */
@@ -163,6 +171,7 @@ export type ApiSSEEvent =
     }
   | { event: 'insight_question'; data: ApiSSEInsightQuestionEventData }
   | { event: 'insight_complete'; data: ApiSSEInsightCompleteEventData }
+  | { event: 'retry_request'; data: ApiSSERetryRequestEventData }
   | { event: 'error'; data: ApiSSEErrorEventData };
 
 /** [API] 응답자 대답 전송 요청 바디 */
@@ -249,6 +258,12 @@ export interface SSEInsightQuestionEventData {
   questionText: string;
   turnNum: number;
   remainingInsights: number;
+}
+
+/** [Client] SSE RetryRequest 이벤트 데이터 */
+export interface SSERetryRequestEventData {
+  message: string;
+  followupType: string;
 }
 
 /** [Client] SSE InsightComplete 이벤트 데이터 */
@@ -339,6 +354,7 @@ export interface UseChatSSEOptions {
   onInterviewComplete?: () => void;
   onInsightQuestion?: (data: SSEInsightQuestionEventData) => void;
   onInsightComplete?: (data: SSEInsightCompleteEventData) => void;
+  onRetryRequest?: (data: SSERetryRequestEventData) => void;
   onError?: (error: string) => void;
   onOpen?: () => void;
   onDisconnect?: () => void;
@@ -394,10 +410,20 @@ export function toSSEContinueEventData(
 ): SSEContinueEventData {
   return {
     fixedQId: api.fixed_q_id,
-    questionText: api.question_text,
+    questionText: api.content || api.question_text || '',
     turnNum: api.turn_num,
     order: api.order,
     totalQuestions: api.total_questions,
+  };
+}
+
+/** API SSE RetryRequest 이벤트 -> 클라이언트 변환 */
+export function toSSERetryRequestEventData(
+  api: ApiSSERetryRequestEventData
+): SSERetryRequestEventData {
+  return {
+    message: api.message,
+    followupType: api.followup_type,
   };
 }
 

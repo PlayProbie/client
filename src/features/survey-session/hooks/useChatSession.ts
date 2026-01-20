@@ -152,9 +152,8 @@ export function useChatSession({
       // 리액션 -> 큐에 추가 (말풍선 -> 타이핑 -> 대기)
       enqueueReaction(data.reactionText, data.turnNum);
     },
-    onGenerateTailComplete: (/* data */) => {
-      // 꼬리 질문 생성 완료 이벤트
-      // 추후 로딩 상태 제어 등에 활용 예정
+    onGenerateTailComplete: (_data) => {
+      enqueueFinalize();
     },
     onStart: () => {
       setStreaming(true);
@@ -201,6 +200,14 @@ export function useChatSession({
     onInsightComplete: (/* data */) => {
       // 인사이트 Phase 완료
       // 인터뷰 종료와 별개로, 후속 SSE 이벤트로 인터뷰 종료될 예정
+    },
+    onRetryRequest: (/* data */) => {
+      // RETRY 메시지는 이미 continue 이벤트로 스트리밍되었으므로
+      // 여기서는 버블 완료 처리만 수행
+      // (done 이벤트에서도 enqueueFinalize가 호출되지만, 안전장치로 여기서도 호출)
+      enqueueFinalize();
+      setIsReady(true);
+      setLoading(false);
     },
     onError: (err) => {
       setError(err);

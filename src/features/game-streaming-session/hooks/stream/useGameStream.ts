@@ -152,9 +152,11 @@ export function useGameStream({
       uploadRateBps,
       streamingActive: isConnected,
       onError: (error) => {
+        // eslint-disable-next-line no-console
         console.error('[UploadWorker] Upload processing failed:', error);
       },
       onSegmentFailed: (segmentId, reason) => {
+        // eslint-disable-next-line no-console
         console.error('[UploadWorker] Segment upload failed:', {
           segmentId,
           reason,

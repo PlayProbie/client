@@ -18,6 +18,7 @@ import type {
   ApiSSEInsightQuestionEventData,
   ApiSSEQuestionEventData,
   ApiSSEReactionEventData,
+  ApiSSERetryRequestEventData,
   UseChatSSEOptions,
   UseChatSSEReturn,
 } from '../types';
@@ -28,6 +29,7 @@ import {
   toSSEInsightQuestionEventData,
   toSSEQuestionEventData,
   toSSEReactionEventData,
+  toSSERetryRequestEventData,
 } from '../types';
 
 export function useChatSSE({
@@ -43,6 +45,7 @@ export function useChatSSE({
   onInterviewComplete,
   onInsightQuestion,
   onInsightComplete,
+  onRetryRequest,
   onError,
   onOpen,
   onDisconnect,
@@ -62,6 +65,7 @@ export function useChatSSE({
   const onInterviewCompleteRef = useRef(onInterviewComplete);
   const onInsightQuestionRef = useRef(onInsightQuestion);
   const onInsightCompleteRef = useRef(onInsightComplete);
+  const onRetryRequestRef = useRef(onRetryRequest);
   const onErrorRef = useRef(onError);
   const onOpenRef = useRef(onOpen);
   const onDisconnectRef = useRef(onDisconnect);
@@ -78,6 +82,7 @@ export function useChatSSE({
     onInterviewCompleteRef.current = onInterviewComplete;
     onInsightQuestionRef.current = onInsightQuestion;
     onInsightCompleteRef.current = onInsightComplete;
+    onRetryRequestRef.current = onRetryRequest;
     onErrorRef.current = onError;
     onOpenRef.current = onOpen;
     onDisconnectRef.current = onDisconnect;
@@ -93,6 +98,7 @@ export function useChatSSE({
     onInterviewComplete,
     onInsightQuestion,
     onInsightComplete,
+    onRetryRequest,
     onError,
     onOpen,
     onDisconnect,
@@ -223,6 +229,17 @@ export function useChatSSE({
         const apiData: ApiSSEInsightCompleteEventData = JSON.parse(event.data);
         const data = toSSEInsightCompleteEventData(apiData);
         onInsightCompleteRef.current?.(data);
+      } catch {
+        // JSON 파싱 실패 무시
+      }
+    });
+
+    // retry_request 이벤트 핸들러
+    eventSource.addEventListener('retry_request', (event) => {
+      try {
+        const apiData: ApiSSERetryRequestEventData = JSON.parse(event.data);
+        const data = toSSERetryRequestEventData(apiData);
+        onRetryRequestRef.current?.(data);
       } catch {
         // JSON 파싱 실패 무시
       }
