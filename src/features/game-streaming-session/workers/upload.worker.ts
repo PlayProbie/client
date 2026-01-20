@@ -165,8 +165,6 @@ let activeAbortController: AbortController | null = null;
 let authToken: string | null = null;
 const rateLimiter = new UploadRateLimiter();
 
-console.log('[upload.worker] Worker initialized');
-
 function postEvent(event: UploadWorkerEvent): void {
   workerContext.postMessage(event);
 }
@@ -238,6 +236,8 @@ async function uploadToS3(
     },
     body,
     signal,
+    // @ts-expect-error: duplex is not yet in the RequestInit type definition but required for streaming bodies
+    duplex: 'half',
   });
 
   if (!response.ok) {
@@ -249,15 +249,8 @@ async function performUpload(task: UploadTask): Promise<{
   remoteSegmentId: string;
   s3Url: string;
 }> {
-  console.log('[upload.worker] performUpload started', {
-    sessionId: task.sessionId,
-    segmentId: task.segment.segment_id,
-    authToken: authToken ? 'exists' : 'null',
-  });
-
   if (!task.remoteSegmentId || !task.s3Url) {
     // 2. Presigned URL 요청
-    console.log('[upload.worker] Requesting presigned URL...');
 
     const { segmentId: backendSegmentId, s3Url } = await postPresignedUrl(
       task.sessionId,
@@ -270,16 +263,11 @@ async function performUpload(task: UploadTask): Promise<{
       authToken ?? undefined
     );
 
-    console.log('[upload.worker] Presigned URL received', {
-      backendSegmentId,
-      s3Url,
-    });
     task.remoteSegmentId = backendSegmentId;
     task.s3Url = s3Url;
   }
 
   if (!task.s3Uploaded && task.s3Url) {
-    console.log('[upload.worker] Uploading to S3...');
     activeAbortController = new AbortController();
     try {
       await uploadToS3(
@@ -290,7 +278,6 @@ async function performUpload(task: UploadTask): Promise<{
       );
 
       task.s3Uploaded = true;
-      console.log('[upload.worker] S3 upload completed');
     } finally {
       activeAbortController = null;
     }
@@ -439,7 +426,6 @@ function resetQueue(): void {
 
 workerContext.onmessage = (event: MessageEvent<UploadWorkerCommand>) => {
   const message = event.data;
-  console.log('[upload.worker] Message received:', message.type);
 
   switch (message.type) {
     case 'enqueue-segment': {
@@ -460,10 +446,6 @@ workerContext.onmessage = (event: MessageEvent<UploadWorkerCommand>) => {
     }
     case 'set-auth-token': {
       authToken = message.payload.token;
-      console.log(
-        '[upload.worker] Auth token received:',
-        authToken ? 'exists' : 'null'
-      );
       break;
     }
     default: {
