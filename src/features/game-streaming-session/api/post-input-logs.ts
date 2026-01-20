@@ -14,12 +14,14 @@ import type { ApiInputLogsUploadRequest, InputLog } from '../types';
  * @param segmentId - 세그먼트 ID
  * @param videoUrl - 세그먼트 영상 URL
  * @param logs - 입력 로그 배열
+ * @param authToken - 인증 토큰 (선택)
  */
 export async function postInputLogs(
   sessionId: string,
   segmentId: string,
   videoUrl: string,
-  logs: InputLog[]
+  logs: InputLog[],
+  authToken?: string
 ): Promise<void> {
   const requestBody: ApiInputLogsUploadRequest = {
     session_id: sessionId,
@@ -28,13 +30,18 @@ export async function postInputLogs(
     logs,
   };
 
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  if (authToken) {
+    headers['Authorization'] = `Bearer ${authToken}`;
+  }
+
   const response = await fetch(
     `${API_BASE_URL}/sessions/${sessionId}/replay/logs`,
     {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify(requestBody),
     }
   );

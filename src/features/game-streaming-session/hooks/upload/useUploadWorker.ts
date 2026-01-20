@@ -292,6 +292,16 @@ export function useUploadWorker({
 
     workerRef.current = worker;
 
+    // Worker에 인증 토큰 전달
+    const token = localStorage.getItem('accessToken');
+    if (token) {
+      const tokenMessage: UploadWorkerCommand = {
+        type: 'set-auth-token',
+        payload: { token },
+      };
+      worker.postMessage(tokenMessage);
+    }
+
     const handleMessage = (event: MessageEvent<UploadWorkerEvent>) => {
       const message = event.data;
 
