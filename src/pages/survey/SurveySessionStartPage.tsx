@@ -127,11 +127,11 @@ function SurveySessionStartPage() {
 
       // 세션 정보를 state로 전달하면서 리다이렉트
       navigate(
-        `/surveys/session/sessions/${session.session_uuid}?surveyUuid=${session.survey_uuid}`,
+        `/surveys/session/sessions/${session.session_uuid}?surveyUuid=${surveyUuid}`,
         {
           replace: true,
           state: {
-            surveyUuid: session.survey_uuid,
+            surveyUuid: surveyUuid,
             sessionUuid: session.session_uuid,
             sseUrl: sseUrl,
           },

@@ -10,6 +10,7 @@ import type {
   InsightQuestionData,
   InsightType,
   InterviewLogQType,
+  ReplayPreloadState,
   SurveySessionStatus,
 } from '../types';
 
@@ -60,6 +61,7 @@ interface ChatState {
   streamingContent: string;
   streamQueue: QueueItem[];
   isProcessingQueue: boolean;
+  replayPreloads: Record<number, ReplayPreloadState>;
 
   // Actions
   setSession: (
@@ -111,6 +113,9 @@ interface ChatState {
   incrementTurnNum: () => void;
   setCurrentFixedQId: (fixedQId: number | null) => void;
   setCurrentInsightTagId: (tagId: number | null) => void;
+  setReplayPreload: (tagId: number, state: ReplayPreloadState) => void;
+  clearReplayPreload: (tagId: number) => void;
+  clearAllReplayPreloads: () => void;
   reset: () => void;
 }
 
@@ -131,6 +136,7 @@ const initialState = {
   streamingContent: '',
   streamQueue: [],
   isProcessingQueue: false,
+  replayPreloads: {},
 };
 
 // 타이핑 속도 (ms per character)
@@ -462,5 +468,43 @@ export const useChatStore = create<ChatState>((set, get) => ({
     set((state) => ({ currentTurnNum: state.currentTurnNum + 1 })),
   setCurrentFixedQId: (fixedQId) => set({ currentFixedQId: fixedQId }),
   setCurrentInsightTagId: (tagId) => set({ currentInsightTagId: tagId }),
-  reset: () => set(initialState),
+  setReplayPreload: (tagId, state) =>
+    set((prev) => ({
+      replayPreloads: {
+        ...prev.replayPreloads,
+        [tagId]: state,
+      },
+    })),
+  clearReplayPreload: (tagId) =>
+    set((prev) => {
+      const next = { ...prev.replayPreloads };
+      const target = next[tagId];
+      if (target?.sources) {
+        for (const source of target.sources) {
+          URL.revokeObjectURL(source.url);
+        }
+      }
+      delete next[tagId];
+      return { replayPreloads: next };
+    }),
+  clearAllReplayPreloads: () =>
+    set((prev) => {
+      for (const preload of Object.values(prev.replayPreloads)) {
+        if (!preload.sources) continue;
+        for (const source of preload.sources) {
+          URL.revokeObjectURL(source.url);
+        }
+      }
+      return { replayPreloads: {} };
+    }),
+  reset: () => {
+    const { replayPreloads } = get();
+    for (const preload of Object.values(replayPreloads)) {
+      if (!preload.sources) continue;
+      for (const source of preload.sources) {
+        URL.revokeObjectURL(source.url);
+      }
+    }
+    set(initialState);
+  },
 }));

@@ -7,9 +7,11 @@ import { useMutation } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { postInsightAnswer, sendMessage } from '../api';
+import { preloadReplaySources } from '../lib/replay-preloader';
 import { useChatStore } from '../store/useChatStore';
 import type {
   ApiSendMessageRequest,
+  SSEInsightQuestionEventData,
   UseChatSessionOptions,
   UseChatSessionReturn,
 } from '../types';
@@ -49,8 +51,39 @@ export function useChatSession({
     setCurrentTurnNum,
     setCurrentFixedQId,
     setCurrentInsightTagId,
+    setReplayPreload,
     reset,
   } = useChatStore();
+
+  const preloadInsightReplay = useCallback(
+    async (data: SSEInsightQuestionEventData) => {
+      const existing =
+        useChatStore.getState().replayPreloads[data.tagId]?.status;
+
+      if (existing === 'loading' || existing === 'ready') {
+        return;
+      }
+
+      setReplayPreload(data.tagId, { status: 'loading' });
+
+      try {
+        const sources = await preloadReplaySources(sessionUuid, {
+          tagId: data.tagId,
+          insightType: data.insightType,
+          videoStartMs: data.videoStartMs,
+          videoEndMs: data.videoEndMs,
+        });
+        setReplayPreload(data.tagId, { status: 'ready', sources });
+      } catch (err) {
+        const message =
+          err instanceof Error
+            ? err.message
+            : '영상 구간 정보를 불러올 수 없습니다.';
+        setReplayPreload(data.tagId, { status: 'error', error: message });
+      }
+    },
+    [sessionUuid, setReplayPreload]
+  );
 
   const { connect } = useChatSSE({
     sessionUuid,
@@ -161,6 +194,7 @@ export function useChatSession({
         data.videoStartMs,
         data.videoEndMs
       );
+      void preloadInsightReplay(data);
       setIsReady(true);
       setLoading(false);
     },

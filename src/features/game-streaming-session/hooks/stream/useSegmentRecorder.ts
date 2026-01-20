@@ -24,6 +24,8 @@ export interface UseSegmentRecorderReturn {
   backend: SegmentStoreBackend | null;
   getActiveSegmentIds: (mediaTimeMs: number) => string[];
   clearSession: () => Promise<void>;
+  /** 활성 세그먼트를 모두 완료하고 저장될 때까지 기다립니다. */
+  finalizeRecording: () => Promise<void>;
 }
 
 export function useSegmentRecorder(
@@ -52,6 +54,12 @@ export function useSegmentRecorder(
   const clearSession = useCallback(async () => {
     if (storeRef.current) {
       await storeRef.current.clear();
+    }
+  }, []);
+
+  const finalizeRecording = useCallback(async () => {
+    if (recorderRef.current) {
+      await recorderRef.current.finalize();
     }
   }, []);
 
@@ -162,5 +170,6 @@ export function useSegmentRecorder(
     backend,
     getActiveSegmentIds,
     clearSession,
+    finalizeRecording,
   };
 }

@@ -4,19 +4,17 @@
  */
 
 import { X } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/loading';
 import { cn } from '@/lib/utils';
 
-import type { InsightQuestionData } from '../types';
+import type { ReplayPreloadState } from '../types';
 
 interface ReplayOverlayProps {
-  /** 인사이트 질문 데이터 */
-  insightQuestion: InsightQuestionData;
-  /** 세션 ID (segment-store 조회용) */
-  sessionId: string;
+  /** 프리로드 상태 */
+  preloadState?: ReplayPreloadState;
   /** 오버레이 닫기 핸들러 */
   onClose: () => void;
 }
@@ -26,108 +24,75 @@ const VIDEO_WIDTH = 640;
 const VIDEO_HEIGHT = 360;
 
 export function ReplayOverlay({
-  insightQuestion,
-  sessionId,
+  preloadState,
   onClose,
 }: ReplayOverlayProps) {
-  const [blobUrl, setBlobUrl] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const isSwitchingRef = useRef(false);
+  const preloadStatus = preloadState?.status ?? 'idle';
+  const error =
+    preloadStatus === 'error'
+      ? preloadState?.error ?? '영상을 재생할 수 없습니다.'
+      : null;
+  const clipSources = preloadState?.sources ?? null;
+  const activeSource = clipSources?.[activeIndex] ?? null;
+  const isLoading =
+    !error &&
+    (preloadStatus === 'loading' ||
+      preloadStatus === 'idle' ||
+      (preloadStatus === 'ready' && !clipSources?.length));
 
-  // 세그먼트 스토어에서 해당 시간대 세그먼트 조회
-  const loadSegment = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
+  const advanceSegment = useCallback(() => {
+    const video = videoRef.current;
+    if (!video || !activeSource || !clipSources?.length) return;
+    if (isSwitchingRef.current) return;
 
-    try {
-      // 동적 import
-      const { createSegmentStore } =
-        await import('@/features/game-streaming-session/lib/store/segment-store');
-      const { findSegmentsByTimeRange } =
-        await import('@/features/game-streaming-session/lib/store/segment-store.utils');
-      const { stitchVideoBlobs } = await import('../lib/video-utils');
-      // eslint-disable-next-line @typescript-eslint/consistent-type-imports
-      type VideoSource = import('../lib/video-utils').VideoSource;
-
-      const store = await createSegmentStore({ sessionId });
-      const segments = await store.listSegments();
-
-      // 범위 내 모든 세그먼트 찾기
-      const targetSegments = findSegmentsByTimeRange(
-        segments,
-        insightQuestion.videoStartMs,
-        insightQuestion.videoEndMs
-      );
-
-      if (targetSegments.length === 0) {
-        setError('해당 구간의 영상을 찾을 수 없습니다.');
-        setIsLoading(false);
-        return;
-      }
-
-      const sources: VideoSource[] = [];
-
-      for (const seg of targetSegments) {
-        // Blob 조회
-        const result = await store.getSegment(seg.segment_id);
-        if (!result) continue;
-
-        // 세그먼트 실제 시작 시간 (오버랩 포함)
-        const segStart =
-          seg.start_media_time === 0
-            ? 0
-            : seg.start_media_time - seg.overlap_ms;
-        const segEnd = seg.end_media_time + seg.overlap_ms;
-
-        // 요청된 구간과의 교집합 계산
-        const overlapStart = Math.max(insightQuestion.videoStartMs, segStart);
-        const overlapEnd = Math.min(insightQuestion.videoEndMs, segEnd);
-
-        if (overlapEnd > overlapStart) {
-          sources.push({
-            blob: result.blob,
-            startOffset: overlapStart - segStart,
-            endOffset: overlapEnd - segStart,
-          });
-        }
-      }
-
-      if (sources.length === 0) {
-        setError('영상 구간 정보를 불러올 수 없습니다.');
-        setIsLoading(false);
-        return;
-      }
-
-      // 스티칭 (하나여도 재인코딩을 통해 클립 생성)
-      try {
-        const stitchedBlob = await stitchVideoBlobs(sources);
-        const url = URL.createObjectURL(stitchedBlob);
-        setBlobUrl(url);
-      } catch (err) {
-        console.error('Stitch generation failed:', err);
-        setError('영상 구간 병합에 실패했습니다.');
-      } finally {
-        setIsLoading(false);
-      }
-    } catch (err) {
-      console.error('Segment load failed:', err);
-      setError('영상을 재생할 수 없습니다.');
-      setIsLoading(false);
+    if (clipSources.length === 1) {
+      video.currentTime = activeSource.startOffsetMs / 1000;
+      void video.play().catch(() => undefined);
+      return;
     }
-  }, [sessionId, insightQuestion]);
 
-  useEffect(() => {
-    loadSegment();
-  }, [loadSegment]);
+    isSwitchingRef.current = true;
+    setActiveIndex((prev) => (prev + 1) % clipSources.length);
+  }, [activeSource, clipSources]);
 
-  // Blob URL cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (blobUrl) {
-        URL.revokeObjectURL(blobUrl);
-      }
-    };
-  }, [blobUrl]);
+  const handleLoadedMetadata = useCallback(() => {
+    const video = videoRef.current;
+    if (!video || !activeSource) return;
+
+    isSwitchingRef.current = false;
+    video.currentTime = activeSource.startOffsetMs / 1000;
+    void video.play().catch(() => undefined);
+  }, [activeSource]);
+
+  const handleTimeUpdate = useCallback(() => {
+    const video = videoRef.current;
+    if (!video || !activeSource || !clipSources?.length) return;
+    if (isSwitchingRef.current) return;
+
+    if (video.currentTime >= activeSource.endOffsetMs / 1000) {
+      advanceSegment();
+    }
+  }, [activeSource, advanceSegment, clipSources]);
+
+  const handleSeeked = useCallback(() => {
+    const video = videoRef.current;
+    if (!video || !activeSource) return;
+
+    const startTime = activeSource.startOffsetMs / 1000;
+    const endTime = activeSource.endOffsetMs / 1000;
+
+    if (video.currentTime < startTime) {
+      video.currentTime = startTime;
+      return;
+    }
+
+    if (video.currentTime > endTime) {
+      video.currentTime = endTime;
+    }
+  }, [activeSource]);
 
   // ESC 키로 닫기
   useEffect(() => {
@@ -199,18 +164,22 @@ export function ReplayOverlay({
         )}
 
         {/* 비디오 플레이어 */}
-        {blobUrl && !isLoading && !error && (
+        {clipSources?.length && !isLoading && !error ? (
           // eslint-disable-next-line jsx-a11y/media-has-caption
           <video
             className="size-full object-contain"
-            src={blobUrl}
+            ref={videoRef}
+            src={activeSource?.url}
             controls
             autoPlay
             playsInline
-            loop
+            onLoadedMetadata={handleLoadedMetadata}
+            onTimeUpdate={handleTimeUpdate}
+            onEnded={advanceSegment}
+            onSeeked={handleSeeked}
             style={{ width: VIDEO_WIDTH, height: VIDEO_HEIGHT }}
           />
-        )}
+        ) : null}
       </div>
     </div>
   );

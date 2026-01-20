@@ -9,19 +9,17 @@ import { type ComponentProps, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
+import { useChatStore } from '../store/useChatStore';
 import type { ChatMessageData } from '../types';
 import { ChatFeedback } from './ChatFeedback';
 import { ReplayOverlay } from './ReplayOverlay';
 
 type ChatMessageProps = ComponentProps<'div'> & {
   message: ChatMessageData;
-  /** 세션 ID (ReplayOverlay용) */
-  sessionId?: string;
 };
 
 export function ChatMessage({
   message,
-  sessionId,
   className,
   ...props
 }: ChatMessageProps) {
@@ -33,6 +31,10 @@ export function ChatMessage({
     message.qType === 'INSIGHT' && message.insightQuestion;
   // 리플레이 오버레이 표시 상태
   const [showReplay, setShowReplay] = useState(false);
+  const insightTagId = message.insightQuestion?.tagId ?? null;
+  const replayPreload = useChatStore((state) =>
+    insightTagId !== null ? state.replayPreloads[insightTagId] : undefined
+  );
 
   // 내용이 없는 AI 메시지는 렌더링하지 않음 (타이핑 인디케이터는 ChatMessageList에서 표시)
   if (isAI && !message.content) {
@@ -108,10 +110,9 @@ export function ChatMessage({
       </div>
 
       {/* 리플레이 오버레이 */}
-      {showReplay && message.insightQuestion && sessionId && (
+      {showReplay && message.insightQuestion && (
         <ReplayOverlay
-          insightQuestion={message.insightQuestion}
-          sessionId={sessionId}
+          preloadState={replayPreload}
           onClose={() => setShowReplay(false)}
         />
       )}

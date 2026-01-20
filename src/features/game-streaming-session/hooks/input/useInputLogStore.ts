@@ -105,14 +105,14 @@ export function useInputLogStore(
         logsBySegmentRef.current.set(segmentId, existing);
         storedLogs.push(normalizedLog);
 
-        // IndexedDB에 실시간 저장 (비동기, 에러 무시)
+        // IndexedDB에 실시간 저장 (비동기)
         saveInputLog(
           sessionId,
           segmentId,
           normalizedLog,
           normalizedLog.media_time ?? 0
         ).catch(() => {
-          // IndexedDB 저장 실패 시 무시 (메모리에는 저장됨)
+          // 저장 실패 무시 (or minimal logging if needed)
         });
       });
 
