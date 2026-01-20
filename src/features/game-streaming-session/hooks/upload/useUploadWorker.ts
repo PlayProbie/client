@@ -182,6 +182,23 @@ export function useUploadWorker({
   const swRegistrationRef = useRef<ServiceWorkerRegistration | null>(null);
   const streamHealthRef = useRef(streamHealth);
 
+  // 콜백을 Ref로 래핑하여 Worker useEffect 의존성에서 제거
+  const onErrorRef = useRef(onError);
+  const onSegmentUploadedRef = useRef(onSegmentUploaded);
+  const onSegmentFailedRef = useRef(onSegmentFailed);
+
+  useEffect(() => {
+    onErrorRef.current = onError;
+  }, [onError]);
+
+  useEffect(() => {
+    onSegmentUploadedRef.current = onSegmentUploaded;
+  }, [onSegmentUploaded]);
+
+  useEffect(() => {
+    onSegmentFailedRef.current = onSegmentFailed;
+  }, [onSegmentFailed]);
+
   useEffect(() => {
     sequenceRef.current = 0;
   }, [sessionId]);
@@ -279,37 +296,60 @@ export function useUploadWorker({
   }, [enabled, sessionId, releaseUploadThrottle]);
 
   useEffect(() => {
+    console.log('[useUploadWorker] useEffect triggered', {
+      enabled,
+      sessionId,
+    });
+
     if (!enabled || !sessionId) {
+      console.log('[useUploadWorker] Skipping - disabled or no sessionId');
       workerRef.current?.terminate();
       workerRef.current = null;
       return;
     }
 
-    const worker = new Worker(
-      new URL('../../workers/upload.worker.ts', import.meta.url),
-      { type: 'module' }
-    );
+    let worker: Worker;
+    try {
+      console.log('[useUploadWorker] Creating Worker...');
+      worker = new Worker(
+        new URL('../../workers/upload.worker.ts', import.meta.url)
+      );
+      console.log('[useUploadWorker] Worker created successfully');
+    } catch (error) {
+      console.error('[useUploadWorker] Failed to create Worker:', error);
+      return;
+    }
 
     workerRef.current = worker;
 
     // Worker에 인증 토큰 전달
     const token = localStorage.getItem('accessToken');
+    console.log(
+      '[useUploadWorker] Token from localStorage:',
+      token ? 'exists' : 'null'
+    );
     if (token) {
       const tokenMessage: UploadWorkerCommand = {
         type: 'set-auth-token',
         payload: { token },
       };
       worker.postMessage(tokenMessage);
+      console.log('[useUploadWorker] Sent auth token to Worker');
     }
 
     const handleMessage = (event: MessageEvent<UploadWorkerEvent>) => {
       const message = event.data;
+      console.log(
+        '[useUploadWorker] Received message from Worker:',
+        message.type,
+        message
+      );
 
       switch (message.type) {
         case 'segment-uploaded':
           // 업로드 성공 시 IndexedDB에서 제거
           removePendingUpload(message.payload.localSegmentId).catch(() => {});
-          onSegmentUploaded?.(
+          onSegmentUploadedRef.current?.(
             message.payload.localSegmentId,
             message.payload.remoteSegmentId,
             message.payload.s3Url
@@ -326,14 +366,14 @@ export function useUploadWorker({
           markPendingUploadPending(message.payload.localSegmentId).catch(
             () => {}
           );
-          onSegmentFailed?.(
+          onSegmentFailedRef.current?.(
             message.payload.localSegmentId,
             message.payload.reason
           );
-          onError?.(new Error(message.payload.reason));
+          onErrorRef.current?.(new Error(message.payload.reason));
           break;
         case 'error':
-          onError?.(new Error(message.payload.message));
+          onErrorRef.current?.(new Error(message.payload.message));
           break;
         default:
           break;
@@ -343,15 +383,21 @@ export function useUploadWorker({
     worker.addEventListener('message', handleMessage);
 
     worker.addEventListener('error', (event) => {
-      onError?.(new Error(event.message));
+      console.error(
+        '[useUploadWorker] Worker error event:',
+        event.message,
+        event
+      );
+      onErrorRef.current?.(new Error(event.message));
     });
 
     return () => {
+      console.log('[useUploadWorker] Terminating Worker');
       worker.removeEventListener('message', handleMessage);
       worker.terminate();
       workerRef.current = null;
     };
-  }, [enabled, sessionId, onError, onSegmentFailed, onSegmentUploaded]);
+  }, [enabled, sessionId]);
 
   useEffect(() => {
     if (!enabled || !sessionId) return;
