@@ -63,7 +63,8 @@ class UploadRateLimiter {
     if (bytes <= 0) return;
 
     let remaining = bytes;
-    const capacity = this.capacity > 0 ? this.capacity : this.rateBytesPerSecond;
+    const capacity =
+      this.capacity > 0 ? this.capacity : this.rateBytesPerSecond;
 
     while (remaining > 0) {
       if (signal?.aborted) {
@@ -154,6 +155,7 @@ const workerContext = self as unknown as {
 };
 
 const queue = new UploadQueue<UploadTask>();
+const PROCESSING_HEARTBEAT_MS = 500;
 let networkStatus: StreamHealthState = 'HEALTHY';
 let uploadRateBps: number | null = null;
 let streamingActive = true;
@@ -319,13 +321,23 @@ async function processQueue(): Promise<void> {
 
   processing = true;
   queue.markInFlight(nextItem.key);
+  const startedAt = new Date().toISOString();
   postEvent({
     type: 'segment-processing',
     payload: {
       localSegmentId: nextItem.key,
-      startedAt: new Date().toISOString(),
+      startedAt,
     },
   });
+  const heartbeatId = setInterval(() => {
+    postEvent({
+      type: 'segment-processing',
+      payload: {
+        localSegmentId: nextItem.key,
+        startedAt: new Date().toISOString(),
+      },
+    });
+  }, PROCESSING_HEARTBEAT_MS);
 
   try {
     const result = await performUpload(nextItem.payload);
@@ -353,6 +365,7 @@ async function processQueue(): Promise<void> {
       });
     }
   } finally {
+    clearInterval(heartbeatId);
     processing = false;
     notifyQueueSize();
     scheduleNext();

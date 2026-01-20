@@ -12,7 +12,7 @@ const STORE_NAME = 'pending-uploads';
 const SEGMENT_DB_NAME = 'segment-store';
 const SEGMENT_DB_VERSION = 1;
 const SEGMENT_STORE_NAME = 'segments';
-const PROCESSING_STALE_MS = 10 * 60 * 1000;
+const PROCESSING_STALE_MS = 1000;
 const PROCESSING_OWNER = 'service-worker';
 
 const searchParams = new URL(location.href).searchParams;
@@ -77,7 +77,9 @@ function openSegmentDb() {
           keyPath: 'key',
         });
         store.createIndex('sessionId', 'sessionId', { unique: false });
-        store.createIndex('lastAccessedAt', 'lastAccessedAt', { unique: false });
+        store.createIndex('lastAccessedAt', 'lastAccessedAt', {
+          unique: false,
+        });
       }
     };
   });
@@ -123,7 +125,10 @@ async function claimPendingUpload(segmentId) {
         return;
       }
       const normalized = normalizePendingUpload(record);
-      if (normalized.status === 'processing' && !isProcessingStale(normalized)) {
+      if (
+        normalized.status === 'processing' &&
+        !isProcessingStale(normalized)
+      ) {
         return;
       }
       const updated = {
@@ -389,7 +394,7 @@ async function uploadSegment(task) {
 }
 
 // 업로드 큐 처리
-async function processUploadQueue() {
+async function processUploadQueue(allowRetry = true) {
   try {
     const pendingUploads = await getPendingUploads();
 
@@ -398,11 +403,15 @@ async function processUploadQueue() {
     }
 
     let lastError = null;
+    let hasActiveProcessing = false;
 
     // 순차적으로 업로드 (병렬 업로드는 서버 부하 고려)
     for (const task of pendingUploads) {
       const claimed = await claimPendingUpload(task.segmentId);
       if (!claimed) {
+        if (task.status === 'processing' && !isProcessingStale(task)) {
+          hasActiveProcessing = true;
+        }
         continue;
       }
       try {
@@ -411,6 +420,11 @@ async function processUploadQueue() {
         await markPendingUploadPending(claimed.segmentId);
         lastError = error;
       }
+    }
+
+    if (hasActiveProcessing && allowRetry) {
+      await new Promise((resolve) => setTimeout(resolve, PROCESSING_STALE_MS));
+      return processUploadQueue(false);
     }
 
     if (lastError) {

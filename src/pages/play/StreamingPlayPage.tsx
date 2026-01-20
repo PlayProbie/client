@@ -5,7 +5,7 @@
  * 밝은 테마의 게임 스트리밍 UI를 제공합니다.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
 import { InlineAlert } from '@/components/ui/InlineAlert';
@@ -29,6 +29,7 @@ const SESSION_MAX_DURATION_SECONDS = 1800;
 
 export default function StreamingPlayPage() {
   const { surveyUuid } = useParams<{ surveyUuid: string }>();
+  const navigate = useNavigate();
   const { toast } = useToast();
 
   // 전체화면 전환을 위한 컨테이너 ref
@@ -82,6 +83,7 @@ export default function StreamingPlayPage() {
     setGameReady,
     connect,
     disconnect,
+    uploadInputLogs,
   } = useGameStream({
     surveyUuid: surveyUuid || '',
     onConnected: () => {
@@ -231,6 +233,22 @@ export default function StreamingPlayPage() {
     toast,
   ]);
 
+  const handleStartSurvey = useCallback(async () => {
+    if (!completionInfo?.sessionUuid || !completionInfo?.surveyUuid) {
+      toast({
+        variant: 'destructive',
+        title: '오류 발생',
+        description: '세션 정보가 없어 설문으로 이동할 수 없습니다.',
+      });
+      return;
+    }
+
+    await uploadInputLogs();
+    navigate(
+      `/surveys/session/${completionInfo.surveyUuid}?sessionUuid=${completionInfo.sessionUuid}`
+    );
+  }, [completionInfo, uploadInputLogs, navigate, toast]);
+
   // 시간 만료 시 자동 종료
   useEffect(() => {
     if (remainingTime === 0 && isConnected) {
@@ -338,7 +356,7 @@ export default function StreamingPlayPage() {
         open={!!completionInfo}
         onOpenChange={(open) => !open && setCompletionInfo(null)}
         sessionUuid={completionInfo?.sessionUuid ?? ''}
-        surveyUuid={completionInfo?.surveyUuid ?? ''}
+        onStartSurvey={handleStartSurvey}
       />
     </div>
   );
