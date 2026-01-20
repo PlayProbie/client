@@ -91,7 +91,6 @@ function SurveySessionPage() {
       <ChatMessageList
         messages={messages}
         isLoading={false}
-        sessionId={sessionUuid}
         className="flex-1"
       />
 

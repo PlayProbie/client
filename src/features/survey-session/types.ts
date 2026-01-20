@@ -265,6 +265,23 @@ export interface InsightQuestionData {
   videoEndMs: number;
 }
 
+/** [Client] 리플레이 프리로드 소스 */
+export interface ReplayClipSource {
+  url: string;
+  startOffsetMs: number;
+  endOffsetMs: number;
+}
+
+/** [Client] 리플레이 프리로드 상태 */
+export type ReplayPreloadStatus = 'idle' | 'loading' | 'ready' | 'error';
+
+/** [Client] 리플레이 프리로드 상태 정보 */
+export interface ReplayPreloadState {
+  status: ReplayPreloadStatus;
+  sources?: ReplayClipSource[];
+  error?: string;
+}
+
 /** [Client] 채팅 메시지 데이터 (클라이언트 상태) */
 export interface ChatMessageData {
   id: string;
