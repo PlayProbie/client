@@ -19,7 +19,7 @@ const STORE_NAME = 'pending-uploads';
 const SEGMENT_DB_NAME = 'segment-store';
 const SEGMENT_DB_VERSION = 1;
 const SEGMENT_STORE_NAME = 'segments';
-const PROCESSING_STALE_MS = 10 * 60 * 1000;
+const PROCESSING_STALE_MS = 1000;
 const PROCESSING_OWNER = 'shared-worker';
 // 환경 변수는 빌드 시점에 Vite가 주입합니다
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL as string;
@@ -447,12 +447,13 @@ async function uploadSegment(task: PendingUpload): Promise<void> {
 }
 
 // 업로드 큐 처리
-async function processUploadQueue(): Promise<void> {
+async function processUploadQueue(allowRetry = true): Promise<void> {
   if (isProcessing) {
     return;
   }
 
   isProcessing = true;
+  let hasActiveProcessing = false;
 
   try {
     const pendingUploads = await getPendingUploads();
@@ -465,6 +466,9 @@ async function processUploadQueue(): Promise<void> {
     for (const task of pendingUploads) {
       const claimed = await claimPendingUpload(task.segmentId);
       if (!claimed) {
+        if (task.status === 'processing' && !isProcessingStale(task)) {
+          hasActiveProcessing = true;
+        }
         continue;
       }
       try {
@@ -482,5 +486,11 @@ async function processUploadQueue(): Promise<void> {
     }
   } finally {
     isProcessing = false;
+  }
+
+  if (hasActiveProcessing && allowRetry) {
+    setTimeout(() => {
+      void processUploadQueue(false);
+    }, PROCESSING_STALE_MS);
   }
 }

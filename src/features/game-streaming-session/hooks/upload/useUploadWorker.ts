@@ -42,9 +42,69 @@ export interface UseUploadWorkerReturn {
   reset: () => void;
 }
 
-// Shared Worker 지원 여부 확인
+type SharedWorkerMessage = {
+  type?: string;
+  payload?: {
+    localSegmentId?: string;
+    remoteSegmentId?: string;
+    s3Url?: string;
+    reason?: string;
+  };
+};
+
+const sharedWorkerListeners = new Set<
+  (message: SharedWorkerMessage) => void
+>();
+let sharedWorkerInstance: SharedWorker | null = null;
+
+function notifySharedWorkerListeners(message: SharedWorkerMessage): void {
+  sharedWorkerListeners.forEach((listener) => {
+    try {
+      listener(message);
+    } catch {
+      // ignore listener errors
+    }
+  });
+}
+
 function supportsSharedWorker(): boolean {
   return typeof SharedWorker !== 'undefined';
+}
+
+function getSharedWorker(): SharedWorker | null {
+  if (!supportsSharedWorker()) {
+    return null;
+  }
+
+  if (sharedWorkerInstance) {
+    return sharedWorkerInstance;
+  }
+
+  try {
+    const sharedWorker = new SharedWorker(
+      new URL('../../workers/upload-shared-worker.ts', import.meta.url),
+      { type: 'module', name: 'upload-shared-worker' }
+    );
+
+    sharedWorker.port.onmessage = (event) => {
+      notifySharedWorkerListeners(event.data as SharedWorkerMessage);
+    };
+    sharedWorker.port.start();
+
+    sharedWorkerInstance = sharedWorker;
+    return sharedWorkerInstance;
+  } catch {
+    return null;
+  }
+}
+
+function addSharedWorkerListener(
+  listener: (message: SharedWorkerMessage) => void
+): () => void {
+  sharedWorkerListeners.add(listener);
+  return () => {
+    sharedWorkerListeners.delete(listener);
+  };
 }
 
 // Service Worker 등록
@@ -66,32 +126,38 @@ async function registerServiceWorker(
 
 // Background Sync 트리거
 async function triggerBackgroundSync(): Promise<void> {
-  if (!('serviceWorker' in navigator) || !('SyncManager' in window)) {
+  if (!('serviceWorker' in navigator)) {
     return;
   }
 
-  try {
-    const registration = await navigator.serviceWorker.ready;
-    // @ts-expect-error - SyncManager types are not complete
-    await registration.sync.register('upload-segments');
-  } catch {
-    // Fallback: SW에 직접 메시지 전송
-    const registration = await navigator.serviceWorker.ready;
-    registration.active?.postMessage({ type: 'PROCESS_UPLOADS' });
+  const registration = await navigator.serviceWorker.ready;
+
+  if ('sync' in registration && 'SyncManager' in window) {
+    try {
+      const syncRegistration = registration as ServiceWorkerRegistration & {
+        sync: { register: (tag: string) => Promise<void> };
+      };
+      await syncRegistration.sync.register('upload-segments');
+      return;
+    } catch {
+      // fall back to direct message
+    }
   }
+
+  registration.active?.postMessage({ type: 'PROCESS_UPLOADS' });
 }
 
 // Shared Worker 또는 Service Worker에 업로드 요청
-function triggerSharedOrServiceWorkerUpload(
-  sharedWorker: SharedWorker | null
-): void {
+function triggerSharedOrServiceWorkerUpload(): void {
+  const sharedWorker = getSharedWorker();
   if (sharedWorker) {
     sharedWorker.port.postMessage({ type: 'PROCESS_UPLOADS' });
-  } else {
-    triggerBackgroundSync().catch(() => {
-      // 백그라운드 동기화 실패는 무시
-    });
+    return;
   }
+
+  triggerBackgroundSync().catch(() => {
+    // ignore background trigger errors
+  });
 }
 
 export function useUploadWorker({
@@ -105,7 +171,6 @@ export function useUploadWorker({
   onSegmentFailed,
 }: UseUploadWorkerOptions): UseUploadWorkerReturn {
   const workerRef = useRef<Worker | null>(null);
-  const sharedWorkerRef = useRef<SharedWorker | null>(null);
   const sequenceRef = useRef(0);
   const swRegistrationRef = useRef<ServiceWorkerRegistration | null>(null);
   const streamHealthRef = useRef(streamHealth);
@@ -144,43 +209,40 @@ export function useUploadWorker({
       swRegistrationRef.current = registration;
     });
 
-    // Shared Worker 등록 (Safari/Firefox 폴백)
-    if (supportsSharedWorker()) {
-      try {
-        const sharedWorker = new SharedWorker(
-          new URL('../../workers/upload-shared-worker.ts', import.meta.url),
-          { type: 'module', name: 'upload-shared-worker' }
-        );
-
-        sharedWorker.port.onmessage = (event) => {
-          const message = event.data;
-          if (message.type === 'SEGMENT_UPLOADED') {
-            removePendingUpload(message.payload.localSegmentId).catch(() => {});
-            onSegmentUploaded?.(
-              message.payload.localSegmentId,
-              message.payload.remoteSegmentId,
-              message.payload.s3Url
-            );
-          } else if (message.type === 'SEGMENT_FAILED') {
-            onSegmentFailed?.(
-              message.payload.localSegmentId,
-              message.payload.reason
-            );
-          }
-        };
-
-        sharedWorker.port.start();
-        sharedWorkerRef.current = sharedWorker;
-      } catch {
-        // Shared Worker 초기화 실패는 무시 (폴백 사용)
-      }
+    const sharedWorker = getSharedWorker();
+    if (!sharedWorker) {
+      return;
     }
 
-    return () => {
-      if (sharedWorkerRef.current) {
-        sharedWorkerRef.current.port.close();
-        sharedWorkerRef.current = null;
+    const unsubscribe = addSharedWorkerListener((message) => {
+      if (
+        message.type === 'SEGMENT_UPLOADED' &&
+        message.payload?.localSegmentId
+      ) {
+        removePendingUpload(message.payload.localSegmentId).catch(() => {});
+        if (
+          message.payload.remoteSegmentId &&
+          typeof message.payload.s3Url === 'string'
+        ) {
+          onSegmentUploaded?.(
+            message.payload.localSegmentId,
+            message.payload.remoteSegmentId,
+            message.payload.s3Url
+          );
+        }
+      } else if (
+        message.type === 'SEGMENT_FAILED' &&
+        message.payload?.localSegmentId
+      ) {
+        onSegmentFailed?.(
+          message.payload.localSegmentId,
+          message.payload.reason ?? ''
+        );
       }
+    });
+
+    return () => {
+      unsubscribe();
     };
   }, [enabled, onSegmentUploaded, onSegmentFailed]);
 
@@ -190,7 +252,7 @@ export function useUploadWorker({
 
     const handlePageHide = () => {
       releaseUploadThrottle();
-      triggerSharedOrServiceWorkerUpload(sharedWorkerRef.current);
+      triggerSharedOrServiceWorkerUpload();
     };
 
     window.addEventListener('pagehide', handlePageHide);
@@ -234,7 +296,9 @@ export function useUploadWorker({
           ).catch(() => {});
           break;
         case 'segment-failed':
-          markPendingUploadPending(message.payload.localSegmentId).catch(() => {});
+          markPendingUploadPending(message.payload.localSegmentId).catch(
+            () => {}
+          );
           onSegmentFailed?.(
             message.payload.localSegmentId,
             message.payload.reason
@@ -267,7 +331,7 @@ export function useUploadWorker({
 
     return () => {
       releaseUploadThrottle();
-      triggerSharedOrServiceWorkerUpload(sharedWorkerRef.current);
+      triggerSharedOrServiceWorkerUpload();
     };
   }, [enabled, sessionId, releaseUploadThrottle]);
 
@@ -294,8 +358,7 @@ export function useUploadWorker({
       logs: InputLog[] = [],
       contentType?: string
     ) => {
-      const worker = workerRef.current;
-      if (!worker || !sessionId) return;
+      if (!sessionId) return;
 
       const currentSequence = sequenceRef.current;
       const resolvedContentType = contentType || blob.type || 'video/webm';
@@ -316,36 +379,43 @@ export function useUploadWorker({
         updatedAt: new Date().toISOString(),
       }).catch(() => {});
 
-      const payload: UploadWorkerSegmentPayload = {
-        sessionId,
-        sequence: currentSequence,
-        segment,
-        contentType: resolvedContentType,
-        blob,
-        logs,
-      };
-
       sequenceRef.current += 1;
 
-      const message: UploadWorkerCommand = {
-        type: 'enqueue-segment',
-        payload,
-      };
+      const worker = workerRef.current;
+      if (worker) {
+        const payload: UploadWorkerSegmentPayload = {
+          sessionId,
+          sequence: currentSequence,
+          segment,
+          contentType: resolvedContentType,
+          blob,
+          logs,
+        };
 
-      worker.postMessage(message);
+        const message: UploadWorkerCommand = {
+          type: 'enqueue-segment',
+          payload,
+        };
+
+        worker.postMessage(message);
+      } else {
+        triggerSharedOrServiceWorkerUpload();
+      }
     },
     [sessionId]
   );
 
   const flush = useCallback(() => {
     const worker = workerRef.current;
-    if (!worker) return;
+    if (!worker) {
+      triggerSharedOrServiceWorkerUpload();
+      return;
+    }
 
     const message: UploadWorkerCommand = { type: 'flush' };
     worker.postMessage(message);
 
-    // Service Worker에도 알림
-    triggerBackgroundSync().catch(() => {});
+    triggerSharedOrServiceWorkerUpload();
   }, []);
 
   const reset = useCallback(() => {
