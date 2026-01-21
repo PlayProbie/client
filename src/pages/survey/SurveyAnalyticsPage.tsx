@@ -77,13 +77,13 @@ function SurveyAnalyticsPage() {
     filters.preferGenre !== null;
 
   // SSE 구독 및 업데이트 시 리패치 트리거
-  // 필터가 적용된 상태면 filtered만, 아니면 unfiltered도 함께 refetch
+  // silent: true로 호출하여 기존 데이터 유지 + 로딩 UI 없이 백그라운드 갱신
   useAnalyticsSubscription(effectiveSurveyUuid, () => {
-    refetchFiltered();
+    refetchFiltered({ silent: true });
     // 필터가 없는 경우에만 unfiltered도 refetch
     // (필터 분석 완료 SSE는 필터 데이터와 관련 없음)
     if (!hasActiveFilters) {
-      refetchUnfiltered();
+      refetchUnfiltered({ silent: true });
     }
   });
 
