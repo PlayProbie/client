@@ -34,6 +34,7 @@ export function useQuestionAnalysis({
     surveySummary: '' as string,
     insufficientData: false,
     isComputing: false, // AI가 계산 중인지 여부
+    isBackgroundRefreshing: false, // 백그라운드 갱신 중 여부 (silent refetch)
   });
 
   // ref를 사용해 중복 요청 방지 (React StrictMode 대응)
@@ -42,6 +43,8 @@ export function useQuestionAnalysis({
   // 요청 시점의 필터 키 저장 (응답 수신 시 비교용)
   const requestFilterKeyRef = useRef<string>('{}');
   const isRequestingRef = useRef(false);
+  // silent refetch 여부 (true면 기존 데이터 유지, 로딩 UI 숨김)
+  const silentRefetchRef = useRef(false);
 
   // Derived state (계산된 값)
   const isLoading = state.status === 'loading';
@@ -51,11 +54,13 @@ export function useQuestionAnalysis({
   // Refetch control - 단일 refetch만 허용
   const [refetchTrigger, setRefetchTrigger] = useState(0);
 
-  const refetch = () => {
+  const refetch = (options?: { silent?: boolean }) => {
     // 이미 요청 중이면 무시 (중복 refetch 방지)
     if (isRequestingRef.current) {
       return;
     }
+    // silent 옵션 저장 (true면 기존 데이터 유지, 로딩 UI 숨김)
+    silentRefetchRef.current = options?.silent ?? false;
     // Reset requesting ref to allow new request
     requestedSurveyUuidRef.current = null;
     setRefetchTrigger((c) => c + 1);
@@ -93,16 +98,26 @@ export function useQuestionAnalysis({
     requestFilterKeyRef.current = currentFilterKey;
     isRequestingRef.current = true;
 
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setState({
-      data: {},
-      error: null,
-      status: 'loading',
-      totalParticipants: 0,
-      surveySummary: '',
-      insufficientData: false,
-      isComputing: false,
-    });
+    // silent 모드: 기존 데이터 유지, 백그라운드 갱신 표시만
+    // 일반 모드: 전체 초기화 + 로딩 상태
+    if (silentRefetchRef.current) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setState((prev) => ({
+        ...prev,
+        isBackgroundRefreshing: true,
+      }));
+    } else {
+      setState({
+        data: {},
+        error: null,
+        status: 'loading',
+        totalParticipants: 0,
+        surveySummary: '',
+        insufficientData: false,
+        isComputing: false,
+        isBackgroundRefreshing: false,
+      });
+    }
 
     let cleanupFn: (() => void) | null = null;
     let isCancelled = false;
@@ -132,8 +147,9 @@ export function useQuestionAnalysis({
       },
       (err: Error) => {
         if (isCancelled) return;
-        setState((prev) => ({ ...prev, error: err, status: 'error' }));
+        setState((prev) => ({ ...prev, error: err, status: 'error', isBackgroundRefreshing: false }));
         isRequestingRef.current = false;
+        silentRefetchRef.current = false;
         // 에러 시에는 재시도할 수 있도록 requestedSurveyUuidRef 초기화
         requestedSurveyUuidRef.current = null;
       },
@@ -155,8 +171,10 @@ export function useQuestionAnalysis({
           surveySummary: surveySummary || '',
           insufficientData: insufficientData || false,
           isComputing: isComputing || false, // AI 계산 중인지 여부
+          isBackgroundRefreshing: false, // 갱신 완료
         }));
         isRequestingRef.current = false;
+        silentRefetchRef.current = false;
         // 성공 완료 시에는 requestedSurveyUuidRef 유지 (중복 요청 방지)
       }
     ).then((cleanup) => {
@@ -192,5 +210,6 @@ export function useQuestionAnalysis({
     surveySummary: state.surveySummary,
     insufficientData: state.insufficientData,
     isComputing: state.isComputing, // AI 계산 중 여부
+    isBackgroundRefreshing: state.isBackgroundRefreshing, // 백그라운드 갱신 중 여부
   };
 }
