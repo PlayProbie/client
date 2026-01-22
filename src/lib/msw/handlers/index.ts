@@ -9,7 +9,6 @@ import { gameStreamingHandlers } from './game-streaming';
 import { gameStreamingSessionHandlers } from './game-streaming-session';
 import { gameStreamingSurveyHandlers } from './game-streaming-survey';
 import { gamesHandlers } from './games';
-import { highlightHandlers } from './highlight';
 import { questionFeedbackHandlers } from './question-feedback';
 import { surveyAnalyticsHandlers } from './survey-analytics';
 import { surveyDesignHandlers } from './survey-design';
@@ -22,7 +21,6 @@ export const handlers = [
   ...gameStreamingHandlers,
   ...gameStreamingSurveyHandlers,
   ...gameStreamingSessionHandlers,
-  ...highlightHandlers,
   ...surveyDesignHandlers,
   ...fixedQuestionsHandlers,
   ...aiQuestionsHandlers,

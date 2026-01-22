@@ -8,7 +8,6 @@ import { delay, http, HttpResponse } from 'msw';
 type SurveyStatus = 'DRAFT' | 'ACTIVE' | 'CLOSED';
 
 import { MSW_API_BASE_URL } from '../../constants';
-import { mswSessionStore } from './msw-session-store';
 
 // ----------------------------------------
 // Mock Data: Surveys (Phase 4-5 확장)
@@ -68,6 +67,8 @@ interface MockSession {
 
 const MOCK_SESSIONS: Record<string, MockSession> = {};
 
+let sessionIdCounter = 1000;
+
 export const gameStreamingSessionHandlers = [
   // ----------------------------------------
   // Tester API: Session
@@ -111,17 +112,7 @@ export const gameStreamingSessionHandlers = [
     async ({ params, request }) => {
       await delay(500);
       const surveyUuid = params.surveyUuid as string;
-
-      // Request Body 파싱 에러 방지
-      let body: { signal_request: string } | null = null;
-      try {
-        body = (await request.json()) as { signal_request: string };
-      } catch {
-        return HttpResponse.json(
-          { message: 'Invalid JSON body', code: 'T000' },
-          { status: 400 }
-        );
-      }
+      const body = (await request.json()) as { signal_request: string };
 
       const survey = MOCK_SURVEYS[surveyUuid];
       if (!survey) {
@@ -138,7 +129,7 @@ export const gameStreamingSessionHandlers = [
         );
       }
 
-      if (!body?.signal_request) {
+      if (!body.signal_request) {
         return HttpResponse.json(
           { message: '잘못된 Signal Request입니다.', code: 'T001' },
           { status: 400 }
@@ -153,9 +144,9 @@ export const gameStreamingSessionHandlers = [
         );
       }
 
-      // 공유 세션 스토어에서 세션 생성/조회 (survey-session과 동일한 ID 사용)
-      const session = mswSessionStore.getOrCreateSession(surveyUuid);
-      const sessionUuid = session.sessionUuid;
+      // 세션 생성
+      sessionIdCounter++;
+      const sessionUuid = `session-${sessionIdCounter}-uuid`;
 
       MOCK_SESSIONS[sessionUuid] = {
         survey_session_uuid: sessionUuid,

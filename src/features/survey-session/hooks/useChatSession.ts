@@ -6,12 +6,10 @@
 import { useMutation } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { postInsightAnswer, sendMessage } from '../api';
-import { preloadReplaySources } from '../lib/replay-preloader';
+import { sendMessage } from '../api';
 import { useChatStore } from '../store/useChatStore';
 import type {
   ApiSendMessageRequest,
-  SSEInsightQuestionEventData,
   UseChatSessionOptions,
   UseChatSessionReturn,
 } from '../types';
@@ -32,7 +30,6 @@ export function useChatSession({
     messages,
     currentTurnNum,
     currentFixedQId,
-    currentInsightTagId,
     isLoading,
     isStreaming,
     isComplete,
@@ -40,7 +37,6 @@ export function useChatSession({
     addUserMessage,
     enqueueReaction,
     enqueueQuestion,
-    enqueueInsightQuestion,
     enqueueStreamToken,
     enqueueFinalize,
     setLoading,
@@ -50,40 +46,8 @@ export function useChatSession({
     setError,
     setCurrentTurnNum,
     setCurrentFixedQId,
-    setCurrentInsightTagId,
-    setReplayPreload,
     reset,
   } = useChatStore();
-
-  const preloadInsightReplay = useCallback(
-    async (data: SSEInsightQuestionEventData) => {
-      const existing =
-        useChatStore.getState().replayPreloads[data.tagId]?.status;
-
-      if (existing === 'loading' || existing === 'ready') {
-        return;
-      }
-
-      setReplayPreload(data.tagId, { status: 'loading' });
-
-      try {
-        const sources = await preloadReplaySources(sessionUuid, {
-          tagId: data.tagId,
-          insightType: data.insightType,
-          videoStartMs: data.videoStartMs,
-          videoEndMs: data.videoEndMs,
-        });
-        setReplayPreload(data.tagId, { status: 'ready', sources });
-      } catch (err) {
-        const message =
-          err instanceof Error
-            ? err.message
-            : '영상 구간 정보를 불러올 수 없습니다.';
-        setReplayPreload(data.tagId, { status: 'error', error: message });
-      }
-    },
-    [sessionUuid, setReplayPreload]
-  );
 
   const { connect } = useChatSSE({
     sessionUuid,
@@ -94,7 +58,7 @@ export function useChatSession({
       // 새 질문 도착: 큐에 질문 말풍선 및 텍스트 추가
       // (이전 말풍선은 이미 enqueueFinalize로 닫혔거나 자동 처리됨)
 
-      // GREETING은 이미 greeting_continue로 처리되었으므로 스킵 가능하나,
+      // GREETING은 이미 greeting_continue로 처리되었으므로 스킵 가능하나, 
       // 만약 onQuestion이 먼저 오거나 별도로 오는 경우를 대비해 처리해도 무방.
       // 하지만 기존 로직에서 GREETING은 setIsReady(true)만 하고 리턴했음.
       if (data.qType === 'GREETING') {
@@ -152,8 +116,9 @@ export function useChatSession({
       // 리액션 -> 큐에 추가 (말풍선 -> 타이핑 -> 대기)
       enqueueReaction(data.reactionText, data.turnNum);
     },
-    onGenerateTailComplete: (_data) => {
-      enqueueFinalize();
+    onGenerateTailComplete: (/* data */) => {
+      // 꼬리 질문 생성 완료 이벤트
+      // 추후 로딩 상태 제어 등에 활용 예정
     },
     onStart: () => {
       setStreaming(true);
@@ -168,46 +133,6 @@ export function useChatSession({
       enqueueFinalize();
       setComplete(true);
       setStreaming(false);
-
-      // 인터뷰 완료 시 로컬 세그먼트 정리
-      (async () => {
-        try {
-          const { createSegmentStore } =
-            await import('@/features/game-streaming-session/lib/store/segment-store');
-          const store = await createSegmentStore({ sessionId: sessionUuid });
-          await store.clear();
-        } catch {
-          // 세그먼트 정리 실패는 무시
-        }
-      })();
-    },
-    onInsightQuestion: (data) => {
-      // 인사이트 질문 도착: 큐에 인사이트 말풍선 추가 (재생 버튼 포함)
-      setCurrentTurnNum(data.turnNum);
-      setCurrentInsightTagId(data.tagId); // 인사이트 답변 시 사용
-      enqueueInsightQuestion(
-        data.questionText,
-        data.turnNum,
-        data.tagId,
-        data.insightType,
-        data.videoStartMs,
-        data.videoEndMs
-      );
-      void preloadInsightReplay(data);
-      setIsReady(true);
-      setLoading(false);
-    },
-    onInsightComplete: (/* data */) => {
-      // 인사이트 Phase 완료
-      // 인터뷰 종료와 별개로, 후속 SSE 이벤트로 인터뷰 종료될 예정
-    },
-    onRetryRequest: (/* data */) => {
-      // RETRY 메시지는 이미 continue 이벤트로 스트리밍되었으므로
-      // 여기서는 버블 완료 처리만 수행
-      // (done 이벤트에서도 enqueueFinalize가 호출되지만, 안전장치로 여기서도 호출)
-      enqueueFinalize();
-      setIsReady(true);
-      setLoading(false);
     },
     onError: (err) => {
       setError(err);
@@ -282,23 +207,12 @@ export function useChatSession({
       );
       const questionText = currentQuestion?.content ?? '';
 
-      // 낙관적 업데이트: UI에 먼저 표시
-      addUserMessage(answerText, currentTurnNum);
-
-      // 인사이트 질문인 경우 별도 API 사용
-      if (currentInsightTagId !== null) {
-        await postInsightAnswer(
-          { sessionUuid, tagId: currentInsightTagId },
-          { answerText }
-        );
-        // 인사이트 답변 완료 후 tagId 초기화
-        setCurrentInsightTagId(null);
-        return;
-      }
-
-      // ⭐ 일반 질문: 스토어의 최신 currentFixedQId 직접 사용
+      // ⭐ 스토어의 최신 currentFixedQId 직접 사용
       const fixedQId = currentFixedQId;
       // OPENING/GREETING 등 fixedQId가 null인 경우는 서버에서 처리
+
+      // 낙관적 업데이트: UI에 먼저 표시
+      addUserMessage(answerText, currentTurnNum);
 
       // 서버에 전송 (useMutation 사용)
       await sendMessageAsync({
@@ -311,15 +225,12 @@ export function useChatSession({
       // SSE 연결은 유지됨 - 서버에서 다음 질문을 전송
     },
     [
-      sessionUuid,
       currentTurnNum,
       currentFixedQId,
-      currentInsightTagId,
       messages,
       isLoading,
       isComplete,
       addUserMessage,
-      setCurrentInsightTagId,
       sendMessageAsync,
     ]
   );

@@ -31,12 +31,11 @@ function useQuestionSelection() {
   // Store에서 선택된 질문 인덱스 가져오기 (없거나 빈 배열이면 전체 선택)
   const selectedQuestions = useMemo(() => {
     const indices = formData.selectedQuestionIndices;
-    // undefined일 때만 전체 선택 (초기화)
-    if (indices === undefined) {
-      return new Set(questions.map((_, i) => i));
+    if (indices !== undefined && indices.length > 0) {
+      return new Set(indices);
     }
-    // 빈 배열([])도 유효한 값(모두 해제)으로 처리
-    return new Set(indices);
+    // 초기화 시 전체 선택
+    return new Set(questions.map((_, i) => i));
   }, [formData.selectedQuestionIndices, questions]);
 
   // Validation 에러 메시지 (react-hook-form에서 가져옴)
@@ -89,15 +88,14 @@ function useQuestionSelection() {
     [selectedQuestions, setSelectedQuestions]
   );
 
-  // 전체 선택
-  const selectAll = useCallback(() => {
-    setSelectedQuestions(new Set(questions.map((_, i) => i)));
-  }, [questions, setSelectedQuestions]);
-
-  // 전체 해제
-  const deselectAll = useCallback(() => {
-    setSelectedQuestions(new Set());
-  }, [setSelectedQuestions]);
+  // 전체 선택/해제
+  const handleSelectAll = useCallback(() => {
+    if (selectedQuestions.size === questions.length) {
+      setSelectedQuestions(new Set());
+    } else {
+      setSelectedQuestions(new Set(questions.map((_, i) => i)));
+    }
+  }, [selectedQuestions.size, questions, setSelectedQuestions]);
 
   // 질문 맨 앞에 추가 (선택 인덱스 재조정 포함)
   const addQuestionAtFront = useCallback(
@@ -162,8 +160,7 @@ function useQuestionSelection() {
 
     // 핸들러
     handleToggle,
-    selectAll,
-    deselectAll,
+    handleSelectAll,
     addQuestionAtFront,
     removeQuestion,
   };

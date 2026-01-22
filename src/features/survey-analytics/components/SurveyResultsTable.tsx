@@ -17,7 +17,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/Table';
-import { GameGenreConfig } from '@/features/game';
 import { getSessionStatusClassName, getSessionStatusLabel, type SurveySessionStatus } from '@/features/survey-session';
 
 import type { SurveyResultListItem } from '../types';
@@ -28,39 +27,13 @@ type SurveyResultsTableProps = {
   data: SurveyResultListItem[];
 };
 
-// 나이대 변환 맵
-const AGE_GROUP_LABELS: Record<string, string> = {
-  '10s': '10대',
-  '20s': '20대',
-  '30s': '30대',
-  '40s': '40대',
-  '50s': '50대 이상',
-};
-
-// 장르 value -> label 변환 함수
-const getGenreLabel = (genre: string): string => {
-  const config = Object.values(GameGenreConfig).find((g) => g.value === genre);
-  return config?.label ?? genre;
-};
-
-// 선호장르 문자열을 한글로 변환 (콤마 구분 문자열 지원)
-const formatPreferGenre = (value: string): string => {
-  return value
-    .split(/,\s*/)
-    .map((genre) => getGenreLabel(genre.trim()))
-    .join(', ');
-};
-
 // 컬럼별 너비 설정
 const COLUMN_WIDTHS = {
   testerId: 'w-[120px]',
   surveyName: 'w-[180px]',
   status: 'w-[80px]',
   endedAt: 'w-[160px]',
-  gender: 'w-[80px]',
-  preferGenre: 'w-[140px]',
-  ageGroup: 'w-[80px]',
-  actions: 'w-[60px]',
+  firstQuestion: 'w-auto',
 } as const;
 
 /**
@@ -109,38 +82,6 @@ function SurveyResultsTable({ data }: SurveyResultsTableProps) {
         },
       },
       {
-        accessorKey: 'gender',
-        header: '성별',
-        size: 80,
-        cell: (info) => {
-          const value = info.getValue<string | null>();
-          if (!value) return '-';
-          if (value === 'M' || value === 'MALE') return '남성';
-          if (value === 'F' || value === 'FEMALE') return '여성';
-          return value;
-        },
-      },
-      {
-        accessorKey: 'preferGenre',
-        header: '선호장르',
-        size: 140,
-        cell: (info) => {
-          const value = info.getValue<string | null>();
-          if (!value) return '-';
-          return <span className="line-clamp-1">{formatPreferGenre(value)}</span>;
-        },
-      },
-      {
-        accessorKey: 'ageGroup',
-        header: '나이',
-        size: 80,
-        cell: (info) => {
-          const value = info.getValue<string | null>();
-          if (!value) return '-';
-          return AGE_GROUP_LABELS[value] ?? value;
-        },
-      },
-      {
         accessorKey: 'endedAt',
         header: '설문 일시',
         size: 160,
@@ -151,20 +92,25 @@ function SurveyResultsTable({ data }: SurveyResultsTableProps) {
         },
       },
       {
-        id: 'actions',
-        header: '',
-        size: 60,
+        accessorKey: 'firstQuestion',
+        header: '첫 질문',
         cell: (info) => {
           const row = info.row.original;
           return (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => handleOpenDetail(row)}
-            >
-              <Eye className="size-4" />
-              <span className="sr-only">상세보기</span>
-            </Button>
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-muted-foreground line-clamp-1 flex-1">
+                {info.getValue<string>()}
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleOpenDetail(row)}
+                className="shrink-0"
+              >
+                <Eye className="size-4" />
+                <span className="sr-only">상세보기</span>
+              </Button>
+            </div>
           );
         },
       },

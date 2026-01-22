@@ -24,8 +24,7 @@ function StepQuestionAIGenerate() {
     isAllSelected,
     validationError,
     handleToggle,
-    selectAll,
-    deselectAll,
+    handleSelectAll,
     handleRegenerate,
     handleAddQuestion,
   } = useQuestionGenerate();
@@ -46,8 +45,7 @@ function StepQuestionAIGenerate() {
         totalCount={totalCount}
         isAllSelected={isAllSelected}
         isRegenerating={isGenerating}
-        onSelectAll={selectAll}
-        onDeselectAll={deselectAll}
+        onSelectAll={handleSelectAll}
         onRegenerate={handleRegenerate}
       />
 

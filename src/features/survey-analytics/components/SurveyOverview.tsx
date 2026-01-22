@@ -12,8 +12,6 @@ import {
 } from '../utils';
 import { ClusterDemographics } from './ClusterDemographics';
 import { GEQRadarChart } from './GEQRadarChart';
-import { InsufficientDataWarning } from './InsufficientDataWarning';
-import { SurveySummaryCard } from './SurveySummaryCard';
 
 type QuestionAnalysisState = {
   [questionId: number]: QuestionAnalysisResult;
@@ -25,15 +23,11 @@ type QuestionAnalysisData = {
   isLoading: boolean;
   isError: boolean;
   totalParticipants?: number;
-  surveySummary?: string;
-  insufficientData?: boolean;
 };
 
 type SurveyOverviewProps = {
   readonly summary: SurveyResultsSummary;
   readonly questionAnalysis: QuestionAnalysisData;
-  /** 필터가 적용된 상태인지 여부 (데이터 부족 메시지 분기용) */
-  readonly isFiltered?: boolean;
 };
 
 function getSentimentBadgeClass(score: number): string {
@@ -48,8 +42,8 @@ function getSentimentBadgeClass(score: number): string {
  * - 전체 감정 분석
  * - 전체 GEQ 레이더 차트
  */
-function SurveyOverview({ summary, questionAnalysis, isFiltered = false }: SurveyOverviewProps) {
-  const { data, questionIds, isLoading, isError, insufficientData } = questionAnalysis;
+function SurveyOverview({ summary, questionAnalysis }: SurveyOverviewProps) {
+  const { data, questionIds, isLoading, isError } = questionAnalysis;
 
   const averageGEQ = calculateAverageGEQ(data);
 
@@ -65,11 +59,6 @@ function SurveyOverview({ summary, questionAnalysis, isFiltered = false }: Surve
 
   return (
     <div className="space-y-6">
-      {/* AI 종합 평가 카드 */}
-      {!isLoading && questionAnalysis.surveySummary && (
-        <SurveySummaryCard summary={questionAnalysis.surveySummary} />
-      )}
-
       {/* 요약 통계 카드 */}
       <div className="grid grid-cols-3 gap-4">
         <Card>
@@ -106,9 +95,9 @@ function SurveyOverview({ summary, questionAnalysis, isFiltered = false }: Surve
             <div>
               <p className="text-sm text-muted-foreground">감정 점수</p>
               <p
-                className={`text-2xl font-bold ${insufficientData || questionIds.length === 0 ? 'text-muted-foreground' : getSentimentColorClass(sentimentStats.averageScore)}`}
+                className={`text-2xl font-bold ${getSentimentColorClass(sentimentStats.averageScore)}`}
               >
-                {isLoading || insufficientData || questionIds.length === 0 ? '-' : `${sentimentStats.averageScore}점`}
+                {isLoading ? '-' : `${sentimentStats.averageScore}점`}
               </p>
             </div>
           </CardContent>
@@ -126,13 +115,8 @@ function SurveyOverview({ summary, questionAnalysis, isFiltered = false }: Surve
         </Card>
       )}
 
-      {/* 데이터 부족 경고 */}
-      {!isLoading && insufficientData && (
-        <InsufficientDataWarning isFiltered={isFiltered} />
-      )}
-
       {/* 분석 결과 */}
-      {!isLoading && !isError && questionIds.length > 0 && !insufficientData && (
+      {!isLoading && !isError && questionIds.length > 0 && (
         <div className="grid gap-6 lg:grid-cols-3">
           {/* 전체 감정 분석 */}
           <Card>

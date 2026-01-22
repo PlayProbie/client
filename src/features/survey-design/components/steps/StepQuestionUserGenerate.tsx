@@ -26,8 +26,7 @@ function StepQuestionUserGenerate() {
     isAllSelected,
     validationError,
     handleToggle,
-    selectAll,
-    deselectAll,
+    handleSelectAll,
     handleAddQuestion,
     handleRequestFeedback,
     handleSuggestionClick,
@@ -93,8 +92,7 @@ function StepQuestionUserGenerate() {
           selectedCount={selectedCount}
           totalCount={totalCount}
           isAllSelected={isAllSelected}
-          onSelectAll={selectAll}
-          onDeselectAll={deselectAll}
+          onSelectAll={handleSelectAll}
         />
       )}
 

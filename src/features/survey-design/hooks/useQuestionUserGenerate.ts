@@ -53,8 +53,7 @@ function useQuestionUserGenerate() {
 
     // 공통 핸들러 (from manager)
     handleToggle: manager.handleToggle,
-    selectAll: manager.selectAll,
-    deselectAll: manager.deselectAll,
+    handleSelectAll: manager.handleSelectAll,
     handleRequestFeedback: manager.handleRequestFeedback,
     handleSuggestionClick: manager.handleSuggestionClick,
 

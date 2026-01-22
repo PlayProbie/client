@@ -1,18 +1,14 @@
 import { API_BASE_URL } from '@/constants/api';
 
-import type {
-  AnalysisFilters,
-  QuestionResponseAnalysisWrapper,
-} from '../types';
+import type { QuestionResponseAnalysisWrapper } from '../types';
 
 /** Analytics 응답 타입 */
 interface AnalyticsResponse {
   analyses: QuestionResponseAnalysisWrapper[];
-  status: 'COMPLETED' | 'NO_DATA' | 'INSUFFICIENT_DATA' | 'IN_PROGRESS';
+  status: 'COMPLETED' | 'NO_DATA' | 'INSUFFICIENT_DATA';
   total_questions: number;
   completed_questions: number;
   total_participants: number;
-  survey_summary?: string;
 }
 
 /**
@@ -21,26 +17,15 @@ interface AnalyticsResponse {
  */
 export async function getQuestionAnalysis(
   surveyUuid: string,
-  filters: AnalysisFilters | undefined,
   onMessage: (data: QuestionResponseAnalysisWrapper) => void,
   onError?: (error: Error) => void,
-  onComplete?: (totalParticipants: number, surveySummary?: string, insufficientData?: boolean, isComputing?: boolean) => void
+  onComplete?: (totalParticipants: number) => void
 ): Promise<() => void> {
   try {
-    // Query Params 생성
-    const params = new URLSearchParams();
-    if (filters?.gender) params.append('gender', filters.gender);
-    if (filters?.ageGroup) params.append('ageGroup', filters.ageGroup);
-    if (filters?.preferGenre) params.append('preferGenre', filters.preferGenre);
-
-    const queryString = params.toString();
-
     // REST API 호출 (Authorization 헤더는 글로벌 인터셉터가 자동 추가)
-    const baseUrl = import.meta.env.DEV
+    const url = import.meta.env.DEV
       ? `/api/analytics/${surveyUuid}`
       : `${API_BASE_URL}/analytics/${surveyUuid}`;
-
-    const url = queryString ? `${baseUrl}?${queryString}` : baseUrl;
 
     const response = await fetch(url);
 
@@ -55,13 +40,8 @@ export async function getQuestionAnalysis(
       onMessage(item);
     }
 
-    // IN_PROGRESS: 이전 버전 데이터를 표시하지만 계산 중 상태
-    const isComputing = data.status === 'IN_PROGRESS';
-    
-    // 데이터 부족 여부 확인
-    const isInsufficientData = data.status === 'INSUFFICIENT_DATA' || data.status === 'NO_DATA';
-    
-    onComplete?.(data.total_participants || 0, data.survey_summary, isInsufficientData, isComputing);
+    // 모든 상태에서 완료 처리 (IN_PROGRESS는 서버에서 반환하지 않음)
+    onComplete?.(data.total_participants || 0);
 
     return () => {}; // cleanup (REST는 cleanup 불필요)
   } catch (error) {
@@ -71,4 +51,3 @@ export async function getQuestionAnalysis(
     return () => {};
   }
 }
-

@@ -12,18 +12,19 @@ interface StreamCompletionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   sessionUuid: string;
-  onStartSurvey: () => void | Promise<void>;
+  surveyUuid: string;
 }
 
 export function StreamCompletionDialog({
   open,
   onOpenChange,
   sessionUuid,
-  onStartSurvey,
+  surveyUuid,
 }: StreamCompletionDialogProps) {
-  const handleStartSurvey = async () => {
+  const handleStartSurvey = () => {
     if (!sessionUuid) return;
-    await onStartSurvey();
+    const baseUrl = import.meta.env.VITE_CLIENT_BASE_URL || '';
+    window.location.href = `${baseUrl}/surveys/session/${surveyUuid}?sessionUuid=${sessionUuid}`;
   };
 
   return (
@@ -31,11 +32,7 @@ export function StreamCompletionDialog({
       open={open}
       onOpenChange={onOpenChange}
     >
-      <DialogContent
-        showCloseButton={false}
-        onPointerDownOutside={(e) => e.preventDefault()}
-        onEscapeKeyDown={(e) => e.preventDefault()}
-      >
+      <DialogContent showCloseButton={false}>
         <DialogHeader>
           <DialogTitle>게임 플레이가 종료되었습니다</DialogTitle>
           <DialogDescription>

@@ -2,7 +2,7 @@
  * 테스터 대기열 페이지
  *
  * 게임 스트리밍 입장 전 대기열과 예상 대기시간을 표시합니다.
- * 일정 시간(기본 3초) 후 스트리밍 페이지로 이동합니다.
+ * 일정 시간(기본 5초) 후 스트리밍 페이지로 이동합니다.
  */
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -16,7 +16,7 @@ import {
 } from '@/features/game-streaming-session';
 
 /** 입장까지의 대기 시간 (초) */
-const DEFAULT_WAIT_SECONDS = 3;
+const DEFAULT_WAIT_SECONDS = 5;
 
 export default function QueuePage() {
   const { surveyUuid } = useParams<{ surveyUuid: string }>();

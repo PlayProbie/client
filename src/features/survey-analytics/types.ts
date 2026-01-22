@@ -32,7 +32,7 @@ export interface ApiSurveySession {
 
 /** [API] 질문-답변 발췌 */
 export interface ApiQuestionAnswerExcerpt {
-  qtype: InterviewLogQType;
+  q_type: InterviewLogQType;
   question_text: string;
   answer_text: string;
 }
@@ -51,9 +51,7 @@ export interface ApiSurveyResultsSummary {
 
 /** [API] 전체 응답 리스트 아이템 */
 export interface ApiSurveyResultListItem extends ApiSurveySession {
-  gender: string | null;
-  age_group: string | null;
-  prefer_genre: string | null;
+  first_question: string;
 }
 
 /** [API] 전체 응답 리스트 데이터 */
@@ -218,9 +216,7 @@ export interface SurveyResultsSummary {
 
 /** [Client] 전체 응답 리스트 아이템 */
 export interface SurveyResultListItem extends SurveySession {
-  gender: string | null;
-  ageGroup: string | null;
-  preferGenre: string | null;
+  firstQuestion: string;
 }
 
 /** [Client] 전체 응답 리스트 데이터 */
@@ -257,11 +253,4 @@ export interface GetSurveyResultsListParams {
 export interface GetSurveyResultDetailsParams {
   surveyUuid: string;
   sessionUuid: string;
-}
-
-/** 분석 필터 조건 */
-export interface AnalysisFilters {
-  gender?: string | null;
-  ageGroup?: string | null;
-  preferGenre?: string | null;
 }
