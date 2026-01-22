@@ -8,7 +8,6 @@ export { getSession, getSessionStatus, postSignal, postTerminate } from './api';
 export * from './components';
 export {
   sessionKeys,
-  useFullscreen,
   useGameStream,
   useInputLogger,
   useSegmentRecorder,
