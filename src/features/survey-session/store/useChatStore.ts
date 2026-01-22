@@ -7,7 +7,10 @@ import { create } from 'zustand';
 
 import type {
   ChatMessageData,
+  InsightQuestionData,
+  InsightType,
   InterviewLogQType,
+  ReplayPreloadState,
   SurveySessionStatus,
 } from '../types';
 
@@ -28,6 +31,7 @@ interface QueueItem {
     order?: number;
     totalQuestions?: number;
     duration?: number; // WAIT 시간 (ms)
+    insightQuestion?: InsightQuestionData; // 인사이트 질문 데이터
   };
 }
 
@@ -43,6 +47,8 @@ interface ChatState {
   messages: ChatMessageData[];
   currentTurnNum: number;
   currentFixedQId: number | null;
+  /** 현재 인사이트 질문의 tag_id (인사이트 답변 시 사용) */
+  currentInsightTagId: number | null;
 
   // UI state
   isLoading: boolean;
@@ -55,6 +61,7 @@ interface ChatState {
   streamingContent: string;
   streamQueue: QueueItem[];
   isProcessingQueue: boolean;
+  replayPreloads: Record<number, ReplayPreloadState>;
 
   // Actions
   setSession: (
@@ -83,6 +90,14 @@ interface ChatState {
     order?: number,
     totalQuestions?: number
   ) => void;
+  enqueueInsightQuestion: (
+    text: string,
+    turnNum: number,
+    tagId: number,
+    insightType: InsightType,
+    videoStartMs: number,
+    videoEndMs: number
+  ) => void;
   enqueueFinalize: () => void;
 
   // Queue Processing (Internal use mostly)
@@ -97,6 +112,10 @@ interface ChatState {
   setCurrentTurnNum: (turnNum: number) => void;
   incrementTurnNum: () => void;
   setCurrentFixedQId: (fixedQId: number | null) => void;
+  setCurrentInsightTagId: (tagId: number | null) => void;
+  setReplayPreload: (tagId: number, state: ReplayPreloadState) => void;
+  clearReplayPreload: (tagId: number) => void;
+  clearAllReplayPreloads: () => void;
   reset: () => void;
 }
 
@@ -108,6 +127,7 @@ const initialState = {
   messages: [],
   currentTurnNum: 0,
   currentFixedQId: null,
+  currentInsightTagId: null,
   isLoading: false,
   isConnecting: false,
   isStreaming: false,
@@ -116,6 +136,7 @@ const initialState = {
   streamingContent: '',
   streamQueue: [],
   isProcessingQueue: false,
+  replayPreloads: {},
 };
 
 // 타이핑 속도 (ms per character)
@@ -174,14 +195,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   },
 
   /** Question (Full Text): 말풍선 시작 -> 전체 텍스트 타이핑 */
-  enqueueQuestion: (
-    text,
-    turnNum,
-    fixedQId,
-    qType,
-    order,
-    totalQuestions
-  ) => {
+  enqueueQuestion: (text, turnNum, fixedQId, qType, order, totalQuestions) => {
     const { processQueue } = get();
     set((state) => ({
       streamQueue: [
@@ -191,6 +205,42 @@ export const useChatStore = create<ChatState>((set, get) => ({
           payload: { turnNum, qType, fixedQId, order, totalQuestions },
         },
         { type: 'TYPE_TEXT', payload: { text } },
+      ],
+    }));
+    processQueue();
+  },
+
+  /** InsightQuestion: 인사이트 질문 말풍선 (재생 버튼 포함) */
+  enqueueInsightQuestion: (
+    text,
+    turnNum,
+    tagId,
+    insightType,
+    videoStartMs,
+    videoEndMs
+  ) => {
+    const { processQueue } = get();
+    const insightQuestion: InsightQuestionData = {
+      tagId,
+      insightType,
+      videoStartMs,
+      videoEndMs,
+    };
+    set((state) => ({
+      streamQueue: [
+        ...state.streamQueue,
+        {
+          type: 'START_BUBBLE',
+          payload: {
+            turnNum,
+            qType: 'INSIGHT',
+            fixedQId: null,
+            insightQuestion,
+          },
+        },
+        { type: 'TYPE_TEXT', payload: { text } },
+        // insight_question은 단발 이벤트이므로 done 없이 직접 FINALIZE
+        { type: 'FINALIZE_BUBBLE' },
       ],
     }));
     processQueue();
@@ -287,6 +337,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
                 order: payload?.order,
                 totalQuestions: payload?.totalQuestions,
                 timestamp: new Date(),
+                insightQuestion: payload?.insightQuestion,
               },
             ],
             streamingContent: '',
@@ -341,26 +392,54 @@ export const useChatStore = create<ChatState>((set, get) => ({
         );
 
         if (!hasStreaming) {
-          // 버블 생성 후 다시 시도 (큐는 유지)
-          set((s) => ({
-            messages: [
-              ...s.messages,
-              {
-                id: `ai-streaming-${payload?.turnNum ?? s.currentTurnNum}`,
-                type: 'ai',
-                content: '',
-                turnNum: payload?.turnNum ?? s.currentTurnNum,
-                qType: payload?.qType,
-                fixedQId: payload?.fixedQId,
-                order: payload?.order,
-                totalQuestions: payload?.totalQuestions,
-                timestamp: new Date(),
-              },
-            ],
-            isStreaming: true,
-          }));
-          // 생성 직후 다시 processNext 호출하면 이 분기점 통과함
-          requestAnimationFrame(processNext);
+
+
+          set((s) => {
+            const lastMsg = s.messages[s.messages.length - 1];
+            const currentTurnNum = payload?.turnNum ?? s.currentTurnNum;
+
+            if (
+              lastMsg &&
+              lastMsg.type === 'ai' &&
+              lastMsg.turnNum === currentTurnNum
+            ) {
+              // 기존 메시지를 스트리밍 상태로 전환 (ID 변경)
+              const newMessages = [...s.messages];
+              newMessages[newMessages.length - 1] = {
+                ...lastMsg,
+                id: `ai-streaming-${currentTurnNum}`, // streaming ID로 변경하여 hasStreaming 감지되게 함
+              };
+              return {
+                messages: newMessages,
+                isStreaming: true,
+                // 스트리밍 재개 시 streamingContent 복구
+                streamingContent: lastMsg.content,
+              };
+            }
+
+            // 진짜 새로운 버블 생성
+            return {
+              messages: [
+                ...s.messages,
+                {
+                  id: `ai-streaming-${currentTurnNum}`,
+                  type: 'ai',
+                  content: '',
+                  turnNum: currentTurnNum,
+                  qType: payload?.qType,
+                  fixedQId: payload?.fixedQId,
+                  order: payload?.order,
+                  totalQuestions: payload?.totalQuestions,
+                  timestamp: new Date(),
+                },
+              ],
+              isStreaming: true,
+            };
+          });
+
+          // 상태 업데이트 후 다시 시도 (큐는 유지)
+          // requestAnimationFrame 대신 setTimeout 사용 (상태 업데이트 보장)
+          setTimeout(processNext, 0);
           return;
         }
 
@@ -416,5 +495,44 @@ export const useChatStore = create<ChatState>((set, get) => ({
   incrementTurnNum: () =>
     set((state) => ({ currentTurnNum: state.currentTurnNum + 1 })),
   setCurrentFixedQId: (fixedQId) => set({ currentFixedQId: fixedQId }),
-  reset: () => set(initialState),
+  setCurrentInsightTagId: (tagId) => set({ currentInsightTagId: tagId }),
+  setReplayPreload: (tagId, state) =>
+    set((prev) => ({
+      replayPreloads: {
+        ...prev.replayPreloads,
+        [tagId]: state,
+      },
+    })),
+  clearReplayPreload: (tagId) =>
+    set((prev) => {
+      const next = { ...prev.replayPreloads };
+      const target = next[tagId];
+      if (target?.sources) {
+        for (const source of target.sources) {
+          URL.revokeObjectURL(source.url);
+        }
+      }
+      delete next[tagId];
+      return { replayPreloads: next };
+    }),
+  clearAllReplayPreloads: () =>
+    set((prev) => {
+      for (const preload of Object.values(prev.replayPreloads)) {
+        if (!preload.sources) continue;
+        for (const source of preload.sources) {
+          URL.revokeObjectURL(source.url);
+        }
+      }
+      return { replayPreloads: {} };
+    }),
+  reset: () => {
+    const { replayPreloads } = get();
+    for (const preload of Object.values(replayPreloads)) {
+      if (!preload.sources) continue;
+      for (const source of preload.sources) {
+        URL.revokeObjectURL(source.url);
+      }
+    }
+    set(initialState);
+  },
 }));

@@ -4,7 +4,29 @@
  * Phase 4-5: Tester 스트리밍 API
  */
 
-// Types
+export { getSession, getSessionStatus, postSignal, postTerminate } from './api';
+export * from './components';
+export {
+  sessionKeys,
+  useGameStream,
+  useInputLogger,
+  useSegmentRecorder,
+  useSessionInfo,
+  useSessionStatus,
+  useSessionTimer,
+  useSignal,
+  useTerminateSession,
+} from './hooks';
+export {
+  computeSegmentTiming,
+  createSegmentStore,
+  createStreamClient,
+  SegmentRecorder,
+  type SegmentStore,
+  type SegmentStoreBackend,
+  type StreamClient,
+  type StreamClientConfig,
+} from './lib';
 export type {
   SessionInfo,
   SessionStatus,
@@ -15,23 +37,3 @@ export type {
   TerminateRequest,
   TerminateResponse,
 } from './types';
-
-// Lib
-export type { StreamClient, StreamClientConfig } from './lib';
-export { createStreamClient } from './lib';
-
-// API
-export { getSession, getSessionStatus, postSignal, postTerminate } from './api';
-
-// Components
-export * from './components';
-
-// Hooks
-export {
-  sessionKeys,
-  useGameStream,
-  useSessionInfo,
-  useSessionStatus,
-  useSignal,
-  useTerminateSession,
-} from './hooks';

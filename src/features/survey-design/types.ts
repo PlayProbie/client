@@ -142,16 +142,19 @@ export interface CreateSurveyResponse {
 }
 
 /** [API] POST /surveys/ai-questions Request */
-export interface ApiGenerateAiQuestionsRequest {
+export interface ApiGenerateAiQuestionsRequest { //추가할 데이터: 핵심요소, 테스트단계
   game_name: string;
   game_context: string;
   game_genre: GameGenre[];
-  survey_name: string;
+  test_stage: TestStage;
   /** 테마 대분류 우선순위 (1~3개, 순서대로) */
   theme_priorities: ThemeCategory[];
   /** 테마 소분류 (대분류별 선택된 세부 테마, 선택사항) */
   theme_details?: Partial<Record<ThemeCategory, ThemeDetail[]>>;
   count: number;
+  shuffle?: boolean;
+  extracted_elements?: Record<string, string>;
+  game_uuid?: string;
 }
 
 /** [API] POST /surveys/ai-questions Response */
@@ -284,6 +287,7 @@ export type SurveyFormData = {
   themePriorities: ThemeCategory[];
   themeDetails: Partial<Record<ThemeCategory, ThemeDetail[]>>;
   versionNote: string;
+  extractedElements: Record<string, string | null>;
 
   // Step 2: 질문 생성
   questions: string[];

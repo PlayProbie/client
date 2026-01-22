@@ -25,6 +25,9 @@ const generateMockSessionItems = (count: number): ApiSurveyResultListItem[] => {
     '초반 난이도가 적절하다고 느끼셨나요?',
     '탈출 포인트까지의 긴장감은 어땠나요?',
   ];
+  const genders = ['M', 'F', null];
+  const ageGroups = ['10s', '20s', '30s', '40s', null];
+  const genres = ['RPG', 'FPS', 'Strategy', 'Simulation', 'Action', 'Casual', null];
 
   return Array.from({ length: count }, (_, i) => ({
     session_uuid: `session-uuid-${1000 + i}`,
@@ -35,6 +38,9 @@ const generateMockSessionItems = (count: number): ApiSurveyResultListItem[] => {
     status: statuses[i % statuses.length],
     first_question: questions[i % questions.length],
     ended_at: toKSTISOString(new Date(Date.now() - i * 3600000)),
+    gender: genders[i % genders.length],
+    age_group: ageGroups[i % ageGroups.length],
+    prefer_genre: genres[i % genres.length],
   }));
 };
 
@@ -119,13 +125,13 @@ export const surveyAnalyticsHandlers = [
               fixed_question: '레이드 중 긴장감을 느끼셨나요?',
               excerpt: [
                 {
-                  q_type: 'FIXED',
+                  qtype: 'FIXED',
                   question_text: '레이드 중 긴장감을 느끼셨나요?',
                   answer_text:
                     '네, 정말 심장이 쿵쾅쿵쾅 뛰었어요! 특히 전리품을 많이 들었을 때요.',
                 },
                 {
-                  q_type: 'TAIL',
+                  qtype: 'TAIL',
                   question_text: '어떤 상황에서 가장 긴장되셨나요?',
                   answer_text:
                     '탈출 포인트 근처에서 적 발소리가 들렸을 때 손에 땀이 났어요.',
@@ -136,13 +142,13 @@ export const surveyAnalyticsHandlers = [
               fixed_question: '은신처 건설을 통한 성장이 체감되셨나요?',
               excerpt: [
                 {
-                  q_type: 'FIXED',
+                  qtype: 'FIXED',
                   question_text: '은신처 건설을 통한 성장이 체감되셨나요?',
                   answer_text:
                     '은신처 레벨을 올리니까 좋은 장비를 만들 수 있어서 확실히 성장한 느낌이에요.',
                 },
                 {
-                  q_type: 'TAIL',
+                  qtype: 'TAIL',
                   question_text: '어떤 업그레이드가 가장 도움이 되었나요?',
                   answer_text:
                     '무기 개조대 업그레이드가 가장 유용했어요. 총기 성능이 확 달라졌어요.',
@@ -153,13 +159,13 @@ export const surveyAnalyticsHandlers = [
               fixed_question: '게임을 다시 플레이하고 싶은 마음이 드시나요?',
               excerpt: [
                 {
-                  q_type: 'FIXED',
+                  qtype: 'FIXED',
                   question_text: '게임을 다시 플레이하고 싶은 마음이 드시나요?',
                   answer_text:
                     '당연하죠! 다음에는 다른 맵도 도전해보고 싶어요.',
                 },
                 {
-                  q_type: 'TAIL',
+                  qtype: 'TAIL',
                   question_text:
                     '다음 레이드에서 시도해보고 싶은 전략이 있나요?',
                   answer_text:
@@ -171,13 +177,13 @@ export const surveyAnalyticsHandlers = [
               fixed_question: '초반 난이도가 적절하다고 느끼셨나요?',
               excerpt: [
                 {
-                  q_type: 'FIXED',
+                  qtype: 'FIXED',
                   question_text: '초반 난이도가 적절하다고 느끼셨나요?',
                   answer_text:
                     '처음 몇 판은 좀 어려웠지만 적응하니까 괜찮았어요.',
                 },
                 {
-                  q_type: 'TAIL',
+                  qtype: 'TAIL',
                   question_text: '어떤 부분이 특히 어려우셨나요?',
                   answer_text:
                     '맵 구조를 모르니까 탈출 포인트 찾기가 힘들었어요. 익숙해지니까 훨씬 나아졌어요.',
@@ -511,6 +517,8 @@ export const surveyAnalyticsHandlers = [
         status: 'COMPLETED',
         total_questions: 3,
         completed_questions: 3,
+        total_participants: 45,
+        survey_summary: '테스터들은 전반적으로 게임의 긴장감과 성장 시스템에 만족했으며, 특히 재플레이 의향이 매우 높게 나타났습니다. 일부 밸런스 조정과 UI 개선이 필요합니다.',
       });
     }
   ),
