@@ -35,12 +35,12 @@ const getAgeGroupLabel = (ageGroup: string): string => {
     '50s': '50대',
     '60s': '60대',
     '60+': '60대 이상',
-    'teens': '10대',
-    'twenties': '20대',
-    'thirties': '30대',
-    'forties': '40대',
-    'fifties': '50대',
-    'sixties': '60대',
+    teens: '10대',
+    twenties: '20대',
+    thirties: '30대',
+    forties: '40대',
+    fifties: '50대',
+    sixties: '60대',
   };
   return map[normalized] ?? ageGroup;
 };
@@ -58,21 +58,21 @@ const getGenreLabel = (genre: string): string => {
 
   // 추가 매핑 (소문자나 다른 형식으로 올 경우 대비)
   const fallbackMap: Record<string, string> = {
-    'ACTION': '액션',
-    'ADVENTURE': '어드벤처',
-    'SIMULATION': '시뮬레이션',
-    'PUZZLE': '퍼즐',
-    'STRATEGY': '전략',
-    'RPG': 'RPG',
-    'ARCADE': '아케이드',
-    'HORROR': '호러',
-    'SHOOTER': '슈팅',
-    'VISUAL_NOVEL': '비주얼 노벨',
-    'ROGUELIKE': '로그라이크',
-    'SPORTS': '스포츠',
-    'RHYTHM': '리듬',
-    'FIGHTING': '대전',
-    'CASUAL': '캐주얼',
+    ACTION: '액션',
+    ADVENTURE: '어드벤처',
+    SIMULATION: '시뮬레이션',
+    PUZZLE: '퍼즐',
+    STRATEGY: '전략',
+    RPG: 'RPG',
+    ARCADE: '아케이드',
+    HORROR: '호러',
+    SHOOTER: '슈팅',
+    VISUAL_NOVEL: '비주얼 노벨',
+    ROGUELIKE: '로그라이크',
+    SPORTS: '스포츠',
+    RHYTHM: '리듬',
+    FIGHTING: '대전',
+    CASUAL: '캐주얼',
   };
 
   return fallbackMap[genreUpper] ?? genre;
@@ -97,7 +97,7 @@ function QuestionAnalysisDetail({ data }: QuestionAnalysisDetailProps) {
   // 2. clusters가 빈 배열이면 분석 완료 but 클러스터 형성 실패 → 데이터 부족
   if (!data?.clusters) {
     return (
-      <div className="py-12 text-center text-muted-foreground">
+      <div className="text-muted-foreground py-12 text-center">
         클러스터 데이터를 불러오는 중...
       </div>
     );
@@ -108,7 +108,8 @@ function QuestionAnalysisDetail({ data }: QuestionAnalysisDetailProps) {
   }
 
   // 선택된 인덱스가 범위를 벗어나면 0으로 리셋
-  const safeClusterIndex = selectedClusterIndex < data.clusters.length ? selectedClusterIndex : 0;
+  const safeClusterIndex =
+    selectedClusterIndex < data.clusters.length ? selectedClusterIndex : 0;
 
   // 현재 선택된 클러스터
   const selectedCluster = data.clusters[safeClusterIndex];
@@ -116,59 +117,61 @@ function QuestionAnalysisDetail({ data }: QuestionAnalysisDetailProps) {
   // 현재 선택된 클러스터의 대표 답변 텍스트 매핑
   const representativeAnswers = selectedCluster?.representative_answers ?? [];
   const answerIds = selectedCluster?.answer_ids ?? [];
-  const answerList: AnswerListItem[] = representativeAnswers.map((text, index) => {
-    // answer_ids와 representative_answers는 같은 인덱스로 매핑됨
-    const answerId = answerIds[index];
-    const profile = answerId ? data.answer_profiles?.[answerId] : undefined;
+  const answerList: AnswerListItem[] = representativeAnswers.map(
+    (text, index) => {
+      // answer_ids와 representative_answers는 같은 인덱스로 매핑됨
+      const answerId = answerIds[index];
+      const profile = answerId ? data.answer_profiles?.[answerId] : undefined;
 
-    // 프로필 태그 생성: 성별, 나이, 선호장르
-    const tags: string[] = [];
-    if (profile) {
-      if (profile.gender) {
-        tags.push(getGenderLabel(profile.gender));
+      // 프로필 태그 생성: 성별, 나이, 선호장르
+      const tags: string[] = [];
+      if (profile) {
+        if (profile.gender) {
+          tags.push(getGenderLabel(profile.gender));
+        }
+        if (profile.age_group) {
+          tags.push(getAgeGroupLabel(profile.age_group));
+        }
+        if (profile.prefer_genre) {
+          tags.push(getGenreLabel(profile.prefer_genre));
+        }
       }
-      if (profile.age_group) {
-        tags.push(getAgeGroupLabel(profile.age_group));
-      }
-      if (profile.prefer_genre) {
-        tags.push(getGenreLabel(profile.prefer_genre));
-      }
+
+      return {
+        id: `answer-${index}`,
+        text: text,
+
+        tags: tags.length > 0 ? tags : undefined,
+      };
     }
-
-    return {
-      id: `answer-${index}`,
-      text: text,
-
-      tags: tags.length > 0 ? tags : undefined,
-    };
-  });
-
-
+  );
 
   return (
     <div className="space-y-6">
       {/* 상단: 전체 요약 정보 */}
-      <Card className="border-primary/20 bg-linear-to-r from-primary/5 to-accent/5">
+      <Card className="border-primary/20 from-primary/5 to-accent/5 bg-linear-to-r">
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">
             <div className="space-y-1">
-              <h2 className="text-lg font-bold text-foreground">
+              <h2 className="text-foreground text-lg font-bold">
                 질문 분석 결과
               </h2>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 응답 {data.total_answers}개 • 공감 {data.sentiment.score}%
               </p>
             </div>
-            
-            <Badge className={`px-3 py-1 text-sm font-semibold ${getSentimentColorClass(data.sentiment.score, 'bg')} ${getSentimentColorClass(data.sentiment.score, 'bg').replace('bg-', 'text-')}-foreground`}>
+
+            <Badge
+              className={`px-3 py-1 text-sm font-semibold ${getSentimentColorClass(data.sentiment.score, 'bg')} ${getSentimentColorClass(data.sentiment.score, 'bg').replace('bg-', 'text-')}-foreground`}
+            >
               {data.sentiment.score}점
             </Badge>
           </div>
         </CardHeader>
-        
+
         {data.meta_summary && (
           <CardContent className="pt-0">
-            <p className="text-sm leading-relaxed text-foreground/80">
+            <p className="text-foreground/80 text-sm leading-relaxed">
               {data.meta_summary}
             </p>
           </CardContent>
@@ -178,7 +181,7 @@ function QuestionAnalysisDetail({ data }: QuestionAnalysisDetailProps) {
       {/* 중단: 클러스터 선택 탭 */}
       <Card>
         <CardHeader className="pb-3">
-          <h3 className="text-sm font-semibold text-foreground">
+          <h3 className="text-foreground text-sm font-semibold">
             질문별 응답 요약 (의견 클러스터링)
           </h3>
         </CardHeader>

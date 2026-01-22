@@ -19,7 +19,10 @@ import {
 } from '@/features/survey-session';
 
 import { getSurveyResultDetails } from '../api/get-survey-result-details';
-import type { ApiQuestionAnswerExcerpt, ApiSurveyResultDetails } from '../types';
+import type {
+  ApiQuestionAnswerExcerpt,
+  ApiSurveyResultDetails,
+} from '../types';
 
 type SurveyResultDetailDialogProps = {
   open: boolean;

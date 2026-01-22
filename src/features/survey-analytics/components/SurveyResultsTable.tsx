@@ -18,7 +18,11 @@ import {
   TableRow,
 } from '@/components/ui/Table';
 import { GameGenreConfig } from '@/features/game';
-import { getSessionStatusClassName, getSessionStatusLabel, type SurveySessionStatus } from '@/features/survey-session';
+import {
+  getSessionStatusClassName,
+  getSessionStatusLabel,
+  type SurveySessionStatus,
+} from '@/features/survey-session';
 
 import type { SurveyResultListItem } from '../types';
 import { SurveyResultDetailDialog } from './SurveyResultDetailDialog';
@@ -127,7 +131,9 @@ function SurveyResultsTable({ data }: SurveyResultsTableProps) {
         cell: (info) => {
           const value = info.getValue<string | null>();
           if (!value) return '-';
-          return <span className="line-clamp-1">{formatPreferGenre(value)}</span>;
+          return (
+            <span className="line-clamp-1">{formatPreferGenre(value)}</span>
+          );
         },
       },
       {

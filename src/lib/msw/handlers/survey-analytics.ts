@@ -27,7 +27,15 @@ const generateMockSessionItems = (count: number): ApiSurveyResultListItem[] => {
   ];
   const genders = ['M', 'F', null];
   const ageGroups = ['10s', '20s', '30s', '40s', null];
-  const genres = ['RPG', 'FPS', 'Strategy', 'Simulation', 'Action', 'Casual', null];
+  const genres = [
+    'RPG',
+    'FPS',
+    'Strategy',
+    'Simulation',
+    'Action',
+    'Casual',
+    null,
+  ];
 
   return Array.from({ length: count }, (_, i) => ({
     session_uuid: `session-uuid-${1000 + i}`,
@@ -284,7 +292,11 @@ export const surveyAnalyticsHandlers = [
           answer_profiles: {
             ans1: { age_group: '20s', gender: 'M', prefer_genre: 'RPG' },
             ans2: { age_group: '20s', gender: 'F', prefer_genre: 'FPS' },
-            ans3: { age_group: '30s', gender: 'M', prefer_genre: 'RPG, Strategy' },
+            ans3: {
+              age_group: '30s',
+              gender: 'M',
+              prefer_genre: 'RPG, Strategy',
+            },
             ans4: { age_group: '20s', gender: 'M', prefer_genre: 'FPS' },
             ans5: { age_group: '40s', gender: 'M', prefer_genre: 'Simulation' },
             ans6: { age_group: '10s', gender: 'F', prefer_genre: 'Casual' },
@@ -397,9 +409,17 @@ export const surveyAnalyticsHandlers = [
             ans7: { age_group: '20s', gender: 'M', prefer_genre: 'RPG' },
             ans8: { age_group: '20s', gender: 'F', prefer_genre: 'FPS' },
             ans9: { age_group: '30s', gender: 'M', prefer_genre: 'RPG' },
-            ans10: { age_group: '20s', gender: 'M', prefer_genre: 'RPG, Strategy' },
+            ans10: {
+              age_group: '20s',
+              gender: 'M',
+              prefer_genre: 'RPG, Strategy',
+            },
             ans11: { age_group: '20s', gender: 'F', prefer_genre: 'Casual' },
-            ans12: { age_group: '40s', gender: 'M', prefer_genre: 'Simulation' },
+            ans12: {
+              age_group: '40s',
+              gender: 'M',
+              prefer_genre: 'Simulation',
+            },
             out4: { age_group: '30s', gender: 'M', prefer_genre: 'FPS' },
             out5: { age_group: '20s', gender: 'F', prefer_genre: 'RPG' },
           },
@@ -518,7 +538,8 @@ export const surveyAnalyticsHandlers = [
         total_questions: 3,
         completed_questions: 3,
         total_participants: 45,
-        survey_summary: '테스터들은 전반적으로 게임의 긴장감과 성장 시스템에 만족했으며, 특히 재플레이 의향이 매우 높게 나타났습니다. 일부 밸런스 조정과 UI 개선이 필요합니다.',
+        survey_summary:
+          '테스터들은 전반적으로 게임의 긴장감과 성장 시스템에 만족했으며, 특히 재플레이 의향이 매우 높게 나타났습니다. 일부 밸런스 조정과 UI 개선이 필요합니다.',
       });
     }
   ),

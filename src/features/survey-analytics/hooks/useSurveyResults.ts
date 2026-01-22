@@ -2,7 +2,11 @@ import { useQuery } from '@tanstack/react-query';
 
 import { getSurveyResultsList } from '../api/get-survey-results-list';
 import { getSurveyResultsSummary } from '../api/get-survey-results-summary';
-import type { ApiSurveyResultListItem, SurveyResultsList, SurveyResultsSummary } from '../types';
+import type {
+  ApiSurveyResultListItem,
+  SurveyResultsList,
+  SurveyResultsSummary,
+} from '../types';
 
 type UseSurveyResultsOptions = {
   surveyUuid: string;
@@ -32,15 +36,19 @@ function useSurveyResults({ surveyUuid }: UseSurveyResultsOptions) {
 
       while (hasNext) {
         const response = await getSurveyResultsList({
-           surveyUuid, 
-           limit: 100, // Fetch more items per request to reduce roundtrips
-           cursor 
+          surveyUuid,
+          limit: 100, // Fetch more items per request to reduce roundtrips
+          cursor,
         });
-        
+
         // ESLint: Variable name must match camelCase
-        const { content, next_cursor: nextCursorResponse, has_next: hasNextResponse } = response.result;
+        const {
+          content,
+          next_cursor: nextCursorResponse,
+          has_next: hasNextResponse,
+        } = response.result;
         allContent = [...allContent, ...content];
-        
+
         hasNext = hasNextResponse;
         cursor = nextCursorResponse?.toString();
       }
@@ -50,8 +58,8 @@ function useSurveyResults({ surveyUuid }: UseSurveyResultsOptions) {
         result: {
           content: allContent,
           next_cursor: null,
-          has_next: false
-        }
+          has_next: false,
+        },
       };
     },
     select: (response): SurveyResultsList => ({
@@ -82,4 +90,3 @@ function useSurveyResults({ surveyUuid }: UseSurveyResultsOptions) {
 }
 
 export { useSurveyResults };
-

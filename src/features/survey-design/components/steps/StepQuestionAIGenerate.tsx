@@ -83,7 +83,7 @@ function StepQuestionAIGenerate() {
               <label
                 htmlFor={`question-${index}`}
                 className={cn(
-                  'flex items-start gap-3 cursor-pointer select-none',
+                  'flex cursor-pointer items-start gap-3 select-none',
                   isLoading && 'cursor-not-allowed'
                 )}
               >
@@ -94,15 +94,17 @@ function StepQuestionAIGenerate() {
                   disabled={isLoading}
                 />
                 <div className="flex-1">
-                  <span className="text-sm font-medium text-muted-foreground mr-2">
+                  <span className="text-muted-foreground mr-2 text-sm font-medium">
                     Q{index + 1}.
                   </span>
-                  <span className={cn(isSelected && 'text-primary font-medium')}>
+                  <span
+                    className={cn(isSelected && 'text-primary font-medium')}
+                  >
                     {question}
                   </span>
                 </div>
                 {isSelected && (
-                  <Check className="size-5 text-primary shrink-0" />
+                  <Check className="text-primary size-5 shrink-0" />
                 )}
               </label>
             </div>

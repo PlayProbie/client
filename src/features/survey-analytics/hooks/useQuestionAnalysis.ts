@@ -147,7 +147,12 @@ export function useQuestionAnalysis({
       },
       (err: Error) => {
         if (isCancelled) return;
-        setState((prev) => ({ ...prev, error: err, status: 'error', isBackgroundRefreshing: false }));
+        setState((prev) => ({
+          ...prev,
+          error: err,
+          status: 'error',
+          isBackgroundRefreshing: false,
+        }));
         isRequestingRef.current = false;
         silentRefetchRef.current = false;
         // 에러 시에는 재시도할 수 있도록 requestedSurveyUuidRef 초기화

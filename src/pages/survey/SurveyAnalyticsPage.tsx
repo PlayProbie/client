@@ -125,7 +125,7 @@ function SurveyAnalyticsPage() {
       )}
 
       {isPageError && (
-        <div className="py-12 text-center text-destructive">
+        <div className="text-destructive py-12 text-center">
           데이터를 불러오는 중 오류가 발생했습니다.
         </div>
       )}
@@ -168,15 +168,13 @@ function SurveyAnalyticsPage() {
           )}
 
           {activeTab === 'questions' && !surveyUuid && (
-            <div className="py-12 text-center text-muted-foreground">
+            <div className="text-muted-foreground py-12 text-center">
               분석할 설문 데이터가 없습니다.
             </div>
           )}
 
           {/* 세부 데이터 탭 */}
-          {activeTab === 'details' && (
-            <SurveyResultsTable data={list} />
-          )}
+          {activeTab === 'details' && <SurveyResultsTable data={list} />}
         </>
       )}
     </main>
@@ -184,4 +182,3 @@ function SurveyAnalyticsPage() {
 }
 
 export default SurveyAnalyticsPage;
-

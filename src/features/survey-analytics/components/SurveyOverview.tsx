@@ -48,18 +48,23 @@ function getSentimentBadgeClass(score: number): string {
  * - 전체 감정 분석
  * - 전체 GEQ 레이더 차트
  */
-function SurveyOverview({ summary, questionAnalysis, isFiltered = false }: SurveyOverviewProps) {
-  const { data, questionIds, isLoading, isError, insufficientData } = questionAnalysis;
+function SurveyOverview({
+  summary,
+  questionAnalysis,
+  isFiltered = false,
+}: SurveyOverviewProps) {
+  const { data, questionIds, isLoading, isError, insufficientData } =
+    questionAnalysis;
 
   const averageGEQ = calculateAverageGEQ(data);
-
-
 
   const sentimentStats = calculateAverageSentiment(data);
 
   const firstAnalysis = Object.values(data)[0];
   const demographics = {
-    answerIds: firstAnalysis?.answer_profiles ? Object.keys(firstAnalysis.answer_profiles) : [],
+    answerIds: firstAnalysis?.answer_profiles
+      ? Object.keys(firstAnalysis.answer_profiles)
+      : [],
     profiles: firstAnalysis?.answer_profiles || {},
   };
 
@@ -74,11 +79,11 @@ function SurveyOverview({ summary, questionAnalysis, isFiltered = false }: Surve
       <div className="grid grid-cols-3 gap-4">
         <Card>
           <CardContent className="flex items-center gap-4 pt-6">
-            <div className="rounded-lg bg-primary/10 p-3">
-              <Users className="h-6 w-6 text-primary" />
+            <div className="bg-primary/10 rounded-lg p-3">
+              <Users className="text-primary h-6 w-6" />
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">총 응답 수</p>
+              <p className="text-muted-foreground text-sm">총 응답 수</p>
               <p className="text-2xl font-bold">
                 {questionAnalysis.totalParticipants ?? summary.responseCount}
               </p>
@@ -88,11 +93,11 @@ function SurveyOverview({ summary, questionAnalysis, isFiltered = false }: Surve
 
         <Card>
           <CardContent className="flex items-center gap-4 pt-6">
-            <div className="rounded-lg bg-primary/10 p-3">
-              <MessageSquare className="h-6 w-6 text-primary" />
+            <div className="bg-primary/10 rounded-lg p-3">
+              <MessageSquare className="text-primary h-6 w-6" />
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">분석된 질문</p>
+              <p className="text-muted-foreground text-sm">분석된 질문</p>
               <p className="text-2xl font-bold">{questionIds.length}</p>
             </div>
           </CardContent>
@@ -100,15 +105,17 @@ function SurveyOverview({ summary, questionAnalysis, isFiltered = false }: Surve
 
         <Card>
           <CardContent className="flex items-center gap-4 pt-6">
-            <div className="rounded-lg bg-primary/10 p-3">
-              <Smile className="h-6 w-6 text-primary" />
+            <div className="bg-primary/10 rounded-lg p-3">
+              <Smile className="text-primary h-6 w-6" />
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">감정 점수</p>
+              <p className="text-muted-foreground text-sm">감정 점수</p>
               <p
                 className={`text-2xl font-bold ${insufficientData || questionIds.length === 0 ? 'text-muted-foreground' : getSentimentColorClass(sentimentStats.averageScore)}`}
               >
-                {isLoading || insufficientData || questionIds.length === 0 ? '-' : `${sentimentStats.averageScore}점`}
+                {isLoading || insufficientData || questionIds.length === 0
+                  ? '-'
+                  : `${sentimentStats.averageScore}점`}
               </p>
             </div>
           </CardContent>
@@ -120,7 +127,7 @@ function SurveyOverview({ summary, questionAnalysis, isFiltered = false }: Surve
 
       {isError && (
         <Card className="border-destructive/50 bg-destructive/10">
-          <CardContent className="py-6 text-center text-destructive">
+          <CardContent className="text-destructive py-6 text-center">
             AI 분석 결과를 불러오는 중 오류가 발생했습니다.
           </CardContent>
         </Card>
@@ -132,92 +139,101 @@ function SurveyOverview({ summary, questionAnalysis, isFiltered = false }: Surve
       )}
 
       {/* 분석 결과 */}
-      {!isLoading && !isError && questionIds.length > 0 && !insufficientData && (
-        <div className="grid gap-6 lg:grid-cols-3">
-          {/* 전체 감정 분석 */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">전체 감정 분석</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">종합 점수</span>
-                <span
-                  className={`text-2xl font-bold ${getSentimentColorClass(sentimentStats.averageScore)}`}
-                >
-                  {sentimentStats.averageScore}점
-                </span>
-              </div>
-
-              <div className="text-center">
-                <span
-                  className={`inline-block rounded-full px-4 py-2 text-sm font-medium ${getSentimentBadgeClass(sentimentStats.averageScore)}`}
-                >
-                  {getSentimentLabel(sentimentStats.averageScore)}
-                </span>
-              </div>
-
-              {/* 감정 분포 바 */}
-              <div className="space-y-2">
-                <p className="text-sm font-medium">감정 분포</p>
-                <div className="flex h-4 overflow-hidden rounded-full">
-                  <div
-                    className="bg-success transition-all"
-                    style={{ width: `${sentimentStats.distribution.positive}%` }}
-                  />
-                  <div
-                    className="bg-muted transition-all"
-                    style={{ width: `${sentimentStats.distribution.neutral}%` }}
-                  />
-                  <div
-                    className="bg-destructive transition-all"
-                    style={{ width: `${sentimentStats.distribution.negative}%` }}
-                  />
-                </div>
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <span className="h-2 w-2 rounded-full bg-success" />
-                    긍정 {sentimentStats.distribution.positive}%
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <span className="h-2 w-2 rounded-full bg-muted" />
-                    중립 {sentimentStats.distribution.neutral}%
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <span className="h-2 w-2 rounded-full bg-destructive" />
-                    부정 {sentimentStats.distribution.negative}%
+      {!isLoading &&
+        !isError &&
+        questionIds.length > 0 &&
+        !insufficientData && (
+          <div className="grid gap-6 lg:grid-cols-3">
+            {/* 전체 감정 분석 */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">전체 감정 분석</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">종합 점수</span>
+                  <span
+                    className={`text-2xl font-bold ${getSentimentColorClass(sentimentStats.averageScore)}`}
+                  >
+                    {sentimentStats.averageScore}점
                   </span>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
 
-          {/* 전체 GEQ 레이더 차트 */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">유저 감정 분석 (전체 평균)</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <GEQRadarChart scores={averageGEQ} />
+                <div className="text-center">
+                  <span
+                    className={`inline-block rounded-full px-4 py-2 text-sm font-medium ${getSentimentBadgeClass(sentimentStats.averageScore)}`}
+                  >
+                    {getSentimentLabel(sentimentStats.averageScore)}
+                  </span>
+                </div>
 
-            </CardContent>
-          </Card>
+                {/* 감정 분포 바 */}
+                <div className="space-y-2">
+                  <p className="text-sm font-medium">감정 분포</p>
+                  <div className="flex h-4 overflow-hidden rounded-full">
+                    <div
+                      className="bg-success transition-all"
+                      style={{
+                        width: `${sentimentStats.distribution.positive}%`,
+                      }}
+                    />
+                    <div
+                      className="bg-muted transition-all"
+                      style={{
+                        width: `${sentimentStats.distribution.neutral}%`,
+                      }}
+                    />
+                    <div
+                      className="bg-destructive transition-all"
+                      style={{
+                        width: `${sentimentStats.distribution.negative}%`,
+                      }}
+                    />
+                  </div>
+                  <div className="text-muted-foreground flex justify-between text-xs">
+                    <span className="flex items-center gap-1">
+                      <span className="bg-success h-2 w-2 rounded-full" />
+                      긍정 {sentimentStats.distribution.positive}%
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <span className="bg-muted h-2 w-2 rounded-full" />
+                      중립 {sentimentStats.distribution.neutral}%
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <span className="bg-destructive h-2 w-2 rounded-full" />
+                      부정 {sentimentStats.distribution.negative}%
+                    </span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
+            {/* 전체 GEQ 레이더 차트 */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">
+                  유저 감정 분석 (전체 평균)
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <GEQRadarChart scores={averageGEQ} />
+              </CardContent>
+            </Card>
 
-          {/* 테스터 분포 (Demographics) */}
-          <div>
-             <ClusterDemographics 
-               answerIds={demographics.answerIds}
-               profiles={demographics.profiles}
-             />
+            {/* 테스터 분포 (Demographics) */}
+            <div>
+              <ClusterDemographics
+                answerIds={demographics.answerIds}
+                profiles={demographics.profiles}
+              />
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
       {/* 분석된 질문이 없는 경우 */}
       {!isLoading && !isError && questionIds.length === 0 && (
         <Card>
-          <CardContent className="py-12 text-center text-muted-foreground">
+          <CardContent className="text-muted-foreground py-12 text-center">
             아직 분석된 질문이 없습니다.
           </CardContent>
         </Card>
