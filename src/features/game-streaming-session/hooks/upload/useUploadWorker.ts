@@ -1,20 +1,33 @@
+/**
+ * Upload Worker Hook
+ *
+ * 세그먼트 업로드를 관리하는 오케스트레이션 훅.
+ * Web Worker, Shared Worker, Service Worker를 조합하여 안정적인 업로드를 보장합니다.
+ */
 import { useCallback, useEffect, useRef } from 'react';
 
 import { API_BASE_URL } from '@/constants/api';
 
 import {
+  registerServiceWorker,
+  triggerSharedOrServiceWorkerUpload,
+} from '../../lib/upload/service-worker-manager';
+import {
+  addSharedWorkerListener,
+  getSharedWorker,
+  type SharedWorkerMessage,
+} from '../../lib/upload/shared-worker-manager';
+import {
   addPendingUpload,
-  markPendingUploadPending,
-  markPendingUploadProcessing,
   removePendingUpload,
 } from '../../lib/upload/upload-sync-store';
 import type { InputLog, SegmentMeta } from '../../types';
 import type {
   UploadWorkerCommand,
-  UploadWorkerEvent,
   UploadWorkerSegmentPayload,
 } from '../../workers/upload-worker.types';
 import type { StreamHealthState } from '../stream/useStreamHealth';
+import { useWebWorker } from './useWebWorker';
 
 export interface UseUploadWorkerOptions {
   enabled: boolean;
@@ -42,131 +55,6 @@ export interface UseUploadWorkerReturn {
   reset: () => void;
 }
 
-type SharedWorkerMessage = {
-  type?: string;
-  payload?: {
-    localSegmentId?: string;
-    remoteSegmentId?: string;
-    s3Url?: string;
-    reason?: string;
-  };
-};
-
-const sharedWorkerListeners = new Set<(message: SharedWorkerMessage) => void>();
-let sharedWorkerInstance: SharedWorker | null = null;
-
-function notifySharedWorkerListeners(message: SharedWorkerMessage): void {
-  sharedWorkerListeners.forEach((listener) => {
-    try {
-      listener(message);
-    } catch {
-      // ignore listener errors
-    }
-  });
-}
-
-function supportsSharedWorker(): boolean {
-  return typeof SharedWorker !== 'undefined';
-}
-
-function getSharedWorker(): SharedWorker | null {
-  if (!supportsSharedWorker()) {
-    return null;
-  }
-
-  if (sharedWorkerInstance) {
-    return sharedWorkerInstance;
-  }
-
-  try {
-    const sharedWorker = new SharedWorker(
-      new URL('../../workers/upload-shared-worker.ts', import.meta.url),
-      { type: 'module', name: 'upload-shared-worker' }
-    );
-
-    sharedWorker.port.onmessage = (event) => {
-      notifySharedWorkerListeners(event.data as SharedWorkerMessage);
-    };
-    sharedWorker.port.start();
-
-    sharedWorkerInstance = sharedWorker;
-    return sharedWorkerInstance;
-  } catch {
-    return null;
-  }
-}
-
-function addSharedWorkerListener(
-  listener: (message: SharedWorkerMessage) => void
-): () => void {
-  sharedWorkerListeners.add(listener);
-  return () => {
-    sharedWorkerListeners.delete(listener);
-  };
-}
-
-// Service Worker 등록
-async function registerServiceWorker(
-  apiUrl: string
-): Promise<ServiceWorkerRegistration | null> {
-  if (!('serviceWorker' in navigator)) {
-    return null;
-  }
-
-  try {
-    const swPath = `/upload-sw.js?apiUrl=${encodeURIComponent(apiUrl)}`;
-    const registration = await navigator.serviceWorker.register(swPath);
-    return registration;
-  } catch {
-    return null;
-  }
-}
-
-// Service Worker에 토큰 전송 (postMessage로 안전하게 전달)
-function sendTokenToServiceWorker(token: string | null): void {
-  if (!token || !navigator.serviceWorker?.controller) return;
-  navigator.serviceWorker.controller.postMessage({
-    type: 'UPDATE_TOKEN',
-    token,
-  });
-}
-
-// Background Sync 트리거
-async function triggerBackgroundSync(): Promise<void> {
-  if (!('serviceWorker' in navigator)) {
-    return;
-  }
-
-  const registration = await navigator.serviceWorker.ready;
-
-  if ('sync' in registration && 'SyncManager' in window) {
-    try {
-      const syncRegistration = registration as ServiceWorkerRegistration & {
-        sync: { register: (tag: string) => Promise<void> };
-      };
-      await syncRegistration.sync.register('upload-segments');
-      return;
-    } catch {
-      // fall back to direct message
-    }
-  }
-
-  registration.active?.postMessage({ type: 'PROCESS_UPLOADS' });
-}
-
-// Shared Worker 또는 Service Worker에 업로드 요청
-function triggerSharedOrServiceWorkerUpload(): void {
-  const sharedWorker = getSharedWorker();
-  if (sharedWorker) {
-    sharedWorker.port.postMessage({ type: 'PROCESS_UPLOADS' });
-    return;
-  }
-
-  triggerBackgroundSync().catch(() => {
-    // ignore background trigger errors
-  });
-}
-
 export function useUploadWorker({
   enabled,
   sessionId,
@@ -177,110 +65,76 @@ export function useUploadWorker({
   onSegmentUploaded,
   onSegmentFailed,
 }: UseUploadWorkerOptions): UseUploadWorkerReturn {
-  const workerRef = useRef<Worker | null>(null);
   const sequenceRef = useRef(0);
   const swRegistrationRef = useRef<ServiceWorkerRegistration | null>(null);
-  const streamHealthRef = useRef(streamHealth);
 
-  // 콜백을 Ref로 래핑하여 Worker useEffect 의존성에서 제거
-  const onErrorRef = useRef(onError);
-  const onSegmentUploadedRef = useRef(onSegmentUploaded);
-  const onSegmentFailedRef = useRef(onSegmentFailed);
+  // Web Worker 관리 훅
+  const { workerRef, releaseUploadThrottle } = useWebWorker({
+    enabled,
+    sessionId,
+    streamHealth,
+    uploadRateBps,
+    streamingActive,
+    onError,
+    onSegmentUploaded,
+    onSegmentFailed,
+  });
 
-  useEffect(() => {
-    onErrorRef.current = onError;
-  }, [onError]);
-
-  useEffect(() => {
-    onSegmentUploadedRef.current = onSegmentUploaded;
-  }, [onSegmentUploaded]);
-
-  useEffect(() => {
-    onSegmentFailedRef.current = onSegmentFailed;
-  }, [onSegmentFailed]);
-
+  // 세션 변경 시 시퀀스 초기화
   useEffect(() => {
     sequenceRef.current = 0;
   }, [sessionId]);
-
-  useEffect(() => {
-    streamHealthRef.current = streamHealth;
-  }, [streamHealth]);
-
-  const releaseUploadThrottle = useCallback(() => {
-    const worker = workerRef.current;
-    if (!worker) return;
-
-    const message: UploadWorkerCommand = {
-      type: 'set-network-status',
-      payload: {
-        status: streamHealthRef.current,
-        rateBps: null,
-        streamingActive: false,
-      },
-    };
-
-    worker.postMessage(message);
-  }, []);
 
   // Service Worker 및 Shared Worker 등록
   useEffect(() => {
     if (!enabled) return;
 
-    // Service Worker 등록 (Chrome/Edge Background Sync)
-    const apiUrl = API_BASE_URL;
-    const token = localStorage.getItem('accessToken');
+    // API URL 절대 경로 변환
+    const apiUrl = API_BASE_URL.startsWith('/')
+      ? `${window.location.origin}${API_BASE_URL}`
+      : API_BASE_URL;
     registerServiceWorker(apiUrl).then((registration) => {
       swRegistrationRef.current = registration;
-      // SW 활성화 후 토큰 전송
-      if (registration?.active) {
-        sendTokenToServiceWorker(token);
-      } else {
-        // SW가 아직 활성화되지 않은 경우, ready 이벤트 대기
-        navigator.serviceWorker.ready.then(() => {
-          sendTokenToServiceWorker(token);
-        });
-      }
     });
 
     const sharedWorker = getSharedWorker();
-    if (!sharedWorker) {
-      return;
-    }
+    if (!sharedWorker) return;
 
-    const unsubscribe = addSharedWorkerListener((message) => {
-      if (
-        message.type === 'SEGMENT_UPLOADED' &&
-        message.payload?.localSegmentId
-      ) {
-        removePendingUpload(message.payload.localSegmentId).catch(() => {});
+    const unsubscribe = addSharedWorkerListener(
+      (message: SharedWorkerMessage) => {
         if (
-          message.payload.remoteSegmentId &&
-          typeof message.payload.s3Url === 'string'
+          message.type === 'SEGMENT_UPLOADED' &&
+          message.payload?.localSegmentId
         ) {
-          onSegmentUploaded?.(
+          removePendingUpload(message.payload.localSegmentId).catch(() => {});
+          if (
+            message.payload.remoteSegmentId &&
+            typeof message.payload.s3Url === 'string'
+          ) {
+            onSegmentUploaded?.(
+              message.payload.localSegmentId,
+              message.payload.remoteSegmentId,
+              message.payload.s3Url
+            );
+          }
+        } else if (
+          message.type === 'SEGMENT_FAILED' &&
+          message.payload?.localSegmentId
+        ) {
+          onSegmentFailed?.(
             message.payload.localSegmentId,
-            message.payload.remoteSegmentId,
-            message.payload.s3Url
+            message.payload.reason ?? ''
           );
         }
-      } else if (
-        message.type === 'SEGMENT_FAILED' &&
-        message.payload?.localSegmentId
-      ) {
-        onSegmentFailed?.(
-          message.payload.localSegmentId,
-          message.payload.reason ?? ''
-        );
       }
-    });
+    );
 
     return () => {
       unsubscribe();
     };
   }, [enabled, onSegmentUploaded, onSegmentFailed]);
 
-  // pagehide 이벤트에서 Background Sync 또는 Shared Worker 트리거
+  // pagehide 이벤트에서 Background Sync 트리거
   useEffect(() => {
     if (!enabled || !sessionId) return;
 
@@ -295,104 +149,15 @@ export function useUploadWorker({
     };
   }, [enabled, sessionId, releaseUploadThrottle]);
 
-  useEffect(() => {
-    if (!enabled || !sessionId) {
-      workerRef.current?.terminate();
-      workerRef.current = null;
-      return;
-    }
-
-    const worker = new Worker(
-      new URL('../../workers/upload.worker.ts', import.meta.url)
-    );
-
-    workerRef.current = worker;
-
-    // Worker에 인증 토큰 전달
-    const token = localStorage.getItem('accessToken');
-    if (token) {
-      const tokenMessage: UploadWorkerCommand = {
-        type: 'set-auth-token',
-        payload: { token },
-      };
-      worker.postMessage(tokenMessage);
-    }
-
-    const handleMessage = (event: MessageEvent<UploadWorkerEvent>) => {
-      const message = event.data;
-
-      switch (message.type) {
-        case 'segment-uploaded':
-          // 업로드 성공 시 IndexedDB에서 제거
-          removePendingUpload(message.payload.localSegmentId).catch(() => {});
-          onSegmentUploadedRef.current?.(
-            message.payload.localSegmentId,
-            message.payload.remoteSegmentId,
-            message.payload.s3Url
-          );
-          break;
-        case 'segment-processing':
-          markPendingUploadProcessing(
-            message.payload.localSegmentId,
-            'main',
-            message.payload.startedAt
-          ).catch(() => {});
-          break;
-        case 'segment-failed':
-          markPendingUploadPending(message.payload.localSegmentId).catch(
-            () => {}
-          );
-          onSegmentFailedRef.current?.(
-            message.payload.localSegmentId,
-            message.payload.reason
-          );
-          onErrorRef.current?.(new Error(message.payload.reason));
-          break;
-        case 'error':
-          onErrorRef.current?.(new Error(message.payload.message));
-          break;
-        default:
-          break;
-      }
-    };
-
-    worker.addEventListener('message', handleMessage);
-
-    worker.addEventListener('error', (event) => {
-      onErrorRef.current?.(new Error(event.message));
-    });
-
-    return () => {
-      worker.removeEventListener('message', handleMessage);
-      worker.terminate();
-      workerRef.current = null;
-    };
-  }, [enabled, sessionId]);
-
+  // 컴포넌트 언마운트 시 업로드 트리거
+  // (releaseUploadThrottle은 useWebWorker cleanup에서 자동 처리됨)
   useEffect(() => {
     if (!enabled || !sessionId) return;
 
     return () => {
-      releaseUploadThrottle();
       triggerSharedOrServiceWorkerUpload();
     };
-  }, [enabled, sessionId, releaseUploadThrottle]);
-
-  useEffect(() => {
-    const worker = workerRef.current;
-    if (!worker) return;
-
-    const message: UploadWorkerCommand = {
-      type: 'set-network-status',
-      payload: {
-        status: streamHealth,
-        rateBps: uploadRateBps,
-        streamingActive,
-      },
-    };
-
-    worker.postMessage(message);
-  }, [streamHealth, uploadRateBps, streamingActive]);
+  }, [enabled, sessionId]);
 
   const enqueueSegment = useCallback(
     (
@@ -445,7 +210,7 @@ export function useUploadWorker({
         triggerSharedOrServiceWorkerUpload();
       }
     },
-    [sessionId]
+    [sessionId, workerRef]
   );
 
   const flush = useCallback(() => {
@@ -459,7 +224,7 @@ export function useUploadWorker({
     worker.postMessage(message);
 
     triggerSharedOrServiceWorkerUpload();
-  }, []);
+  }, [workerRef]);
 
   const reset = useCallback(() => {
     const worker = workerRef.current;
@@ -467,7 +232,7 @@ export function useUploadWorker({
 
     const message: UploadWorkerCommand = { type: 'reset' };
     worker.postMessage(message);
-  }, []);
+  }, [workerRef]);
 
   return {
     enqueueSegment,

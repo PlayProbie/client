@@ -9,15 +9,11 @@ import { toPresignedUrl } from '../types';
 
 export async function postPresignedUrl(
   sessionId: string,
-  request: ApiPresignedUrlRequest,
-  authToken?: string
+  request: ApiPresignedUrlRequest
 ): Promise<{ segmentId: string; s3Url: string; expiresIn: number }> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
   };
-  if (authToken) {
-    headers['Authorization'] = `Bearer ${authToken}`;
-  }
 
   const response = await fetch(
     `${API_BASE_URL}/sessions/${sessionId}/replay/presigned-url`,

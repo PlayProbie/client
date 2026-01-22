@@ -23,7 +23,6 @@ export interface UseStreamHealthOptions {
 
 export interface UseStreamHealthReturn {
   health: StreamHealthState;
-  isUploadAllowed: boolean;
   metrics: StreamHealthMetrics;
 }
 
@@ -84,7 +83,9 @@ function readStreamHealthMetrics(
         const packetsLostValue =
           typeof report.packetsLost === 'number' ? report.packetsLost : 0;
         const packetsReceivedValue =
-          typeof report.packetsReceived === 'number' ? report.packetsReceived : 0;
+          typeof report.packetsReceived === 'number'
+            ? report.packetsReceived
+            : 0;
         packetsLost += packetsLostValue;
         packetsReceived += packetsReceivedValue;
         hasPacketStats = true;
@@ -257,12 +258,8 @@ export function useStreamHealth({
     };
   }, [enabled, intervalMs, getVideoRTCStats, getInputRTCStats, onStatusChange]);
 
-  // 업로드 허용 여부: HEALTHY 또는 DEGRADED 상태일 때 허용
-  const isUploadAllowed = health === 'HEALTHY' || health === 'DEGRADED';
-
   return {
     health,
-    isUploadAllowed,
     metrics,
   };
 }

@@ -15,7 +15,6 @@ import {
   StreamFooter,
   StreamHeader,
   StreamPlayer,
-  useFullscreen,
   useGameStream,
   useSessionInfo,
   useSessionStatus,
@@ -53,17 +52,6 @@ export default function StreamingPlayPage() {
 
   // 수동 종료 여부 (버튼 클릭 또는 타임아웃)
   const isManuallyTerminated = useRef(false);
-
-  // 전체화면 훅
-  const { requestFullscreen } = useFullscreen({
-    onError: (err) => {
-      toast({
-        variant: 'warning',
-        title: '전체 화면 전환 실패',
-        description: String(err),
-      });
-    },
-  });
 
   // 세션 정보 조회
   const {
@@ -166,9 +154,6 @@ export default function StreamingPlayPage() {
   // 연결 시작 핸들러 (수동 재시도용)
   const handleConnect = async () => {
     if (!surveyUuid || isConnecting || isConnected) return;
-
-    // 사용자 제스처로 전체화면 전환 (버튼 클릭 시점에 호출해야 브라우저가 허용)
-    requestFullscreen();
 
     // 로딩 화면 표시
     if (window.GameLiftLoadingScreen) {
