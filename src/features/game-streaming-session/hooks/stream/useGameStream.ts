@@ -124,7 +124,7 @@ export function useGameStream({
       return null;
     }
 
-    if (streamHealth.health === 'UNSTABLE') {
+    if (streamHealth.health !== 'HEALTHY') {
       return 0;
     }
 

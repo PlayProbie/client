@@ -5,8 +5,6 @@
  */
 import { postInputLogs, postPresignedUrl, postUploadComplete } from '../api';
 import type { InputLog } from '../types';
-import type { UploadRateLimiter } from './rate-limiter';
-import { createThrottledStream } from './rate-limiter';
 import type { UploadWorkerSegmentPayload } from './upload-worker.types';
 
 /**
@@ -27,16 +25,16 @@ export interface UploadTask {
 }
 
 /**
- * S3에 비디오 업로드 (rate-limited)
+ * S3에 비디오 업로드
  */
 export async function uploadToS3(
   s3Url: string,
   contentType: string,
   blob: Blob,
-  rateLimiter: UploadRateLimiter,
   signal: AbortSignal
 ): Promise<void> {
-  const body = createThrottledStream(blob, rateLimiter, signal);
+  // Presigned PUT에서는 streaming body가 실패할 수 있어 Blob으로 전송합니다.
+  const body = blob;
   const response = await fetch(s3Url, {
     method: 'PUT',
     headers: {
@@ -44,8 +42,6 @@ export async function uploadToS3(
     },
     body,
     signal,
-    // @ts-expect-error: duplex is not yet in the RequestInit type definition but required for streaming bodies
-    duplex: 'half',
   });
 
   if (!response.ok) {
@@ -55,7 +51,6 @@ export async function uploadToS3(
 
 export interface PerformUploadOptions {
   task: UploadTask;
-  rateLimiter: UploadRateLimiter;
   getAbortController: () => AbortController;
   clearAbortController: () => void;
 }
@@ -74,7 +69,6 @@ export interface PerformUploadResult {
  */
 export async function performUpload({
   task,
-  rateLimiter,
   getAbortController,
   clearAbortController,
 }: PerformUploadOptions): Promise<PerformUploadResult> {
@@ -102,7 +96,6 @@ export async function performUpload({
         task.s3Url,
         task.contentType,
         task.blob,
-        rateLimiter,
         abortController.signal
       );
       task.s3Uploaded = true;

@@ -1,4 +1,4 @@
-export const DEFAULT_MAX_UPLOAD_RETRIES = 3;
+export const DEFAULT_MAX_UPLOAD_RETRIES = 5;
 export const DEFAULT_RETRY_BASE_DELAY_MS = 1000;
 export const DEFAULT_RETRY_MAX_DELAY_MS = 4000;
 
@@ -108,11 +108,36 @@ export class UploadQueue<TPayload> {
     }
 
     item.retryCount = nextRetryCount;
-    item.nextAttemptAt = now + getRetryDelayMs(
-      nextRetryCount,
-      this.baseDelayMs,
-      this.maxDelayMs
-    );
+    item.nextAttemptAt =
+      now + getRetryDelayMs(nextRetryCount, this.baseDelayMs, this.maxDelayMs);
+    item.inFlight = false;
+    return true;
+  }
+
+  /**
+   * Abort 에러 시 retryCount를 증가시키지 않고 재시도 스케줄링
+   * UNSTABLE 상태에서 abort된 경우 실제 실패가 아니므로 retryCount를 소모하지 않음
+   */
+  scheduleRetryWithoutIncrement(
+    key: string,
+    now: number = Date.now()
+  ): boolean {
+    const item = this.items.get(key);
+    if (!item) return false;
+
+    // retryCount가 이미 maxRetries를 초과한 경우에만 실패 처리
+    if (item.retryCount > this.maxRetries) {
+      return false;
+    }
+
+    // retryCount를 증가시키지 않고 딜레이만 적용
+    item.nextAttemptAt =
+      now +
+      getRetryDelayMs(
+        item.retryCount > 0 ? item.retryCount : 1,
+        this.baseDelayMs,
+        this.maxDelayMs
+      );
     item.inFlight = false;
     return true;
   }

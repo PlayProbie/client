@@ -5,7 +5,6 @@
  */
 import type { StreamHealthState } from '../hooks/stream/useStreamHealth';
 import { UploadQueue } from '../lib/upload/upload-queue';
-import { UploadRateLimiter } from './rate-limiter';
 import { performUpload, type UploadTask } from './upload-task';
 import type {
   UploadWorkerCommand,
@@ -24,7 +23,6 @@ const PROCESSING_HEARTBEAT_MS = 500;
 
 // 상태 변수
 const queue = new UploadQueue<UploadTask>();
-const rateLimiter = new UploadRateLimiter();
 let networkStatus: StreamHealthState = 'HEALTHY';
 let uploadRateBps: number | null = null;
 let streamingActive = true;
@@ -53,7 +51,7 @@ function isUploadAllowed(): boolean {
   if (!streamingActive) {
     return true;
   }
-  if (networkStatus === 'UNSTABLE') {
+  if (networkStatus !== 'HEALTHY') {
     return false;
   }
   if (uploadRateBps == null) {
@@ -127,7 +125,6 @@ async function processQueue(): Promise<void> {
   try {
     const result = await performUpload({
       task: nextItem.payload,
-      rateLimiter,
       getAbortController: () => {
         activeAbortController = new AbortController();
         return activeAbortController;
@@ -138,6 +135,7 @@ async function processQueue(): Promise<void> {
     });
 
     queue.markDone(nextItem.key);
+
     postEvent({
       type: 'segment-uploaded',
       payload: {
@@ -148,7 +146,16 @@ async function processQueue(): Promise<void> {
     });
   } catch (error) {
     const reason = error instanceof Error ? error.message : String(error);
-    const retryScheduled = queue.scheduleRetry(nextItem.key, Date.now());
+
+    // Abort 에러인지 확인 (UNSTABLE 상태에서 abort된 경우)
+    const isAbortError =
+      error instanceof Error &&
+      (error.name === 'AbortError' || reason.includes('aborted'));
+
+    // Abort 에러가 아닌 경우에만 retryCount 증가
+    const retryScheduled = isAbortError
+      ? queue.scheduleRetryWithoutIncrement(nextItem.key, Date.now())
+      : queue.scheduleRetry(nextItem.key, Date.now());
 
     if (!retryScheduled) {
       queue.markDone(nextItem.key);
@@ -193,10 +200,12 @@ function setUploadPolicy(params: {
   networkStatus = params.status;
   streamingActive = params.streamingActive;
   uploadRateBps = params.streamingActive ? params.rateBps : null;
-  rateLimiter.setRate(uploadRateBps);
 
-  if (params.streamingActive && params.status === 'UNSTABLE') {
-    activeAbortController?.abort();
+  // HEALTHY가 아닌 상태에서는 진행 중 업로드 즉시 중단
+  if (params.streamingActive && params.status !== 'HEALTHY') {
+    if (activeAbortController) {
+      activeAbortController.abort();
+    }
     clearTimer();
     return;
   }

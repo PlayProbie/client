@@ -45,8 +45,8 @@ export const DEFAULT_BATCH_SIZE = 100;
 /** 업로드 대역폭 비율 (availableIncomingBitrate의 1%) */
 export const UPLOAD_RATE_RATIO = 0.01;
 
-/** 업로드 대역폭 상한 (bps) */
-export const UPLOAD_RATE_CAP_BPS = 128_000;
+/** 업로드 대역폭 상한 (bps) - 30초 내 업로드 목표 (360p/최대 ~8MB 기준) */
+export const UPLOAD_RATE_CAP_BPS = 2_500_000;
 
 /** 업로드 대역폭 fallback (bps) */
-export const UPLOAD_RATE_FALLBACK_BPS = 64_000;
+export const UPLOAD_RATE_FALLBACK_BPS = 2_200_000;

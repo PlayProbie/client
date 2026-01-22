@@ -95,7 +95,8 @@ export function useWebWorker({
     }
 
     const worker = new Worker(
-      new URL('../../workers/upload.worker.ts', import.meta.url)
+      new URL('../../workers/upload.worker.ts', import.meta.url),
+      { type: 'module' }
     );
 
     workerRef.current = worker;
