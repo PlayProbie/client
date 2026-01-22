@@ -106,7 +106,9 @@ function openSegmentDb(): Promise<IDBDatabase> {
           keyPath: 'key',
         });
         store.createIndex('sessionId', 'sessionId', { unique: false });
-        store.createIndex('lastAccessedAt', 'lastAccessedAt', { unique: false });
+        store.createIndex('lastAccessedAt', 'lastAccessedAt', {
+          unique: false,
+        });
       }
     };
   });
@@ -155,7 +157,10 @@ async function claimPendingUpload(
       }
 
       const normalized = normalizePendingUpload(record);
-      if (normalized.status === 'processing' && !isProcessingStale(normalized)) {
+      if (
+        normalized.status === 'processing' &&
+        !isProcessingStale(normalized)
+      ) {
         return;
       }
 
@@ -216,9 +221,7 @@ async function getPendingUploads(): Promise<PendingUpload[]> {
 
     request.onerror = () => reject(request.error);
     request.onsuccess = () =>
-      resolve(
-        (request.result as PendingUpload[]).map(normalizePendingUpload)
-      );
+      resolve((request.result as PendingUpload[]).map(normalizePendingUpload));
   });
 }
 

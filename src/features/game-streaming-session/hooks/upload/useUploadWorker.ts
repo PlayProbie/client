@@ -122,15 +122,6 @@ async function registerServiceWorker(
   }
 }
 
-// Service Worker에 토큰 전송 (postMessage로 안전하게 전달)
-function sendTokenToServiceWorker(token: string | null): void {
-  if (!token || !navigator.serviceWorker?.controller) return;
-  navigator.serviceWorker.controller.postMessage({
-    type: 'UPDATE_TOKEN',
-    token,
-  });
-}
-
 // Background Sync 트리거
 async function triggerBackgroundSync(): Promise<void> {
   if (!('serviceWorker' in navigator)) {
@@ -228,19 +219,12 @@ export function useUploadWorker({
     if (!enabled) return;
 
     // Service Worker 등록 (Chrome/Edge Background Sync)
-    const apiUrl = API_BASE_URL;
-    const token = localStorage.getItem('accessToken');
+    // API_BASE_URL이 상대 경로인 경우 절대 URL로 변환 (Service Worker는 별도 scope에서 실행되므로)
+    const apiUrl = API_BASE_URL.startsWith('/')
+      ? `${window.location.origin}${API_BASE_URL}`
+      : API_BASE_URL;
     registerServiceWorker(apiUrl).then((registration) => {
       swRegistrationRef.current = registration;
-      // SW 활성화 후 토큰 전송
-      if (registration?.active) {
-        sendTokenToServiceWorker(token);
-      } else {
-        // SW가 아직 활성화되지 않은 경우, ready 이벤트 대기
-        navigator.serviceWorker.ready.then(() => {
-          sendTokenToServiceWorker(token);
-        });
-      }
     });
 
     const sharedWorker = getSharedWorker();
@@ -307,16 +291,6 @@ export function useUploadWorker({
     );
 
     workerRef.current = worker;
-
-    // Worker에 인증 토큰 전달
-    const token = localStorage.getItem('accessToken');
-    if (token) {
-      const tokenMessage: UploadWorkerCommand = {
-        type: 'set-auth-token',
-        payload: { token },
-      };
-      worker.postMessage(tokenMessage);
-    }
 
     const handleMessage = (event: MessageEvent<UploadWorkerEvent>) => {
       const message = event.data;

@@ -162,7 +162,6 @@ let streamingActive = true;
 let processing = false;
 let timerId: ReturnType<typeof setTimeout> | null = null;
 let activeAbortController: AbortController | null = null;
-let authToken: string | null = null;
 const rateLimiter = new UploadRateLimiter();
 
 function postEvent(event: UploadWorkerEvent): void {
@@ -259,8 +258,7 @@ async function performUpload(task: UploadTask): Promise<{
         video_start_ms: task.segment.start_media_time,
         video_end_ms: task.segment.end_media_time,
         content_type: task.contentType,
-      },
-      authToken ?? undefined
+      }
     );
 
     task.remoteSegmentId = backendSegmentId;
@@ -284,11 +282,7 @@ async function performUpload(task: UploadTask): Promise<{
   }
 
   if (!task.completeNotified && task.remoteSegmentId) {
-    await postUploadComplete(
-      task.sessionId,
-      task.remoteSegmentId,
-      authToken ?? undefined
-    );
+    await postUploadComplete(task.sessionId, task.remoteSegmentId);
 
     task.completeNotified = true;
   }
@@ -299,8 +293,7 @@ async function performUpload(task: UploadTask): Promise<{
         task.sessionId,
         task.remoteSegmentId,
         task.s3Url,
-        task.logs,
-        authToken ?? undefined
+        task.logs
       );
     }
     task.logsUploaded = true;
@@ -442,10 +435,6 @@ workerContext.onmessage = (event: MessageEvent<UploadWorkerCommand>) => {
     }
     case 'reset': {
       resetQueue();
-      break;
-    }
-    case 'set-auth-token': {
-      authToken = message.payload.token;
       break;
     }
     default: {
