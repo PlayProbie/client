@@ -37,6 +37,7 @@ export const INITIAL_STATE = {
     themePriorities: [],
     themeDetails: {},
     versionNote: '',
+    extractedElements: {},
   },
   surveyUrl: null,
 };

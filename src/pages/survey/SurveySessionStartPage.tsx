@@ -126,14 +126,17 @@ function SurveySessionStartPage() {
       const { session, sse_url: sseUrl } = response.result;
 
       // 세션 정보를 state로 전달하면서 리다이렉트
-      navigate(`/surveys/session/sessions/${session.session_uuid}`, {
-        replace: true,
-        state: {
-          surveyUuid: session.survey_uuid,
-          sessionUuid: session.session_uuid,
-          sseUrl: sseUrl,
-        },
-      });
+      navigate(
+        `/surveys/session/sessions/${session.session_uuid}?surveyUuid=${surveyUuid}`,
+        {
+          replace: true,
+          state: {
+            surveyUuid: surveyUuid,
+            sessionUuid: session.session_uuid,
+            sseUrl: sseUrl,
+          },
+        }
+      );
     } catch {
       // 에러 로깅은 생략
       setError('세션 생성에 실패했습니다. 잠시 후 다시 시도해주세요.');

@@ -5,7 +5,7 @@
  * 밝은 테마의 게임 스트리밍 UI를 제공합니다.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
 import { InlineAlert } from '@/components/ui/InlineAlert';
@@ -28,6 +28,7 @@ const SESSION_MAX_DURATION_SECONDS = 1800;
 
 export default function StreamingPlayPage() {
   const { surveyUuid } = useParams<{ surveyUuid: string }>();
+  const navigate = useNavigate();
   const { toast } = useToast();
 
   // 전체화면 전환을 위한 컨테이너 ref
@@ -52,35 +53,6 @@ export default function StreamingPlayPage() {
   // 수동 종료 여부 (버튼 클릭 또는 타임아웃)
   const isManuallyTerminated = useRef(false);
 
-  // 전체화면 전환 함수 (vendor-prefixed APIs 지원)
-  const requestFullscreen = useCallback(() => {
-    // Loading Screen(body 자식)을 포함하기 위해 documentElement를 전체화면 대상으로 설정
-    const element = document.documentElement;
-    if (!element) return;
-
-    // Vendor-prefixed fullscreen API 타입
-    type FullscreenElement = HTMLElement & {
-      webkitRequestFullscreen?: () => Promise<void>;
-      msRequestFullscreen?: () => Promise<void>;
-    };
-
-    const el = element as FullscreenElement;
-
-    if (el.requestFullscreen) {
-      el.requestFullscreen().catch((err) => {
-        toast({
-          variant: 'warning',
-          title: '전체 화면 전환 실패',
-          description: err,
-        });
-      });
-    } else if (el.webkitRequestFullscreen) {
-      el.webkitRequestFullscreen();
-    } else if (el.msRequestFullscreen) {
-      el.msRequestFullscreen();
-    }
-  }, [toast]);
-
   // 세션 정보 조회
   const {
     data: sessionInfo,
@@ -96,8 +68,10 @@ export default function StreamingPlayPage() {
     isConnecting,
     isConnected,
     sessionUuid,
+    setGameReady,
     connect,
     disconnect,
+    uploadInputLogs,
   } = useGameStream({
     surveyUuid: surveyUuid || '',
     onConnected: () => {
@@ -107,6 +81,9 @@ export default function StreamingPlayPage() {
       if (window.GameLiftLoadingScreen) {
         window.GameLiftLoadingScreen.hide();
       }
+
+      // 게임 준비 완료 → 입력 로깅 시작
+      setGameReady(true);
 
       toast({
         variant: 'success',
@@ -174,20 +151,9 @@ export default function StreamingPlayPage() {
     return () => clearInterval(timer);
   }, [isConnected]);
 
-  // 시간 만료 시 자동 종료
-  useEffect(() => {
-    if (remainingTime === 0 && isConnected) {
-      handleDisconnect();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [remainingTime, isConnected]);
-
   // 연결 시작 핸들러 (수동 재시도용)
   const handleConnect = async () => {
     if (!surveyUuid || isConnecting || isConnected) return;
-
-    // 사용자 제스처로 전체화면 전환 (버튼 클릭 시점에 호출해야 브라우저가 허용)
-    requestFullscreen();
 
     // 로딩 화면 표시
     if (window.GameLiftLoadingScreen) {
@@ -198,7 +164,7 @@ export default function StreamingPlayPage() {
   };
 
   // 연결 종료 핸들러
-  const handleDisconnect = () => {
+  const handleDisconnect = useCallback(() => {
     if (!surveyUuid || !sessionUuid) return;
 
     // 수동 종료 플래그 설정
@@ -243,7 +209,37 @@ export default function StreamingPlayPage() {
         },
       }
     );
-  };
+  }, [
+    surveyUuid,
+    sessionUuid,
+    signalMutation,
+    terminateMutation,
+    disconnect,
+    toast,
+  ]);
+
+  const handleStartSurvey = useCallback(async () => {
+    if (!completionInfo?.sessionUuid || !completionInfo?.surveyUuid) {
+      toast({
+        variant: 'destructive',
+        title: '오류 발생',
+        description: '세션 정보가 없어 설문으로 이동할 수 없습니다.',
+      });
+      return;
+    }
+
+    await uploadInputLogs();
+    navigate(
+      `/surveys/session/${completionInfo.surveyUuid}?sessionUuid=${completionInfo.sessionUuid}`
+    );
+  }, [completionInfo, uploadInputLogs, navigate, toast]);
+
+  // 시간 만료 시 자동 종료
+  useEffect(() => {
+    if (remainingTime === 0 && isConnected) {
+      handleDisconnect();
+    }
+  }, [remainingTime, isConnected, handleDisconnect]);
 
   // 에러 상태 처리
   if (!surveyUuid) {
@@ -345,7 +341,7 @@ export default function StreamingPlayPage() {
         open={!!completionInfo}
         onOpenChange={(open) => !open && setCompletionInfo(null)}
         sessionUuid={completionInfo?.sessionUuid ?? ''}
-        surveyUuid={completionInfo?.surveyUuid ?? ''}
+        onStartSurvey={handleStartSurvey}
       />
     </div>
   );

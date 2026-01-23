@@ -148,7 +148,7 @@ type QuestionAnswerBlockProps = {
 };
 
 function QuestionAnswerBlock({ qa }: QuestionAnswerBlockProps) {
-  const isFixed = qa.q_type === 'FIXED';
+  const isFixed = qa.qtype === 'FIXED';
 
   return (
     <div className="border-border rounded-md border p-3">

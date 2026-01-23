@@ -54,7 +54,7 @@
             onerror="this.style.display='none'"
           />
         </div>
-
+        
         <!-- 로딩 텍스트 -->
         <p style="
           color: #ffffff;
